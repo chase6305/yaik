@@ -6,7 +6,7 @@ struct puma_ik {
 
 // Constants for solver
 static constexpr int robot_nq = 6;
-static constexpr int max_n_solutions = 16;
+static constexpr int max_n_solutions = 32;
 static constexpr int n_tree_nodes = 24;
 static constexpr int intermediate_solution_size = 9;
 static constexpr double pose_tolerance = 1e-6;
@@ -473,6 +473,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const bool checked_result = std::fabs(Pz - d_1) <= 9.9999999999999995e-7 && std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0)) <= 9.9999999999999995e-7;
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
     
@@ -640,20 +642,29 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             bool taken_by_degenerate = false;
+            bool forwarded_to_child = false;
             const double th_4 = this_solution[7];
             
             const bool degenerate_valid_0 = std::fabs(th_4) <= 9.9999999999999995e-7;
             if (degenerate_valid_0)
             {
                 taken_by_degenerate = true;
-                add_input_index_to(14, node_input_i_idx_in_queue);
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(14, branch_input_index);
             }
             
             const bool degenerate_valid_1 = std::fabs(th_4 - M_PI) <= 9.9999999999999995e-7;
             if (degenerate_valid_1)
             {
                 taken_by_degenerate = true;
-                add_input_index_to(19, node_input_i_idx_in_queue);
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(19, branch_input_index);
             }
             
             if (!taken_by_degenerate)

@@ -297,6 +297,8 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
             checked_result: bool = (abs(l_3 - l_4*math.sin(th_2)) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(3, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_2_processor()

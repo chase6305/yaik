@@ -539,6 +539,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             
             if (!taken_by_degenerate)
                 add_input_index_to(5, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
     
@@ -701,6 +703,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const bool checked_result = std::fabs(Pz + d_4*r_31*std::sin(th_5) + d_4*r_32*std::cos(th_5)) <= 9.9999999999999995e-7 && std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0) + d_4*r_11*std::sin(th_5)*std::cos(th_0) + d_4*r_12*std::cos(th_0)*std::cos(th_5) + d_4*r_21*std::sin(th_0)*std::sin(th_5) + d_4*r_22*std::sin(th_0)*std::cos(th_5)) <= 9.9999999999999995e-7;
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(11, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
     
@@ -922,43 +926,27 @@ static void computeIKUnChecked(const Eigen::Matrix4d& T_ee, RawIKWorksace& works
     }
 }
 
+static void wrapAngleToPi(std::array<double, robot_nq>& solution_i)
+{
+    // Wrap angular value to [-pi, pi]
+    // Revolute unknown th_0
+    solution_i[0] = std::atan2(std::sin(solution_i[0]), std::cos(solution_i[0]));
+    // Revolute unknown th_1
+    solution_i[1] = std::atan2(std::sin(solution_i[1]), std::cos(solution_i[1]));
+    // Revolute unknown th_2
+    solution_i[2] = std::atan2(std::sin(solution_i[2]), std::cos(solution_i[2]));
+    // Revolute unknown th_3
+    solution_i[3] = std::atan2(std::sin(solution_i[3]), std::cos(solution_i[3]));
+    // Revolute unknown th_4
+    solution_i[4] = std::atan2(std::sin(solution_i[4]), std::cos(solution_i[4]));
+    // Revolute unknown th_5
+    solution_i[5] = std::atan2(std::sin(solution_i[5]), std::cos(solution_i[5]));
+}
+
 static void wrapAngleToPi(std::vector<std::array<double, robot_nq>>& ik_output)
 {
-    for(int i = 0; i < ik_output.size(); i++)
-    {
-        // Wrap angular value to [-pi, pi]
-        auto& solution_i = ik_output[i];
-        // Revolute unknown th_0
-        while(solution_i[0] > M_PI)
-            solution_i[0] -= 2 * M_PI;
-        while(solution_i[0] < - M_PI)
-            solution_i[0] += 2 * M_PI;
-        // Revolute unknown th_1
-        while(solution_i[1] > M_PI)
-            solution_i[1] -= 2 * M_PI;
-        while(solution_i[1] < - M_PI)
-            solution_i[1] += 2 * M_PI;
-        // Revolute unknown th_2
-        while(solution_i[2] > M_PI)
-            solution_i[2] -= 2 * M_PI;
-        while(solution_i[2] < - M_PI)
-            solution_i[2] += 2 * M_PI;
-        // Revolute unknown th_3
-        while(solution_i[3] > M_PI)
-            solution_i[3] -= 2 * M_PI;
-        while(solution_i[3] < - M_PI)
-            solution_i[3] += 2 * M_PI;
-        // Revolute unknown th_4
-        while(solution_i[4] > M_PI)
-            solution_i[4] -= 2 * M_PI;
-        while(solution_i[4] < - M_PI)
-            solution_i[4] += 2 * M_PI;
-        // Revolute unknown th_5
-        while(solution_i[5] > M_PI)
-            solution_i[5] -= 2 * M_PI;
-        while(solution_i[5] < - M_PI)
-            solution_i[5] += 2 * M_PI;
-    }
+    for (auto& solution_i : ik_output)
+        wrapAngleToPi(solution_i);
 }
 
 static void computeIK(const Eigen::Matrix4d& T_ee, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output)
@@ -977,6 +965,7 @@ static void computeIK(const Eigen::Matrix4d& T_ee, RawIKWorksace& workspace, std
         ik_out_i[3] -= th_3_offset_original2raw;
         ik_out_i[4] -= th_4_offset_original2raw;
         ik_out_i[5] -= th_5_offset_original2raw;
+        wrapAngleToPi(ik_out_i);
         const Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
         double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
         if (ee_pose_diff < pose_tolerance)
@@ -985,7 +974,6 @@ static void computeIK(const Eigen::Matrix4d& T_ee, RawIKWorksace& workspace, std
     
     if (!ik_output.empty())
     {
-        wrapAngleToPi(ik_output);
         removeDuplicate<robot_nq>(ik_output, zero_tolerance);
         return;
     }
@@ -1004,6 +992,7 @@ static void computeIK(const Eigen::Matrix4d& T_ee, RawIKWorksace& workspace, std
         ik_out_i[3] -= th_3_offset_original2raw;
         ik_out_i[4] -= th_4_offset_original2raw;
         ik_out_i[5] -= th_5_offset_original2raw;
+        wrapAngleToPi(ik_out_i);
         Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
         double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();
         if (!std::isfinite(ee_pose_diff) || ee_pose_diff > pose_tolerance_degenerate)
@@ -1011,13 +1000,12 @@ static void computeIK(const Eigen::Matrix4d& T_ee, RawIKWorksace& workspace, std
         
         // Try numerical refinement
         yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i);
+        wrapAngleToPi(ik_out_i);
         ee_pose_i = computeFK(ik_out_i);
         ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
         if (ee_pose_diff < pose_tolerance_degenerate)
             ik_output.push_back(ik_out_i);
     }
-    
-    wrapAngleToPi(ik_output);
     removeDuplicate<robot_nq>(ik_output, zero_tolerance);
 }
 

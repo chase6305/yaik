@@ -563,6 +563,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             
             if (!taken_by_degenerate)
                 add_input_index_to(5, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
     
@@ -725,6 +727,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const bool checked_result = std::fabs(Pz + d_5*r_31*std::sin(th_5) + d_5*r_32*std::cos(th_5) - d_6*r_33) <= 9.9999999999999995e-7 && std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0) + d_5*r_11*std::sin(th_5)*std::cos(th_0) + d_5*r_12*std::cos(th_0)*std::cos(th_5) + d_5*r_21*std::sin(th_0)*std::sin(th_5) + d_5*r_22*std::sin(th_0)*std::cos(th_5) - d_6*r_13*std::cos(th_0) - d_6*r_23*std::sin(th_0)) <= 9.9999999999999995e-7;
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(11, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
     

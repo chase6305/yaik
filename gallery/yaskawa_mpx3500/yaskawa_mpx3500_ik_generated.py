@@ -1504,6 +1504,8 @@ def yaskawa_mpx3500_ik_solve_raw(T_ee: np.ndarray):
             checked_result: bool = (abs(d_2*math.sin(alpha_3)*math.cos(th_3)) <= 1.0e-6) and (abs(Px - d_4*r_13) <= 1.0e-6) and (abs(Py - d_4*r_23) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_4_processor()
@@ -1575,6 +1577,8 @@ def yaskawa_mpx3500_ik_solve_raw(T_ee: np.ndarray):
             checked_result: bool = (abs(Pz - d_4*r_33) <= 1.0e-6) and (abs(Px*math.cos(th_0) + Py*math.sin(th_0) - d_4*r_13*math.cos(th_0) - d_4*r_23*math.sin(th_0)) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(7, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_6_processor()

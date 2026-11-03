@@ -6,7 +6,7 @@ struct franka_panda_ik {
 
 // Constants for solver
 static constexpr int robot_nq = 7;
-static constexpr int max_n_solutions = 16;
+static constexpr int max_n_solutions = 32;
 static constexpr int n_tree_nodes = 16;
 static constexpr int intermediate_solution_size = 6;
 static constexpr double pose_tolerance = 1e-6;
@@ -565,19 +565,28 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_3, SolutionQueue
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             bool taken_by_degenerate = false;
+            bool forwarded_to_child = false;
             
             const bool degenerate_valid_0 = std::fabs(th_3 - M_PI) <= 9.9999999999999995e-7;
             if (degenerate_valid_0)
             {
                 taken_by_degenerate = true;
-                add_input_index_to(12, node_input_i_idx_in_queue);
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(12, branch_input_index);
             }
             
             const bool degenerate_valid_1 = std::fabs(th_3 - 3.0893893222715398 + M_PI) <= 9.9999999999999995e-7;
             if (degenerate_valid_1)
             {
                 taken_by_degenerate = true;
-                add_input_index_to(13, node_input_i_idx_in_queue);
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(13, branch_input_index);
             }
             
             if (!taken_by_degenerate)
@@ -783,6 +792,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_3, SolutionQueue
             const bool checked_result = std::fabs(inv_Pz) <= 9.9999999999999995e-7 && std::fabs(a_5 + inv_Px*std::cos(th_6) - inv_Py*std::sin(th_6)) <= 9.9999999999999995e-7;
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
     
@@ -1018,6 +1029,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_3, SolutionQueue
             const bool checked_result = std::fabs(r_13) <= 9.9999999999999995e-7 && std::fabs(r_23) <= 9.9999999999999995e-7 && std::fabs(std::sin(th_2)*std::sin(th_3)*std::cos(th_5) + std::sin(th_2)*std::sin(th_5)*std::cos(th_3)*std::cos(th_4) - std::sin(th_4)*std::sin(th_5)*std::cos(th_2)) <= 9.9999999999999995e-7;
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(9, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
     
@@ -1101,6 +1114,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_3, SolutionQueue
             const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0)) <= 9.9999999999999995e-7;
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(11, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
     
@@ -1211,6 +1226,7 @@ static void computeIKUnChecked(const Eigen::Matrix4d& T_ee, double th_3, RawIKWo
 static void computeIK(const Eigen::Matrix4d& T_ee, double th_3, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output)
 {
     if (!T_ee.allFinite()) { ik_output.clear(); return; }
+    if (!std::isfinite(th_3)) { ik_output.clear(); return; }
     const Eigen::Matrix4d& T_ee_raw = endEffectorTargetOriginalToRaw(T_ee);
     computeRawIK(T_ee_raw, th_3 + th_3_offset_original2raw, workspace);
     const auto& raw_ik_out = workspace.raw_ik_out;

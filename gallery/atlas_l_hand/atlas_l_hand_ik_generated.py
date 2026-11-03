@@ -2153,17 +2153,26 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_3 = this_solution[7]
             degenerate_valid_0 = (abs(th_3 - math.pi + 3.0801531643337) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(12, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(12, branch_input_index)
             
             th_3 = this_solution[7]
             degenerate_valid_1 = (abs(th_3 - 3.33833913195303e-5 + math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(27, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(27, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(5, node_input_i_idx_in_queue)
@@ -2286,6 +2295,8 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             
             if not taken_by_degenerate:
                 add_input_index_to(31, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     SolvedVariableDispatcherNode_node_30_processor()
@@ -2626,6 +2637,8 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             
             if not taken_by_degenerate:
                 add_input_index_to(16, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     SolvedVariableDispatcherNode_node_15_processor()
@@ -2966,17 +2979,26 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_5 = this_solution[10]
             degenerate_valid_0 = (abs(th_5) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(42, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(42, branch_input_index)
             
             th_5 = this_solution[10]
             degenerate_valid_1 = (abs(th_5 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(47, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(47, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(9, node_input_i_idx_in_queue)
@@ -3299,6 +3321,8 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
 
 def atlas_l_hand_ik_solve(T_ee: np.ndarray, th_0):
     if not np.all(np.isfinite(T_ee)):
+        return []
+    if not (math.isfinite(th_0)):
         return []
     T_ee_raw_in = atlas_l_hand_ik_target_original_to_raw(T_ee)
     ik_output_raw = atlas_l_hand_ik_solve_raw(T_ee_raw_in, th_0 + th_0_offset_original2raw)

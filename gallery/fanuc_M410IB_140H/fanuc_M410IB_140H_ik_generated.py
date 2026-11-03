@@ -485,6 +485,8 @@ def fanuc_M410IB_140H_ik_solve_raw(T_ee: np.ndarray):
             checked_result: bool = (abs(Pz - d_3*r_33) <= 1.0e-6) and (abs(-Px*math.cos(th_0) - Py*math.sin(th_0) + a_0 + d_3*r_13*math.cos(th_0) + d_3*r_23*math.sin(th_0)) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_4_processor()

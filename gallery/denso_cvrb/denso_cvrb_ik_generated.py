@@ -1259,6 +1259,8 @@ def denso_cvrb_ik_solve_raw(T_ee: np.ndarray):
             checked_result: bool = (abs(Px - d_4*r_13) <= 1.0e-6) and (abs(Py - d_4*r_23) <= 1.0e-6) and (abs(d_1 - d_3*math.cos(th_3)) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_4_processor()
@@ -1324,17 +1326,26 @@ def denso_cvrb_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_3 = this_solution[4]
             degenerate_valid_0 = (abs(th_3) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(12, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(12, branch_input_index)
             
             th_3 = this_solution[4]
             degenerate_valid_1 = (abs(th_3 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(17, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(17, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(7, node_input_i_idx_in_queue)
@@ -1417,17 +1428,26 @@ def denso_cvrb_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_2 = this_solution[3]
             degenerate_valid_0 = (abs(th_2 - 1/2*math.pi) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(30, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(30, branch_input_index)
             
             th_2 = this_solution[3]
             degenerate_valid_1 = (abs(th_2 + (1/2)*math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(33, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(33, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(21, node_input_i_idx_in_queue)
@@ -1693,17 +1713,26 @@ def denso_cvrb_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_2 = this_solution[3]
             degenerate_valid_0 = (abs(th_2 - 1/2*math.pi) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(24, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(24, branch_input_index)
             
             th_2 = this_solution[3]
             degenerate_valid_1 = (abs(th_2 + (1/2)*math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(27, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(27, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(14, node_input_i_idx_in_queue)
@@ -1991,6 +2020,8 @@ def denso_cvrb_ik_solve_raw(T_ee: np.ndarray):
             checked_result: bool = (abs(d_2*math.cos(th_2) - d_3*math.sin(th_2)*math.sin(th_3)) <= 1.0e-6) and (abs(-a_0 + d_2*math.sin(th_2) + d_3*math.sin(th_3)*math.cos(th_2)) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(9, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_8_processor()

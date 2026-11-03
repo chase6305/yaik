@@ -1908,6 +1908,8 @@ def abb_crb_15000_ik_solve_raw(T_ee: np.ndarray):
             checked_result: bool = (abs(a_3*r_11*math.sin(th_0) - a_3*r_21*math.cos(th_0)) <= 1.0e-6) and (abs(a_3*r_12*math.sin(th_0) - a_3*r_22*math.cos(th_0)) <= 1.0e-6) and (abs(Px*math.sin(th_0) - Py*math.cos(th_0) - d_4*r_13*math.sin(th_0) + d_4*r_23*math.cos(th_0)) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(3, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_2_processor()
@@ -2122,17 +2124,26 @@ def abb_crb_15000_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_3 = this_solution[5]
             degenerate_valid_0 = (abs(th_3) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(14, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(14, branch_input_index)
             
             th_3 = this_solution[5]
             degenerate_valid_1 = (abs(th_3 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(17, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(17, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(9, node_input_i_idx_in_queue)
@@ -2182,17 +2193,26 @@ def abb_crb_15000_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_2 = this_solution[4]
             degenerate_valid_0 = (abs(th_2 - math.pi + 1.34089189866299) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(22, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(22, branch_input_index)
             
             th_2 = this_solution[4]
             degenerate_valid_1 = (abs(th_2 - 2*math.pi + 1.34089189866299) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(25, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(25, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(19, node_input_i_idx_in_queue)

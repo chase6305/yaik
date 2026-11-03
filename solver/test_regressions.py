@@ -82,6 +82,11 @@ class TestRegressions(TestCase):
                 target = np.eye(4)
                 target[:3, 3] = 100
                 self.assertFalse(ik(target, *(float(q[index]) for index in indices)))
+                for invalid in (np.nan, np.inf, -np.inf):
+                    for argument in range(len(indices)):
+                        parameters = [float(q[index]) for index in indices]
+                        parameters[argument] = invalid
+                        self.assertEqual(ik(fk(q), *parameters), [])
                 for row in range(4):
                     for col in range(4):
                         for invalid in (np.nan, np.inf, -np.inf):

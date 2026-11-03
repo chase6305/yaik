@@ -495,17 +495,26 @@ def pr2_r_gripper_palm_ik_solve_raw(T_ee: np.ndarray, th_0):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_3 = this_solution[5]
             degenerate_valid_0 = (abs(th_3) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(12, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(12, branch_input_index)
             
             th_3 = this_solution[5]
             degenerate_valid_1 = (abs(th_3 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(23, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(23, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(3, node_input_i_idx_in_queue)
@@ -611,6 +620,8 @@ def pr2_r_gripper_palm_ik_solve_raw(T_ee: np.ndarray, th_0):
             
             if not taken_by_degenerate:
                 add_input_index_to(27, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     SolvedVariableDispatcherNode_node_26_processor()
@@ -835,17 +846,26 @@ def pr2_r_gripper_palm_ik_solve_raw(T_ee: np.ndarray, th_0):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_5 = this_solution[8]
             degenerate_valid_0 = (abs(th_5) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(44, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(44, branch_input_index)
             
             th_5 = this_solution[8]
             degenerate_valid_1 = (abs(th_5 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(51, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(51, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(16, node_input_i_idx_in_queue)
@@ -1309,6 +1329,8 @@ def pr2_r_gripper_palm_ik_solve_raw(T_ee: np.ndarray, th_0):
             checked_result: bool = (abs(Pz) <= 1.0e-6) and (abs(Px*math.cos(th_0) + Py*math.sin(th_0) - a_1) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_4_processor()
@@ -1403,17 +1425,26 @@ def pr2_r_gripper_palm_ik_solve_raw(T_ee: np.ndarray, th_0):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_5 = this_solution[8]
             degenerate_valid_0 = (abs(th_5) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(34, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(34, branch_input_index)
             
             th_5 = this_solution[8]
             degenerate_valid_1 = (abs(th_5 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(39, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(39, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(9, node_input_i_idx_in_queue)
@@ -1727,6 +1758,8 @@ def pr2_r_gripper_palm_ik_solve_raw(T_ee: np.ndarray, th_0):
 
 def pr2_r_gripper_palm_ik_solve(T_ee: np.ndarray, th_0):
     if not np.all(np.isfinite(T_ee)):
+        return []
+    if not (math.isfinite(th_0)):
         return []
     T_ee_raw_in = pr2_r_gripper_palm_ik_target_original_to_raw(T_ee)
     ik_output_raw = pr2_r_gripper_palm_ik_solve_raw(T_ee_raw_in, th_0 + th_0_offset_original2raw)
