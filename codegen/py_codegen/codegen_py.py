@@ -395,6 +395,8 @@ class CodeGenerationPython(CodeGenerationBase):
         self.append_new_function_two_empty_lines()
         func_arguments = self._ik_func_args_string()
         self._add_code_line('def ' + self.ik_function_name(False) + func_arguments)
+        self._add_code_line('if not np.all(np.isfinite(T_ee)):', indent_level=1)
+        self._add_code_line('return []', indent_level=2)
 
         # The ee target
         if self.robot.get_pre_transform_sp() is None and self.robot.get_post_transform_sp() is None:

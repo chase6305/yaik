@@ -13,13 +13,15 @@ import sympy as sp
 from fk.robot_models import mini_dd_robot, puma_robot
 from fk.chain_transform import ChainTransformElement
 from fk.robots import DHEntry, RobotDescription
-from python_run_import import compute_polynomial_real_roots
+from python_run_import import (compute_polynomial_real_roots, try_solve_linear_type2,
+                               try_solve_linear_type2_specific_rows)
 from solver.build_equations import IkEquationCollection
 from solver.degenerate_analyse.analyser_step import DegenerateAnalyserContext
 from solver.degenerate_analyse.numerical_analyser import NumericalCheckDegenerateAnalyzer
 from solver.degenerate_analyse.numerical_check_data import generate_test_cases
 from solver.equation_types import NumericalAnalyseContext, ScalarEquation, Unknown, UnknownType
 from solver.equation_utils import scalar_equation_by_unknowns
+from solver.linear_solver.linear_sin_cos_type2_numerical_solve import try_solve_linear_type2_combined
 from solver.polynomial_solver.verify_polynomial_solution import verify_polynomial_solution
 from solver.select_solution import select_solution_in_type
 from solver.solved_variable import NumericalAnalysedResultType, SolutionDegenerateRecord, SolutionMethod, VariableSolution
@@ -79,6 +81,12 @@ class TestRegressions(TestCase):
                 target = np.eye(4)
                 target[:3, 3] = 100
                 self.assertFalse(ik(target, *(float(q[index]) for index in indices)))
+                for row in range(4):
+                    for col in range(4):
+                        for invalid in (np.nan, np.inf, -np.inf):
+                            target = fk(q)
+                            target[row, col] = invalid
+                            self.assertFalse(ik(target, *(float(q[index]) for index in indices)))
 
     def test_loading_robots_does_not_change_previous_model(self):
         first_data = puma_robot().to_dict()
@@ -145,12 +153,49 @@ class TestRegressions(TestCase):
                          (False, 0.0))
         self.assertEqual(verify_polynomial_solution([x], output, []), (False, 0))
 
+    def test_polynomial_verification_preserves_zero_denominators(self):
+        x, parameter = sp.symbols('x parameter')
+        polynomial = {0: (-parameter, parameter), 1: (parameter, parameter)}
+        output = (polynomial, x, Unknown(x), SolutionMethod.PolynomialDirect.name)
+        self.assertEqual(verify_polynomial_solution([x - 1], output, [{x: 1, parameter: 0}]), (False, 0.0))
+        self.assertEqual(verify_polynomial_solution([x - 1], output, [{x: 1, parameter: 2}]), (True, 1.0))
+
     def test_real_roots_handle_roundoff_and_degree_reduction(self):
         roots = compute_polynomial_real_roots([1, -0.6, 0.09])
         np.testing.assert_allclose(sorted(roots), [0.3, 0.3], atol=1e-6)
         self.assertEqual(compute_polynomial_real_roots([0, 0, 2, -4]), [2.0])
         self.assertEqual(compute_polynomial_real_roots([0, 0]), [])
         self.assertEqual(compute_polynomial_real_roots([np.nan, 1]), [])
+
+    def test_linear_type2_recovers_unit_circle_families(self):
+        angle = 0.73
+        B = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+        A = np.vstack((np.column_stack((np.eye(2), -B)), np.zeros(4)))
+        solutions = try_solve_linear_type2(A)
+        np.testing.assert_allclose(solutions, [0, np.pi])
+        for y in solutions:
+            self.assertAlmostEqual(np.linalg.norm(B @ [np.sin(y), np.cos(y)]), 1)
+        A[:2, 2:] = -2 * np.eye(2)
+        self.assertIsNone(try_solve_linear_type2(A))
+
+    def test_linear_type2_falls_back_to_independent_rows(self):
+        A = np.array([[0, 0, 0, 0], [1, 0, 0, -1], [0, 1, -1, 0], [1, 0, -1, 0]], dtype=float)
+        solutions = try_solve_linear_type2_specific_rows(A, 0, 1, 2)
+        self.assertIsNotNone(solutions)
+        for y in solutions:
+            values = [np.cos(y), np.sin(y), np.sin(y), np.cos(y)]
+            np.testing.assert_allclose(A @ values, 0, atol=1e-14)
+        self.assertIsNone(try_solve_linear_type2_specific_rows(np.zeros((4, 4)), 0, 1, 2))
+
+    def test_linear_type2_checks_remaining_rows_before_choosing_family(self):
+        angle = 1.0
+        A = np.array([[1, 0, -1, 0], [0, 1, 0, -1], [0.7, -0.2, -0.7, 0.2],
+                      [0, 0, np.cos(angle), -np.sin(angle)]])
+        solutions = try_solve_linear_type2_specific_rows(A, 0, 1, 2)
+        self.assertIsNotNone(solutions)
+        for y in solutions:
+            np.testing.assert_allclose(A @ [np.sin(y), np.cos(y), np.sin(y), np.cos(y)], 0, atol=1e-14)
+        np.testing.assert_allclose(try_solve_linear_type2_combined(A, [(0, 1, 2)]), solutions)
 
     def test_compiled_degeneration_checks_keep_unknown_samples_conservative(self):
         x = sp.Symbol('x')
@@ -194,9 +239,20 @@ class TestRegressions(TestCase):
         x, a, b = sp.symbols('x a b')
         equations = scalar_equation_by_unknowns(
             [ScalarEquation(a, sp.sin(x)), ScalarEquation(b, sp.cos(x))], [x])
-        with mock.patch('multiprocessing.Manager', side_effect=AssertionError('unexpected process')):
-            solutions = UnarySolverStep.make_default().solve_step_parallel(equations, [x], with_timeout=True)
+        with mock.patch('multiprocessing.Manager', side_effect=AssertionError('unexpected process')), \
+                mock.patch('multiprocessing.Pool', side_effect=AssertionError('unexpected process')):
+            solutions = UnarySolverStep.make_default().solve_step_parallel(equations, [x], with_timeout=False)
         self.assertTrue(any(solution.solution_method == SolutionMethod.Tangent.name for solution in solutions))
+
+    def test_explicit_timeout_keeps_worker_isolation(self):
+        x, a, b = sp.symbols('x a b')
+        equations = scalar_equation_by_unknowns(
+            [ScalarEquation(a, sp.sin(x)), ScalarEquation(b, sp.cos(x))], [x])
+        step = UnarySolverStep.make_default()
+        with mock.patch.object(step, 'solve_step', side_effect=AssertionError('timeout bypassed')), \
+                mock.patch.object(step, 'parallel_run', return_value=[]) as workers:
+            step.solve_step_parallel(equations, [x], with_timeout=True)
+        workers.assert_called_once()
 
     def test_rule_workers_share_one_batch_deadline(self):
         clock = [0.0]
@@ -269,6 +325,17 @@ class TestRegressions(TestCase):
         self.assertEqual(len(output), 1)
         np.testing.assert_allclose(output[0].reshape(-1), [1, 0.25])
 
+    def test_generated_ik_rejects_nonfinite_targets(self):
+        scope = {}
+        exec('\n'.join(CodeGenerationPython(polynomial_tree()).generate_code()), scope)
+        for row in range(4):
+            for col in range(4):
+                for invalid in (np.nan, np.inf, -np.inf):
+                    target = np.eye(4)
+                    target[2, 3] = 1
+                    target[row, col] = invalid
+                    self.assertEqual(scope['regression_ik_solve'](target), [])
+
     def test_cpp_sparse_polynomial_codegen_and_runtime(self):
         eigen = Path('/usr/include/eigen3')
         if not shutil.which('g++') or not (eigen / 'Eigen/Core').exists():
@@ -280,6 +347,34 @@ int main() {
     const auto roots = yaik_cpp::computePolynomialRealRoots<3>({0, 0, 2, -4});
     assert(roots[0].is_valid && std::abs(roots[0].value - 2) < 1e-12);
     assert(!roots[1].is_valid && !roots[2].is_valid);
+    Eigen::Matrix<double, 4, 4> linear;
+    linear << 1, 0, -1, 0,
+              0, 1, 0, -1,
+              0.7, -0.2, -0.7, 0.2,
+              0, 0, std::cos(1.0), -std::sin(1.0);
+    double y0 = 0, y1 = 0;
+    assert(yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<4>(linear, 0, 1, 2, y0, y1));
+    for (double y : {y0, y1}) {
+        Eigen::Vector4d values;
+        values << std::sin(y), std::cos(y), std::sin(y), std::cos(y);
+        assert((linear * values).norm() < 1e-14);
+    }
+    linear << 0, 0, 0, 0, 1, 0, 0, -1, 0, 1, -1, 0, 1, 0, -1, 0;
+    assert(yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<4>(linear, 0, 1, 2, y0, y1));
+    for (double y : {y0, y1}) {
+        Eigen::Vector4d values;
+        values << std::cos(y), std::sin(y), std::sin(y), std::cos(y);
+        assert((linear * values).norm() < 1e-14);
+    }
+    linear.row(0) = linear.row(3);
+    assert(yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<4>(linear, 1, 2, 0, y0, y1));
+    linear.setZero();
+    linear(0, 0) = linear(1, 1) = 1;
+    linear(0, 2) = linear(1, 3) = -1;
+    assert(yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<4>(linear, 0, 1, 2, y0, y1));
+    assert(y0 == 0 && std::abs(y1 - std::acos(-1.0)) < 1e-15);
+    linear(0, 2) = linear(1, 3) = -2;
+    assert(!yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<4>(linear, 0, 1, 2, y0, y1));
     std::array<double, 2> q{{0, 0}};
     auto fk = [](const std::array<double, 2>& value) -> Eigen::Matrix4d {
         Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
@@ -302,6 +397,22 @@ int main() {
     const auto parameterized_output = parameterized_ik::computeIK(parameterized_target, 0.4, 0.25);
     assert(parameterized_output.size() == 1);
     assert(std::abs(parameterized_output[0][0] - 1) < 1e-12 && parameterized_output[0][1] == 0.25);
+    assert(parameterized_ik::computeIK(parameterized_target, std::numeric_limits<double>::quiet_NaN(), 0.25).empty());
+    regression_ik::RawIKWorksace workspace;
+    for (int row = 0; row < 4; ++row) {
+        for (int col = 0; col < 4; ++col) {
+            for (double invalid : {std::numeric_limits<double>::quiet_NaN(),
+                                   std::numeric_limits<double>::infinity(),
+                                   -std::numeric_limits<double>::infinity()}) {
+                Eigen::Matrix4d invalid_target = target;
+                invalid_target(row, col) = invalid;
+                assert(regression_ik::computeIK(invalid_target).empty());
+                auto reused_output = output;
+                regression_ik::computeIK(invalid_target, workspace, reused_output);
+                assert(reused_output.empty());
+            }
+        }
+    }
 }
 '''
         with tempfile.TemporaryDirectory() as directory:

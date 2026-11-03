@@ -33,12 +33,15 @@ def verify_polynomial_solution(
         if order >= poly_order:
             poly_order = order
 
-    coefficients = [sp.S.Zero] * (poly_order + 1)
+    numerators = [sp.S.Zero] * (poly_order + 1)
+    denominators = [sp.S.One] * (poly_order + 1)
     for order, (numerator, denominator) in poly_dict.items():
-        coefficients[poly_order - order] = sp.sympify(numerator) / denominator
-    coefficient_symbols = sorted(set().union(*(expr.free_symbols for expr in coefficients)), key=str)
+        numerators[poly_order - order] = sp.sympify(numerator)
+        denominators[poly_order - order] = sp.sympify(denominator)
+    coefficient_symbols = sorted(set().union(*(expr.free_symbols for expr in numerators + denominators)), key=str)
     equation_symbols = sorted(set().union(*(expr.free_symbols for expr in polynomials)), key=str)
-    evaluate_coefficients = sp.lambdify(coefficient_symbols, coefficients, modules='numpy', cse=True)
+    # Keep the original denominators: symbolic cancellation would hide singular samples.
+    evaluate_coefficients = sp.lambdify(coefficient_symbols, [numerators, denominators], modules='numpy', cse=True)
     evaluate_equations = sp.lambdify(equation_symbols, polynomials, modules='numpy', cse=True)
 
     # Compile once, then evaluate all samples and candidate roots numerically.
@@ -51,7 +54,8 @@ def verify_polynomial_solution(
         value_map_i = parameter_values_to_test[idx]
         try:
             with np.errstate(divide='ignore', invalid='ignore', over='ignore'):
-                p_coefficients = evaluate_coefficients(*(float(value_map_i[s]) for s in coefficient_symbols))
+                values = np.asarray(evaluate_coefficients(*(float(value_map_i[s]) for s in coefficient_symbols)), dtype=float)
+                p_coefficients = values[0] / values[1]
         except (KeyError, TypeError, ValueError, ZeroDivisionError, OverflowError):
             all_value_match = False
             continue

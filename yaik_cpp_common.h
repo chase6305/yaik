@@ -277,7 +277,8 @@ namespace linear_solver {
 
 template <typename T>
 bool trySolveLinearType2(const Eigen::Ref<Eigen::Matrix<T, 3, 4>>& A,
-                         T& solution_0, T& solution_1) {
+                         T& solution_0, T& solution_1, bool allow_family = true) {
+  if (!A.allFinite()) return false;
   const T a = A(0, 0);
   const T b = A(0, 1);
   const T c = A(1, 0);
@@ -297,11 +298,18 @@ bool trySolveLinearType2(const Eigen::Ref<Eigen::Matrix<T, 3, 4>>& A,
   const Eigen::Matrix<T, 2, 2> B = -A_top2x2_inv * A.template block<2, 2>(0, 2);
   const T e = A(2, 2) + A(2, 0) * B(0, 0) + A(2, 1) * B(1, 0);
   const T f = A(2, 3) + A(2, 0) * B(0, 1) + A(2, 1) * B(1, 1);
-  if (std::abs(e) < zero_tolerance && std::abs(f) < zero_tolerance)
+  if (std::abs(e) < zero_tolerance && std::abs(f) < zero_tolerance) {
+    if (allow_family && (B.transpose() * B - Eigen::Matrix<T, 2, 2>::Identity())
+                            .cwiseAbs().maxCoeff() <= T(1e-10)) {
+      solution_0 = T(0);
+      solution_1 = std::acos(T(-1));
+      return true;
+    }
     return false;
+  }
 
   // The solution should be OK
-  constexpr T local_pi = 3.1415926;
+  constexpr T local_pi = T(3.141592653589793238462643383279502884L);
   solution_0 = std::atan2(-f, e);
   solution_1 = solution_0 + local_pi;
   if (solution_1 > local_pi) solution_1 -= 2 * local_pi;
@@ -316,6 +324,31 @@ bool trySolveLinearType2SpecificRows(
   A_for_given_row.row(0) = A.row(row_0);
   A_for_given_row.row(1) = A.row(row_1);
   A_for_given_row.row(2) = A.row(row_2);
+  if (trySolveLinearType2<double>(A_for_given_row, solution_0, solution_1, false)) return true;
+  if (!A.allFinite()) return false;
+  int best_i = -1, best_j = -1;
+  double best_det = 1e-10;
+  for (int i = 0; i < n_rows; ++i) {
+    for (int j = i + 1; j < n_rows; ++j) {
+      const double det = std::abs(A(i, 0) * A(j, 1) - A(i, 1) * A(j, 0));
+      if (det > best_det) { best_det = det; best_i = i; best_j = j; }
+    }
+  }
+  if (best_i < 0) return false;
+  A_for_given_row.row(0) = A.row(best_i);
+  A_for_given_row.row(1) = A.row(best_j);
+  const Eigen::Matrix2d B = -A_for_given_row.block<2, 2>(0, 0).inverse() * A_for_given_row.block<2, 2>(0, 2);
+  int best_k = -1;
+  double best_residual = -1;
+  for (int k = 0; k < n_rows; ++k) {
+    if (k == best_i || k == best_j) continue;
+    const Eigen::RowVector2d residual = A.row(k).template tail<2>() + A.row(k).template head<2>() * B;
+    if (residual.squaredNorm() > best_residual) {
+      best_residual = residual.squaredNorm(); best_k = k;
+    }
+  }
+  if (best_k < 0) return false;
+  A_for_given_row.row(2) = A.row(best_k);
   return trySolveLinearType2<double>(A_for_given_row, solution_0, solution_1);
 }
 

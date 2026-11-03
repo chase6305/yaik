@@ -889,6 +889,8 @@ def puma_ik_solve_raw(T_ee: np.ndarray):
 
 
 def puma_ik_solve(T_ee: np.ndarray):
+    if not np.all(np.isfinite(T_ee)):
+        return []
     T_ee_raw_in = T_ee
     ik_output_raw = puma_ik_solve_raw(T_ee_raw_in)
     ik_output = list()

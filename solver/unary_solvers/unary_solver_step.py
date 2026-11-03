@@ -105,7 +105,7 @@ class UnarySolverStep(object):
                             unknowns: List[sp.Symbol],
                             with_timeout: bool = False):
         # Process startup costs more than these small rule searches.
-        if len(unknowns) == 1 and sum(
+        if not with_timeout and len(unknowns) == 1 and sum(
                 sp.count_ops(equ.lhs) + sp.count_ops(equ.rhs)
                 for equ in collected_equations.one_unknown_equations) <= 100:
             return self.solve_step(collected_equations, unknowns)

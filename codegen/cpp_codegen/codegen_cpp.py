@@ -115,7 +115,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         n_temp_sol = len(all_solved_symbol)
         self.add_code_line('static constexpr int intermediate_solution_size = {n_temp_sol};'.
                            format(n_temp_sol=n_temp_sol))
-        self.add_code_line('static constexpr double pose_tolerance = 1e-4;')
+        self.add_code_line('static constexpr double pose_tolerance = 1e-6;')
         self.add_code_line('static constexpr double pose_tolerance_degenerate = 1e-4;')
         self.add_code_line('static constexpr double {zero_tolerance} = 1e-6;'.
                            format(zero_tolerance=fk_equations.zero_tolerance))
@@ -598,6 +598,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         # The ik define
         self.add_code_line('static void ' + self.ik_function_name(False) + func_arguments)
         self.enter_scope('checked_ik')
+        self.add_code_line('if (!T_ee.allFinite()) { ik_output.clear(); return; }')
 
         # To raw target
         if (self.robot.get_pre_transform_sp() is not None) or (self.robot.get_post_transform_sp() is not None):
@@ -652,7 +653,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         fk_args_call += ')'
         self.add_code_line('const Eigen::Matrix4d ee_pose_i = {fk_func}{fk_args};'.
                            format(fk_func=fk_func_name, fk_args=fk_args_call))
-        self.add_code_line('double ee_pose_diff = (ee_pose_i - T_ee).cwiseAbs().maxCoeff();')
+        self.add_code_line('double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();')
         self.add_code_line('if (ee_pose_diff < pose_tolerance)')
         self.add_code_line(indent() + 'ik_output.push_back(ik_out_i);')
         self.exit_scope('for')
@@ -691,8 +692,8 @@ class CodeGenerationCpp(CodeGenerationBase):
         # Compute the pose again, note that we can use same fk_func_args
         self.add_code_line('Eigen::Matrix4d ee_pose_i = {fk_func}{fk_args};'.
                            format(fk_func=fk_func_name, fk_args=fk_args_call))
-        self.add_code_line('double ee_pose_diff = (ee_pose_i - T_ee_disturbed).cwiseAbs().maxCoeff();')
-        self.add_code_line('if (ee_pose_diff > pose_tolerance_degenerate)')
+        self.add_code_line('double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();')
+        self.add_code_line('if (!std::isfinite(ee_pose_diff) || ee_pose_diff > pose_tolerance_degenerate)')
         self.add_code_line(indent() + 'continue;')
 
         # Try numerical
@@ -719,7 +720,7 @@ class CodeGenerationCpp(CodeGenerationBase):
                            + refinement_args + ');')
         self.add_code_line('ee_pose_i = {fk_func}{fk_args};'.
                            format(fk_func=fk_func_name, fk_args=fk_args_call))
-        self.add_code_line('ee_pose_diff = (ee_pose_i - T_ee).cwiseAbs().maxCoeff();')
+        self.add_code_line('ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();')
         self.add_code_line('if (ee_pose_diff < pose_tolerance_degenerate)')
         self.add_code_line(indent() + 'ik_output.push_back(ik_out_i);')
         self.exit_scope('for')

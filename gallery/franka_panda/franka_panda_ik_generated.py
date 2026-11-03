@@ -1062,6 +1062,8 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
 
 
 def franka_panda_ik_solve(T_ee: np.ndarray, th_3):
+    if not np.all(np.isfinite(T_ee)):
+        return []
     T_ee_raw_in = franka_panda_ik_target_original_to_raw(T_ee)
     ik_output_raw = franka_panda_ik_solve_raw(T_ee_raw_in, th_3 + th_3_offset_original2raw)
     ik_output = list()

@@ -1813,6 +1813,8 @@ def kuka_iiwa_ik_solve_raw(T_ee: np.ndarray, th_0):
 
 
 def kuka_iiwa_ik_solve(T_ee: np.ndarray, th_0):
+    if not np.all(np.isfinite(T_ee)):
+        return []
     T_ee_raw_in = kuka_iiwa_ik_target_original_to_raw(T_ee)
     ik_output_raw = kuka_iiwa_ik_solve_raw(T_ee_raw_in, th_0)
     ik_output = list()

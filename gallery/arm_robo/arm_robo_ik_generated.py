@@ -824,6 +824,8 @@ def arm_robo_ik_solve_raw(T_ee: np.ndarray):
 
 
 def arm_robo_ik_solve(T_ee: np.ndarray):
+    if not np.all(np.isfinite(T_ee)):
+        return []
     T_ee_raw_in = T_ee
     ik_output_raw = arm_robo_ik_solve_raw(T_ee_raw_in)
     ik_output = list()

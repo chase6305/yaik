@@ -1726,6 +1726,8 @@ def pr2_r_gripper_palm_ik_solve_raw(T_ee: np.ndarray, th_0):
 
 
 def pr2_r_gripper_palm_ik_solve(T_ee: np.ndarray, th_0):
+    if not np.all(np.isfinite(T_ee)):
+        return []
     T_ee_raw_in = pr2_r_gripper_palm_ik_target_original_to_raw(T_ee)
     ik_output_raw = pr2_r_gripper_palm_ik_solve_raw(T_ee_raw_in, th_0 + th_0_offset_original2raw)
     ik_output = list()

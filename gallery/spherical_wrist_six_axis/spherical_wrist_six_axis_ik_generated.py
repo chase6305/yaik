@@ -1001,6 +1001,8 @@ def spherical_wrist_six_axis_ik_solve_raw(T_ee: np.ndarray):
 
 
 def spherical_wrist_six_axis_ik_solve(T_ee: np.ndarray):
+    if not np.all(np.isfinite(T_ee)):
+        return []
     T_ee_raw_in = spherical_wrist_six_axis_ik_target_original_to_raw(T_ee)
     ik_output_raw = spherical_wrist_six_axis_ik_solve_raw(T_ee_raw_in)
     ik_output = list()
