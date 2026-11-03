@@ -18,6 +18,8 @@ def parallel_solve_processor(dict_in) -> List[VariableSolution]:
     Just a parallel processor that encapsulate the solver.try_solve
     """
     collected_equations = dict_in['collected_equations']
+    if 'solver_step' in dict_in:
+        return dict_in['solver_step'].solve_step(collected_equations, dict_in['unknowns'])
     var_to_try = dict_in['var_to_try']
     solver_in: UnaryVariableSolver = dict_in['solver']
     unknowns = dict_in['unknowns']
@@ -25,15 +27,22 @@ def parallel_solve_processor(dict_in) -> List[VariableSolution]:
     return solver_output
 
 
-def parallel_solve_processor_list_output(dict_in, output_list: List[List[VariableSolution]], lock=None):
+def parallel_solve_processor_list_output(dict_in, output_list, lock=None, task_index: int = 0):
     this_output = parallel_solve_processor(dict_in)
 
     # Append a result
     if lock is not None:
         lock.acquire()
-    output_list.append(this_output)
+    output_list.append((task_index, this_output))
     if lock is not None:
         lock.release()
+
+
+def single_solve_processor(dict_in, connection):
+    try:
+        connection.send(parallel_solve_processor(dict_in))
+    finally:
+        connection.close()
 
 
 class UnarySolverStep(object):
@@ -103,16 +112,30 @@ class UnarySolverStep(object):
     def solve_step_parallel(self,
                             collected_equations: CollectedEquations,
                             unknowns: List[sp.Symbol],
-                            with_timeout: bool = False):
+                            with_timeout: bool = False,
+                            timeout_seconds: float = 300):
         # Process startup costs more than these small rule searches.
-        if not with_timeout and len(unknowns) == 1 and sum(
+        small_search = len(unknowns) == 1 and sum(
                 sp.count_ops(equ.lhs) + sp.count_ops(equ.rhs)
-                for equ in collected_equations.one_unknown_equations) <= 100:
-            return self.solve_step(collected_equations, unknowns)
+                for equ in collected_equations.one_unknown_equations) <= 100
+        if small_search:
+            if not with_timeout:
+                return self.solve_step(collected_equations, unknowns)
+            output = self.parallel_run([dict(solver_step=self, collected_equations=collected_equations,
+                                             unknowns=unknowns)], timeout_seconds=timeout_seconds)
+            return output[0] if output else []
 
         # The final output
-        solutions, has_soa_solution = self._try_algebra_solution(
-            collected_equations, unknowns)
+        deadline = time.monotonic() + timeout_seconds
+        if with_timeout:
+            algebra_args = [dict(solver=self._unary_algebra_solver, collected_equations=collected_equations,
+                                 var_to_try=unknown, unknowns=unknowns) for unknown in unknowns]
+            output = self.parallel_run(algebra_args, timeout_seconds=timeout_seconds)
+            solutions = [solution for group in output for solution in group]
+            has_soa_solution = any(solution.solved_from_scalar_equations[0].is_sum_of_angle
+                                   for solution in solutions)
+        else:
+            solutions, has_soa_solution = self._try_algebra_solution(collected_equations, unknowns)
 
         # Just return (because SOA equations very good ones)
         if has_soa_solution:
@@ -132,7 +155,7 @@ class UnarySolverStep(object):
 
         # OK, map it
         if with_timeout:
-            output = self.parallel_run(input_args)
+            output = self.parallel_run(input_args, timeout_seconds=max(0.0, deadline - time.monotonic()))
         else:
             n_process = min(32, len(input_args))
             n_process = max(n_process, 1)
@@ -155,9 +178,32 @@ class UnarySolverStep(object):
         return solver_list
 
     @staticmethod
-    def parallel_run(input_args: List[Dict], timeout_seconds: int = 300) -> List[List[VariableSolution]]:
-        if not input_args:
+    def parallel_run(input_args: List[Dict], timeout_seconds: float = 300) -> List[List[VariableSolution]]:
+        """Return completed tasks in input order within one wall-clock budget."""
+        if not input_args or timeout_seconds <= 0:
             return []
+        deadline = time.monotonic() + timeout_seconds
+        if len(input_args) == 1:
+            receive, send = multiprocessing.Pipe(duplex=False)
+            processor = None
+            try:
+                processor = multiprocessing.Process(target=single_solve_processor, args=(input_args[0], send))
+                processor.start()
+                send.close()
+                if receive.poll(max(0.0, deadline - time.monotonic())):
+                    try:
+                        return [receive.recv()]
+                    except EOFError:
+                        pass
+                return []
+            finally:
+                send.close()
+                receive.close()
+                if processor is not None and processor.pid is not None:
+                    processor.join(timeout=max(0.0, deadline - time.monotonic()))
+                    if processor.is_alive():
+                        processor.terminate()
+                    processor.join()
         n_processor = min(32, int(len(input_args)))
         n_processor = max(n_processor, 1)
         print('Try solving the equations using rule solver. The candidate number: ', len(input_args))
@@ -165,33 +211,34 @@ class UnarySolverStep(object):
         manager = multiprocessing.Manager()
         shared_result_list = manager.list()
         processed_offset = 0
-        while processed_offset < len(input_args):
-            processor_list = list()
-            for i in range(n_processor):
-                offset_i = processed_offset + i
-                if offset_i < len(input_args):
-                    # OK, make the processor
-                    processor = multiprocessing.Process(
-                        target=parallel_solve_processor_list_output,
-                        args=(input_args[offset_i], shared_result_list, lock))
-                    processor_list.append(processor)
+        processor_list = []
+        try:
+            while processed_offset < len(input_args):
+                processor_list = []
+                for i in range(n_processor):
+                    offset_i = processed_offset + i
+                    if offset_i < len(input_args):
+                        processor = multiprocessing.Process(
+                            target=parallel_solve_processor_list_output,
+                            args=(input_args[offset_i], shared_result_list, lock, offset_i))
+                        processor_list.append(processor)
 
-            # Start the processor with timeout
-            deadline = time.monotonic() + timeout_seconds
+                for p in processor_list:
+                    p.start()
+                for p in processor_list:
+                    p.join(timeout=max(0.0, deadline - time.monotonic()))
+                    if p.is_alive():
+                        p.terminate()
+                    p.join()
+
+                processed_offset += n_processor
+                if time.monotonic() >= deadline:
+                    break
+            return [copy.deepcopy(elem) for _, elem in sorted(shared_result_list, key=lambda item: item[0])]
+        finally:
             for p in processor_list:
-                p.start()
-            for p in processor_list:
-                p.join(timeout=max(0.0, deadline - time.monotonic()))
-                if p.is_alive():
-                    p.terminate()
-                p.join()
-
-            # Update the offset
-            processed_offset += n_processor
-
-        # To usual list
-        output_list = list()
-        for elem in shared_result_list:
-            output_list.append(copy.deepcopy(elem))
-        manager.shutdown()
-        return output_list
+                if getattr(p, 'pid', None) is not None:
+                    if p.is_alive():
+                        p.terminate()
+                    p.join()
+            manager.shutdown()

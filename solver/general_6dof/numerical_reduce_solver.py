@@ -83,14 +83,14 @@ def parallel_solve_processor(input_tuple):
     return solution
 
 
-def parallel_solve_processor_v2(input_tuple, lock: multiprocessing.Lock, result_list):
+def parallel_solve_processor_v2(input_tuple, lock: multiprocessing.Lock, result_list, task_index: int = 0):
     out = parallel_solve_processor(input_tuple)
     if out is None:
         return
     # Not none, append to result
     if lock is not None:
         lock.acquire()
-    result_list.append(out)
+    result_list.append((task_index, out))
     if lock is not None:
         lock.release()
 
@@ -200,7 +200,7 @@ def try_solve_parallel_v2(
     processor_list = list()
     for i in range(n_process):
         processor = multiprocessing.Process(target=parallel_solve_processor_v2,
-                                            args=(input_tuple_list[i], lock, result_list))
+                                            args=(input_tuple_list[i], lock, result_list, i))
         processor_list.append(processor)
 
     # Start with timeout
@@ -216,7 +216,7 @@ def try_solve_parallel_v2(
 
     # Collect the result
     output: List[General6DoFNumericalReduceSolution] = list()
-    for elem in result_list:
+    for _, elem in sorted(result_list, key=lambda item: item[0]):
         if elem is not None:
             output.append(copy.deepcopy(elem))
     manager.shutdown()

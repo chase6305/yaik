@@ -7,7 +7,7 @@ from solver.degenerate_analyse.numerical_analyser import NumericalCheckDegenerat
 from solver.solved_variable import VariableSolution, DegenerateType, NumericalAnalysedResultType, SolutionMethod
 from typing import List, Set, Dict, Tuple, Optional
 import sympy as sp
-import multiprocessing
+import numpy as np
 import copy
 
 
@@ -23,6 +23,28 @@ def check_zero_processor(input_dict) -> bool:
         return False
     lhs_minus_rhs = lhs_value - rhs_value
     return abs(lhs_minus_rhs) < 1e-6
+
+
+def _check_soa_equations_numerically(equations, test_maps) -> bool:
+    try:
+        # Keep both sides intact so cancellation cannot hide undefined values.
+        expressions = [side for equation in equations for side in (equation.lhs, equation.rhs)]
+        symbols = sorted(set().union(*(expr.free_symbols for expr in expressions)), key=str)
+        evaluate = sp.lambdify(symbols, expressions, modules='numpy', cse=False)
+        for test_map in test_maps:
+            arguments = [float(test_map[symbol]) for symbol in symbols]
+            if not np.all(np.isfinite(arguments)):
+                return False
+            with np.errstate(divide='ignore', invalid='ignore', over='ignore'):
+                values = np.asarray(evaluate(*arguments), dtype=complex)
+                if (values.shape != (len(expressions),) or not np.all(np.isfinite(values))
+                        or np.any(values.imag != 0)
+                        or not np.all(np.abs(values[::2] - values[1::2]) < 1e-6)):
+                    return False
+    except Exception:
+        # Failed evaluations cannot certify a degenerate solution family.
+        return False
+    return True
 
 
 def detect_soa_solution(
@@ -147,34 +169,10 @@ def detect_soa_solution(
         test_map_i[unknown_1.symbol] = unknown_1_value
         updated_test_map_list.append(test_map_i)
 
-    # This should be in parallel
-    n_equations = len(collected_equations.other_equations) + len(collected_equations.two_unknown_equations)
-    print('The number of input args is ', n_equations * len(updated_test_map_list))
-    input_args = list()
-    for equ_k in collected_equations.other_equations + collected_equations.two_unknown_equations:
-        for test_map_i in updated_test_map_list:
-            input_dict = dict()
-            input_dict['scalar_equation'] = equ_k
-            input_dict['test_map'] = test_map_i
-            input_args.append(input_dict)
-
-            # We don't need these serial code
-            # lhs_minus_rhs = equ_k.lhs - equ_k.rhs
-            # value_k = lhs_minus_rhs.subs(test_map_i)
-            # value_k = cast_expr_to_float(value_k)
-            # if value_k is None or abs(value_k) > 1e-6:
-            #    return None
-
-    # Run processing in parallel
-    n_process = min(32, len(input_args))
-    n_process = max(n_process, 1)
-    with multiprocessing.Pool(n_process) as pool:
-        output = pool.map(check_zero_processor, input_args)
-
-    # Check output
-    for k in range(len(output)):
-        if not output[k]:
-            return None
+    equations = collected_equations.other_equations + collected_equations.two_unknown_equations
+    print('The number of numerical checks is ', len(equations) * len(updated_test_map_list))
+    if not _check_soa_equations_numerically(equations, updated_test_map_list):
+        return None
 
     # All test passed
     print('Find a degenerate soa solution')

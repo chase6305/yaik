@@ -22,7 +22,8 @@ def solve_processor(equations: List[sp.Expr],
                     numerical_context: Optional[NumericalAnalyseContext] = None,
                     lock: Optional[multiprocessing.Lock] = None,
                     reduce_to_cos: bool = True,
-                    logging: bool = False):
+                    logging: bool = False,
+                    task_index: int = 0):
     # Hand in to different methods
     this_output = groebner_reduce(equations, unknowns, all_parameters, reduce_to_cos)
 
@@ -44,7 +45,7 @@ def solve_processor(equations: List[sp.Expr],
     # Append a result
     if lock is not None:
         lock.acquire()
-    output_list.append(this_output)
+    output_list.append((task_index, this_output))
     if lock is not None:
         lock.release()
 
@@ -115,7 +116,7 @@ def polynomial_try_solve(collected_equations: CollectedEquations,
                 # OK, make the processor
                 processor = multiprocessing.Process(
                     target=solve_processor,
-                    args=argument_list[offset_i])
+                    args=argument_list[offset_i], kwargs={'task_index': offset_i})
                 processor_list.append(processor)
 
         # Start the processor with time-out of 5 minutes
@@ -133,8 +134,8 @@ def polynomial_try_solve(collected_equations: CollectedEquations,
 
     # Process of the output
     solutions: List[VariableSolution] = list()
-    for i in range(len(result_list)):
-        poly_dict, _, solved_unknown, solution_method = result_list[i]
+    for i, (_, result) in enumerate(sorted(result_list, key=lambda item: item[0])):
+        poly_dict, _, solved_unknown, solution_method = result
         this_solution = VariableSolution.make_polynomial_solution(
             solved_unknown.symbol, solution_method, poly_dict)
         print('Polynomial solution {idx} which solves {x}, which is a {n}-order polynomial'.
