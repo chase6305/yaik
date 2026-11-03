@@ -121,6 +121,24 @@ def rational_polynomial_tree():
 
 
 class TestCodegenSafety(TestCase):
+    def test_polynomial_large_integer_coefficients(self):
+        x = sp.Symbol('x')
+        target = np.eye(4)
+        target[2, 3] = 1
+        for digits in (30, 400):
+            with self.subTest(digits=digits):
+                large = sp.Integer(10) ** digits
+                model = robot('large_integer_polynomial', [x])
+                solution = VariableSolution.make_polynomial_solution(
+                    x, SolutionMethod.PolynomialDirect.name, {0: (-large, large), 1: (large, large)})
+                scope = {}
+                exec('\n'.join(CodeGenerationPython(SkeletonTree([solution], model)).generate_code()), scope)
+                output = scope[model.name + '_ik_solve'](target)
+                np.testing.assert_allclose([q.ravel() for q in output], [[1]])
+        solution = VariableSolution.make_polynomial_solution(
+            x, SolutionMethod.PolynomialDirect.name, {0: (-large, sp.S.One), 1: (large, sp.S.One)})
+        self.assertEqual(generated_python(SkeletonTree([solution], model))(target), [])
+
     def test_polynomial_coefficients_reject_zero_denominators_before_division(self):
         tree = rational_polynomial_tree()
         scope = {}

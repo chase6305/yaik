@@ -503,12 +503,17 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
             denominator_code = self.generate_py_code(denominator)
             self.add_code_line('poly_coefficient_{order}_num = {code}'.format(order=order, code=numerator_code))
             self.add_code_line('poly_coefficient_{order}_denom = {code}'.format(order=order, code=denominator_code))
-            self.add_code_line('if not np.isfinite(poly_coefficient_{order}_num) or '
-                               'not np.isfinite(poly_coefficient_{order}_denom) or '
+            self.add_code_line('if (not isinstance(poly_coefficient_{order}_num, int) and '
+                               'not np.isfinite(poly_coefficient_{order}_num)) or '
+                               '(not isinstance(poly_coefficient_{order}_denom, int) and '
+                               'not np.isfinite(poly_coefficient_{order}_denom)) or '
                                'poly_coefficient_{order}_denom == 0:'.format(order=order))
             self.add_code_line(indent() + 'return')
-            self.add_code_line('poly_coefficient_{order} = poly_'
+            self.add_code_line('try:')
+            self.add_code_line(indent() + 'poly_coefficient_{order} = poly_'
                                'coefficient_{order}_num / poly_coefficient_{order}_denom'.format(order=order))
+            self.add_code_line('except OverflowError:')
+            self.add_code_line(indent() + 'return')
             self.add_code_line('if not np.isfinite(poly_coefficient_{order}):'.format(order=order))
             self.add_code_line(indent() + 'return')
             if order > poly_order:
