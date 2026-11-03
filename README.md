@@ -30,6 +30,14 @@ To use the generated C++ solver, you need to include the [yaik_cpp_common.h](./y
 
 To use the generated Python solver, you need to import [python_run_import.py](./python_run_import.py), which further depends on numpy.
 
+Checked IK wrappers reject nonfinite targets and scalar parameters, and verify candidates
+with generated FK. Fixed redundant joints retain the supplied angle representation.
+C++ normalizes other revolute joints before FK verification; prismatic joints are not wrapped.
+The existing error contracts are preserved: Python checks maximum matrix-entry error
+against `1e-4`, while C++ checks squared matrix error against `1e-6` (`1e-4` after refinement).
+For robot integration, validate base/tool frame conversion, URDF limits, and independent
+position/rotation errors as needed; these matrix tolerances do not impose joint limits.
+
 ### Generate a solver for your robot
 
 To generate a new solver for a robot that is not in the gallery, you need to install python3, [pyyaml](https://github.com/yaml/pyyaml), [attrs](https://www.attrs.org/en/stable/index.html) and [sympy](https://github.com/sympy/sympy/wiki/Download-Installation) on your system. Optionally, you might install [sagemath](https://www.sagemath.org/index.html), which contains a faster groebner reduce implementation.
@@ -39,6 +47,21 @@ Then, you need to express your robot in **Modified** DH format. A documentation 
 After that, you can run `ik_solve.py` to generate the solution for your robot in YAML format. This step can take a LOT of time, as we perform offline analysis to find the simplest solution and avoid degeneration. Moreover, this step might fail to find a feasible solution (although the pipeline succeeded for all the robots we tested).
 
 Finally, you can use `cpp_codegen.py/py_codegen.py` to generate solvers in C++ and Python, similar to the ones in the gallery.
+
+For repeatable offline sampling and candidate selection, pass a seed:
+
+```python
+from ik_solve import run_ik, RunIKOption
+
+run_ik(robot, run_ik_option=RunIKOption(random_seed=42))
+```
+
+The seeded run restores the caller's Python and NumPy random states when it finishes.
+Use the same dependency versions when comparing generated output; process deadlines can
+still change which expensive candidates finish. Automatic special samples stay within
+joint bounds and include their endpoints; explicitly requested branch values are preserved.
+Timed unary searches include algebraic expansion and use one deadline per call; small
+single-variable searches batch rules into one isolated worker.
 
 ### Acknowledgement
 

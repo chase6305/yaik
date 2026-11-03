@@ -43,9 +43,10 @@ class Unknown(object):
         if len(self._degenerate_check_value) < 4:
             # Some default value
             self._degenerate_check_value.append(sp.S.Zero)
-            self._degenerate_check_value.append(sp.pi / 2)
-            self._degenerate_check_value.append(sp.pi)
-            self._degenerate_check_value.append(- sp.pi / 2)
+            if self.is_revolute:
+                self._degenerate_check_value.append(sp.pi / 2)
+                self._degenerate_check_value.append(sp.pi)
+                self._degenerate_check_value.append(- sp.pi / 2)
 
     @property
     def symbol(self):
