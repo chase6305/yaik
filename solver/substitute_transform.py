@@ -56,35 +56,27 @@ def substitute_transform_parallel(scalar_exprs: List[ScalarEquation],
     if n_equation_pairs <= 2:
         return list()
     n_max_pair = max_candidate_pair
-    accept_ratio = float(n_max_pair) / float(n_equation_pairs)
-    accept_ratio = min(1.0, accept_ratio)
+    # Sample pair indices directly instead of enumerating every pair first.
+    n_equations = len(scalar_exprs)
+    indices = range(n_equation_pairs)
+    if n_equation_pairs > n_max_pair:
+        indices = random.sample(indices, n_max_pair)
+    pairs = set()
+    for index in indices:
+        i, j = divmod(index, n_equations - 1)
+        pairs.add((i, j if j < i else j + 1))
+    for i, equation in enumerate(scalar_exprs):
+        if equation.is_sum_of_angle:
+            for j in range(n_equations):
+                if i != j:
+                    pairs.add((i, j))
+                    pairs.add((j, i))
 
-    # Make the input
     input_args = list()
-    for i in range(len(scalar_exprs)):
+    for i, j in sorted(pairs):
         equ_i = scalar_exprs[i]
-        for j in range(len(scalar_exprs)):
-            # Should we skip this pair
-            skip_ij = False
-            if i == j:
-                skip_ij = True
-            if random.uniform(0.0, 1.0) > accept_ratio:
-                skip_ij = True
-            if scalar_exprs[i].equation_type == ScalarEquationType.SumOfAngle.name \
-                    or scalar_exprs[j].equation_type == ScalarEquationType.SumOfAngle.name:
-                skip_ij = False
-
-            # If yes, then ignore this pair
-            if skip_ij:
-                continue
-            equ_j = scalar_exprs[j]
-            dict_in = dict()
-            dict_in['equ_i'] = equ_i
-            dict_in['equ_j'] = equ_j
-            dict_in['unknowns'] = unknowns
-            dict_in['i'] = i
-            dict_in['j'] = j
-            input_args.append(dict_in)
+        equ_j = scalar_exprs[j]
+        input_args.append(dict(equ_i=equ_i, equ_j=equ_j, unknowns=unknowns, i=i, j=j))
 
     # OK, do the mapping
     n_process = min(32, len(input_args))

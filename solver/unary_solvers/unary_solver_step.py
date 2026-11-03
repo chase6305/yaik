@@ -10,6 +10,7 @@ from typing import List, Dict
 import sympy as sp
 import copy
 import multiprocessing
+import time
 
 
 def parallel_solve_processor(dict_in) -> List[VariableSolution]:
@@ -103,6 +104,12 @@ class UnarySolverStep(object):
                             collected_equations: CollectedEquations,
                             unknowns: List[sp.Symbol],
                             with_timeout: bool = False):
+        # Process startup costs more than these small rule searches.
+        if len(unknowns) == 1 and sum(
+                sp.count_ops(equ.lhs) + sp.count_ops(equ.rhs)
+                for equ in collected_equations.one_unknown_equations) <= 100:
+            return self.solve_step(collected_equations, unknowns)
+
         # The final output
         solutions, has_soa_solution = self._try_algebra_solution(
             collected_equations, unknowns)
@@ -149,6 +156,8 @@ class UnarySolverStep(object):
 
     @staticmethod
     def parallel_run(input_args: List[Dict], timeout_seconds: int = 300) -> List[List[VariableSolution]]:
+        if not input_args:
+            return []
         n_processor = min(32, int(len(input_args)))
         n_processor = max(n_processor, 1)
         print('Try solving the equations using rule solver. The candidate number: ', len(input_args))
@@ -168,11 +177,14 @@ class UnarySolverStep(object):
                     processor_list.append(processor)
 
             # Start the processor with timeout
+            deadline = time.monotonic() + timeout_seconds
             for p in processor_list:
                 p.start()
             for p in processor_list:
-                p.join(timeout=timeout_seconds)
-                p.terminate()
+                p.join(timeout=max(0.0, deadline - time.monotonic()))
+                if p.is_alive():
+                    p.terminate()
+                p.join()
 
             # Update the offset
             processed_offset += n_processor
@@ -181,4 +193,5 @@ class UnarySolverStep(object):
         output_list = list()
         for elem in shared_result_list:
             output_list.append(copy.deepcopy(elem))
+        manager.shutdown()
         return output_list

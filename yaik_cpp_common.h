@@ -3,6 +3,7 @@
 #ifdef WIN32
 #define _USE_MATH_DEFINES
 #endif
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <iostream>
@@ -39,7 +40,7 @@ T safe_acos(T a) {
   if (a > 1)
     return 0.0;
   else if (a < -1)
-    return -M_PI;
+    return M_PI;
   else
     return std::acos(a);
 }
@@ -221,25 +222,41 @@ struct PolynomialRealRoot {
 template <int poly_order>
 std::array<PolynomialRealRoot, poly_order> computePolynomialRealRoots(
     const std::array<double, poly_order + 1>& coefficient_high_to_low_order) {
+  std::array<PolynomialRealRoot, poly_order> poly_roots{};
+  double coefficient_scale = 0;
+  for (double coefficient : coefficient_high_to_low_order) {
+    if (!std::isfinite(coefficient)) return poly_roots;
+    coefficient_scale = std::max(coefficient_scale, std::abs(coefficient));
+  }
+  int first_nonzero = 0;
+  while (first_nonzero <= poly_order && coefficient_high_to_low_order[first_nonzero] == 0)
+    ++first_nonzero;
+  const int degree = poly_order - first_nonzero;
+  if (degree <= 0) return poly_roots;
+
   // Convert to eigen, note the reversed order
-  Eigen::Matrix<double, poly_order + 1, 1> eigen_coefficient;
-  for (auto i = 0; i < poly_order + 1; i++) {
-    eigen_coefficient[i] = coefficient_high_to_low_order[poly_order - i];
+  Eigen::VectorXd eigen_coefficient(degree + 1);
+  for (auto i = 0; i <= degree; i++) {
+    eigen_coefficient[i] = coefficient_high_to_low_order[poly_order - i] / coefficient_scale;
   }
 
   // Call eigen solver
-  Eigen::PolynomialSolver<double, poly_order> solver;
+  Eigen::PolynomialSolver<double, Eigen::Dynamic> solver;
   solver.compute(eigen_coefficient);
 
   // The result
-  using RootsType =
-      typename Eigen::PolynomialSolver<double, poly_order>::RootsType;
-  const RootsType& roots = solver.roots();
-  std::array<PolynomialRealRoot, poly_order> poly_roots;
+  const auto& roots = solver.roots();
   for (auto i = 0; i < roots.size(); i++) {
     const std::complex<double>& root_i = roots[i];
-    if (std::abs(root_i.imag()) < 1e-6) {
+    if (std::abs(root_i.imag()) <= 1e-6 * (1 + std::abs(root_i.real()))) {
       const double real_root_i = root_i.real();
+      double residual = eigen_coefficient[degree];
+      double scale = std::abs(residual);
+      for (int j = degree - 1; j >= 0; --j) {
+        residual = residual * real_root_i + eigen_coefficient[j];
+        scale = scale * std::abs(real_root_i) + std::abs(eigen_coefficient[j]);
+      }
+      if (!std::isfinite(residual) || std::abs(residual) > 1e-6 * std::max(1.0, scale)) continue;
       PolynomialRealRoot root_i_return;
       root_i_return.is_valid = true;
       root_i_return.value = real_root_i;
@@ -553,7 +570,8 @@ void numericalRefinement(
                              Eigen::Matrix<double, 6, robot_nq>&)>&
         twist_jacobian_functor,
     const Eigen::Matrix4d& ee_target, std::array<double, robot_nq>& q,
-    double diagonal_damping = 1e-4) {
+    double diagonal_damping = 1e-4,
+    const std::array<bool, robot_nq>& fixed_joints = {}) {
   Eigen::Matrix<double, 6, robot_nq> jacobian;
   Eigen::Matrix<double, robot_nq, robot_nq> jtj;
   Eigen::Matrix<double, robot_nq, 1> delta_q, jte;
@@ -573,6 +591,9 @@ void numericalRefinement(
 
     // Compute jacobian and solve it
     twist_jacobian_functor(q, jacobian);
+    for (auto j = 0; j < robot_nq; j++) {
+      if (fixed_joints[j]) jacobian.col(j).setZero();
+    }
     jtj = jacobian.transpose() * jacobian;
     jte = jacobian.transpose() * twist_target;
     for (auto j = 0; j < robot_nq; j++) {

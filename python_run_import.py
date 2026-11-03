@@ -26,6 +26,28 @@ def safe_acos(a):
         return math.acos(a)
 
 
+def compute_polynomial_real_roots(coefficients, tolerance: float = 1e-6) -> List[float]:
+    """Return finite real roots, allowing roundoff in the imaginary part."""
+    coefficients = np.asarray(coefficients, dtype=float)
+    if not np.all(np.isfinite(coefficients)):
+        return []
+    coefficients = np.trim_zeros(coefficients, 'f')
+    if coefficients.size < 2:
+        return []
+    coefficients = coefficients / np.max(np.abs(coefficients))
+    roots = []
+    for root in np.roots(coefficients):
+        if abs(root.imag) > tolerance * (1 + abs(root.real)):
+            continue
+        value = float(root.real)
+        with np.errstate(over='ignore', invalid='ignore'):
+            residual = np.polyval(coefficients, value)
+            scale = np.polyval(np.abs(coefficients), abs(value))
+        if np.isfinite(residual) and abs(residual) <= tolerance * max(1.0, scale):
+            roots.append(value)
+    return roots
+
+
 # For general 6-dof
 def compute_solution_from_tanhalf_LME(
         A_x2: np.ndarray,

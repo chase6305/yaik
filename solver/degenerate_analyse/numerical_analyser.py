@@ -1,7 +1,7 @@
 from solver.solved_variable import \
     DegenerateType, SolutionDegenerateRecord, NumericalAnalysedResultType, VariableSolution
 import solver.equation_utils as equation_utils
-import multiprocessing
+import numpy as np
 from typing import Optional, List, Dict, Set, Tuple
 import sympy as sp
 
@@ -45,21 +45,20 @@ class NumericalCheckDegenerateAnalyzer(object):
         # Only handle current record
         assert current_record.type == DegenerateType.DegenerateIfAllEquationsZero.name
         equations = current_record.equations
-        input_args = list()
-        for i in range(len(self._test_cases)):
-            test_map_i = self._test_cases[i]
-            input_args.append((equations, test_map_i))
-
-        # Run processing in parallel
-        n_process = min(32, len(input_args))
-        n_process = max(n_process, 1)
-        with multiprocessing.Pool(n_process) as pool:
-            output = pool.map(check_zero_processor, input_args)
-
-        # Count the # of degenerate
+        if not self._test_cases:
+            raise ValueError('Numerical degeneration analysis requires at least one test case')
+        symbols = sorted(set().union(*(equation.free_symbols for equation in equations)), key=str)
+        evaluate = sp.lambdify(symbols, equations, modules='numpy', cse=True)
         n_degenerate = 0
-        for i in range(len(output)):
-            if output[i]:
+        for test_case in self._test_cases:
+            try:
+                with np.errstate(divide='ignore', invalid='ignore', over='ignore'):
+                    values = np.asarray(evaluate(*(float(test_case[s]) for s in symbols)), dtype=float)
+                degenerate = not np.all(np.isfinite(values)) or np.all(np.abs(values) <= 1e-6)
+            except (KeyError, TypeError, ValueError, ZeroDivisionError, OverflowError):
+                # An unevaluable sample must not certify a formula as non-degenerate.
+                degenerate = True
+            if degenerate:
                 n_degenerate += 1
 
         # Check result

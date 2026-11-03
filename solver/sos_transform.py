@@ -2,6 +2,7 @@ import sympy as sp
 import copy
 import random
 import multiprocessing
+import time
 from typing import List, Optional, Dict
 from fk.fk_equations import expr_include_translation_target
 from solver.equation_types import MatrixEquation, ScalarEquation, SumOfSquareHint, ScalarEquationType
@@ -102,6 +103,8 @@ def parallel_processor_list_output(dict_in: Dict, output_list: List[ScalarEquati
 
 
 def parallel_run(input_args: List[Dict], timeout_seconds: int = 30) -> List[ScalarEquation]:
+    if not input_args:
+        return []
     n_processor = min(32, int(len(input_args)))
     n_processor = max(n_processor, 1)
     lock = multiprocessing.Lock()
@@ -120,11 +123,14 @@ def parallel_run(input_args: List[Dict], timeout_seconds: int = 30) -> List[Scal
                 processor_list.append(processor)
 
         # Start the processor with time-out
+        deadline = time.monotonic() + timeout_seconds
         for p in processor_list:
             p.start()
         for p in processor_list:
-            p.join(timeout=timeout_seconds)
-            p.terminate()  # Explicit kill a process if the reduction takes too long
+            p.join(timeout=max(0.0, deadline - time.monotonic()))
+            if p.is_alive():
+                p.terminate()
+            p.join()
 
         # Update the offset
         processed_offset += n_processor
@@ -133,6 +139,7 @@ def parallel_run(input_args: List[Dict], timeout_seconds: int = 30) -> List[Scal
     output_list = list()
     for elem in shared_result_list:
         output_list.append(copy.deepcopy(elem))
+    manager.shutdown()
     return output_list
 
 

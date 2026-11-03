@@ -32,11 +32,11 @@ class UnReducedMatrixClosureEquation(object):
 
     # The variable in lhs gen
     variable_in_lhs_matrix: RevoluteVariable = None
-    lhs_gen_vars: List[RevoluteVariable] = list()
+    lhs_gen_vars: List[RevoluteVariable] = attr.ib(factory=list)
 
     # The coefficient that should be zero, but can be very complex in symbolic processing
     # Thus, check them numerically
-    ignored_coefficient: List[sp.Expr] = list()
+    ignored_coefficient: List[sp.Expr] = attr.ib(factory=list)
 
     def subs(self, subst_map):
         subst_lhs_matrix = self.lhs_matrix.subs(subst_map)

@@ -1,5 +1,4 @@
 from fk.robots import RobotDescription
-import solver.build_equations as build_equations
 import solver.equation_utils as equation_utils
 from solver.solved_variable import SolutionDegenerateRecord, VariableSolution
 from codegen.skeleton.tree_node import SkeletonTreeNode, SolutionNodeBase
@@ -178,8 +177,7 @@ class TreeSerializer(SkeletonNodeVisitor):
                     tree_node_list[i].set_child_by_index(tree_node_list[child_idx_j], j)
 
         # Update the tree
-        ik_equations = build_equations.build_ik_equations(robot)
-        tree = SkeletonTree([], robot, ik_equations)
+        tree = SkeletonTree([], robot)
         tree._node_list = tree_node_list
         tree._root_dispatcher = tree_node_list[0]
 

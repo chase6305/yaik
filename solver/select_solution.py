@@ -41,7 +41,7 @@ def select_solution_in_type(
         solution_selected_type = solution_selected.impl_class_key
         solution_k_type = solution_k.impl_class_key
         assert solution_selected_type in solution_preference_order
-        assert solution_k_type in solution_selected_type
+        assert solution_k_type in solution_preference_order
         solution_selected_order = solution_preference_order[solution_selected_type]
         solution_k_order = solution_preference_order[solution_k_type]
 

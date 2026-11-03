@@ -50,7 +50,7 @@ def construct_variable_branched_equations(
                 solved_variable=var,
                 solutions=[sol],
                 solution_method=SolutionMethod.OneVariableAlgebra.name,
-                solve_from_equations=None, arguments=[], argument_valid_checkers=[sp.S.BooleanTrue])
+                solve_from_equations=None, argument_valid_checkers=[sp.S.BooleanTrue])
             solution_from_degenerate.append(this_solution)
             continue
 

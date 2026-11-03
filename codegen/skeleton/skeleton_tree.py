@@ -17,7 +17,7 @@ class SkeletonTree(object):
     def __init__(self,
                  main_branch_solution: List[VariableSolution],
                  robot: RobotDescription,
-                 solved_equations: IkEquationCollection):
+                 solved_equations: Optional[IkEquationCollection] = None):
         # Init the variable
         self._robot = robot
         # TODO(wei): consider do we need to implement a separate serializer for
@@ -50,10 +50,16 @@ class SkeletonTree(object):
 
     @property
     def solved_unknowns(self):
-        return self._solved_equations.used_unknowns
+        if self._solved_equations is not None:
+            return self._solved_equations.used_unknowns
+        return [unknown for unknown in self.robot.unknowns
+                if unknown.symbol not in self.robot.unknown_as_parameter_more_dof]
 
     @property
     def solved_equation_record(self):
+        if self._solved_equations is None:
+            from solver.build_equations import build_ik_equations
+            self._solved_equations = build_ik_equations(self.robot)
         return self._solved_equations
 
     @property
@@ -271,7 +277,7 @@ class SkeletonTree(object):
 
         # Get unsolved vars
         unsolved_variables: List[sp.Symbol] = list()
-        for var in self._solved_equations.used_unknowns:  # change from robot._unknowns
+        for var in self.solved_unknowns:
             if not is_variable_solved_before_parent(var.symbol):
                 unsolved_variables.append(var.symbol)
 
@@ -323,14 +329,13 @@ class SkeletonTree(object):
 
         # If unknown is not required, we're done
         if not include_unknown_as_parameter:
-            return all_symbol_list
+            return sorted(all_symbol_list, key=str)
 
         # Also the unknown
-        ik_equations = self.solved_equation_record
         for unknown_i in robot.unknowns:
-            idx = find_unknown_idx(ik_equations.used_unknowns, unknown_i.symbol.name)
+            idx = find_unknown_idx(self.solved_unknowns, unknown_i.symbol.name)
             if idx < 0:
                 all_symbol_list.append(unknown_i.symbol)
 
         # OK
-        return all_symbol_list
+        return sorted(all_symbol_list, key=str)

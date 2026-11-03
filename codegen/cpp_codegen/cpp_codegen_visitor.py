@@ -348,6 +348,7 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
 
         # Do cse for solution/checker
         replacements, reduced_solutions = sp.cse(solution_list)
+        shared_condition = n_solution > 1 and len(set(solution.argument_validity_checkers)) == 1
 
         # The code gen
         for i in range(n_solution):
@@ -356,27 +357,28 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
             checker_i = solution.argument_validity_checkers[i]
             solution_i_code = self.generate_cxx_code(reduced_solution_i)
             checker_i_code = self.generate_cxx_code(checker_i)
-            self.add_code_line('const bool condition_{sol_idx} = {cond_code};'.
-                               format(sol_idx=i, cond_code=checker_i_code))
-            self.add_code_line('if (condition_{sol_idx})'.format(sol_idx=i))
-            self.enter_scope('if_condition')
-            self.add_code_line('// Temp variable for efficiency')
-            for k in range(len(replacements)):
-                symbol_k, expr_k = replacements[k]
-                expr_code = self.generate_cxx_code(expr_k)
-                self.add_code_line('const double {var} = {expr_code};'.format(var=str(symbol_k), expr_code=expr_code))
-            self.add_code_line('// End of temp variables')
+            if not shared_condition or i == 0:
+                self.add_code_line('const bool condition_{sol_idx} = {cond_code};'.
+                                   format(sol_idx=i, cond_code=checker_i_code))
+                self.add_code_line('if (condition_{sol_idx})'.format(sol_idx=i))
+                self.enter_scope('if_condition')
+                for symbol_k, expr_k in replacements:
+                    expr_code = self.generate_cxx_code(expr_k)
+                    self.add_code_line('const double {var} = {expr_code};'.format(var=str(symbol_k), expr_code=expr_code))
 
             # Actual solution
             self.add_empty_line()
             self.add_code_line('auto solution_{sol_idx} = make_raw_solution();'.format(sol_idx=i))
             self.add_code_line('solution_{sol_idx}[{var_idx}] = {sol_code};'.
                                format(sol_idx=i, var_idx=solved_var_idx, sol_code=solution_i_code))
-            self.add_code_line('int appended_idx = append_solution_to_queue(solution_{sol_idx});'.format(sol_idx=i))
+            self.add_code_line('int appended_idx_{sol_idx} = append_solution_to_queue(solution_{sol_idx});'.format(sol_idx=i))
             if output_idx is not None:
-                self.add_code_line('add_input_index_to({node_idx}, appended_idx);'.format(node_idx=output_idx))
-            self.exit_scope('if_condition')
+                self.add_code_line('add_input_index_to({node_idx}, appended_idx_{sol_idx});'.format(node_idx=output_idx, sol_idx=i))
+            if not shared_condition:
+                self.exit_scope('if_condition')
             self.add_empty_line()
+        if shared_condition:
+            self.exit_scope('if_condition')
 
     def _visit_explicit_solution_node_non_root(self, solution_node: ExplicitSolutionNode):
         assert self.indent_level == 1
@@ -524,7 +526,7 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
 
         # Make the coefficients
         assert poly_order >= 1
-        self.add_code_line('std::array<double, {poly_order} + 1> p_coefficients;'.format(poly_order=poly_order))
+        self.add_code_line('std::array<double, {poly_order} + 1> p_coefficients{{}};'.format(poly_order=poly_order))
         for order in poly_dict_input:
             self.add_code_line('p_coefficients[{idx}] = poly_coefficient_{order};'.
                                format(order=order, idx=poly_order - order))
@@ -547,14 +549,14 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         # Depends on the solution method
         solution_method = solution.solution_method
         if solution_method == SolutionMethod.PolynomialSin.name or solution_method == SolutionMethod.PolynomialCos.name:
-            self.add_code_line('if (std::abs(this_root) > 1)')
+            self.add_code_line('if (std::abs(this_root) > 1 + zero_tolerance)')
             self.add_code_line(indent() + 'continue;')
             if solution_method == SolutionMethod.PolynomialSin.name:
-                self.add_code_line('const double first_angle = std::asin(this_root);')
-                self.add_code_line('const double second_angle = M_PI - std::asin(this_root);')
+                self.add_code_line('const double first_angle = safe_asin(this_root);')
+                self.add_code_line('const double second_angle = M_PI - first_angle;')
             else:
-                self.add_code_line('const double first_angle = std::acos(this_root);')
-                self.add_code_line('const double second_angle = - std::acos(this_root);')
+                self.add_code_line('const double first_angle = safe_acos(this_root);')
+                self.add_code_line('const double second_angle = -first_angle;')
 
             # The remaining code is the same
             self.add_code_line('auto solution_{sol_idx} = make_raw_solution();'.format(sol_idx=0))
@@ -570,8 +572,14 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
             if output_idx is not None:
                 self.add_code_line('add_input_index_to({node_idx}, appended_idx_0);'.format(node_idx=output_idx))
                 self.add_code_line('add_input_index_to({node_idx}, appended_idx_1);'.format(node_idx=output_idx))
+        elif solution_method == SolutionMethod.PolynomialDirect.name:
+            self.add_code_line('auto solution = make_raw_solution();')
+            self.add_code_line('solution[{idx}] = this_root;'.format(idx=solved_var_idx))
+            self.add_code_line('int appended_idx = append_solution_to_queue(solution);')
+            if output_idx is not None:
+                self.add_code_line('add_input_index_to({idx}, appended_idx);'.format(idx=output_idx))
         else:
-            raise NotImplementedError("Polynomial solver codegen with non sin/cos intermediate is not implemented yet")
+            raise NotImplementedError('Unsupported polynomial solution method: ' + solution_method)
 
 
         # Finish the polynomial solve
@@ -968,7 +976,8 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         requested_symbol_names = sorted(requested_symbol_names)
 
         # Next check they are in parent
-        self._verify_requested_variables_solved(requested_symbol_names, node)
+        if not self._verify_requested_variables_solved(requested_symbol_names, node):
+            raise ValueError('Solution node depends on variables not solved by its ancestors: ' + ', '.join(requested_symbol_names))
 
         # OK
         return [sp.Symbol(symbol_name) for symbol_name in requested_symbol_names]
@@ -1023,7 +1032,8 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         requested_symbol_names = sorted(requested_symbol_names)
 
         # Next check they are in parent
-        self._verify_requested_variables_solved(requested_symbol_names, node)
+        if not self._verify_requested_variables_solved(requested_symbol_names, node):
+            raise ValueError('Solution node depends on variables not solved by its ancestors: ' + ', '.join(requested_symbol_names))
 
         # OK
         return [sp.Symbol(symbol_name) for symbol_name in requested_symbol_names]

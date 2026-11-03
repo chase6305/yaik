@@ -121,7 +121,8 @@ class IkSolutionGeneratorPythonBase(SkeletonNodeVisitor, ABC):
         requested_symbol_names = sorted(requested_symbol_names)
 
         # Next check they are in parent
-        self._verify_requested_variables_solved(requested_symbol_names, node)
+        if not self._verify_requested_variables_solved(requested_symbol_names, node):
+            raise ValueError('Solution node depends on variables not solved by its ancestors: ' + ', '.join(requested_symbol_names))
 
         # OK
         return [sp.Symbol(symbol_name) for symbol_name in requested_symbol_names]
@@ -148,7 +149,8 @@ class IkSolutionGeneratorPythonBase(SkeletonNodeVisitor, ABC):
         requested_symbol_names = sorted(requested_symbol_names)
 
         # Next check they are in parent
-        self._verify_requested_variables_solved(requested_symbol_names, node)
+        if not self._verify_requested_variables_solved(requested_symbol_names, node):
+            raise ValueError('Solution node depends on variables not solved by its ancestors: ' + ', '.join(requested_symbol_names))
 
         # OK
         return [sp.Symbol(symbol_name) for symbol_name in requested_symbol_names]

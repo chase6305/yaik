@@ -9,7 +9,7 @@ import utility.rotation_utils as rotation_utils
 @attr.s
 class ChainTransformElement(object):
     joint_placement: np.ndarray = attr.ib()  # 4x4 transformation matrix
-    joint_axis: List[float] = [0, 0, 1]  # Must be unit length
+    joint_axis: List[float] = attr.ib(factory=lambda: [0, 0, 1])  # Must be unit length
     flip_angle: bool = False
 
     # Compute the fk

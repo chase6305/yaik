@@ -28,7 +28,7 @@ class VariableSolution(object):
             solution_method: str,
             solve_from_equations: Optional[List[ScalarEquation]] = None,
             argument_valid_checkers: Optional[List[sp.Expr]] = None,
-            degenerate_record: SolutionDegenerateRecord = SolutionDegenerateRecord.record_cannot_analyse()):
+            degenerate_record: Optional[SolutionDegenerateRecord] = None):
         solution_impl = ExplicitVariableSolutionImpl.make_explicit_solution(
             solved_variable=solved_variable,
             solutions=solutions, solution_method=solution_method,
@@ -45,7 +45,7 @@ class VariableSolution(object):
             solved_variable: sp.Symbol,
             solution_method: str,
             polynomial_dict: Dict[int, Tuple[sp.Expr, sp.Expr]],
-            degenerate_record: SolutionDegenerateRecord = SolutionDegenerateRecord.record_cannot_analyse()):
+            degenerate_record: Optional[SolutionDegenerateRecord] = None):
         solution_impl = PolynomialVariableSolutionImpl.make_polynomial_solution(
             solved_variable=solved_variable, solution_method=solution_method,
             polynomial_dict=polynomial_dict, degenerate_record=degenerate_record)

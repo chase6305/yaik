@@ -4,7 +4,6 @@ from solver.build_equations import IkEquationCollection
 import solver.equation_utils as equation_utils
 from fk.robots import Unknown
 import fk.fk_equations as fk_equations
-import multiprocessing
 import sympy as sp
 import numpy as np
 from typing import Set, List, Dict, Tuple
@@ -31,7 +30,7 @@ def collect_bounded_parameters(
     ik_target_symbols = fk_equations.ik_target_symbols()
 
     # First iterate the symbolic parameters
-    for parameter in ik_input.all_symbol_set:
+    for parameter in sorted(ik_input.all_symbol_set, key=str):
         if parameter in ik_target_symbols:
             # We don't need to generate this
             continue
@@ -153,22 +152,12 @@ def generate_test_cases(
 
     # Build fk
     ee_pose = ik_input.ee_pose
-    input_args = list()
-    for i in range(n_test_cases):
-        subst_map_i = subst_map_list[i]
-        input_args.append((ee_pose, subst_map_i, i))
-
-    # OK, do the mapping
-    n_process = min(32, len(input_args))
-    n_process = max(n_process, 1)
-    print('Generate {n} numerical test cases. The # of processors is {m}: '.format(n=n_test_cases, m=n_process))
-    output: List[np.ndarray] = list()
-    with multiprocessing.Pool(n_process) as pool:
-        output = pool.map(compute_fk_processor, input_args)
-
-    # Collect the result
-    for i in range(n_test_cases):
-        ee_pose_np_i = output[i]
+    symbols = sorted(ee_pose.free_symbols, key=str)
+    compute_fk = sp.lambdify(symbols, ee_pose, modules='numpy', cse=True)
+    print('Generate {n} numerical test cases using compiled FK'.format(n=n_test_cases))
+    for i, subst_map_i in enumerate(subst_map_list):
+        values = [float(subst_map_i[symbol]) for symbol in symbols]
+        ee_pose_np_i = np.asarray(compute_fk(*values), dtype=float)
         pose_map_i = fk_equations.ik_target_subst_map(ee_pose_np_i)
         subst_map_list[i].update(pose_map_i)
 

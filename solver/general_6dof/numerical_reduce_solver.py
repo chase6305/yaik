@@ -9,6 +9,7 @@ from solver.general_6dof.numerical_reduce_closure_equation import verify_solve
 from solver.general_6dof.select_lines_to_reduce_numerical import select_lines_to_reduce
 from solver.general_6dof.semi_symbolic_reduce import convert_to_semi_symbolic_reduce
 import multiprocessing
+import time
 import numpy as np
 import sympy as sp
 from typing import Tuple, Optional, List, Dict
@@ -204,17 +205,21 @@ def try_solve_parallel_v2(
 
     # Start with timeout
     timeout_seconds: int = 4 * 3600  # 4 hours
+    deadline = time.monotonic() + timeout_seconds
     for p in processor_list:
         p.start()
     for p in processor_list:
-        p.join(timeout=timeout_seconds)
-        p.terminate()  # Explicit kill a process if the reduction takes too long
+        p.join(timeout=max(0.0, deadline - time.monotonic()))
+        if p.is_alive():
+            p.terminate()
+        p.join()
 
     # Collect the result
     output: List[General6DoFNumericalReduceSolution] = list()
     for elem in result_list:
         if elem is not None:
             output.append(copy.deepcopy(elem))
+    manager.shutdown()
     return output
 
 

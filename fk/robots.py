@@ -22,7 +22,7 @@ class RobotAuxiliaryData(object):
     # The offset of unknown, None implies no offset
     # The solver does NOT consider the offset. However, the offset should be handled in codegen
     # Must be in the same size as robot.unknowns
-    unknown_offset: Optional[List[float]] = list()
+    unknown_offset: Optional[List[float]] = attr.ib(default=None)
 
     # Flatten
     def to_dict(self):
@@ -59,21 +59,21 @@ class RobotDescription(object):
 
     # One unknown corresponds to one DH entry
     # Thus, these two lists have the same length
-    dh_params: List[DHEntry] = list()
-    unknowns: List[Unknown] = list()
+    dh_params: List[DHEntry] = attr.ib(factory=list)
+    unknowns: List[Unknown] = attr.ib(factory=list)
 
     # These two may NOT be in equal size
     # For example, in a 7-DOF robot we may select one joint as a parameter,
     # but is value is given at runtime.
-    symbolic_parameters: Set[sp.Symbol] = set()
-    parameters_value: Dict[sp.Symbol, float] = dict()
+    symbolic_parameters: Set[sp.Symbol] = attr.ib(factory=set)
+    parameters_value: Dict[sp.Symbol, float] = attr.ib(factory=dict)
 
     # However, each parameter must be either valued or bounded
-    parameters_bound: Dict[sp.Symbol, Tuple[float, float]] = dict()
+    parameters_bound: Dict[sp.Symbol, Tuple[float, float]] = attr.ib(factory=dict)
 
     # If the robot has more than 6 DoF, then one or more of its unknown
     # should be treated as parameter (else the problem is undefined).
-    unknown_as_parameter_more_dof: List[sp.Symbol] = list()
+    unknown_as_parameter_more_dof: List[sp.Symbol] = attr.ib(factory=list)
 
     # The auxiliary data that won't go into the solver
     auxiliary_data: Optional[RobotAuxiliaryData] = None
@@ -188,7 +188,7 @@ class RobotDescription(object):
             parameter_bound_map = data_map['parameters_bound']
             for key in parameter_bound_map:
                 variable = sp.Symbol(key)
-                lb, ub = parameter_bound_map[variable]
+                lb, ub = parameter_bound_map[key]
                 self.parameters_bound[variable] = (lb, ub)
 
         # For unknown_as_parameter_more_dof
