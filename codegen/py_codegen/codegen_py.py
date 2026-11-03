@@ -397,6 +397,11 @@ class CodeGenerationPython(CodeGenerationBase):
         self._add_code_line('def ' + self.ik_function_name(False) + func_arguments)
         self._add_code_line('if not np.all(np.isfinite(T_ee)):', indent_level=1)
         self._add_code_line('return []', indent_level=2)
+        free_symbols = self.free_symbols()
+        if free_symbols:
+            finite_parameters = ' and '.join('math.isfinite(' + str(symbol) + ')' for symbol in free_symbols)
+            self._add_code_line('if not (' + finite_parameters + '):', indent_level=1)
+            self._add_code_line('return []', indent_level=2)
 
         # The ee target
         if self.robot.get_pre_transform_sp() is None and self.robot.get_post_transform_sp() is None:
@@ -406,7 +411,6 @@ class CodeGenerationPython(CodeGenerationBase):
 
         # Call the old method
         ik_raw_func = self.ik_function_name(True)
-        free_symbols = self.free_symbols()
         unknown_symbols = [elem.symbol for elem in self.robot.unknowns]
 
         func_arguments_call = '(T_ee_raw_in'

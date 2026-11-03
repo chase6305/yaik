@@ -607,6 +607,10 @@ void numericalRefinement(
     const Eigen::Matrix4d& ee_target, std::array<double, robot_nq>& q,
     double diagonal_damping = 1e-4,
     const std::array<bool, robot_nq>& fixed_joints = {}) {
+  if (!ee_target.allFinite() || !std::isfinite(diagonal_damping)) return;
+  for (double value : q) {
+    if (!std::isfinite(value)) return;
+  }
   Eigen::Matrix<double, 6, robot_nq> jacobian;
   Eigen::Matrix<double, robot_nq, robot_nq> jtj;
   Eigen::Matrix<double, robot_nq, 1> delta_q, jte;
@@ -616,6 +620,9 @@ void numericalRefinement(
   for (auto i = 0; i < n_iterations; i++) {
     // Compute the twist target
     Eigen::Matrix4d ee_pose_i = fk_functor(q);
+    // A zero skew rotation residual alone would also occur at a pi rotation.
+    const double pose_error = (ee_pose_i - ee_target).squaredNorm();
+    if (!std::isfinite(pose_error) || pose_error <= 1e-20) return;
     Eigen::Matrix4d twist_target_4x4 = ee_target * inverse_transform(ee_pose_i);
     twist_target[0] = 0.5 * (twist_target_4x4(2, 1) - twist_target_4x4(1, 2));
     twist_target[1] = 0.5 * (twist_target_4x4(0, 2) - twist_target_4x4(2, 0));
@@ -623,9 +630,11 @@ void numericalRefinement(
     twist_target[3] = twist_target_4x4(0, 3);
     twist_target[4] = twist_target_4x4(1, 3);
     twist_target[5] = twist_target_4x4(2, 3);
+    if (!twist_target.allFinite()) return;
 
     // Compute jacobian and solve it
     twist_jacobian_functor(q, jacobian);
+    if (!jacobian.allFinite()) return;
     for (auto j = 0; j < robot_nq; j++) {
       if (fixed_joints[j]) jacobian.col(j).setZero();
     }
@@ -634,12 +643,20 @@ void numericalRefinement(
     for (auto j = 0; j < robot_nq; j++) {
       jtj(j, j) += diagonal_damping;
     }
+    if (!jtj.allFinite() || !jte.allFinite()) return;
 
     // Solve Ax = b and update
     delta_q = jtj.colPivHouseholderQr().solve(jte);
+    if (!delta_q.allFinite()) return;
+    const auto previous_q = q;
     for (auto j = 0; j < robot_nq; j++) {
       q[j] += delta_q[j];
+      if (!std::isfinite(q[j])) {
+        q = previous_q;
+        return;
+      }
     }
+    if (q == previous_q) return;
   }
 }
 
