@@ -94,6 +94,7 @@ def faunc_M900IB_700_ik_target_raw_to_original(T_ee: np.ndarray):
 
 
 def faunc_M900IB_700_fk(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
     th_1 = theta_input[1] + th_1_offset_original2raw
     th_2 = theta_input[2] + th_2_offset_original2raw

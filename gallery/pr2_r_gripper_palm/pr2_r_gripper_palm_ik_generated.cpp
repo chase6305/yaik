@@ -9,7 +9,7 @@ static constexpr int robot_nq = 7;
 static constexpr int max_n_solutions = 16;
 static constexpr int n_tree_nodes = 58;
 static constexpr int intermediate_solution_size = 10;
-static constexpr double pose_tolerance = 1e-6;
+static constexpr double pose_tolerance = 1e-4;
 static constexpr double pose_tolerance_degenerate = 1e-4;
 static constexpr double zero_tolerance = 1e-6;
 using RawIKWorksace = ::yaik_cpp::RawIkWorkspaceTemplate<intermediate_solution_size, max_n_solutions, robot_nq>;
@@ -472,7 +472,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         if (condition_0)
         {
             // Temp variable for efficiency
-            const double x0 = std::acos((1.0/2.0)*(-std::pow(Px, 2) + 2*Px*a_1*std::cos(th_0) - std::pow(Py, 2) + 2*Py*a_1*std::sin(th_0) - std::pow(Pz, 2) - std::pow(a_1, 2) + std::pow(d_2, 2) + std::pow(d_4, 2))/(d_2*d_4));
+            const double x0 = safe_acos((1.0/2.0)*(-std::pow(Px, 2) + 2*Px*a_1*std::cos(th_0) - std::pow(Py, 2) + 2*Py*a_1*std::sin(th_0) - std::pow(Pz, 2) - std::pow(a_1, 2) + std::pow(d_2, 2) + std::pow(d_4, 2))/(d_2*d_4));
             // End of temp variables
             
             auto solution_0 = make_raw_solution();
@@ -485,7 +485,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         if (condition_1)
         {
             // Temp variable for efficiency
-            const double x0 = std::acos((1.0/2.0)*(-std::pow(Px, 2) + 2*Px*a_1*std::cos(th_0) - std::pow(Py, 2) + 2*Py*a_1*std::sin(th_0) - std::pow(Pz, 2) - std::pow(a_1, 2) + std::pow(d_2, 2) + std::pow(d_4, 2))/(d_2*d_4));
+            const double x0 = safe_acos((1.0/2.0)*(-std::pow(Px, 2) + 2*Px*a_1*std::cos(th_0) - std::pow(Py, 2) + 2*Py*a_1*std::sin(th_0) - std::pow(Pz, 2) - std::pow(a_1, 2) + std::pow(d_2, 2) + std::pow(d_4, 2))/(d_2*d_4));
             // End of temp variables
             
             auto solution_1 = make_raw_solution();
@@ -600,7 +600,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             {
                 // Temp variable for efficiency
                 const double x0 = std::sin(th_1);
-                const double x1 = std::acos(r_13*x0*std::cos(th_0) + r_23*x0*std::sin(th_0) + r_33*std::cos(th_1));
+                const double x1 = safe_acos(r_13*x0*std::cos(th_0) + r_23*x0*std::sin(th_0) + r_33*std::cos(th_1));
                 // End of temp variables
                 RawSolution solution_0(this_solution);
                 solution_0[8] = x1;
@@ -613,7 +613,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             {
                 // Temp variable for efficiency
                 const double x0 = std::sin(th_1);
-                const double x1 = std::acos(r_13*x0*std::cos(th_0) + r_23*x0*std::sin(th_0) + r_33*std::cos(th_1));
+                const double x1 = safe_acos(r_13*x0*std::cos(th_0) + r_23*x0*std::sin(th_0) + r_33*std::cos(th_1));
                 // End of temp variables
                 const double tmp_sol_value = -x1;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[8] = tmp_sol_value;
@@ -894,7 +894,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             {
                 // Temp variable for efficiency
                 const double x0 = std::sin(th_1);
-                const double x1 = std::acos(-r_13*x0*std::cos(th_0) - r_23*x0*std::sin(th_0) - r_33*std::cos(th_1));
+                const double x1 = safe_acos(-r_13*x0*std::cos(th_0) - r_23*x0*std::sin(th_0) - r_33*std::cos(th_1));
                 // End of temp variables
                 RawSolution solution_0(this_solution);
                 solution_0[8] = x1;
@@ -907,7 +907,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             {
                 // Temp variable for efficiency
                 const double x0 = std::sin(th_1);
-                const double x1 = std::acos(-r_13*x0*std::cos(th_0) - r_23*x0*std::sin(th_0) - r_33*std::cos(th_1));
+                const double x1 = safe_acos(-r_13*x0*std::cos(th_0) - r_23*x0*std::sin(th_0) - r_33*std::cos(th_1));
                 // End of temp variables
                 const double tmp_sol_value = -x1;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[8] = tmp_sol_value;
@@ -1482,7 +1482,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             if (condition_0)
             {
                 // Temp variable for efficiency
-                const double x0 = std::asin((-Px*std::sin(th_0) + Py*std::cos(th_0))/(d_4*std::sin(th_3)));
+                const double x0 = safe_asin((-Px*std::sin(th_0) + Py*std::cos(th_0))/(d_4*std::sin(th_3)));
                 // End of temp variables
                 RawSolution solution_0(this_solution);
                 solution_0[3] = x0;
@@ -1494,7 +1494,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             if (condition_1)
             {
                 // Temp variable for efficiency
-                const double x0 = std::asin((-Px*std::sin(th_0) + Py*std::cos(th_0))/(d_4*std::sin(th_3)));
+                const double x0 = safe_asin((-Px*std::sin(th_0) + Py*std::cos(th_0))/(d_4*std::sin(th_3)));
                 // End of temp variables
                 const double tmp_sol_value = M_PI - x0;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[3] = tmp_sol_value;
@@ -1598,7 +1598,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             {
                 // Temp variable for efficiency
                 const double x0 = r_13*std::cos(th_0) + r_23*std::sin(th_0);
-                const double x1 = std::acos((a_1*x0 + d_2*(-r_33*std::cos(th_1) - x0*std::sin(th_1)) + inv_Pz)/d_4);
+                const double x1 = safe_acos((a_1*x0 + d_2*(-r_33*std::cos(th_1) - x0*std::sin(th_1)) + inv_Pz)/d_4);
                 // End of temp variables
                 RawSolution solution_0(this_solution);
                 solution_0[8] = x1;
@@ -1611,7 +1611,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             {
                 // Temp variable for efficiency
                 const double x0 = r_13*std::cos(th_0) + r_23*std::sin(th_0);
-                const double x1 = std::acos((a_1*x0 + d_2*(-r_33*std::cos(th_1) - x0*std::sin(th_1)) + inv_Pz)/d_4);
+                const double x1 = safe_acos((a_1*x0 + d_2*(-r_33*std::cos(th_1) - x0*std::sin(th_1)) + inv_Pz)/d_4);
                 // End of temp variables
                 const double tmp_sol_value = -x1;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[8] = tmp_sol_value;
@@ -2078,7 +2078,7 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_0, RawIKWorksace& w
         ik_out_i[5] -= th_5_offset_original2raw;
         ik_out_i[6] -= th_6_offset_original2raw;
         const Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
-        double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
+        double ee_pose_diff = (ee_pose_i - T_ee).cwiseAbs().maxCoeff();
         if (ee_pose_diff < pose_tolerance)
             ik_output.push_back(ik_out_i);
     }
@@ -2100,14 +2100,14 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_0, RawIKWorksace& w
         ik_out_i[5] -= th_5_offset_original2raw;
         ik_out_i[6] -= th_6_offset_original2raw;
         Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
-        double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();
+        double ee_pose_diff = (ee_pose_i - T_ee_disturbed).cwiseAbs().maxCoeff();
         if (ee_pose_diff > pose_tolerance_degenerate)
             continue;
         
         // Try numerical refinement
-        yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i);
+        yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i, 1e-4, std::array<bool, robot_nq>{{true, false, false, false, false, false, false}});
         ee_pose_i = computeFK(ik_out_i);
-        ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
+        ee_pose_diff = (ee_pose_i - T_ee).cwiseAbs().maxCoeff();
         if (ee_pose_diff < pose_tolerance_degenerate)
             ik_output.push_back(ik_out_i);
     }

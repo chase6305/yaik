@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import math
 from typing import List, NewType
+from python_run_import import *
 
 # Constants for solver
 robot_nq: int = 6
@@ -95,6 +96,7 @@ def ur_5_ik_target_raw_to_original(T_ee: np.ndarray):
 
 
 def ur_5_fk(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
     th_1 = theta_input[1] + th_1_offset_original2raw
     th_2 = theta_input[2] + th_2_offset_original2raw
@@ -450,7 +452,7 @@ def ur_5_ik_solve_raw(T_ee: np.ndarray):
             x1 = -Py + d_6*r_23
             x2 = math.atan2(x0, x1)
             x3 = -d_0 - d_2 - d_4
-            x4 = math.sqrt(x0**2 + x1**2 - x3**2)
+            x4 = safe_sqrt(x0**2 + x1**2 - x3**2)
             # End of temp variables
             solution_0: IkSolution = make_ik_solution()
             solution_0[0] = x2 + math.atan2(x4, x3)
@@ -464,7 +466,7 @@ def ur_5_ik_solve_raw(T_ee: np.ndarray):
             x1 = -Py + d_6*r_23
             x2 = math.atan2(x0, x1)
             x3 = -d_0 - d_2 - d_4
-            x4 = math.sqrt(x0**2 + x1**2 - x3**2)
+            x4 = safe_sqrt(x0**2 + x1**2 - x3**2)
             # End of temp variables
             solution_1: IkSolution = make_ik_solution()
             solution_1[0] = x2 + math.atan2(-x4, x3)
@@ -495,7 +497,7 @@ def ur_5_ik_solve_raw(T_ee: np.ndarray):
             condition_0: bool = (abs(r_13*math.sin(th_0) - r_23*math.cos(th_0)) <= 1)
             if condition_0:
                 # Temp variable for efficiency
-                x0 = math.acos(r_13*math.sin(th_0) - r_23*math.cos(th_0))
+                x0 = safe_acos(r_13*math.sin(th_0) - r_23*math.cos(th_0))
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[7] = x0
@@ -505,7 +507,7 @@ def ur_5_ik_solve_raw(T_ee: np.ndarray):
             condition_1: bool = (abs(r_13*math.sin(th_0) - r_23*math.cos(th_0)) <= 1)
             if condition_1:
                 # Temp variable for efficiency
-                x0 = math.acos(r_13*math.sin(th_0) - r_23*math.cos(th_0))
+                x0 = safe_acos(r_13*math.sin(th_0) - r_23*math.cos(th_0))
                 # End of temp variables
                 this_solution[7] = -x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -634,7 +636,7 @@ def ur_5_ik_solve_raw(T_ee: np.ndarray):
                 # Temp variable for efficiency
                 x0 = 2*d_0
                 x1 = 2*d_5
-                x2 = math.acos((1/2)*(-a_1**2 - a_3**2 - d_0**2 - d_2**2 - 2*d_2*d_4 - d_2*x0 - d_4**2 - d_4*x0 + d_5**2 + d_6**2 + 2*d_6*inv_Pz + inv_Px**2 - inv_Px*x1*math.sin(th_5) + inv_Py**2 - inv_Py*x1*math.cos(th_5) + inv_Pz**2)/(a_1*a_3))
+                x2 = safe_acos((1/2)*(-a_1**2 - a_3**2 - d_0**2 - d_2**2 - 2*d_2*d_4 - d_2*x0 - d_4**2 - d_4*x0 + d_5**2 + d_6**2 + 2*d_6*inv_Pz + inv_Px**2 - inv_Px*x1*math.sin(th_5) + inv_Py**2 - inv_Py*x1*math.cos(th_5) + inv_Pz**2)/(a_1*a_3))
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[4] = x2
@@ -646,7 +648,7 @@ def ur_5_ik_solve_raw(T_ee: np.ndarray):
                 # Temp variable for efficiency
                 x0 = 2*d_0
                 x1 = 2*d_5
-                x2 = math.acos((1/2)*(-a_1**2 - a_3**2 - d_0**2 - d_2**2 - 2*d_2*d_4 - d_2*x0 - d_4**2 - d_4*x0 + d_5**2 + d_6**2 + 2*d_6*inv_Pz + inv_Px**2 - inv_Px*x1*math.sin(th_5) + inv_Py**2 - inv_Py*x1*math.cos(th_5) + inv_Pz**2)/(a_1*a_3))
+                x2 = safe_acos((1/2)*(-a_1**2 - a_3**2 - d_0**2 - d_2**2 - 2*d_2*d_4 - d_2*x0 - d_4**2 - d_4*x0 + d_5**2 + d_6**2 + 2*d_6*inv_Pz + inv_Px**2 - inv_Px*x1*math.sin(th_5) + inv_Py**2 - inv_Py*x1*math.cos(th_5) + inv_Pz**2)/(a_1*a_3))
                 # End of temp variables
                 this_solution[4] = -x2
                 solution_queue[node_input_i_idx_in_queue] = this_solution

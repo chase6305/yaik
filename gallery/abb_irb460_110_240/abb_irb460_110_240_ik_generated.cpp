@@ -9,7 +9,7 @@ static constexpr int robot_nq = 4;
 static constexpr int max_n_solutions = 16;
 static constexpr int n_tree_nodes = 16;
 static constexpr int intermediate_solution_size = 5;
-static constexpr double pose_tolerance = 1e-6;
+static constexpr double pose_tolerance = 1e-4;
 static constexpr double pose_tolerance_degenerate = 1e-4;
 static constexpr double zero_tolerance = 1e-6;
 using RawIKWorksace = ::yaik_cpp::RawIkWorkspaceTemplate<intermediate_solution_size, max_n_solutions, robot_nq>;
@@ -346,7 +346,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         if (condition_0)
         {
             // Temp variable for efficiency
-            const double x0 = std::acos(-r_33);
+            const double x0 = safe_acos(-r_33);
             // End of temp variables
             
             auto solution_0 = make_raw_solution();
@@ -359,7 +359,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         if (condition_1)
         {
             // Temp variable for efficiency
-            const double x0 = std::acos(-r_33);
+            const double x0 = safe_acos(-r_33);
             // End of temp variables
             
             auto solution_1 = make_raw_solution();
@@ -397,7 +397,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             if (condition_0)
             {
                 // Temp variable for efficiency
-                const double x0 = std::asin((Pz + a_2*std::sin(th_1th_2_soa) + d_3*std::cos(th_1th_2_soa))/a_1);
+                const double x0 = safe_asin((Pz + a_2*std::sin(th_1th_2_soa) + d_3*std::cos(th_1th_2_soa))/a_1);
                 // End of temp variables
                 RawSolution solution_0(this_solution);
                 solution_0[1] = -x0;
@@ -409,7 +409,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             if (condition_1)
             {
                 // Temp variable for efficiency
-                const double x0 = std::asin((Pz + a_2*std::sin(th_1th_2_soa) + d_3*std::cos(th_1th_2_soa))/a_1);
+                const double x0 = safe_asin((Pz + a_2*std::sin(th_1th_2_soa) + d_3*std::cos(th_1th_2_soa))/a_1);
                 // End of temp variables
                 const double tmp_sol_value = x0 + M_PI;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
@@ -794,7 +794,7 @@ static void computeIK(const Eigen::Matrix4d& T_ee, RawIKWorksace& workspace, std
         ik_out_i[2] -= th_2_offset_original2raw;
         ik_out_i[3] -= th_3_offset_original2raw;
         const Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
-        double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
+        double ee_pose_diff = (ee_pose_i - T_ee).cwiseAbs().maxCoeff();
         if (ee_pose_diff < pose_tolerance)
             ik_output.push_back(ik_out_i);
     }
@@ -813,14 +813,14 @@ static void computeIK(const Eigen::Matrix4d& T_ee, RawIKWorksace& workspace, std
         ik_out_i[2] -= th_2_offset_original2raw;
         ik_out_i[3] -= th_3_offset_original2raw;
         Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
-        double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();
+        double ee_pose_diff = (ee_pose_i - T_ee_disturbed).cwiseAbs().maxCoeff();
         if (ee_pose_diff > pose_tolerance_degenerate)
             continue;
         
         // Try numerical refinement
         yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i);
         ee_pose_i = computeFK(ik_out_i);
-        ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
+        ee_pose_diff = (ee_pose_i - T_ee).cwiseAbs().maxCoeff();
         if (ee_pose_diff < pose_tolerance_degenerate)
             ik_output.push_back(ik_out_i);
     }

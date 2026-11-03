@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import math
 from typing import List, NewType
+from python_run_import import *
 
 # Constants for solver
 robot_nq: int = 6
@@ -36,6 +37,7 @@ def puma_ik_target_raw_to_original(T_ee: np.ndarray):
 
 
 def puma_fk(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0]
     th_1 = theta_input[1]
     th_2 = theta_input[2]
@@ -350,7 +352,7 @@ def puma_ik_solve_raw(T_ee: np.ndarray):
         if condition_0:
             # Temp variable for efficiency
             x0 = math.atan2(Px, -Py)
-            x1 = math.sqrt(Px**2 + Py**2 - d_3**2)
+            x1 = safe_sqrt(Px**2 + Py**2 - d_3**2)
             x2 = -d_3
             # End of temp variables
             solution_0: IkSolution = make_ik_solution()
@@ -362,7 +364,7 @@ def puma_ik_solve_raw(T_ee: np.ndarray):
         if condition_1:
             # Temp variable for efficiency
             x0 = math.atan2(Px, -Py)
-            x1 = math.sqrt(Px**2 + Py**2 - d_3**2)
+            x1 = safe_sqrt(Px**2 + Py**2 - d_3**2)
             x2 = -d_3
             # End of temp variables
             solution_1: IkSolution = make_ik_solution()
@@ -400,7 +402,7 @@ def puma_ik_solve_raw(T_ee: np.ndarray):
                 x4 = 4*x3
                 x5 = d_4**2
                 x6 = Px**2 + Py**2 + Pz**2 - 2*Pz*d_1 + d_1**2 - d_3**2 - x2 - x3 - x5
-                x7 = math.sqrt(x2*x4 + x4*x5 - x6**2)
+                x7 = safe_sqrt(x2*x4 + x4*x5 - x6**2)
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[4] = x1 + math.atan2(x7, x6)
@@ -417,7 +419,7 @@ def puma_ik_solve_raw(T_ee: np.ndarray):
                 x4 = 4*x3
                 x5 = d_4**2
                 x6 = Px**2 + Py**2 + Pz**2 - 2*Pz*d_1 + d_1**2 - d_3**2 - x2 - x3 - x5
-                x7 = math.sqrt(x2*x4 + x4*x5 - x6**2)
+                x7 = safe_sqrt(x2*x4 + x4*x5 - x6**2)
                 # End of temp variables
                 this_solution[4] = x1 + math.atan2(-x7, x6)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -541,7 +543,7 @@ def puma_ik_solve_raw(T_ee: np.ndarray):
                 x2 = math.sin(th_1)
                 x3 = math.sin(th_2)
                 x4 = x0*x3 + x1*x2
-                x5 = math.acos(-r_13*x4*math.cos(th_0) - r_23*x4*math.sin(th_0) - r_33*(x0*x1 - x2*x3))
+                x5 = safe_acos(-r_13*x4*math.cos(th_0) - r_23*x4*math.sin(th_0) - r_33*(x0*x1 - x2*x3))
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[7] = x5
@@ -556,7 +558,7 @@ def puma_ik_solve_raw(T_ee: np.ndarray):
                 x2 = math.sin(th_1)
                 x3 = math.sin(th_2)
                 x4 = x0*x3 + x1*x2
-                x5 = math.acos(-r_13*x4*math.cos(th_0) - r_23*x4*math.sin(th_0) - r_33*(x0*x1 - x2*x3))
+                x5 = safe_acos(-r_13*x4*math.cos(th_0) - r_23*x4*math.sin(th_0) - r_33*(x0*x1 - x2*x3))
                 # End of temp variables
                 this_solution[7] = -x5
                 solution_queue[node_input_i_idx_in_queue] = this_solution

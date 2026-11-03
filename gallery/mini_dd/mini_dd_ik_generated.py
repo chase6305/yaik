@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import math
 from typing import List, NewType
+from python_run_import import *
 
 # Constants for solver
 robot_nq: int = 5
@@ -33,6 +34,7 @@ def mini_dd_ik_target_raw_to_original(T_ee: np.ndarray):
 
 
 def mini_dd_fk(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     d_0 = theta_input[0]
     th_1 = theta_input[1]
     th_2 = theta_input[2]
@@ -259,7 +261,7 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
         condition_0: bool = (abs(Py/l_4) <= 1)
         if condition_0:
             # Temp variable for efficiency
-            x0 = math.acos(-Py/l_4)
+            x0 = safe_acos(-Py/l_4)
             # End of temp variables
             solution_0: IkSolution = make_ik_solution()
             solution_0[2] = x0
@@ -269,7 +271,7 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
         condition_1: bool = (abs(Py/l_4) <= 1)
         if condition_1:
             # Temp variable for efficiency
-            x0 = math.acos(-Py/l_4)
+            x0 = safe_acos(-Py/l_4)
             # End of temp variables
             solution_1: IkSolution = make_ik_solution()
             solution_1[2] = -x0
@@ -317,7 +319,7 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
             condition_0: bool = (abs(Px/(l_3 - l_4*math.sin(th_2))) <= 1)
             if condition_0:
                 # Temp variable for efficiency
-                x0 = math.acos(Px/(l_3 - l_4*math.sin(th_2)))
+                x0 = safe_acos(Px/(l_3 - l_4*math.sin(th_2)))
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[1] = x0
@@ -327,7 +329,7 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
             condition_1: bool = (abs(Px/(l_3 - l_4*math.sin(th_2))) <= 1)
             if condition_1:
                 # Temp variable for efficiency
-                x0 = math.acos(Px/(l_3 - l_4*math.sin(th_2)))
+                x0 = safe_acos(Px/(l_3 - l_4*math.sin(th_2)))
                 # End of temp variables
                 this_solution[1] = -x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution

@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import math
 from typing import List, NewType
+from python_run_import import *
 
 # Constants for solver
 robot_nq: int = 6
@@ -34,6 +35,7 @@ def arm_robo_ik_target_raw_to_original(T_ee: np.ndarray):
 
 
 def arm_robo_fk(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0]
     th_1 = theta_input[1]
     th_2 = theta_input[2]
@@ -326,17 +328,17 @@ def arm_robo_ik_solve_raw(T_ee: np.ndarray):
         p_coefficients[0] = poly_coefficient_4
         
         # Note that in np.roots, p_coefficient[0] is the highest order
-        poly_roots = np.roots(p_coefficients)
+        poly_roots = compute_polynomial_real_roots(p_coefficients)
         
         # Result collection
         for root_idx in range(len(poly_roots)):
             this_root = poly_roots[root_idx]
             if not np.isreal(this_root):
                 continue
-            if abs(this_root) > 1:
+            if abs(this_root) > 1 + zero_tolerance:
                 continue
-            first_angle = np.arcsin(this_root)
-            second_angle = np.pi - np.arcsin(this_root)
+            first_angle = safe_asin(this_root)
+            second_angle = np.pi - safe_asin(this_root)
             solution_0: IkSolution = make_ik_solution()
             solution_0[2] = first_angle
             solution_1: IkSolution = make_ik_solution()
@@ -435,7 +437,7 @@ def arm_robo_ik_solve_raw(T_ee: np.ndarray):
             condition_0: bool = (abs((Py - d_6*r_23 + l_2)/l_3) <= 1)
             if condition_0:
                 # Temp variable for efficiency
-                x0 = math.acos((-Py + d_6*r_23 - l_2)/l_3)
+                x0 = safe_acos((-Py + d_6*r_23 - l_2)/l_3)
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[7] = x0
@@ -445,7 +447,7 @@ def arm_robo_ik_solve_raw(T_ee: np.ndarray):
             condition_1: bool = (abs((Py - d_6*r_23 + l_2)/l_3) <= 1)
             if condition_1:
                 # Temp variable for efficiency
-                x0 = math.acos((-Py + d_6*r_23 - l_2)/l_3)
+                x0 = safe_acos((-Py + d_6*r_23 - l_2)/l_3)
                 # End of temp variables
                 this_solution[7] = -x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
