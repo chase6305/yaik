@@ -19,13 +19,14 @@ from solver.build_equations import IkEquationCollection
 from solver.degenerate_analyse.analyser_step import DegenerateAnalyserContext
 from solver.degenerate_analyse.numerical_analyser import NumericalCheckDegenerateAnalyzer
 from solver.degenerate_analyse.numerical_check_data import generate_test_cases
-from solver.equation_types import NumericalAnalyseContext, ScalarEquation, Unknown, UnknownType
+from solver.equation_types import EquationInput, NumericalAnalyseContext, ScalarEquation, Unknown, UnknownType
 from solver.equation_utils import scalar_equation_by_unknowns
 from solver.linear_solver.linear_sin_cos_type2_numerical_solve import try_solve_linear_type2_combined
 from solver.polynomial_solver.verify_polynomial_solution import verify_polynomial_solution
 from solver.select_solution import select_solution_in_type
 from solver.solved_variable import NumericalAnalysedResultType, SolutionDegenerateRecord, SolutionMethod, VariableSolution
 from solver.solve_branched import construct_variable_branched_equations
+from solver.solve_equations import solve_equations, SolveEquationOption
 from solver.solver_snapshot import SolverSnapshot
 from solver.substitute_transform import substitute_transform_parallel
 from solver.unary_solvers.unary_solver_step import UnarySolverStep
@@ -49,7 +50,7 @@ def polynomial_tree():
 def parameterized_tree():
     tree = polynomial_tree()
     tree.robot.name = 'parameterized'
-    length, y = sp.symbols('length y')
+    length, y = sp.symbols('z_length y')
     tree.robot.symbolic_parameters.add(length)
     tree.robot.parameters_bound[length] = (0.1, 0.9)
     tree.robot.dh_params[0].a = length
@@ -166,6 +167,9 @@ class TestRegressions(TestCase):
         self.assertEqual(compute_polynomial_real_roots([0, 0, 2, -4]), [2.0])
         self.assertEqual(compute_polynomial_real_roots([0, 0]), [])
         self.assertEqual(compute_polynomial_real_roots([np.nan, 1]), [])
+        with warnings.catch_warnings():
+            warnings.simplefilter('error')
+            self.assertEqual(compute_polynomial_real_roots([1e-320, 1, 1]), [])
 
     def test_linear_type2_recovers_unit_circle_families(self):
         angle = 0.73
@@ -196,6 +200,24 @@ class TestRegressions(TestCase):
         for y in solutions:
             np.testing.assert_allclose(A @ [np.sin(y), np.cos(y), np.sin(y), np.cos(y)], 0, atol=1e-14)
         np.testing.assert_allclose(try_solve_linear_type2_combined(A, [(0, 1, 2)]), solutions)
+
+    def test_linear_type2_returns_empty_when_row_selection_is_numerically_singular(self):
+        A = np.zeros((4, 4))
+        top = np.array([[1100, 1300], [770, 909.9999999999999]])
+        A[1:3, :2], A[1:3, 2:] = top, -top
+        self.assertIsNone(try_solve_linear_type2_specific_rows(A, 0, 1, 2))
+
+    def test_equation_dedup_preserves_layout_needed_by_rule_matching(self):
+        a, x, y = sp.symbols('a x y')
+        equations = EquationInput([ScalarEquation(a + y, x + y), ScalarEquation(a, x)], [])
+        unknowns = [Unknown(x, UnknownType.Translational.name), Unknown(y, UnknownType.Translational.name)]
+        options = SolveEquationOption()
+        options.disable_polynomial_solution = True
+        options.stop_on_first_unsolved = True
+        options.stop_on_bad_solution = True
+        solutions = solve_equations(equations, unknowns, {a}, NumericalAnalyseContext(), options)
+        self.assertTrue(any(solution.solved_variable == x and solution.explicit_solutions == [a]
+                            for solution in solutions))
 
     def test_compiled_degeneration_checks_keep_unknown_samples_conservative(self):
         x = sp.Symbol('x')
@@ -320,10 +342,28 @@ class TestRegressions(TestCase):
     def test_runtime_parameters_and_redundant_joints_without_offsets(self):
         scope = {}
         exec('\n'.join(CodeGenerationPython(parameterized_tree()).generate_code()), scope)
+        self.assertEqual(list(inspect.signature(scope['parameterized_ik_solve']).parameters),
+                         ['T_ee', 'z_length', 'y'])
         target = scope['parameterized_fk'](np.array([1, 0.25]), 0.4)
         output = scope['parameterized_ik_solve'](target, 0.4, 0.25)
         self.assertEqual(len(output), 1)
         np.testing.assert_allclose(output[0].reshape(-1), [1, 0.25])
+
+    def test_free_joints_keep_robot_order_after_geometry_parameters(self):
+        tree = parameterized_tree()
+        th_2, th_10 = sp.symbols('th_2 th_10')
+        tree.robot.unknowns[1] = Unknown(th_2, UnknownType.Translational.name)
+        tree.robot.dh_params[1].d = th_2
+        tree.robot.unknowns.append(Unknown(th_10, UnknownType.Translational.name))
+        tree.robot.dh_params.append(DHEntry(0, 0, th_10, 0))
+        tree.robot.unknown_as_parameter_more_dof = [th_2, th_10]
+        self.assertEqual(tree.get_free_symbols(), [sp.Symbol('z_length'), th_2, th_10])
+        scope = {}
+        exec('\n'.join(CodeGenerationPython(tree).generate_code()), scope)
+        target = scope['parameterized_fk']([1, 0.25, 0.5], 0.4)
+        solutions = scope['parameterized_ik_solve'](target, 0.4, 0.25, 0.5)
+        self.assertEqual(len(solutions), 1)
+        np.testing.assert_allclose(solutions[0].reshape(-1), [1, 0.25, 0.5])
 
     def test_generated_ik_rejects_nonfinite_targets(self):
         scope = {}
@@ -347,6 +387,8 @@ int main() {
     const auto roots = yaik_cpp::computePolynomialRealRoots<3>({0, 0, 2, -4});
     assert(roots[0].is_valid && std::abs(roots[0].value - 2) < 1e-12);
     assert(!roots[1].is_valid && !roots[2].is_valid);
+    const auto underflow_roots = yaik_cpp::computePolynomialRealRoots<2>({1e-300, 1e300, 1});
+    assert(!underflow_roots[0].is_valid && !underflow_roots[1].is_valid);
     Eigen::Matrix<double, 4, 4> linear;
     linear << 1, 0, -1, 0,
               0, 1, 0, -1,

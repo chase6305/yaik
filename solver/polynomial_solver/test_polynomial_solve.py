@@ -174,8 +174,8 @@ class TestPolynomialSolverNumerical(unittest.TestCase):
         ok_1 = polynomial_numerical_match([poly_0, poly_1], [unknowns[1], unknowns[0]], parameter_set, values_to_test)
         self.assertTrue(ok_0 and ok_1)
 
-    # Expensive exploratory example without numerical reference cases or assertions.
-    def example_polynomial_4(self):
+    @unittest.skipUnless(SAGE_AVAILABLE, 'SageMath is required for this symbolic elimination case')
+    def test_polynomial_4(self):
         from solver.equation_utils import default_unknowns
         from fk.fk_equations import Px, Py
         unknowns = default_unknowns(4)

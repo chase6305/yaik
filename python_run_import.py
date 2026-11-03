@@ -35,8 +35,13 @@ def compute_polynomial_real_roots(coefficients, tolerance: float = 1e-6) -> List
     if coefficients.size < 2:
         return []
     coefficients = coefficients / np.max(np.abs(coefficients))
+    try:
+        with np.errstate(over='ignore', invalid='ignore', divide='ignore'):
+            candidates = np.roots(coefficients)
+    except np.linalg.LinAlgError:
+        return []
     roots = []
-    for root in np.roots(coefficients):
+    for root in candidates:
         if abs(root.imag) > tolerance * (1 + abs(root.real)):
             continue
         value = float(root.real)
@@ -182,7 +187,10 @@ def try_solve_linear_type2_specific_rows(
     if best_pair is None:
         return None
     top = A_combined[list(best_pair)]
-    B = -np.linalg.solve(top[:, :2], top[:, 2:])
+    try:
+        B = -np.linalg.solve(top[:, :2], top[:, 2:])
+    except np.linalg.LinAlgError:
+        return None
     residual = A_combined[:, 2:] + A_combined[:, :2] @ B
     remaining = [i for i in range(len(A_combined)) if i not in best_pair]
     third = max(remaining, key=lambda i: float(residual[i] @ residual[i]))

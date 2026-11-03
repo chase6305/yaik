@@ -326,10 +326,11 @@ class SkeletonTree(object):
         for symbol_i in robot.symbolic_parameters:
             if symbol_i not in robot.parameters_value:
                 all_symbol_list.append(symbol_i)
+        all_symbol_list.sort(key=str)
 
         # If unknown is not required, we're done
         if not include_unknown_as_parameter:
-            return sorted(all_symbol_list, key=str)
+            return all_symbol_list
 
         # Also the unknown
         for unknown_i in robot.unknowns:
@@ -338,4 +339,4 @@ class SkeletonTree(object):
                 all_symbol_list.append(unknown_i.symbol)
 
         # OK
-        return sorted(all_symbol_list, key=str)
+        return all_symbol_list

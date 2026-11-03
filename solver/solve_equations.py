@@ -102,10 +102,8 @@ def solve_equations(equation_input: EquationInput,
 
     def unique_equations(candidates):
         for equation in candidates:
-            residual = equation.lhs - equation.rhs
-            if residual.could_extract_minus_sign():
-                residual = -residual
-            key = (equation.equation_type, residual)
+            # Rule matching depends on the expression layout on each side.
+            key = (equation.equation_type, equation.lhs, equation.rhs)
             if key not in seen_equations:
                 seen_equations.add(key)
                 yield equation

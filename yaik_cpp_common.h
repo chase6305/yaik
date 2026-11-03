@@ -239,6 +239,8 @@ std::array<PolynomialRealRoot, poly_order> computePolynomialRealRoots(
   for (auto i = 0; i <= degree; i++) {
     eigen_coefficient[i] = coefficient_high_to_low_order[poly_order - i] / coefficient_scale;
   }
+  // Scaling can underflow a nonzero leading coefficient.
+  if (eigen_coefficient[degree] == 0) return poly_roots;
 
   // Call eigen solver
   Eigen::PolynomialSolver<double, Eigen::Dynamic> solver;
