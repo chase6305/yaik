@@ -315,19 +315,39 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         // The polynomial solution of root node
         const double poly_coefficient_0_num = (std::pow(inv_Px, 2) - 2*inv_Px*l_1*r_11 - 2*inv_Px*l_2*r_21 + std::pow(inv_Py, 2) - 2*inv_Py*l_1*r_12 - 2*inv_Py*l_2*r_22 + std::pow(l_1, 2)*std::pow(r_11, 2) + std::pow(l_1, 2)*std::pow(r_12, 2) + 2*l_1*l_2*r_11*r_21 + 2*l_1*l_2*r_12*r_22 + std::pow(l_2, 2)*std::pow(r_21, 2) + std::pow(l_2, 2)*std::pow(r_22, 2) - std::pow(l_3, 2))*(std::pow(inv_Px, 2) + 2*inv_Px*l_1*r_11 - 2*inv_Px*l_2*r_21 + std::pow(inv_Py, 2) + 2*inv_Py*l_1*r_12 - 2*inv_Py*l_2*r_22 + std::pow(l_1, 2)*std::pow(r_11, 2) + std::pow(l_1, 2)*std::pow(r_12, 2) - 2*l_1*l_2*r_11*r_21 - 2*l_1*l_2*r_12*r_22 + std::pow(l_2, 2)*std::pow(r_21, 2) + std::pow(l_2, 2)*std::pow(r_22, 2) - std::pow(l_3, 2));
         const double poly_coefficient_0_denom = 1;
+        if (!std::isfinite(poly_coefficient_0_num) || !std::isfinite(poly_coefficient_0_denom) || poly_coefficient_0_denom == 0)
+            return;
         const double poly_coefficient_0 = poly_coefficient_0_num / poly_coefficient_0_denom;
+        if (!std::isfinite(poly_coefficient_0))
+            return;
         const double poly_coefficient_1_num = 4*l_1*(std::pow(inv_Px, 3)*r_31 + std::pow(inv_Px, 2)*inv_Py*r_32 - 3*std::pow(inv_Px, 2)*l_2*r_21*r_31 - std::pow(inv_Px, 2)*l_2*r_22*r_32 + inv_Px*std::pow(inv_Py, 2)*r_31 - 2*inv_Px*inv_Py*l_2*r_21*r_32 - 2*inv_Px*inv_Py*l_2*r_22*r_31 - inv_Px*std::pow(l_1, 2)*std::pow(r_11, 2)*r_31 - 2*inv_Px*std::pow(l_1, 2)*r_11*r_12*r_32 + inv_Px*std::pow(l_1, 2)*std::pow(r_12, 2)*r_31 + 3*inv_Px*std::pow(l_2, 2)*std::pow(r_21, 2)*r_31 + 2*inv_Px*std::pow(l_2, 2)*r_21*r_22*r_32 + inv_Px*std::pow(l_2, 2)*std::pow(r_22, 2)*r_31 - inv_Px*std::pow(l_3, 2)*r_31 + std::pow(inv_Py, 3)*r_32 - std::pow(inv_Py, 2)*l_2*r_21*r_31 - 3*std::pow(inv_Py, 2)*l_2*r_22*r_32 + inv_Py*std::pow(l_1, 2)*std::pow(r_11, 2)*r_32 - 2*inv_Py*std::pow(l_1, 2)*r_11*r_12*r_31 - inv_Py*std::pow(l_1, 2)*std::pow(r_12, 2)*r_32 + inv_Py*std::pow(l_2, 2)*std::pow(r_21, 2)*r_32 + 2*inv_Py*std::pow(l_2, 2)*r_21*r_22*r_31 + 3*inv_Py*std::pow(l_2, 2)*std::pow(r_22, 2)*r_32 - inv_Py*std::pow(l_3, 2)*r_32 + std::pow(l_1, 2)*l_2*std::pow(r_11, 2)*r_21*r_31 - std::pow(l_1, 2)*l_2*std::pow(r_11, 2)*r_22*r_32 + 2*std::pow(l_1, 2)*l_2*r_11*r_12*r_21*r_32 + 2*std::pow(l_1, 2)*l_2*r_11*r_12*r_22*r_31 - std::pow(l_1, 2)*l_2*std::pow(r_12, 2)*r_21*r_31 + std::pow(l_1, 2)*l_2*std::pow(r_12, 2)*r_22*r_32 - std::pow(l_2, 3)*std::pow(r_21, 3)*r_31 - std::pow(l_2, 3)*std::pow(r_21, 2)*r_22*r_32 - std::pow(l_2, 3)*r_21*std::pow(r_22, 2)*r_31 - std::pow(l_2, 3)*std::pow(r_22, 3)*r_32 + l_2*std::pow(l_3, 2)*r_21*r_31 + l_2*std::pow(l_3, 2)*r_22*r_32);
         const double poly_coefficient_1_denom = 1;
+        if (!std::isfinite(poly_coefficient_1_num) || !std::isfinite(poly_coefficient_1_denom) || poly_coefficient_1_denom == 0)
+            return;
         const double poly_coefficient_1 = poly_coefficient_1_num / poly_coefficient_1_denom;
+        if (!std::isfinite(poly_coefficient_1))
+            return;
         const double poly_coefficient_2_num = 2*std::pow(l_1, 2)*(std::pow(inv_Px, 2)*std::pow(r_11, 2) - std::pow(inv_Px, 2)*std::pow(r_12, 2) + 3*std::pow(inv_Px, 2)*std::pow(r_31, 2) + std::pow(inv_Px, 2)*std::pow(r_32, 2) + 4*inv_Px*inv_Py*r_11*r_12 + 4*inv_Px*inv_Py*r_31*r_32 - 2*inv_Px*l_2*std::pow(r_11, 2)*r_21 - 4*inv_Px*l_2*r_11*r_12*r_22 + 2*inv_Px*l_2*std::pow(r_12, 2)*r_21 - 6*inv_Px*l_2*r_21*std::pow(r_31, 2) - 2*inv_Px*l_2*r_21*std::pow(r_32, 2) - 4*inv_Px*l_2*r_22*r_31*r_32 - std::pow(inv_Py, 2)*std::pow(r_11, 2) + std::pow(inv_Py, 2)*std::pow(r_12, 2) + std::pow(inv_Py, 2)*std::pow(r_31, 2) + 3*std::pow(inv_Py, 2)*std::pow(r_32, 2) + 2*inv_Py*l_2*std::pow(r_11, 2)*r_22 - 4*inv_Py*l_2*r_11*r_12*r_21 - 2*inv_Py*l_2*std::pow(r_12, 2)*r_22 - 4*inv_Py*l_2*r_21*r_31*r_32 - 2*inv_Py*l_2*r_22*std::pow(r_31, 2) - 6*inv_Py*l_2*r_22*std::pow(r_32, 2) - std::pow(l_1, 2)*std::pow(r_11, 4) - 2*std::pow(l_1, 2)*std::pow(r_11, 2)*std::pow(r_12, 2) - std::pow(l_1, 2)*std::pow(r_11, 2)*std::pow(r_31, 2) + std::pow(l_1, 2)*std::pow(r_11, 2)*std::pow(r_32, 2) - 4*std::pow(l_1, 2)*r_11*r_12*r_31*r_32 - std::pow(l_1, 2)*std::pow(r_12, 4) + std::pow(l_1, 2)*std::pow(r_12, 2)*std::pow(r_31, 2) - std::pow(l_1, 2)*std::pow(r_12, 2)*std::pow(r_32, 2) + std::pow(l_2, 2)*std::pow(r_11, 2)*std::pow(r_21, 2) - std::pow(l_2, 2)*std::pow(r_11, 2)*std::pow(r_22, 2) + 4*std::pow(l_2, 2)*r_11*r_12*r_21*r_22 - std::pow(l_2, 2)*std::pow(r_12, 2)*std::pow(r_21, 2) + std::pow(l_2, 2)*std::pow(r_12, 2)*std::pow(r_22, 2) + 3*std::pow(l_2, 2)*std::pow(r_21, 2)*std::pow(r_31, 2) + std::pow(l_2, 2)*std::pow(r_21, 2)*std::pow(r_32, 2) + 4*std::pow(l_2, 2)*r_21*r_22*r_31*r_32 + std::pow(l_2, 2)*std::pow(r_22, 2)*std::pow(r_31, 2) + 3*std::pow(l_2, 2)*std::pow(r_22, 2)*std::pow(r_32, 2) + std::pow(l_3, 2)*std::pow(r_11, 2) + std::pow(l_3, 2)*std::pow(r_12, 2) - std::pow(l_3, 2)*std::pow(r_31, 2) - std::pow(l_3, 2)*std::pow(r_32, 2));
         const double poly_coefficient_2_denom = 1;
+        if (!std::isfinite(poly_coefficient_2_num) || !std::isfinite(poly_coefficient_2_denom) || poly_coefficient_2_denom == 0)
+            return;
         const double poly_coefficient_2 = poly_coefficient_2_num / poly_coefficient_2_denom;
+        if (!std::isfinite(poly_coefficient_2))
+            return;
         const double poly_coefficient_3_num = 4*std::pow(l_1, 3)*(inv_Px*std::pow(r_11, 2)*r_31 + 2*inv_Px*r_11*r_12*r_32 - inv_Px*std::pow(r_12, 2)*r_31 + inv_Px*std::pow(r_31, 3) + inv_Px*r_31*std::pow(r_32, 2) - inv_Py*std::pow(r_11, 2)*r_32 + 2*inv_Py*r_11*r_12*r_31 + inv_Py*std::pow(r_12, 2)*r_32 + inv_Py*std::pow(r_31, 2)*r_32 + inv_Py*std::pow(r_32, 3) - l_2*std::pow(r_11, 2)*r_21*r_31 + l_2*std::pow(r_11, 2)*r_22*r_32 - 2*l_2*r_11*r_12*r_21*r_32 - 2*l_2*r_11*r_12*r_22*r_31 + l_2*std::pow(r_12, 2)*r_21*r_31 - l_2*std::pow(r_12, 2)*r_22*r_32 - l_2*r_21*std::pow(r_31, 3) - l_2*r_21*r_31*std::pow(r_32, 2) - l_2*r_22*std::pow(r_31, 2)*r_32 - l_2*r_22*std::pow(r_32, 3));
         const double poly_coefficient_3_denom = 1;
+        if (!std::isfinite(poly_coefficient_3_num) || !std::isfinite(poly_coefficient_3_denom) || poly_coefficient_3_denom == 0)
+            return;
         const double poly_coefficient_3 = poly_coefficient_3_num / poly_coefficient_3_denom;
+        if (!std::isfinite(poly_coefficient_3))
+            return;
         const double poly_coefficient_4_num = std::pow(l_1, 4)*(std::pow(r_11, 2) - 2*r_11*r_32 + std::pow(r_12, 2) + 2*r_12*r_31 + std::pow(r_31, 2) + std::pow(r_32, 2))*(std::pow(r_11, 2) + 2*r_11*r_32 + std::pow(r_12, 2) - 2*r_12*r_31 + std::pow(r_31, 2) + std::pow(r_32, 2));
         const double poly_coefficient_4_denom = 1;
+        if (!std::isfinite(poly_coefficient_4_num) || !std::isfinite(poly_coefficient_4_denom) || poly_coefficient_4_denom == 0)
+            return;
         const double poly_coefficient_4 = poly_coefficient_4_num / poly_coefficient_4_denom;
+        if (!std::isfinite(poly_coefficient_4))
+            return;
         std::array<double, 4 + 1> p_coefficients{};
         p_coefficients[4] = poly_coefficient_0;
         p_coefficients[3] = poly_coefficient_1;

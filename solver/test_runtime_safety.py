@@ -47,6 +47,25 @@ def large_angle_tree(offset=None):
     return SkeletonTree([solution], robot)
 
 
+def periodic_angle_tree():
+    model = large_angle_tree().robot
+    model.name = 'runtime_periodic'
+    model.unknowns[0] = Unknown(model.unknowns[0].symbol, lower_bound=0, upper_bound=float(sp.pi))
+    solution = VariableSolution.make_explicit_solution(
+        model.unknowns[0].symbol, [-sp.pi, sp.pi], SolutionMethod.OneVariableAlgebra.name)
+    return SkeletonTree([solution], model)
+
+
+def prismatic_periodic_tree():
+    x, y = sp.symbols('x y')
+    model = RobotDescription('runtime_prismatic')
+    model.unknowns = [Unknown(symbol, UnknownType.Translational.name, -10, 10) for symbol in (x, y)]
+    model.dh_params = [DHEntry(0, 0, symbol, 0) for symbol in (x, y)]
+    solutions = [VariableSolution.make_explicit_solution(symbol, values, SolutionMethod.OneVariableAlgebra.name)
+                 for symbol, values in ((x, [-sp.pi, sp.pi]), (y, [-x]))]
+    return SkeletonTree(solutions, model)
+
+
 class TestRuntimeSafety(TestCase):
     def python_solver(self):
         scope = {}
@@ -85,9 +104,61 @@ class TestRuntimeSafety(TestCase):
         iiwa = read_skeleton_tree(str(ROOT / 'gallery/kuka_iiwa/kuka_iiwa_ik.yaml'))
         code = '\n'.join('\n'.join(CodeGenerationCpp(tree, use_safe_operator=True).generate_code())
                          .split('// Code below for debug')[0]
-                         for tree in (runtime_tree(), large_angle_tree(), large_angle_tree(0.7), iiwa))
+                         for tree in (runtime_tree(), large_angle_tree(), large_angle_tree(0.7),
+                                      periodic_angle_tree(), prismatic_periodic_tree(), iiwa))
         main = r'''
 int main() {
+    std::vector<std::array<double, 1>> endpoints{{{-M_PI}}, {{M_PI}}};
+    auto linear = endpoints;
+    yaik_cpp::removeDuplicate<1>(linear, 1e-6);
+    assert(linear.size() == 2);  // Omitting the mask preserves linear comparison.
+    yaik_cpp::removeDuplicate<1>(endpoints, 1e-6, {{true}});
+    assert(endpoints.size() == 1 && endpoints[0][0] == -M_PI);
+    std::vector<std::array<double, 2>> mixed{{{-M_PI, 0}}, {{M_PI, 0}}};
+    yaik_cpp::removeDuplicate<2>(mixed, 1e-6, {{false, true}});
+    assert(mixed.size() == 2);
+    for (double epsilon : {2e-7, 2e-5}) {
+        std::vector<std::array<double, 1>> boundary{{{-M_PI + epsilon}}, {{M_PI - epsilon}}};
+        yaik_cpp::removeDuplicate<1>(boundary, 1e-6, {{true}});
+        assert(boundary.size() == (epsilon < 1e-6 ? 1 : 2));
+    }
+    const double huge = std::ldexp(2 * M_PI, 60);
+    assert(std::abs(std::sin(huge)) > 1e-3);
+    std::vector<std::array<double, 1>> distinct{{{huge}}, {{0}}};
+    yaik_cpp::removeDuplicate<1>(distinct, 1e-6, {{true}});
+    assert(distinct.size() == 2);  // remainder(huge, 2*pi)==0 would falsely merge these.
+    std::vector<std::array<double, 1>> equivalent{{{1e20}}, {{std::atan2(std::sin(1e20), std::cos(1e20))}}};
+    yaik_cpp::removeDuplicate<1>(equivalent, 1e-6, {{true}});
+    assert(equivalent.size() == 1 && equivalent[0][0] == 1e20);
+    for (double invalid : {std::numeric_limits<double>::quiet_NaN(),
+                           std::numeric_limits<double>::infinity()}) {
+        std::vector<std::array<double, 1>> nonfinite{{{invalid}}, {{invalid}}};
+        std::feclearexcept(FE_ALL_EXCEPT);
+        yaik_cpp::removeDuplicate<1>(nonfinite, 1e-6, {{true}});
+        assert(nonfinite.size() == 2 && !std::fetestexcept(FE_INVALID | FE_OVERFLOW));
+    }
+    const double largest = std::numeric_limits<double>::max();
+    std::vector<std::array<double, 1>> overflow{{{largest}}, {{-largest}}};
+    std::feclearexcept(FE_ALL_EXCEPT);
+    yaik_cpp::removeDuplicate<1>(overflow, 1e-6, {{true}});
+    assert(overflow.size() == 2 && !std::fetestexcept(FE_INVALID | FE_OVERFLOW));
+    const auto periodic_target = runtime_periodic_ik::computeFK({{M_PI}});
+    const auto periodic_output = runtime_periodic_ik::computeIK(periodic_target);
+    assert(periodic_output.size() == 2);
+    std::vector<std::array<double, 1>> feasible;
+    for (const auto& q : periodic_output) {
+        assert((runtime_periodic_ik::computeFK(q) - periodic_target).squaredNorm() < 1e-20);
+        if (q[0] >= 0 && q[0] <= M_PI) feasible.push_back(q);
+    }
+    // Screen the model's [0,pi] limits before opting into periodic deduplication.
+    yaik_cpp::removeDuplicate<1>(feasible, 1e-6, {{true}});
+    assert(feasible.size() == 1 && feasible[0][0] == M_PI);
+    const auto prismatic_target = runtime_prismatic_ik::computeFK({{0, 0}});
+    const auto prismatic_output = runtime_prismatic_ik::computeIK(prismatic_target);
+    assert(prismatic_output.size() == 2);
+    for (const auto& q : prismatic_output) {
+        assert((runtime_prismatic_ik::computeFK(q) - prismatic_target).squaredNorm() < 1e-20);
+    }
     for (double angle : {0.25, 2 * M_PI + 0.3, 1e20, -1e20}) {
         const auto target = runtime_safety_ik::computeFK({{1, angle}}, 0.4);
         const auto output = runtime_safety_ik::computeIK(target, 0.4, angle);
@@ -200,7 +271,7 @@ int main() {
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / 'runtime.cpp'
             executable = Path(directory) / 'runtime'
-            source.write_text(code + main)
+            source.write_text('#include <cfenv>\n' + code + main)
             compiled = subprocess.run(['g++', '-std=c++14', '-O0', '-I' + str(ROOT), '-I' + str(eigen),
                                        str(source), '-o', str(executable)], capture_output=True, text=True, timeout=120)
             self.assertEqual(compiled.returncode, 0, compiled.stderr)

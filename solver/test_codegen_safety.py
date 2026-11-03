@@ -109,7 +109,34 @@ def successful_overlap_tree():
     return tree
 
 
+def rational_polynomial_tree():
+    x, p = sp.symbols('x p')
+    result = robot('polynomial_denominator', [x])
+    result.symbolic_parameters = {p}
+    result.parameters_bound = {p: (0, 1)}
+    result.dh_params[0].a = p
+    solution = VariableSolution.make_polynomial_solution(
+        x, SolutionMethod.PolynomialDirect.name, {0: (-p, p), 1: (p, p)})
+    return SkeletonTree([solution], result)
+
+
 class TestCodegenSafety(TestCase):
+    def test_polynomial_coefficients_reject_zero_denominators_before_division(self):
+        tree = rational_polynomial_tree()
+        scope = {}
+        exec('\n'.join(CodeGenerationPython(tree).generate_code()), scope)
+        solve = scope[tree.robot.name + '_ik_solve']
+        target = np.eye(4)
+        target[2, 3] = 1
+        for parameter in (0.5, 1e-300, float(np.nextafter(0.0, 1.0))):
+            with self.subTest(parameter=parameter):
+                target[0, 3] = parameter
+                output = solve(target, parameter)
+                np.testing.assert_allclose([q.ravel() for q in output], [[1]])
+        for invalid in (0.0, -0.0, np.inf, np.nan):
+            target[0, 3] = 0
+            self.assertEqual(solve(target, invalid), [])
+
     def test_guards_isolate_cse_and_keep_output_order(self):
         for non_root in (False, True):
             solve = generated_python(guarded_tree(non_root))
@@ -217,7 +244,7 @@ class TestCodegenSafety(TestCase):
                  missing_branch_tree(True), missing_branch_tree(True, implemented_overlap=True), complete_prefix_tree()]
         trees.extend(overlapping_branch_tree(missing_first, root_count)
                      for missing_first in (False, True) for root_count in (1, 16))
-        trees.extend([overlapping_branch_tree(False, 16, overlap=False), successful_overlap_tree()])
+        trees.extend([overlapping_branch_tree(False, 16, overlap=False), successful_overlap_tree(), rational_polynomial_tree()])
         code = '\n'.join('\n'.join(CodeGenerationCpp(tree).generate_code()).split('// Code below for debug')[0]
                          for tree in trees)
         main = r'''
@@ -270,6 +297,23 @@ int main() {
     assert(successful.raw_ik_out.size() == 2);
     assert(successful.raw_ik_out[0][0] == 0 && successful.raw_ik_out[0][1] == 1 && successful.raw_ik_out[0][2] == 1);
     assert(successful.raw_ik_out[1][0] == 0 && successful.raw_ik_out[1][1] == -1 && successful.raw_ik_out[1][2] == 3);
+    for (double p : {0.5, 1e-300, std::numeric_limits<double>::denorm_min(), 0.0,
+                     std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()}) {
+        Eigen::Matrix4d polynomial_target = target;
+        polynomial_target(2, 3) = 1;
+        polynomial_target(0, 3) = std::isfinite(p) ? p : 0;
+        polynomial_denominator_ik::RawIKWorksace workspace;
+        std::feclearexcept(FE_ALL_EXCEPT);
+        polynomial_denominator_ik::computeRawIK(polynomial_target, p, workspace);
+        const auto checked = polynomial_denominator_ik::computeIK(polynomial_target, p);
+        assert(!std::fetestexcept(FE_DIVBYZERO | FE_INVALID));
+        if (p != 0 && std::isfinite(p)) {
+            assert(workspace.raw_ik_out.size() == 1 && workspace.raw_ik_out[0][0] == 1);
+            assert(checked.size() == 1 && checked[0][0] == 1);
+        } else {
+            assert(workspace.raw_ik_out.empty() && checked.empty());
+        }
+    }
 }
 '''
         overlap_checks = ''

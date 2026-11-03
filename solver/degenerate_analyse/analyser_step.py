@@ -3,6 +3,7 @@ from solver.equation_utils import cast_expr_to_float
 from typing import Optional, List, Dict, Set, Tuple
 import sympy as sp
 import attr
+import math
 
 
 @attr.s
@@ -41,6 +42,9 @@ class DegenerateAnalyserStep(object):
 
 class CheckConstantAnalyserStep(DegenerateAnalyserStep):
 
+    def __init__(self):
+        self._constant_cache = {}
+
     def perform_analyse(
             self,
             current_record: SolutionDegenerateRecord,
@@ -51,10 +55,15 @@ class CheckConstantAnalyserStep(DegenerateAnalyserStep):
         """
         if current_record.type == DegenerateType.AlwaysNonDegenerate.name:
             return None
+        parameters = tuple(sorted(context.parameter_value.items(), key=lambda item: str(item[0])))
         for equation in current_record.equations:
-            simplified = equation.subs(context.parameter_value).simplify()
-            simplified_value = cast_expr_to_float(simplified)
-            if (simplified_value is not None) and simplified != sp.S.Zero:
+            key = (equation, parameters)
+            if key not in self._constant_cache:
+                simplified = equation.subs(context.parameter_value).simplify()
+                simplified_value = cast_expr_to_float(simplified)
+                self._constant_cache[key] = (simplified_value is not None and math.isfinite(simplified_value)
+                                             and simplified_value != 0.0)
+            if self._constant_cache[key]:
                 return current_record.record_always_non_degenerate()
         return None
 

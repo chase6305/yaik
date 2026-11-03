@@ -37,6 +37,10 @@ The existing error contracts are preserved: Python checks maximum matrix-entry e
 against `1e-4`, while C++ checks squared matrix error against `1e-6` (`1e-4` after refinement).
 For robot integration, validate base/tool frame conversion, URDF limits, and independent
 position/rotation errors as needed; these matrix tolerances do not impose joint limits.
+C++ callers can pass a per-joint revolute mask as the third argument to
+`yaik_cpp::removeDuplicate<N>` for periodic comparison after normalization and limit
+filtering. The default comparison preserves distinct `-pi`/`+pi` representations,
+which can differ in feasibility under joint limits; prismatic mask entries stay false.
 
 ### Generate a solver for your robot
 

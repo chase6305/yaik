@@ -9,7 +9,7 @@ import sympy as sp
 
 from fk.fk_equations import DHEntry
 from fk.robot_models import puma_robot
-from fk.robots import RobotDescription
+from fk.robots import RobotAuxiliaryData, RobotDescription
 from ik_solve import check_robot, run_ik, RunIKOption
 from solver.build_equations import build_ik_equations
 from solver.degenerate_analyse.numerical_check_data import generate_test_cases
@@ -93,6 +93,30 @@ class TestModelInputs(TestCase):
             self.assertIn(joint.upper_bound, values)
         joint = bounded_joint().unknowns[0]
         self.assertEqual(joint.degenerate_check_value, [sp.S.Zero])
+
+    def test_preflight_rejects_coupled_dh_and_malformed_auxiliary_data(self):
+        robot = bounded_joint()
+        robot.dh_params[0].theta = robot.unknowns[0].symbol
+        self.assert_invalid(robot)
+        for offsets in ([], [0, 0], [np.nan], [np.inf], 0.1):
+            robot = bounded_joint()
+            robot.auxiliary_data = RobotAuxiliaryData(unknown_offset=offsets)
+            self.assert_invalid(robot)
+        for matrix in (sp.eye(3), sp.eye(4) * sp.nan):
+            for field in ('pre_transform_sp', 'post_transform_sp'):
+                robot = bounded_joint()
+                robot.auxiliary_data = RobotAuxiliaryData()
+                setattr(robot.auxiliary_data, field, matrix)
+                self.assert_invalid(robot)
+        robot = bounded_joint()
+        length = sp.Symbol('tool_length')
+        robot.auxiliary_data = RobotAuxiliaryData(unknown_offset=[0.1])
+        robot.auxiliary_data.post_transform_sp = sp.eye(4)
+        robot.auxiliary_data.post_transform_sp[0, 3] = length
+        self.assert_invalid(robot)
+        robot.symbolic_parameters.add(length)
+        robot.parameters_bound[length] = (0, 0.2)
+        self.assertTrue(check_robot(robot))
 
     def test_explicit_branch_samples_and_empty_batches(self):
         robot = bounded_joint()

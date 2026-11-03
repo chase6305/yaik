@@ -307,19 +307,39 @@ def arm_robo_ik_solve_raw(T_ee: np.ndarray):
         # The polynomial solution of root node
         poly_coefficient_0_num = (inv_Px**2 - 2*inv_Px*l_1*r_11 - 2*inv_Px*l_2*r_21 + inv_Py**2 - 2*inv_Py*l_1*r_12 - 2*inv_Py*l_2*r_22 + l_1**2*r_11**2 + l_1**2*r_12**2 + 2*l_1*l_2*r_11*r_21 + 2*l_1*l_2*r_12*r_22 + l_2**2*r_21**2 + l_2**2*r_22**2 - l_3**2)*(inv_Px**2 + 2*inv_Px*l_1*r_11 - 2*inv_Px*l_2*r_21 + inv_Py**2 + 2*inv_Py*l_1*r_12 - 2*inv_Py*l_2*r_22 + l_1**2*r_11**2 + l_1**2*r_12**2 - 2*l_1*l_2*r_11*r_21 - 2*l_1*l_2*r_12*r_22 + l_2**2*r_21**2 + l_2**2*r_22**2 - l_3**2)
         poly_coefficient_0_denom = 1
+        if not np.isfinite(poly_coefficient_0_num) or not np.isfinite(poly_coefficient_0_denom) or poly_coefficient_0_denom == 0:
+            return
         poly_coefficient_0 = poly_coefficient_0_num / poly_coefficient_0_denom
+        if not np.isfinite(poly_coefficient_0):
+            return
         poly_coefficient_1_num = 4*l_1*(inv_Px**3*r_31 + inv_Px**2*inv_Py*r_32 - 3*inv_Px**2*l_2*r_21*r_31 - inv_Px**2*l_2*r_22*r_32 + inv_Px*inv_Py**2*r_31 - 2*inv_Px*inv_Py*l_2*r_21*r_32 - 2*inv_Px*inv_Py*l_2*r_22*r_31 - inv_Px*l_1**2*r_11**2*r_31 - 2*inv_Px*l_1**2*r_11*r_12*r_32 + inv_Px*l_1**2*r_12**2*r_31 + 3*inv_Px*l_2**2*r_21**2*r_31 + 2*inv_Px*l_2**2*r_21*r_22*r_32 + inv_Px*l_2**2*r_22**2*r_31 - inv_Px*l_3**2*r_31 + inv_Py**3*r_32 - inv_Py**2*l_2*r_21*r_31 - 3*inv_Py**2*l_2*r_22*r_32 + inv_Py*l_1**2*r_11**2*r_32 - 2*inv_Py*l_1**2*r_11*r_12*r_31 - inv_Py*l_1**2*r_12**2*r_32 + inv_Py*l_2**2*r_21**2*r_32 + 2*inv_Py*l_2**2*r_21*r_22*r_31 + 3*inv_Py*l_2**2*r_22**2*r_32 - inv_Py*l_3**2*r_32 + l_1**2*l_2*r_11**2*r_21*r_31 - l_1**2*l_2*r_11**2*r_22*r_32 + 2*l_1**2*l_2*r_11*r_12*r_21*r_32 + 2*l_1**2*l_2*r_11*r_12*r_22*r_31 - l_1**2*l_2*r_12**2*r_21*r_31 + l_1**2*l_2*r_12**2*r_22*r_32 - l_2**3*r_21**3*r_31 - l_2**3*r_21**2*r_22*r_32 - l_2**3*r_21*r_22**2*r_31 - l_2**3*r_22**3*r_32 + l_2*l_3**2*r_21*r_31 + l_2*l_3**2*r_22*r_32)
         poly_coefficient_1_denom = 1
+        if not np.isfinite(poly_coefficient_1_num) or not np.isfinite(poly_coefficient_1_denom) or poly_coefficient_1_denom == 0:
+            return
         poly_coefficient_1 = poly_coefficient_1_num / poly_coefficient_1_denom
+        if not np.isfinite(poly_coefficient_1):
+            return
         poly_coefficient_2_num = 2*l_1**2*(inv_Px**2*r_11**2 - inv_Px**2*r_12**2 + 3*inv_Px**2*r_31**2 + inv_Px**2*r_32**2 + 4*inv_Px*inv_Py*r_11*r_12 + 4*inv_Px*inv_Py*r_31*r_32 - 2*inv_Px*l_2*r_11**2*r_21 - 4*inv_Px*l_2*r_11*r_12*r_22 + 2*inv_Px*l_2*r_12**2*r_21 - 6*inv_Px*l_2*r_21*r_31**2 - 2*inv_Px*l_2*r_21*r_32**2 - 4*inv_Px*l_2*r_22*r_31*r_32 - inv_Py**2*r_11**2 + inv_Py**2*r_12**2 + inv_Py**2*r_31**2 + 3*inv_Py**2*r_32**2 + 2*inv_Py*l_2*r_11**2*r_22 - 4*inv_Py*l_2*r_11*r_12*r_21 - 2*inv_Py*l_2*r_12**2*r_22 - 4*inv_Py*l_2*r_21*r_31*r_32 - 2*inv_Py*l_2*r_22*r_31**2 - 6*inv_Py*l_2*r_22*r_32**2 - l_1**2*r_11**4 - 2*l_1**2*r_11**2*r_12**2 - l_1**2*r_11**2*r_31**2 + l_1**2*r_11**2*r_32**2 - 4*l_1**2*r_11*r_12*r_31*r_32 - l_1**2*r_12**4 + l_1**2*r_12**2*r_31**2 - l_1**2*r_12**2*r_32**2 + l_2**2*r_11**2*r_21**2 - l_2**2*r_11**2*r_22**2 + 4*l_2**2*r_11*r_12*r_21*r_22 - l_2**2*r_12**2*r_21**2 + l_2**2*r_12**2*r_22**2 + 3*l_2**2*r_21**2*r_31**2 + l_2**2*r_21**2*r_32**2 + 4*l_2**2*r_21*r_22*r_31*r_32 + l_2**2*r_22**2*r_31**2 + 3*l_2**2*r_22**2*r_32**2 + l_3**2*r_11**2 + l_3**2*r_12**2 - l_3**2*r_31**2 - l_3**2*r_32**2)
         poly_coefficient_2_denom = 1
+        if not np.isfinite(poly_coefficient_2_num) or not np.isfinite(poly_coefficient_2_denom) or poly_coefficient_2_denom == 0:
+            return
         poly_coefficient_2 = poly_coefficient_2_num / poly_coefficient_2_denom
+        if not np.isfinite(poly_coefficient_2):
+            return
         poly_coefficient_3_num = 4*l_1**3*(inv_Px*r_11**2*r_31 + 2*inv_Px*r_11*r_12*r_32 - inv_Px*r_12**2*r_31 + inv_Px*r_31**3 + inv_Px*r_31*r_32**2 - inv_Py*r_11**2*r_32 + 2*inv_Py*r_11*r_12*r_31 + inv_Py*r_12**2*r_32 + inv_Py*r_31**2*r_32 + inv_Py*r_32**3 - l_2*r_11**2*r_21*r_31 + l_2*r_11**2*r_22*r_32 - 2*l_2*r_11*r_12*r_21*r_32 - 2*l_2*r_11*r_12*r_22*r_31 + l_2*r_12**2*r_21*r_31 - l_2*r_12**2*r_22*r_32 - l_2*r_21*r_31**3 - l_2*r_21*r_31*r_32**2 - l_2*r_22*r_31**2*r_32 - l_2*r_22*r_32**3)
         poly_coefficient_3_denom = 1
+        if not np.isfinite(poly_coefficient_3_num) or not np.isfinite(poly_coefficient_3_denom) or poly_coefficient_3_denom == 0:
+            return
         poly_coefficient_3 = poly_coefficient_3_num / poly_coefficient_3_denom
+        if not np.isfinite(poly_coefficient_3):
+            return
         poly_coefficient_4_num = l_1**4*(r_11**2 - 2*r_11*r_32 + r_12**2 + 2*r_12*r_31 + r_31**2 + r_32**2)*(r_11**2 + 2*r_11*r_32 + r_12**2 - 2*r_12*r_31 + r_31**2 + r_32**2)
         poly_coefficient_4_denom = 1
+        if not np.isfinite(poly_coefficient_4_num) or not np.isfinite(poly_coefficient_4_denom) or poly_coefficient_4_denom == 0:
+            return
         poly_coefficient_4 = poly_coefficient_4_num / poly_coefficient_4_denom
+        if not np.isfinite(poly_coefficient_4):
+            return
         p_coefficients = np.zeros(shape=(4 + 1,))
         p_coefficients[4] = poly_coefficient_0
         p_coefficients[3] = poly_coefficient_1

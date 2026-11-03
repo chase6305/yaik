@@ -73,6 +73,29 @@ def check_robot(robot: RobotDescription) -> bool:
         joint_parameter = dh.theta if unknown.is_revolute else dh.d
         if joint_parameter != unknown.symbol:
             errors.append('joint must match its DH theta/d symbol: ' + str(unknown.symbol))
+        fixed_entries = (dh.alpha, dh.a, dh.d if unknown.is_revolute else dh.theta)
+        if any(sp.sympify(value).free_symbols & unknown_set for value in fixed_entries):
+            errors.append('fixed DH entries must not depend on joints: ' + str(unknown.symbol))
+
+    offsets = robot.get_unknown_offset()
+    if offsets is not None:
+        try:
+            valid_offsets = len(offsets) == len(robot.unknowns) and all(map(finite, offsets))
+        except TypeError:
+            valid_offsets = False
+        if not valid_offsets:
+            errors.append('joint offsets must contain one finite value per joint')
+    frame_parameters = robot.symbolic_parameters | set(robot.parameters_value)
+    for transform in (robot.get_pre_transform_sp(), robot.get_post_transform_sp()):
+        if transform is None:
+            continue
+        if not isinstance(transform, sp.MatrixBase) or transform.shape != (4, 4):
+            errors.append('base/tool transforms must be 4x4 symbolic matrices')
+            continue
+        if transform.free_symbols - frame_parameters:
+            errors.append('base/tool transforms contain undeclared parameters or joint variables')
+        if any(not value.free_symbols and not finite(value) for value in transform):
+            errors.append('base/tool transform constants must be finite real numbers')
     for parameter in robot.symbolic_parameters:
         if parameter not in robot.parameters_value and parameter not in robot.parameters_bound:
             errors.append('missing parameter value or bounds: ' + str(parameter))

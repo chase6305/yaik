@@ -45,17 +45,37 @@ T safe_acos(T a) {
     return std::acos(a);
 }
 
+// Periodic comparison is opt-in; select limit-compatible representatives first.
 template <int N>
 void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
-                      double tolerance) {
+                      double tolerance,
+                      const std::array<bool, N>& revolute_joints = {}) {
   // Do nothing if size less than 1
   if (ik_output.size() <= 1) return;
 
   // Functor to compare two vectors
-  auto is_duplicate = [tolerance](const std::array<double, N>& a,
+  auto is_duplicate = [tolerance, &revolute_joints](const std::array<double, N>& a,
                                   const std::array<double, N>& b) -> bool {
     for (std::size_t j = 0; j < a.size(); j++) {
-      if (std::abs(a[j] - b[j]) > tolerance) return false;
+      if (revolute_joints[j]) {
+        if (!std::isfinite(a[j]) || !std::isfinite(b[j])) return false;
+        if (std::signbit(a[j]) != std::signbit(b[j]) &&
+            std::abs(a[j]) > std::numeric_limits<double>::max() - std::abs(b[j])) return false;
+      }
+      double difference = std::abs(a[j] - b[j]);
+      if (revolute_joints[j]) {
+        if (!std::isfinite(difference)) return false;
+        if (difference > tolerance) {
+          // Generated angles are normalized; reduce unusual inputs individually.
+          if (difference > 2 * M_PI) {
+            const double angle_a = std::atan2(std::sin(a[j]), std::cos(a[j]));
+            const double angle_b = std::atan2(std::sin(b[j]), std::cos(b[j]));
+            difference = std::abs(angle_a - angle_b);
+          }
+          difference = std::min(difference, std::abs(difference - 2 * M_PI));
+        }
+      }
+      if (difference > tolerance) return false;
     }
     return true;
   };

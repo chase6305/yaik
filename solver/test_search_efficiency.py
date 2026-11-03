@@ -14,12 +14,13 @@ import sympy as sp
 from solver.equation_types import CollectedEquations, ScalarEquation, Unknown
 from solver.equation_utils import scalar_equation_by_unknowns
 from solver.polynomial_solver.find_candidate import collect_equation_by_variables
-from solver.solved_variable import SolutionMethod, VariableSolution
+from solver.solved_variable import DegenerateType, SolutionDegenerateRecord, SolutionMethod, VariableSolution
 from solver.sos_transform import sum_of_square_transform_pairwise
 from solver.unary_solvers.unary_solver_step import UnarySolverStep
 from solver.degenerate_analyse.detect_soa_solution import (
     _check_soa_equations_numerically, check_zero_processor, detect_soa_solution)
-from solver.degenerate_analyse.analyser_step import DegenerateAnalyserContext, DegenerateAnalyserOption
+from solver.degenerate_analyse.analyser_step import (
+    CheckConstantAnalyserStep, DegenerateAnalyserContext, DegenerateAnalyserOption)
 from solver.soa_transform import SumOfAngleAccumulator
 import solver.sos_transform as sos
 import solver.general_6dof.numerical_reduce_solver as general
@@ -65,6 +66,37 @@ def delayed_polynomial(equations, unknowns, parameters, reduce_to_cos):
 
 
 class TestSearchEfficiency(TestCase):
+    def test_constant_analysis_cache_keeps_new_records_and_tracks_parameters(self):
+        parameter = sp.Symbol('parameter')
+        record = SolutionDegenerateRecord.record_all_equations([parameter])
+        context = DegenerateAnalyserContext(parameter_value={parameter: 1})
+        option = DegenerateAnalyserOption()
+        analyser = CheckConstantAnalyserStep()
+        with mock.patch('solver.degenerate_analyse.analyser_step.cast_expr_to_float',
+                        wraps=float) as evaluate:
+            first = analyser.perform_analyse(record, context, option)
+            second = analyser.perform_analyse(record, context, option)
+            self.assertIsNot(first, second)
+            self.assertEqual(first.type, DegenerateType.AlwaysNonDegenerate.name)
+            self.assertEqual(second.type, first.type)
+            self.assertEqual(evaluate.call_count, 1)
+            context.parameter_value[parameter] = 0
+            self.assertIsNone(analyser.perform_analyse(record, context, option))
+            self.assertIsNone(analyser.perform_analyse(record, context, option))
+            self.assertEqual(evaluate.call_count, 2)
+            context.parameter_value[parameter] = 2
+            self.assertIsNotNone(analyser.perform_analyse(record, context, option))
+            self.assertEqual(evaluate.call_count, 3)
+            fresh_analyser = CheckConstantAnalyserStep()
+            self.assertIsNotNone(fresh_analyser.perform_analyse(record, context, option))
+            self.assertEqual(evaluate.call_count, 4)
+        for zero in (sp.Float(0.0), -0.0):
+            with self.subTest(zero=zero):
+                context.parameter_value[parameter] = zero
+                fresh_analyser = CheckConstantAnalyserStep()
+                self.assertIsNone(fresh_analyser.perform_analyse(record, context, option))
+                self.assertIsNone(fresh_analyser.perform_analyse(record, context, option))
+
     def test_compiled_soa_checks_match_scalar_reference(self):
         x, y, total = sp.symbols('x y total')
         equations = [ScalarEquation(total, x + y), ScalarEquation(sp.cos(total), sp.cos(x + y))]

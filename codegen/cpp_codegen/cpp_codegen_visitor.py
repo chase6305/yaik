@@ -484,8 +484,12 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
             self.add_code_line('const double poly_coefficient_{order}_num = {code};'.
                                format(order=order, code=numerator_code))
             self.add_code_line('const double poly_coefficient_{order}_denom = {code};'.format(order=order, code=denominator_code))
+            self.add_code_line('if (!std::isfinite(poly_coefficient_{order}_num) || '
+                               '!std::isfinite(poly_coefficient_{order}_denom) || '
+                               'poly_coefficient_{order}_denom == 0) return;'.format(order=order))
             self.add_code_line('const double poly_coefficient_{order} = poly_'
                                'coefficient_{order}_num / poly_coefficient_{order}_denom;'.format(order=order))
+            self.add_code_line('if (!std::isfinite(poly_coefficient_{order})) return;'.format(order=order))
             if order > poly_order:
                 poly_order = order
 
