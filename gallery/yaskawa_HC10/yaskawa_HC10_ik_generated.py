@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import math
 from typing import List, NewType
+from python_run_import import *
 
 # Constants for solver
 robot_nq: int = 6
@@ -92,6 +93,7 @@ def yaskawa_HC10_ik_target_raw_to_original(T_ee: np.ndarray):
 
 
 def yaskawa_HC10_fk(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
     th_1 = theta_input[1] + th_1_offset_original2raw
     th_2 = theta_input[2] + th_2_offset_original2raw
@@ -1124,7 +1126,7 @@ def yaskawa_HC10_ik_solve_raw(T_ee: np.ndarray):
         C[5, 6] = x366 + x425
         C[5, 7] = x343 + x426
         C[5, 8] = x365 + x427
-        from solver.general_6dof.numerical_reduce_closure_equation import compute_solution_from_tanhalf_LME
+        from python_run_import import compute_solution_from_tanhalf_LME
         local_solutions = compute_solution_from_tanhalf_LME(A, B, C)
         for local_solutions_i in local_solutions:
             solution_i: IkSolution = make_ik_solution()
@@ -1184,7 +1186,7 @@ def yaskawa_HC10_ik_solve_raw(T_ee: np.ndarray):
                 # Temp variable for efficiency
                 x0 = 2*d_3
                 x1 = d_3**2
-                x2 = math.asin((1/2)*(Px**2 - Px*r_13*x0 + Py**2 - Py*r_23*x0 + Pz**2 - Pz*r_33*x0 - a_0**2 + 2*a_0*d_1*math.sin(th_2) - d_1**2 - d_2**2 + r_13**2*x1 + r_23**2*x1 + r_33**2*x1)/(a_0*d_2*math.cos(th_2)))
+                x2 = safe_asin((1/2)*(Px**2 - Px*r_13*x0 + Py**2 - Py*r_23*x0 + Pz**2 - Pz*r_33*x0 - a_0**2 + 2*a_0*d_1*math.sin(th_2) - d_1**2 - d_2**2 + r_13**2*x1 + r_23**2*x1 + r_33**2*x1)/(a_0*d_2*math.cos(th_2)))
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[3] = -x2
@@ -1196,7 +1198,7 @@ def yaskawa_HC10_ik_solve_raw(T_ee: np.ndarray):
                 # Temp variable for efficiency
                 x0 = 2*d_3
                 x1 = d_3**2
-                x2 = math.asin((1/2)*(Px**2 - Px*r_13*x0 + Py**2 - Py*r_23*x0 + Pz**2 - Pz*r_33*x0 - a_0**2 + 2*a_0*d_1*math.sin(th_2) - d_1**2 - d_2**2 + r_13**2*x1 + r_23**2*x1 + r_33**2*x1)/(a_0*d_2*math.cos(th_2)))
+                x2 = safe_asin((1/2)*(Px**2 - Px*r_13*x0 + Py**2 - Py*r_23*x0 + Pz**2 - Pz*r_33*x0 - a_0**2 + 2*a_0*d_1*math.sin(th_2) - d_1**2 - d_2**2 + r_13**2*x1 + r_23**2*x1 + r_33**2*x1)/(a_0*d_2*math.cos(th_2)))
                 # End of temp variables
                 this_solution[3] = x2 + math.pi
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -1249,7 +1251,7 @@ def yaskawa_HC10_ik_solve_raw(T_ee: np.ndarray):
                 x1 = Py - d_3*r_23
                 x2 = math.atan2(x0, x1)
                 x3 = math.cos(th_3)
-                x4 = math.sqrt(-d_2**2*x3**2 + x0**2 + x1**2)
+                x4 = safe_sqrt(-d_2**2*x3**2 + x0**2 + x1**2)
                 x5 = d_2*x3
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
@@ -1264,7 +1266,7 @@ def yaskawa_HC10_ik_solve_raw(T_ee: np.ndarray):
                 x1 = Py - d_3*r_23
                 x2 = math.atan2(x0, x1)
                 x3 = math.cos(th_3)
-                x4 = math.sqrt(-d_2**2*x3**2 + x0**2 + x1**2)
+                x4 = safe_sqrt(-d_2**2*x3**2 + x0**2 + x1**2)
                 x5 = d_2*x3
                 # End of temp variables
                 this_solution[0] = x2 + math.atan2(-x4, x5)
@@ -1737,7 +1739,7 @@ def yaskawa_HC10_ik_solve_raw(T_ee: np.ndarray):
             condition_0: bool = (abs((r_13*math.sin(th_0) - r_23*math.cos(th_0))/math.sin(th_3)) <= 1)
             if condition_0:
                 # Temp variable for efficiency
-                x0 = math.asin((r_13*math.sin(th_0) - r_23*math.cos(th_0))/math.sin(th_3))
+                x0 = safe_asin((r_13*math.sin(th_0) - r_23*math.cos(th_0))/math.sin(th_3))
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[4] = x0
@@ -1747,7 +1749,7 @@ def yaskawa_HC10_ik_solve_raw(T_ee: np.ndarray):
             condition_1: bool = (abs((r_13*math.sin(th_0) - r_23*math.cos(th_0))/math.sin(th_3)) <= 1)
             if condition_1:
                 # Temp variable for efficiency
-                x0 = math.asin((r_13*math.sin(th_0) - r_23*math.cos(th_0))/math.sin(th_3))
+                x0 = safe_asin((r_13*math.sin(th_0) - r_23*math.cos(th_0))/math.sin(th_3))
                 # End of temp variables
                 this_solution[4] = math.pi - x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -1889,6 +1891,8 @@ def yaskawa_HC10_ik_solve_raw(T_ee: np.ndarray):
 
 
 def yaskawa_HC10_ik_solve(T_ee: np.ndarray):
+    if not np.all(np.isfinite(T_ee)):
+        return []
     T_ee_raw_in = yaskawa_HC10_ik_target_original_to_raw(T_ee)
     ik_output_raw = yaskawa_HC10_ik_solve_raw(T_ee_raw_in)
     ik_output = list()

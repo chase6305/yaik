@@ -328,7 +328,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const double poly_coefficient_4_num = std::pow(l_1, 4)*(std::pow(r_11, 2) - 2*r_11*r_32 + std::pow(r_12, 2) + 2*r_12*r_31 + std::pow(r_31, 2) + std::pow(r_32, 2))*(std::pow(r_11, 2) + 2*r_11*r_32 + std::pow(r_12, 2) - 2*r_12*r_31 + std::pow(r_31, 2) + std::pow(r_32, 2));
         const double poly_coefficient_4_denom = 1;
         const double poly_coefficient_4 = poly_coefficient_4_num / poly_coefficient_4_denom;
-        std::array<double, 4 + 1> p_coefficients;
+        std::array<double, 4 + 1> p_coefficients{};
         p_coefficients[4] = poly_coefficient_0;
         p_coefficients[3] = poly_coefficient_1;
         p_coefficients[2] = poly_coefficient_2;
@@ -345,10 +345,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             if(!this_root_record.is_valid)
                 continue;
             const double this_root = this_root_record.value;
-            if (std::abs(this_root) > 1)
+            if (std::abs(this_root) > 1 + zero_tolerance)
                 continue;
-            const double first_angle = std::asin(this_root);
-            const double second_angle = M_PI - std::asin(this_root);
+            const double first_angle = safe_asin(this_root);
+            const double second_angle = M_PI - safe_asin(this_root);
             auto solution_0 = make_raw_solution();
             solution_0[2] = first_angle;
             auto solution_1 = make_raw_solution();
@@ -469,7 +469,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             if (condition_0)
             {
                 // Temp variable for efficiency
-                const double x0 = std::acos((-Py + d_6*r_23 - l_2)/l_3);
+                const double x0 = safe_acos((-Py + d_6*r_23 - l_2)/l_3);
                 // End of temp variables
                 RawSolution solution_0(this_solution);
                 solution_0[7] = x0;
@@ -481,7 +481,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             if (condition_1)
             {
                 // Temp variable for efficiency
-                const double x0 = std::acos((-Py + d_6*r_23 - l_2)/l_3);
+                const double x0 = safe_acos((-Py + d_6*r_23 - l_2)/l_3);
                 // End of temp variables
                 const double tmp_sol_value = -x0;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[7] = tmp_sol_value;
@@ -971,6 +971,7 @@ static void computeIKUnChecked(const Eigen::Matrix4d& T_ee, RawIKWorksace& works
 
 static void computeIK(const Eigen::Matrix4d& T_ee, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output)
 {
+    if (!T_ee.allFinite()) { ik_output.clear(); return; }
     const Eigen::Matrix4d& T_ee_raw = T_ee;
     computeRawIK(T_ee_raw, workspace);
     const auto& raw_ik_out = workspace.raw_ik_out;
@@ -995,7 +996,7 @@ static void computeIK(const Eigen::Matrix4d& T_ee, RawIKWorksace& workspace, std
         auto ik_out_i = raw_ik_out_disturb[i];
         Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
         double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();
-        if (ee_pose_diff > pose_tolerance_degenerate)
+        if (!std::isfinite(ee_pose_diff) || ee_pose_diff > pose_tolerance_degenerate)
             continue;
         
         // Try numerical refinement

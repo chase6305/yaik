@@ -68,13 +68,7 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         self.add_code_line('IkSolution = NewType("IkSolution", List[float])')
         self.add_code_line('def make_ik_solution():')
         self.enter_scope('make_ik_solution')
-        self.add_code_line('tmp_sol = IkSolution(list())')
-        self.add_code_line(
-            'for tmp_sol_idx in range({n_vars}):'.format(n_vars=len(tree.all_solved_symbol())))
-        self.enter_scope('for tmp_sol_idx')
-        self.add_code_line('tmp_sol.append(100000.0)')
-        self.exit_scope('for tmp_sol_idx')
-        self.add_code_line('return tmp_sol')
+        self.add_code_line('return IkSolution([100000.0] * {n_vars})'.format(n_vars=len(tree.all_solved_symbol())))
         self.exit_scope('make_ik_solution')
 
         # Code for the shared queue
@@ -375,6 +369,7 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
 
         # Do cse for solution/checker
         replacements, reduced_solutions = sp.cse(solution_list)
+        shared_condition = n_solution > 1 and len(set(solution.argument_validity_checkers)) == 1
 
         # The code gen
         for i in range(n_solution):
@@ -383,18 +378,14 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
             checker_i = solution.argument_validity_checkers[i]
             solution_i_code = self.generate_py_code(reduced_solution_i)
             checker_i_code = self.generate_py_code(checker_i)
-            self.add_code_line('condition_{sol_idx}: bool = {cond_code}'.
-                               format(sol_idx=i, cond_code=checker_i_code))
-            self.add_code_line('if condition_{sol_idx}:'.format(sol_idx=i))
-
-            # The replacement code
-            self.enter_scope('if condition')
-            self.add_code_line('# Temp variable for efficiency')
-            for k in range(len(replacements)):
-                symbol_k, expr_k = replacements[k]
-                expr_code = self.generate_py_code(expr_k)
-                self.add_code_line('{var} = {expr_code}'.format(var=str(symbol_k), expr_code=expr_code))
-            self.add_code_line('# End of temp variables')
+            if not shared_condition or i == 0:
+                self.add_code_line('condition_{sol_idx}: bool = {cond_code}'.
+                                   format(sol_idx=i, cond_code=checker_i_code))
+                self.add_code_line('if condition_{sol_idx}:'.format(sol_idx=i))
+                self.enter_scope('if condition')
+                for symbol_k, expr_k in replacements:
+                    expr_code = self.generate_py_code(expr_k)
+                    self.add_code_line('{var} = {expr_code}'.format(var=str(symbol_k), expr_code=expr_code))
 
             # Actual solution
             self.add_code_line('solution_{sol_idx}: IkSolution = make_ik_solution()'.format(sol_idx=i))
@@ -404,6 +395,9 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
             if output_idx is not None:
                 self.add_code_line('add_input_index_to({node_idx}, appended_idx)'.format(node_idx=output_idx))
             self.add_code_line('')
+            if not shared_condition:
+                self.exit_scope('if condition')
+        if shared_condition:
             self.exit_scope('if condition')
 
     def _visit_explicit_solution_node_non_root(self, solution_node: ExplicitSolutionNode):
@@ -560,7 +554,7 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
 
         self.add_code_line('')
         self.add_code_line('# Note that in np.roots, p_coefficient[0] is the highest order')
-        self.add_code_line('poly_roots = np.roots(p_coefficients)')
+        self.add_code_line('poly_roots = compute_polynomial_real_roots(p_coefficients)')
 
         # Collect the result
         self.add_code_line('')
@@ -568,14 +562,13 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         self.add_code_line('for root_idx in range(len(poly_roots)):')
         self.enter_scope('for_root')
         self.add_code_line('this_root = poly_roots[root_idx]')
-        self.add_code_line('if not np.isreal(this_root):')
-        self.add_code_line(indent() + 'continue')
 
         # Depends on the solution method
         solution_method = solution.solution_method
         if solution_method == SolutionMethod.PolynomialSin.name or solution_method == SolutionMethod.PolynomialCos.name:
-            self.add_code_line('if abs(this_root) > 1:')
+            self.add_code_line('if abs(this_root) > 1 + zero_tolerance:')
             self.add_code_line(indent() + 'continue')
+            self.add_code_line('this_root = min(1.0, max(-1.0, this_root))')
             if solution_method == SolutionMethod.PolynomialSin.name:
                 self.add_code_line('first_angle = np.arcsin(this_root)')
                 self.add_code_line('second_angle = np.pi - np.arcsin(this_root)')
@@ -597,8 +590,14 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
             if output_idx is not None:
                 self.add_code_line('add_input_index_to({node_idx}, appended_idx_0)'.format(node_idx=output_idx))
                 self.add_code_line('add_input_index_to({node_idx}, appended_idx_1)'.format(node_idx=output_idx))
+        elif solution_method == SolutionMethod.PolynomialDirect.name:
+            self.add_code_line('solution = make_ik_solution()')
+            self.add_code_line('solution[{idx}] = this_root'.format(idx=solved_var_idx))
+            self.add_code_line('appended_idx = append_solution_to_queue(solution)')
+            if output_idx is not None:
+                self.add_code_line('add_input_index_to({idx}, appended_idx)'.format(idx=output_idx))
         else:
-            raise NotImplementedError("Polynomial solver codegen with non sin/cos intermediate is not implemented yet")
+            raise NotImplementedError('Unsupported polynomial solution method: ' + solution_method)
 
         # Finish the polynomial solve
         self.exit_scope('for_root')

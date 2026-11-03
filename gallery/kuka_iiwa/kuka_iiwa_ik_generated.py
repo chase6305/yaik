@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import math
 from typing import List, NewType
+from python_run_import import *
 
 # Constants for solver
 robot_nq: int = 7
@@ -93,6 +94,7 @@ def kuka_iiwa_ik_target_raw_to_original(T_ee: np.ndarray):
 
 
 def kuka_iiwa_fk(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
     th_1 = theta_input[1] + th_1_offset_original2raw
     th_2 = theta_input[2] + th_2_offset_original2raw
@@ -470,7 +472,7 @@ def kuka_iiwa_ik_solve_raw(T_ee: np.ndarray, th_0):
         condition_0: bool = ((1/2)*abs((-d_1**2 - d_2**2 + (Px - d_3*r_13)**2 + (Py - d_3*r_23)**2 + (Pz - d_3*r_33)**2)/(d_1*d_2)) <= 1)
         if condition_0:
             # Temp variable for efficiency
-            x0 = math.acos((1/2)*(d_1**2 + d_2**2 - (Px - d_3*r_13)**2 - (Py - d_3*r_23)**2 - (Pz - d_3*r_33)**2)/(d_1*d_2))
+            x0 = safe_acos((1/2)*(d_1**2 + d_2**2 - (Px - d_3*r_13)**2 - (Py - d_3*r_23)**2 - (Pz - d_3*r_33)**2)/(d_1*d_2))
             # End of temp variables
             solution_0: IkSolution = make_ik_solution()
             solution_0[5] = x0
@@ -480,7 +482,7 @@ def kuka_iiwa_ik_solve_raw(T_ee: np.ndarray, th_0):
         condition_1: bool = ((1/2)*abs((-d_1**2 - d_2**2 + (Px - d_3*r_13)**2 + (Py - d_3*r_23)**2 + (Pz - d_3*r_33)**2)/(d_1*d_2)) <= 1)
         if condition_1:
             # Temp variable for efficiency
-            x0 = math.acos((1/2)*(d_1**2 + d_2**2 - (Px - d_3*r_13)**2 - (Py - d_3*r_23)**2 - (Pz - d_3*r_33)**2)/(d_1*d_2))
+            x0 = safe_acos((1/2)*(d_1**2 + d_2**2 - (Px - d_3*r_13)**2 - (Py - d_3*r_23)**2 - (Pz - d_3*r_33)**2)/(d_1*d_2))
             # End of temp variables
             solution_1: IkSolution = make_ik_solution()
             solution_1[5] = -x0
@@ -571,7 +573,7 @@ def kuka_iiwa_ik_solve_raw(T_ee: np.ndarray, th_0):
             condition_0: bool = (abs((d_3 + inv_Pz)/(d_1 + d_2)) <= 1)
             if condition_0:
                 # Temp variable for efficiency
-                x0 = math.acos((d_3 + inv_Pz)/(d_1 + d_2))
+                x0 = safe_acos((d_3 + inv_Pz)/(d_1 + d_2))
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[8] = x0
@@ -581,7 +583,7 @@ def kuka_iiwa_ik_solve_raw(T_ee: np.ndarray, th_0):
             condition_1: bool = (abs((d_3 + inv_Pz)/(d_1 + d_2)) <= 1)
             if condition_1:
                 # Temp variable for efficiency
-                x0 = math.acos((d_3 + inv_Pz)/(d_1 + d_2))
+                x0 = safe_acos((d_3 + inv_Pz)/(d_1 + d_2))
                 # End of temp variables
                 this_solution[8] = -x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -825,7 +827,7 @@ def kuka_iiwa_ik_solve_raw(T_ee: np.ndarray, th_0):
             condition_0: bool = (abs((d_3 + inv_Pz)/(d_1 - d_2)) <= 1)
             if condition_0:
                 # Temp variable for efficiency
-                x0 = math.acos((d_3 + inv_Pz)/(-d_1 + d_2))
+                x0 = safe_acos((d_3 + inv_Pz)/(-d_1 + d_2))
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[8] = x0
@@ -835,7 +837,7 @@ def kuka_iiwa_ik_solve_raw(T_ee: np.ndarray, th_0):
             condition_1: bool = (abs((d_3 + inv_Pz)/(d_1 - d_2)) <= 1)
             if condition_1:
                 # Temp variable for efficiency
-                x0 = math.acos((d_3 + inv_Pz)/(-d_1 + d_2))
+                x0 = safe_acos((d_3 + inv_Pz)/(-d_1 + d_2))
                 # End of temp variables
                 this_solution[8] = -x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -1357,7 +1359,7 @@ def kuka_iiwa_ik_solve_raw(T_ee: np.ndarray, th_0):
                 # Temp variable for efficiency
                 x0 = math.cos(th_0)
                 x1 = math.sin(th_0)
-                x2 = math.asin((-Px*x1 + Py*x0 - d_3*(-r_13*x1 + r_23*x0))/(d_2*math.sin(th_3)))
+                x2 = safe_asin((-Px*x1 + Py*x0 - d_3*(-r_13*x1 + r_23*x0))/(d_2*math.sin(th_3)))
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[3] = x2
@@ -1369,7 +1371,7 @@ def kuka_iiwa_ik_solve_raw(T_ee: np.ndarray, th_0):
                 # Temp variable for efficiency
                 x0 = math.cos(th_0)
                 x1 = math.sin(th_0)
-                x2 = math.asin((-Px*x1 + Py*x0 - d_3*(-r_13*x1 + r_23*x0))/(d_2*math.sin(th_3)))
+                x2 = safe_asin((-Px*x1 + Py*x0 - d_3*(-r_13*x1 + r_23*x0))/(d_2*math.sin(th_3)))
                 # End of temp variables
                 this_solution[3] = math.pi - x2
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -1455,7 +1457,7 @@ def kuka_iiwa_ik_solve_raw(T_ee: np.ndarray, th_0):
             condition_0: bool = (abs((-d_1*(r_33*math.cos(th_1) + (r_13*math.cos(th_0) + r_23*math.sin(th_0))*math.sin(th_1)) + d_3 + inv_Pz)/d_2) <= 1)
             if condition_0:
                 # Temp variable for efficiency
-                x0 = math.acos((d_1*(-r_33*math.cos(th_1) - (r_13*math.cos(th_0) + r_23*math.sin(th_0))*math.sin(th_1)) + d_3 + inv_Pz)/d_2)
+                x0 = safe_acos((d_1*(-r_33*math.cos(th_1) - (r_13*math.cos(th_0) + r_23*math.sin(th_0))*math.sin(th_1)) + d_3 + inv_Pz)/d_2)
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[8] = x0
@@ -1465,7 +1467,7 @@ def kuka_iiwa_ik_solve_raw(T_ee: np.ndarray, th_0):
             condition_1: bool = (abs((-d_1*(r_33*math.cos(th_1) + (r_13*math.cos(th_0) + r_23*math.sin(th_0))*math.sin(th_1)) + d_3 + inv_Pz)/d_2) <= 1)
             if condition_1:
                 # Temp variable for efficiency
-                x0 = math.acos((d_1*(-r_33*math.cos(th_1) - (r_13*math.cos(th_0) + r_23*math.sin(th_0))*math.sin(th_1)) + d_3 + inv_Pz)/d_2)
+                x0 = safe_acos((d_1*(-r_33*math.cos(th_1) - (r_13*math.cos(th_0) + r_23*math.sin(th_0))*math.sin(th_1)) + d_3 + inv_Pz)/d_2)
                 # End of temp variables
                 this_solution[8] = -x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -1811,6 +1813,8 @@ def kuka_iiwa_ik_solve_raw(T_ee: np.ndarray, th_0):
 
 
 def kuka_iiwa_ik_solve(T_ee: np.ndarray, th_0):
+    if not np.all(np.isfinite(T_ee)):
+        return []
     T_ee_raw_in = kuka_iiwa_ik_target_original_to_raw(T_ee)
     ik_output_raw = kuka_iiwa_ik_solve_raw(T_ee_raw_in, th_0)
     ik_output = list()

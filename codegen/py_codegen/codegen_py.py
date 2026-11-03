@@ -60,7 +60,7 @@ class CodeGenerationPython(CodeGenerationBase):
         self._add_code_line('{zero_tolerance}: float = 1e-6'.format(zero_tolerance=fk_equations.zero_tolerance))
 
         # Parameter values
-        parameter_values = tree.solved_equation_record.parameter_value_dict
+        parameter_values = robot.parameters_value
         self._add_empty_line()
         self._add_code_line('# Robot parameters')
         for parameter in parameter_values:
@@ -234,6 +234,7 @@ class CodeGenerationPython(CodeGenerationBase):
             func_arguments += ',' + str(symbol_i)
         func_arguments += '):'
         self._add_code_line('def ' + self.fk_function_name() + func_arguments)
+        self._add_code_line('theta_input = np.asarray(theta_input).reshape(-1)', indent_level=1)
 
         # Compute fk
         robot = self.robot
@@ -310,6 +311,7 @@ class CodeGenerationPython(CodeGenerationBase):
         func_arguments += '):'
         self.append_new_function_two_empty_lines()
         self._add_code_line('def ' + jacobian_func_name + func_arguments)
+        self._add_code_line('theta_input = np.asarray(theta_input).reshape(-1)', indent_level=1)
 
         # Generate the unknown extraction
         unknown_offset = robot.get_unknown_offset()
@@ -393,6 +395,8 @@ class CodeGenerationPython(CodeGenerationBase):
         self.append_new_function_two_empty_lines()
         func_arguments = self._ik_func_args_string()
         self._add_code_line('def ' + self.ik_function_name(False) + func_arguments)
+        self._add_code_line('if not np.all(np.isfinite(T_ee)):', indent_level=1)
+        self._add_code_line('return []', indent_level=2)
 
         # The ee target
         if self.robot.get_pre_transform_sp() is None and self.robot.get_post_transform_sp() is None:
@@ -407,7 +411,7 @@ class CodeGenerationPython(CodeGenerationBase):
 
         func_arguments_call = '(T_ee_raw_in'
         for symbol_i in free_symbols:
-            if symbol_i in unknown_symbols:
+            if symbol_i in unknown_symbols and self.robot.get_unknown_offset() is not None:
                 offset_var_i = self.get_unknown_offset_name(symbol_i.name)
                 func_arguments_call += ', ' + str(symbol_i) + ' + ' + offset_var_i
             else:

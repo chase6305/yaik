@@ -8,12 +8,12 @@ import attr
 @attr.s
 class DegenerateAnalyserContext(object):
     # Everything is default constructable
-    solved_variables: List[VariableSolution] = list()
-    all_unknown_variables: List[sp.Symbol] = list()
-    all_parameters: Set[sp.Symbol] = list()
-    parameter_bounds: Dict[sp.Symbol, Tuple[float, float]] = dict()
-    parameter_value: Dict[sp.Symbol, float] = dict()
-    numerical_test_cases: List[Dict[sp.Symbol, float]] = list()
+    solved_variables: List[VariableSolution] = attr.ib(factory=list)
+    all_unknown_variables: List[sp.Symbol] = attr.ib(factory=list)
+    all_parameters: Set[sp.Symbol] = attr.ib(factory=set)
+    parameter_bounds: Dict[sp.Symbol, Tuple[float, float]] = attr.ib(factory=dict)
+    parameter_value: Dict[sp.Symbol, float] = attr.ib(factory=dict)
+    numerical_test_cases: List[Dict[sp.Symbol, float]] = attr.ib(factory=list)
 
 
 @attr.s

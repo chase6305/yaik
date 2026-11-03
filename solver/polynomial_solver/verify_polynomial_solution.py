@@ -1,9 +1,8 @@
-import solver.equation_utils as equation_utils
-from solver.solved_variable import VariableSolution, SolutionMethod
+from solver.solved_variable import SolutionMethod
+from python_run_import import compute_polynomial_real_roots
 from typing import List, Dict, Tuple
 import sympy as sp
 import numpy as np
-import copy
 
 
 def verify_polynomial_solution(
@@ -24,7 +23,7 @@ def verify_polynomial_solution(
                      the second is the ration of passed case (which <= len(parameter_values_to_test))
     """
     # Extract the output
-    if poly_reduce_output is None:
+    if poly_reduce_output is None or not polynomials or not parameter_values_to_test or max_n_test_cases <= 0:
         return False, 0
     poly_dict, solved_term, solved_unknown, solution_method = poly_reduce_output
 
@@ -34,7 +33,18 @@ def verify_polynomial_solution(
         if order >= poly_order:
             poly_order = order
 
-    # Iterate through the parameters
+    numerators = [sp.S.Zero] * (poly_order + 1)
+    denominators = [sp.S.One] * (poly_order + 1)
+    for order, (numerator, denominator) in poly_dict.items():
+        numerators[poly_order - order] = sp.sympify(numerator)
+        denominators[poly_order - order] = sp.sympify(denominator)
+    coefficient_symbols = sorted(set().union(*(expr.free_symbols for expr in numerators + denominators)), key=str)
+    equation_symbols = sorted(set().union(*(expr.free_symbols for expr in polynomials)), key=str)
+    # Keep the original denominators: symbolic cancellation would hide singular samples.
+    evaluate_coefficients = sp.lambdify(coefficient_symbols, [numerators, denominators], modules='numpy', cse=True)
+    evaluate_equations = sp.lambdify(equation_symbols, polynomials, modules='numpy', cse=True)
+
+    # Compile once, then evaluate all samples and candidate roots numerically.
     n_matched = 0
     all_value_match = True
     n_test_case = min(len(parameter_values_to_test), max_n_test_cases)
@@ -42,30 +52,28 @@ def verify_polynomial_solution(
     for i in range(n_test_case):
         idx = index2test[i]
         value_map_i = parameter_values_to_test[idx]
-        p_coefficients = np.zeros(shape=(poly_order + 1,))
-        for order in poly_dict:
-            numerator, denominator = poly_dict[order]
-            numerator_value = numerator.subs(value_map_i)
-            denominator_value = denominator.subs(value_map_i)
-            coefficient_value = numerator_value / denominator_value
-            assert coefficient_value.is_Number
-            # Note that in np.roots, p[0] corresponds to the highest order
-            p_coefficients[poly_order - order] = float(coefficient_value)
+        try:
+            with np.errstate(divide='ignore', invalid='ignore', over='ignore'):
+                values = np.asarray(evaluate_coefficients(*(float(value_map_i[s]) for s in coefficient_symbols)), dtype=float)
+                p_coefficients = values[0] / values[1]
+        except (KeyError, TypeError, ValueError, ZeroDivisionError, OverflowError):
+            all_value_match = False
+            continue
 
         # Find the root
-        poly_roots = np.roots(p_coefficients)
+        poly_roots = compute_polynomial_real_roots(p_coefficients)
         solutions = list()
-        for root_idx in range(poly_roots.size):
-            this_root = poly_roots[root_idx]
-            if not np.isreal(this_root):
-                continue
+        for this_root in poly_roots:
             if solution_method == SolutionMethod.PolynomialDirect.name:
                 solutions.append(this_root)
-            if solution_method == SolutionMethod.PolynomialSin.name and abs(this_root) < 1:
+            if abs(this_root) > 1 + 1e-6:
+                continue
+            this_root = float(np.clip(this_root, -1, 1))
+            if solution_method == SolutionMethod.PolynomialSin.name:
                 first_angle = np.arcsin(this_root)
                 solutions.append(first_angle)
                 solutions.append(np.pi - first_angle)
-            if solution_method == SolutionMethod.PolynomialCos.name and abs(this_root) < 1:
+            if solution_method == SolutionMethod.PolynomialCos.name:
                 first_angle = np.arccos(this_root)
                 solutions.append(first_angle)
                 solutions.append(-first_angle)
@@ -74,17 +82,17 @@ def verify_polynomial_solution(
         contain_solution = False
         diff_values = list()
         for j in range(len(solutions)):
-            subst_map_j = copy.deepcopy(value_map_i)
-            subst_map_j[solved_unknown.symbol] = solutions[j]
-            for k in range(len(polynomials)):
-                poly_k = polynomials[k]
-                poly_k_value = poly_k.subs(subst_map_j)
-                if not poly_k_value.is_Number:
-                    continue
-                if abs(poly_k_value) < 1e-10:
-                    contain_solution = True
-                else:
-                    diff_values.append(abs(poly_k_value))
+            try:
+                values = [solutions[j] if symbol == solved_unknown.symbol else float(value_map_i[symbol])
+                          for symbol in equation_symbols]
+                with np.errstate(divide='ignore', invalid='ignore', over='ignore'):
+                    residuals = np.asarray(evaluate_equations(*values), dtype=complex)
+            except (KeyError, TypeError, ValueError, ZeroDivisionError, OverflowError):
+                continue
+            if np.all(np.isfinite(residuals)) and np.all(np.abs(residuals) < 1e-10):
+                contain_solution = True
+                break
+            diff_values.extend(np.abs(residuals).tolist())
 
         # Update the statistic
         all_value_match = all_value_match and contain_solution

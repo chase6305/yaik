@@ -2226,6 +2226,7 @@ static void wrapAngleToPi(std::vector<std::array<double, robot_nq>>& ik_output)
 
 static void computeIK(const Eigen::Matrix4d& T_ee, double th_0, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output)
 {
+    if (!T_ee.allFinite()) { ik_output.clear(); return; }
     const Eigen::Matrix4d& T_ee_raw = endEffectorTargetOriginalToRaw(T_ee);
     computeRawIK(T_ee_raw, th_0 + th_0_offset_original2raw, workspace);
     const auto& raw_ik_out = workspace.raw_ik_out;
@@ -2270,11 +2271,11 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_0, RawIKWorksace& w
         ik_out_i[6] -= th_6_offset_original2raw;
         Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
         double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();
-        if (ee_pose_diff > pose_tolerance_degenerate)
+        if (!std::isfinite(ee_pose_diff) || ee_pose_diff > pose_tolerance_degenerate)
             continue;
         
         // Try numerical refinement
-        yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i);
+        yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i, 1e-4, std::array<bool, robot_nq>{{true, false, false, false, false, false, false}});
         ee_pose_i = computeFK(ik_out_i);
         ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
         if (ee_pose_diff < pose_tolerance_degenerate)

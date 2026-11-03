@@ -15,9 +15,9 @@ class SolverSnapshot(object):
     sos_hints: List[SumOfSquareHint] = attr.ib()
     unknowns: List[Unknown] = attr.ib()
     all_parameters: Set[sp.Symbol] = attr.ib()
-    parameter_values: Dict[sp.Symbol, float] = dict()
-    parameter_bounds: Dict[sp.Symbol, Tuple[float, float]] = dict()
-    numerical_test_cases: List[Dict[sp.Symbol, float]] = list()
+    parameter_values: Dict[sp.Symbol, float] = attr.ib(factory=dict)
+    parameter_bounds: Dict[sp.Symbol, Tuple[float, float]] = attr.ib(factory=dict)
+    numerical_test_cases: List[Dict[sp.Symbol, float]] = attr.ib(factory=list)
 
 
 def solver_snapshot_dict_raw(

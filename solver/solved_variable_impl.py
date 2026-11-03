@@ -42,11 +42,12 @@ class VariableSolutionImplBase(object):
     def __init__(self,
                  solved_var: sp.Symbol,
                  solution_method: str = SolutionMethod.Invalid.name,
-                 degenerate_record: SolutionDegenerateRecord = SolutionDegenerateRecord(),
+                 degenerate_record: Optional[SolutionDegenerateRecord] = None,
                  solved_from_equations: Optional[List[ScalarEquation]] = None):
         self._solved_variable: sp.Symbol = solved_var
         self._solution_method: str = solution_method
-        self._degenerate_record: SolutionDegenerateRecord = degenerate_record
+        self._degenerate_record: SolutionDegenerateRecord = (
+            degenerate_record if degenerate_record is not None else SolutionDegenerateRecord())
         self._solved_from_equations: Optional[List[ScalarEquation]] = solved_from_equations
 
     # Update the record
@@ -99,7 +100,7 @@ class ExplicitVariableSolutionImpl(VariableSolutionImplBase):
                  solutions: List[sp.Expr],
                  solution_validity_checkers: List[sp.Expr],
                  solution_method: str = SolutionMethod.Invalid.name,
-                 degenerate_record: SolutionDegenerateRecord = SolutionDegenerateRecord(),
+                 degenerate_record: Optional[SolutionDegenerateRecord] = None,
                  solved_from_equations: Optional[List[ScalarEquation]] = None):
         super().__init__(solved_var, solution_method, degenerate_record, solved_from_equations)
         # One checker per solution
@@ -144,7 +145,7 @@ class ExplicitVariableSolutionImpl(VariableSolutionImplBase):
             solution_method: str,
             solve_from_equations: Optional[List[ScalarEquation]] = None,
             argument_valid_checkers: Optional[List[sp.Expr]] = None,
-            degenerate_record: SolutionDegenerateRecord = SolutionDegenerateRecord.record_cannot_analyse()):
+            degenerate_record: Optional[SolutionDegenerateRecord] = None):
         # If validity checker is None, assume all valid
         validity_checker = argument_valid_checkers
         if validity_checker is None:
@@ -169,7 +170,7 @@ class PolynomialVariableSolutionImpl(VariableSolutionImplBase):
                  solved_var: sp.Symbol,
                  polynomial_dict: Dict[int, Tuple[sp.Expr, sp.Expr]],
                  solution_method: str = SolutionMethod.Invalid.name,
-                 degenerate_record: SolutionDegenerateRecord = SolutionDegenerateRecord(),
+                 degenerate_record: Optional[SolutionDegenerateRecord] = None,
                  solved_from_equations: Optional[List[ScalarEquation]] = None):
         super().__init__(solved_var, solution_method, degenerate_record, solved_from_equations)
         self._polynomial_to_solve = polynomial_dict
@@ -209,7 +210,7 @@ class PolynomialVariableSolutionImpl(VariableSolutionImplBase):
             solved_variable: sp.Symbol,
             solution_method: str,
             polynomial_dict: Dict[int, Tuple[sp.Expr, sp.Expr]],
-            degenerate_record: SolutionDegenerateRecord = SolutionDegenerateRecord.record_cannot_analyse()):
+            degenerate_record: Optional[SolutionDegenerateRecord] = None):
         assert solution_method == SolutionMethod.PolynomialDirect.name \
                or solution_method == SolutionMethod.PolynomialSin.name \
                or solution_method == SolutionMethod.PolynomialCos.name

@@ -98,6 +98,18 @@ def solve_equations(equation_input: EquationInput,
         # Nothing would happen in soa, thus just return the empty record
         accumulator = soa_transform.SumOfAngleAccumulator([], [], dict(), dict())
 
+    seen_equations = set()
+
+    def unique_equations(candidates):
+        for equation in candidates:
+            # Rule matching depends on the expression layout on each side.
+            key = (equation.equation_type, equation.lhs, equation.rhs)
+            if key not in seen_equations:
+                seen_equations.add(key)
+                yield equation
+
+    scalar_equations = list(unique_equations(scalar_equations))
+
     # Ok, run the solver loop
     count = 0
     unary_solver_step = UnarySolverStep.make_default()
@@ -200,7 +212,7 @@ def solve_equations(equation_input: EquationInput,
                 only_include_position_expr=True,
                 max_ops_in_candidate=option.pairwise_sos_max_candidate_ops,
                 max_pairwise_sos_candidates=option.max_pairwise_sos_candidates)
-            scalar_equations.extend(pairwise_sos_expr)
+            scalar_equations.extend(unique_equations(pairwise_sos_expr))
 
             # Run translational sos
             translation_sos_expr = sos_transform.sum_of_square_transform_translation(
@@ -208,7 +220,7 @@ def solve_equations(equation_input: EquationInput,
                 accumulator,
                 unknown_symbols
             )
-            scalar_equations.extend(translation_sos_expr)
+            scalar_equations.extend(unique_equations(translation_sos_expr))
 
             # Try substitute transform
             sufficient_one_unknown_equations = option.sufficient_one_unknown_equations_to_skip_substitute
@@ -223,7 +235,7 @@ def solve_equations(equation_input: EquationInput,
                 new_equations = substitute_transform.substitute_transform_parallel(
                     scalar_equations, unknown_symbols,
                     max_candidate_pair=option.substitute_max_candidate_pair)
-                scalar_equations.extend(new_equations)
+                scalar_equations.extend(unique_equations(new_equations))
                 collected_equations = equation_utils.scalar_equation_by_unknowns(scalar_equations, unknown_symbols)
 
             # Solve again

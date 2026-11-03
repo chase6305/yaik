@@ -3,10 +3,13 @@ import numpy as np
 from typing import List, Set, Dict
 import unittest
 import copy
+import importlib.util
 from solver.equation_types import Unknown, UnknownType
 from solver.solved_variable import SolutionMethod
 from solver.polynomial_solver.groebner_reduce_sympy import groebner_reduce_sympy
 from solver.polynomial_solver.verify_polynomial_solution import verify_polynomial_solution
+
+SAGE_AVAILABLE = importlib.util.find_spec('sage') is not None
 
 
 def polynomial_numerical_match(
@@ -15,7 +18,8 @@ def polynomial_numerical_match(
         parameters: Set[sp.Symbol],
         parameter_values_to_test: List[Dict[sp.Symbol, float]],
         use_sage: bool = True) -> bool:
-    from solver.polynomial_solver.groebner_reduce_sage import groebner_reduce_sage
+    if use_sage:
+        from solver.polynomial_solver.groebner_reduce_sage import groebner_reduce_sage
     value_match = True
     for to_cos in [False, True]:
         if use_sage:
@@ -52,7 +56,9 @@ class TestPolynomialSolverNumerical(unittest.TestCase):
             value_map_i[l_0] = expr_0_value
             values_to_test.append(value_map_i)
 
-        ok_sage = polynomial_numerical_match([poly_0], [th_0_unknown], parameters, values_to_test, True)
+        ok_sage = True
+        if SAGE_AVAILABLE:
+            ok_sage = polynomial_numerical_match([poly_0], [th_0_unknown], parameters, values_to_test, True)
         ok_sympy = polynomial_numerical_match([poly_0], [th_0_unknown], parameters, values_to_test, False)
         self.assertTrue(ok_sage)
         self.assertTrue(ok_sympy)
@@ -84,11 +90,14 @@ class TestPolynomialSolverNumerical(unittest.TestCase):
             value_map_i[Px] = Px_value
             values_to_test.append(value_map_i)
 
-        ok_sage = polynomial_numerical_match([poly_0], [th_0_unknown], parameter_set, values_to_test, True)
+        ok_sage = True
+        if SAGE_AVAILABLE:
+            ok_sage = polynomial_numerical_match([poly_0], [th_0_unknown], parameter_set, values_to_test, True)
         ok_sympy = polynomial_numerical_match([poly_0], [Unknown(th_0)], parameter_set, values_to_test, False)
         self.assertTrue(ok_sage)
         self.assertTrue(ok_sympy)
 
+    @unittest.skipUnless(SAGE_AVAILABLE, 'SageMath is required for this symbolic elimination case')
     def test_polynomial_2(self):
         from fk.fk_equations import inv_Px, inv_Py
         th_0 = sp.Symbol('th_0')
@@ -124,6 +133,7 @@ class TestPolynomialSolverNumerical(unittest.TestCase):
         self.assertTrue(ok_sage)
         # self.assertTrue(ok_sympy)
 
+    @unittest.skipUnless(SAGE_AVAILABLE, 'SageMath is required for this symbolic elimination case')
     def test_polynomial_3(self):
         from solver.equation_utils import default_unknowns
         from fk.fk_equations import Px, Py
@@ -164,6 +174,7 @@ class TestPolynomialSolverNumerical(unittest.TestCase):
         ok_1 = polynomial_numerical_match([poly_0, poly_1], [unknowns[1], unknowns[0]], parameter_set, values_to_test)
         self.assertTrue(ok_0 and ok_1)
 
+    @unittest.skipUnless(SAGE_AVAILABLE, 'SageMath is required for this symbolic elimination case')
     def test_polynomial_4(self):
         from solver.equation_utils import default_unknowns
         from fk.fk_equations import Px, Py

@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import math
 from typing import List, NewType
+from python_run_import import *
 
 # Constants for solver
 robot_nq: int = 6
@@ -93,6 +94,7 @@ def abb_crb_15000_ik_target_raw_to_original(T_ee: np.ndarray):
 
 
 def abb_crb_15000_fk(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
     th_1 = theta_input[1] + th_1_offset_original2raw
     th_2 = theta_input[2] + th_2_offset_original2raw
@@ -1880,7 +1882,7 @@ def abb_crb_15000_ik_solve_raw(T_ee: np.ndarray):
         C[5, 6] = x1202 + x767
         C[5, 7] = x133*(x703 + x85)
         C[5, 8] = x1202 + x764
-        from solver.general_6dof.numerical_reduce_closure_equation import compute_solution_from_tanhalf_LME
+        from python_run_import import compute_solution_from_tanhalf_LME
         local_solutions = compute_solution_from_tanhalf_LME(A, B, C)
         for local_solutions_i in local_solutions:
             solution_i: IkSolution = make_ik_solution()
@@ -1936,7 +1938,7 @@ def abb_crb_15000_ik_solve_raw(T_ee: np.ndarray):
                 x5 = -r_11*x1 + r_21*x3
                 x6 = math.atan2(x4, x5)
                 x7 = -Px*x0 + Py*x2 + d_4*r_13*x0 - d_4*r_23*x2
-                x8 = math.sqrt(x4**2 + x5**2 - x7**2)
+                x8 = safe_sqrt(x4**2 + x5**2 - x7**2)
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[7] = x6 + math.atan2(x8, x7)
@@ -1954,7 +1956,7 @@ def abb_crb_15000_ik_solve_raw(T_ee: np.ndarray):
                 x5 = -r_11*x1 + r_21*x3
                 x6 = math.atan2(x4, x5)
                 x7 = -Px*x0 + Py*x2 + d_4*r_13*x0 - d_4*r_23*x2
-                x8 = math.sqrt(x4**2 + x5**2 - x7**2)
+                x8 = safe_sqrt(x4**2 + x5**2 - x7**2)
                 # End of temp variables
                 this_solution[7] = x6 + math.atan2(-x8, x7)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -1989,7 +1991,7 @@ def abb_crb_15000_ik_solve_raw(T_ee: np.ndarray):
                 # Temp variable for efficiency
                 x0 = math.cos(th_0)
                 x1 = math.sin(th_0)
-                x2 = math.acos((-r_11*x1 + r_21*x0)*math.sin(th_5) + (-r_12*x1 + r_22*x0)*math.cos(th_5))
+                x2 = safe_acos((-r_11*x1 + r_21*x0)*math.sin(th_5) + (-r_12*x1 + r_22*x0)*math.cos(th_5))
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[5] = x2
@@ -2001,7 +2003,7 @@ def abb_crb_15000_ik_solve_raw(T_ee: np.ndarray):
                 # Temp variable for efficiency
                 x0 = math.cos(th_0)
                 x1 = math.sin(th_0)
-                x2 = math.acos((-r_11*x1 + r_21*x0)*math.sin(th_5) + (-r_12*x1 + r_22*x0)*math.cos(th_5))
+                x2 = safe_acos((-r_11*x1 + r_21*x0)*math.sin(th_5) + (-r_12*x1 + r_22*x0)*math.cos(th_5))
                 # End of temp variables
                 this_solution[5] = -x2
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -2059,7 +2061,7 @@ def abb_crb_15000_ik_solve_raw(T_ee: np.ndarray):
                 x23 = x10*x22
                 x24 = x10*math.sin(2*th_5)
                 x25 = Px**2 - Px*r_11*x17 + Px*r_12*x19 - Px*x7 + Py**2 - Py*r_21*x17 + Py*r_22*x19 - Py*x8 + Pz**2 - Pz*r_31*x17 + Pz*r_32*x19 - Pz*x9 + r_11**2*x23 - r_11*r_12*x24 + r_11*x20*x7 - r_12*x21*x7 + r_13**2*x14 + r_21**2*x23 - r_21*r_22*x24 + r_21*x20*x8 - r_22*x21*x8 + r_23**2*x14 + r_31**2*x23 - r_31*r_32*x24 + r_31*x20*x9 - r_32*x21*x9 + r_33**2*x14 - x11*x22 + x11 - x12*x22 + x12 - x13*x22 + x13 - x2 - x3 - x5
-                x26 = math.sqrt(x2*x4 - x25**2 + x4*x5)
+                x26 = safe_sqrt(x2*x4 - x25**2 + x4*x5)
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[4] = x1 + math.atan2(x26, x25)
@@ -2095,7 +2097,7 @@ def abb_crb_15000_ik_solve_raw(T_ee: np.ndarray):
                 x23 = x10*x22
                 x24 = x10*math.sin(2*th_5)
                 x25 = Px**2 - Px*r_11*x17 + Px*r_12*x19 - Px*x7 + Py**2 - Py*r_21*x17 + Py*r_22*x19 - Py*x8 + Pz**2 - Pz*r_31*x17 + Pz*r_32*x19 - Pz*x9 + r_11**2*x23 - r_11*r_12*x24 + r_11*x20*x7 - r_12*x21*x7 + r_13**2*x14 + r_21**2*x23 - r_21*r_22*x24 + r_21*x20*x8 - r_22*x21*x8 + r_23**2*x14 + r_31**2*x23 - r_31*r_32*x24 + r_31*x20*x9 - r_32*x21*x9 + r_33**2*x14 - x11*x22 + x11 - x12*x22 + x12 - x13*x22 + x13 - x2 - x3 - x5
-                x26 = math.sqrt(x2*x4 - x25**2 + x4*x5)
+                x26 = safe_sqrt(x2*x4 - x25**2 + x4*x5)
                 # End of temp variables
                 this_solution[4] = x1 + math.atan2(-x26, x25)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -2632,6 +2634,8 @@ def abb_crb_15000_ik_solve_raw(T_ee: np.ndarray):
 
 
 def abb_crb_15000_ik_solve(T_ee: np.ndarray):
+    if not np.all(np.isfinite(T_ee)):
+        return []
     T_ee_raw_in = abb_crb_15000_ik_target_original_to_raw(T_ee)
     ik_output_raw = abb_crb_15000_ik_solve_raw(T_ee_raw_in)
     ik_output = list()

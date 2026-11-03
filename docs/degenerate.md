@@ -57,3 +57,22 @@ Equation 2: *-B sin(theta) + A cos(theta) = D*
 We can think of *sin(theta), cos(theta)* as the solution of a linear system. This is a very special linear system such
 that its linear coefficient is [A B; -B A]. The system doesn't have unique solution if and only if *A^2 + B^2 = 0*, 
 which implies *A = 0* **AND** *B = 0*.
+
+## Linear Solver Type 2
+
+Each row of this system is *a sin(x) + b cos(x) + c sin(y) + d cos(y) = 0*.
+Two independent rows express *[sin(x), cos(x)] = B [sin(y), cos(y)]*. A third row
+then constrains *y*. If the selected rows become dependent, the numerical helper
+tries another independent pair and the remaining row with the largest elimination
+residual, using all available equations before declaring a continuous family.
+
+When the eliminated equations vanish and *B* is orthogonal, every value of *y*
+preserves the unit-circle constraint. The helper returns *0* and *pi* as family
+representatives. These two values do not enumerate the family or guarantee a
+solution inside application-specific joint limits. Other rank-deficient cases
+remain unsupported, and every returned IK candidate still requires FK validation.
+
+For real-robot validation, compare candidates against independent model FK after
+converting the base and tool frames. Check position error, rotation error, joint
+limits, and preservation of any fixed redundant joint separately. A round trip
+through generated FK alone cannot detect a shared model or frame error.

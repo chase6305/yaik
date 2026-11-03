@@ -17,25 +17,25 @@ import attr
 class IkEquationCollection(object):
     # The result that can be directly collected from fk_out
     ee_pose: sp.Matrix = attr.ib()
-    scalar_equations: List[ScalarEquation] = list()
-    sos_hint: List[SumOfSquareHint] = list()
+    scalar_equations: List[ScalarEquation] = attr.ib(factory=list)
+    sos_hint: List[SumOfSquareHint] = attr.ib(factory=list)
 
     # The transform for each unknown
-    transform_for_unknown: List[sp.Matrix] = list()
+    transform_for_unknown: List[sp.Matrix] = attr.ib(factory=list)
 
     # The unknowns and symbols
-    all_symbol_set: Set[sp.Symbol] = set()
-    parameter_value_dict: Dict[sp.Symbol, float] = dict()
-    parameter_bound_dict: Dict[sp.Symbol, Tuple[float, float]] = dict()
+    all_symbol_set: Set[sp.Symbol] = attr.ib(factory=set)
+    parameter_value_dict: Dict[sp.Symbol, float] = attr.ib(factory=dict)
+    parameter_bound_dict: Dict[sp.Symbol, Tuple[float, float]] = attr.ib(factory=dict)
 
     # The intersection-axis equations
-    sub_equation_dict: Dict[Tuple[str, ...], Tuple[List[TranslationalEquation], List[ScalarEquation]]] = dict()
+    sub_equation_dict: Dict[Tuple[str, ...], Tuple[List[TranslationalEquation], List[ScalarEquation]]] = attr.ib(factory=dict)
 
     # The unknowns, note the different between initial and used
     # As some variable from initial unknowns will be moved to used one
-    initial_unknowns: List[Unknown] = list()
-    used_unknowns: List[Unknown] = list()
-    unknown_as_parameter_more_dof: List[sp.Symbol] = list()
+    initial_unknowns: List[Unknown] = attr.ib(factory=list)
+    used_unknowns: List[Unknown] = attr.ib(factory=list)
+    unknown_as_parameter_more_dof: List[sp.Symbol] = attr.ib(factory=list)
 
     def make_numerical_context(
             self,

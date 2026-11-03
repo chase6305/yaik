@@ -4,6 +4,7 @@ from solver.equation_types import CollectedEquations, Unknown, NumericalAnalyseC
 import solver.equation_utils as equation_utils
 from solver.solved_variable import VariableSolution
 import multiprocessing
+import time
 import sympy as sp
 from typing import List, Tuple, Optional, Set
 
@@ -70,6 +71,8 @@ def polynomial_try_solve(collected_equations: CollectedEquations,
         value = variable_to_equation[key]
         variable_tuples.append(key)
         variable_equations.append(value)
+    if not variable_tuples:
+        return []
 
     # Process-level details
     n_processor = min(32, len(variable_tuples))
@@ -116,11 +119,14 @@ def polynomial_try_solve(collected_equations: CollectedEquations,
                 processor_list.append(processor)
 
         # Start the processor with time-out of 5 minutes
+        deadline = time.monotonic() + timeout_seconds
         for p in processor_list:
             p.start()
         for p in processor_list:
-            p.join(timeout=timeout_seconds)
-            p.terminate()  # Explicit kill a process if the reduction takes too long
+            p.join(timeout=max(0.0, deadline - time.monotonic()))
+            if p.is_alive():
+                p.terminate()
+            p.join()
 
         # Update the offset
         processed_offset += n_processor
@@ -135,6 +141,7 @@ def polynomial_try_solve(collected_equations: CollectedEquations,
               format(idx=i, x=solved_unknown.symbol.name, n=len(poly_dict)-1))
         print(poly_dict)
         solutions.append(this_solution)
+    manager.shutdown()
 
     # The solutions are verified if data are provided
     return solutions

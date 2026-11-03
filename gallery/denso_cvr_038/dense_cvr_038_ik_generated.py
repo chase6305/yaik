@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import math
 from typing import List, NewType
+from python_run_import import *
 
 # Constants for solver
 robot_nq: int = 6
@@ -94,6 +95,7 @@ def dense_cvr_038_ik_target_raw_to_original(T_ee: np.ndarray):
 
 
 def dense_cvr_038_fk(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
     th_1 = theta_input[1] + th_1_offset_original2raw
     th_2 = theta_input[2] + th_2_offset_original2raw
@@ -1975,7 +1977,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
         C[5, 6] = x1294 + x829 + x836
         C[5, 7] = x1292 + x755 + x833
         C[5, 8] = x1294 + x830 + x835
-        from solver.general_6dof.numerical_reduce_closure_equation import compute_solution_from_tanhalf_LME
+        from python_run_import import compute_solution_from_tanhalf_LME
         local_solutions = compute_solution_from_tanhalf_LME(A, B, C)
         for local_solutions_i in local_solutions:
             solution_i: IkSolution = make_ik_solution()
@@ -2008,7 +2010,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
                 # Temp variable for efficiency
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
-                x2 = math.acos((Px*x0 - Py*x1 + d_1 + d_5*(-r_13*x0 + r_23*x1))/d_4)
+                x2 = safe_acos((Px*x0 - Py*x1 + d_1 + d_5*(-r_13*x0 + r_23*x1))/d_4)
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[5] = x2
@@ -2020,7 +2022,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
                 # Temp variable for efficiency
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
-                x2 = math.acos((Px*x0 - Py*x1 + d_1 + d_5*(-r_13*x0 + r_23*x1))/d_4)
+                x2 = safe_acos((Px*x0 - Py*x1 + d_1 + d_5*(-r_13*x0 + r_23*x1))/d_4)
                 # End of temp variables
                 this_solution[5] = -x2
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -2061,7 +2063,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
                 x6 = 2*d_5
                 x7 = d_5**2
                 x8 = Px**2 - Px*r_13*x6 + Py**2 - Py*r_23*x6 + Pz**2 - Pz*r_33*x6 - a_2**2 + 2*a_2*x1 - d_1**2 + 2*d_1*d_4*math.cos(th_3) - d_4**2 + r_13**2*x7 + r_23**2*x7 + r_33**2*x7 - x4 - x5
-                x9 = math.sqrt(x2**2 + 4*x4*x5 - x8**2)
+                x9 = safe_sqrt(x2**2 + 4*x4*x5 - x8**2)
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[4] = x3 + math.atan2(x9, x8)
@@ -2080,7 +2082,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
                 x6 = 2*d_5
                 x7 = d_5**2
                 x8 = Px**2 - Px*r_13*x6 + Py**2 - Py*r_23*x6 + Pz**2 - Pz*r_33*x6 - a_2**2 + 2*a_2*x1 - d_1**2 + 2*d_1*d_4*math.cos(th_3) - d_4**2 + r_13**2*x7 + r_23**2*x7 + r_33**2*x7 - x4 - x5
-                x9 = math.sqrt(x2**2 + 4*x4*x5 - x8**2)
+                x9 = safe_sqrt(x2**2 + 4*x4*x5 - x8**2)
                 # End of temp variables
                 this_solution[4] = x3 + math.atan2(-x9, x8)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -2241,7 +2243,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
                 x4 = Px*x0 + Py*x1 - d_5*r_13*x0 - d_5*r_23*x1 + r_11*x0*x2 + r_12*x0*x3 + r_21*x1*x2 + r_22*x1*x3
                 x5 = Pz - d_5*r_33 + r_31*x2 + r_32*x3
                 x6 = math.atan2(x4, x5)
-                x7 = math.sqrt(x4**2 + x5**2 - 0.995450272904637*(-a_2 + 0.067605633802817*d_3)**2)
+                x7 = safe_sqrt(x4**2 + x5**2 - 0.995450272904637*(-a_2 + 0.067605633802817*d_3)**2)
                 x8 = -0.997722543047233*a_2 + 0.0674516648820665*d_3
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
@@ -2259,7 +2261,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
                 x4 = Px*x0 + Py*x1 - d_5*r_13*x0 - d_5*r_23*x1 + r_11*x0*x2 + r_12*x0*x3 + r_21*x1*x2 + r_22*x1*x3
                 x5 = Pz - d_5*r_33 + r_31*x2 + r_32*x3
                 x6 = math.atan2(x4, x5)
-                x7 = math.sqrt(x4**2 + x5**2 - 0.995450272904637*(-a_2 + 0.067605633802817*d_3)**2)
+                x7 = safe_sqrt(x4**2 + x5**2 - 0.995450272904637*(-a_2 + 0.067605633802817*d_3)**2)
                 x8 = -0.997722543047233*a_2 + 0.0674516648820665*d_3
                 # End of temp variables
                 this_solution[1] = x6 + math.atan2(-x7, x8)
@@ -2471,7 +2473,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
                 x4 = Px*x0 + Py*x1 - d_5*r_13*x0 - d_5*r_23*x1 + r_11*x0*x2 + r_12*x0*x3 + r_21*x1*x2 + r_22*x1*x3
                 x5 = Pz - d_5*r_33 + r_31*x2 + r_32*x3
                 x6 = math.atan2(x4, x5)
-                x7 = math.sqrt(x4**2 + x5**2 - 0.995450272904637*(a_2 - 0.067605633802817*d_3)**2)
+                x7 = safe_sqrt(x4**2 + x5**2 - 0.995450272904637*(a_2 - 0.067605633802817*d_3)**2)
                 x8 = 0.997722543047233*a_2 - 0.0674516648820665*d_3
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
@@ -2489,7 +2491,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
                 x4 = Px*x0 + Py*x1 - d_5*r_13*x0 - d_5*r_23*x1 + r_11*x0*x2 + r_12*x0*x3 + r_21*x1*x2 + r_22*x1*x3
                 x5 = Pz - d_5*r_33 + r_31*x2 + r_32*x3
                 x6 = math.atan2(x4, x5)
-                x7 = math.sqrt(x4**2 + x5**2 - 0.995450272904637*(a_2 - 0.067605633802817*d_3)**2)
+                x7 = safe_sqrt(x4**2 + x5**2 - 0.995450272904637*(a_2 - 0.067605633802817*d_3)**2)
                 x8 = 0.997722543047233*a_2 - 0.0674516648820665*d_3
                 # End of temp variables
                 this_solution[1] = x6 + math.atan2(-x7, x8)
@@ -2568,7 +2570,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
                 x4 = Px*x0 + Py*x1 - d_5*r_13*x0 - d_5*r_23*x1 + r_11*x0*x2 + r_12*x0*x3 + r_21*x1*x2 + r_22*x1*x3
                 x5 = Pz - d_5*r_33 + r_31*x2 + r_32*x3
                 x6 = math.atan2(x4, x5)
-                x7 = math.sqrt(x4**2 + x5**2 - 0.995450272904637*(-a_2 + 0.067605633802817*d_3)**2)
+                x7 = safe_sqrt(x4**2 + x5**2 - 0.995450272904637*(-a_2 + 0.067605633802817*d_3)**2)
                 x8 = -0.997722543047233*a_2 + 0.0674516648820665*d_3
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
@@ -2586,7 +2588,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
                 x4 = Px*x0 + Py*x1 - d_5*r_13*x0 - d_5*r_23*x1 + r_11*x0*x2 + r_12*x0*x3 + r_21*x1*x2 + r_22*x1*x3
                 x5 = Pz - d_5*r_33 + r_31*x2 + r_32*x3
                 x6 = math.atan2(x4, x5)
-                x7 = math.sqrt(x4**2 + x5**2 - 0.995450272904637*(-a_2 + 0.067605633802817*d_3)**2)
+                x7 = safe_sqrt(x4**2 + x5**2 - 0.995450272904637*(-a_2 + 0.067605633802817*d_3)**2)
                 x8 = -0.997722543047233*a_2 + 0.0674516648820665*d_3
                 # End of temp variables
                 this_solution[1] = x6 + math.atan2(-x7, x8)
@@ -2738,7 +2740,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
             condition_0: bool = (abs((r_13*math.sin(th_0) - r_23*math.cos(th_0))/math.sin(th_3)) <= 1)
             if condition_0:
                 # Temp variable for efficiency
-                x0 = math.asin((-r_13*math.sin(th_0) + r_23*math.cos(th_0))/math.sin(th_3))
+                x0 = safe_asin((-r_13*math.sin(th_0) + r_23*math.cos(th_0))/math.sin(th_3))
                 # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[6] = x0
@@ -2748,7 +2750,7 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
             condition_1: bool = (abs((r_13*math.sin(th_0) - r_23*math.cos(th_0))/math.sin(th_3)) <= 1)
             if condition_1:
                 # Temp variable for efficiency
-                x0 = math.asin((-r_13*math.sin(th_0) + r_23*math.cos(th_0))/math.sin(th_3))
+                x0 = safe_asin((-r_13*math.sin(th_0) + r_23*math.cos(th_0))/math.sin(th_3))
                 # End of temp variables
                 this_solution[6] = math.pi - x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
@@ -2910,6 +2912,8 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
 
 
 def dense_cvr_038_ik_solve(T_ee: np.ndarray):
+    if not np.all(np.isfinite(T_ee)):
+        return []
     T_ee_raw_in = dense_cvr_038_ik_target_original_to_raw(T_ee)
     ik_output_raw = dense_cvr_038_ik_solve_raw(T_ee_raw_in)
     ik_output = list()

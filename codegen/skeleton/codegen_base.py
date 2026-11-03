@@ -9,6 +9,22 @@ class CodeGenerationBase(object):
 
     def __init__(self, tree: SkeletonTree):
         self._tree = tree
+        if tree.root is None:
+            raise ValueError('Cannot generate code from an empty solution tree')
+        required = {unknown.symbol for unknown in tree.solved_unknowns}
+        complete_branch = False
+        missing = required
+        for node in tree.node_list:
+            if not node.is_solution_node:
+                continue
+            if node.solution.is_polynomial and not node.is_parent_root_dispatcher():
+                raise NotImplementedError('Polynomial code generation requires a root solution node')
+            if all(child is None for child in node.children):
+                solved = {solution.solved_variable for solution in tree.variable_solutions_from_root(node)}
+                missing = required - solved
+                complete_branch = complete_branch or not missing
+        if not complete_branch:
+            raise ValueError('No complete solution branch; missing ' + ', '.join(sorted(map(str, missing))))
 
     @property
     def skeleton_tree(self) -> SkeletonTree:

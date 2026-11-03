@@ -26,6 +26,33 @@ def safe_acos(a):
         return math.acos(a)
 
 
+def compute_polynomial_real_roots(coefficients, tolerance: float = 1e-6) -> List[float]:
+    """Return finite real roots, allowing roundoff in the imaginary part."""
+    coefficients = np.asarray(coefficients, dtype=float)
+    if not np.all(np.isfinite(coefficients)):
+        return []
+    coefficients = np.trim_zeros(coefficients, 'f')
+    if coefficients.size < 2:
+        return []
+    coefficients = coefficients / np.max(np.abs(coefficients))
+    try:
+        with np.errstate(over='ignore', invalid='ignore', divide='ignore'):
+            candidates = np.roots(coefficients)
+    except np.linalg.LinAlgError:
+        return []
+    roots = []
+    for root in candidates:
+        if abs(root.imag) > tolerance * (1 + abs(root.real)):
+            continue
+        value = float(root.real)
+        with np.errstate(over='ignore', invalid='ignore'):
+            residual = np.polyval(coefficients, value)
+            scale = np.polyval(np.abs(coefficients), abs(value))
+        if np.isfinite(residual) and abs(residual) <= tolerance * max(1.0, scale):
+            roots.append(value)
+    return roots
+
+
 # For general 6-dof
 def compute_solution_from_tanhalf_LME(
         A_x2: np.ndarray,
@@ -93,7 +120,7 @@ def compute_solution_from_tanhalf_LME(
 
 
 # For linear solver type2
-def try_solve_linear_type2(A: np.ndarray) -> Optional[Tuple[float, float]]:
+def try_solve_linear_type2(A: np.ndarray, allow_family: bool = True) -> Optional[Tuple[float, float]]:
     """
     Solve y from three linear equations in the form
     A sin(x) + B cos(x) + C sin(y) + D cos(y) == 0
@@ -101,6 +128,8 @@ def try_solve_linear_type2(A: np.ndarray) -> Optional[Tuple[float, float]]:
     """
     assert A.shape[0] == 3
     assert A.shape[1] == 4
+    if not np.all(np.isfinite(A)):
+        return None
     a, b = A[0, 0], A[0, 1]
     c, d = A[1, 0], A[1, 1]
     ad_minus_bc = a * d - b * c
@@ -120,6 +149,9 @@ def try_solve_linear_type2(A: np.ndarray) -> Optional[Tuple[float, float]]:
     e = A[2, 2] + A[2, 0] * B[0, 0] + A[2, 1] * B[1, 0]
     f = A[2, 3] + A[2, 0] * B[0, 1] + A[2, 1] * B[1, 1]
     if abs(e) < zero_tolerance and abs(f) < zero_tolerance:
+        # Orthogonal B leaves a continuous unit-circle family; retain representatives.
+        if allow_family and np.max(np.abs(B.T @ B - np.eye(2))) <= 1e-10:
+            return 0.0, math.pi
         return None
     solution_0 = math.atan2(- f, e)
     solution_1 = solution_0 + np.pi
@@ -139,7 +171,27 @@ def try_solve_linear_type2_specific_rows(
     A_tmp[0, :] = A_combined[row_0, :]
     A_tmp[1, :] = A_combined[row_1, :]
     A_tmp[2, :] = A_combined[row_2, :]
-    A_tmp_sol = try_solve_linear_type2(A_tmp)
+    # Do not choose arbitrary family representatives while other rows may constrain y.
+    A_tmp_sol = try_solve_linear_type2(A_tmp, allow_family=False)
     if A_tmp_sol is not None:
         return A_tmp_sol
-    return None
+    if not np.all(np.isfinite(A_combined)):
+        return None
+    best_pair = None
+    best_det = 1e-10
+    for i in range(len(A_combined)):
+        for j in range(i + 1, len(A_combined)):
+            det = abs(A_combined[i, 0] * A_combined[j, 1] - A_combined[i, 1] * A_combined[j, 0])
+            if det > best_det:
+                best_det, best_pair = det, (i, j)
+    if best_pair is None:
+        return None
+    top = A_combined[list(best_pair)]
+    try:
+        B = -np.linalg.solve(top[:, :2], top[:, 2:])
+    except np.linalg.LinAlgError:
+        return None
+    residual = A_combined[:, 2:] + A_combined[:, :2] @ B
+    remaining = [i for i in range(len(A_combined)) if i not in best_pair]
+    third = max(remaining, key=lambda i: float(residual[i] @ residual[i]))
+    return try_solve_linear_type2(A_combined[[best_pair[0], best_pair[1], third]])

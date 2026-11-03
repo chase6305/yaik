@@ -39,7 +39,7 @@ class Unknown(object):
         self._upper_bound = upper_bound
 
         # The degenerate check value
-        self._degenerate_check_value = value_for_degenerate_check
+        self._degenerate_check_value = list(value_for_degenerate_check)
         if len(self._degenerate_check_value) < 4:
             # Some default value
             self._degenerate_check_value.append(sp.S.Zero)
@@ -363,8 +363,8 @@ class CollectedEquations(object):
 @attr.s
 class NumericalAnalyseContext(object):
     # All the parameter should be valued or bounded
-    parameter_values: Dict[sp.Symbol, float] = dict()
-    parameter_bounds: Dict[sp.Symbol, Tuple[float, float]] = dict()
+    parameter_values: Dict[sp.Symbol, float] = attr.ib(factory=dict)
+    parameter_bounds: Dict[sp.Symbol, Tuple[float, float]] = attr.ib(factory=dict)
 
     # An potentially empty test case lists
-    numerical_test_cases: List[Dict[sp.Symbol, float]] = list()
+    numerical_test_cases: List[Dict[sp.Symbol, float]] = attr.ib(factory=list)

@@ -3,7 +3,7 @@ import fk.intersecting_axis as intersecting_axis
 from fk.intersecting_axis_equation import intersecting_axis_triplet_equation, intersecting_axis_pair_equation
 from utility.symbolic_utils import is_identity_matrix, multiple_list_of_transforms, inverse_transform
 from fk.fk_equations import build_fk_matrix_equations, Py, ik_target_4x4, inv_Px, inv_Py, inv_Pz
-from fk.robots import puma_robot, arm_robo
+from fk.robot_models import puma_robot, arm_robo
 import sympy as sp
 from typing import List
 import numpy as np

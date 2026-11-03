@@ -22,7 +22,7 @@ class NumericalReduceInput(object):
     lhs_A_sin: sp.Matrix = attr.ib()
     lhs_A_cos: sp.Matrix = attr.ib()
     lhs_C_const: sp.Matrix = attr.ib()
-    expr_should_be_zero: List[sp.Expr] = list()
+    expr_should_be_zero: List[sp.Expr] = attr.ib(factory=list)
 
     def to_dict(self):
         datamap = dict()

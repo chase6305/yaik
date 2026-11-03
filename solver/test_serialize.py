@@ -1,5 +1,6 @@
 from fk.fk_equations import Px, Py, Pz, inv_Px, inv_Py, inv_Pz
-from fk.robots import RobotDescription, puma_robot
+from fk.robots import RobotDescription
+from fk.robot_models import puma_robot
 from solver.equation_types import ScalarEquation, ScalarEquationType, Unknown
 from solver.solved_variable import SolutionMethod, SolutionDegenerateRecord
 from solver.solved_variable_impl import ExplicitVariableSolutionImpl, PolynomialVariableSolutionImpl, \

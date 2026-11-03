@@ -3,6 +3,7 @@
 #ifdef WIN32
 #define _USE_MATH_DEFINES
 #endif
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <iostream>
@@ -39,7 +40,7 @@ T safe_acos(T a) {
   if (a > 1)
     return 0.0;
   else if (a < -1)
-    return -M_PI;
+    return M_PI;
   else
     return std::acos(a);
 }
@@ -221,25 +222,43 @@ struct PolynomialRealRoot {
 template <int poly_order>
 std::array<PolynomialRealRoot, poly_order> computePolynomialRealRoots(
     const std::array<double, poly_order + 1>& coefficient_high_to_low_order) {
-  // Convert to eigen, note the reversed order
-  Eigen::Matrix<double, poly_order + 1, 1> eigen_coefficient;
-  for (auto i = 0; i < poly_order + 1; i++) {
-    eigen_coefficient[i] = coefficient_high_to_low_order[poly_order - i];
+  std::array<PolynomialRealRoot, poly_order> poly_roots{};
+  double coefficient_scale = 0;
+  for (double coefficient : coefficient_high_to_low_order) {
+    if (!std::isfinite(coefficient)) return poly_roots;
+    coefficient_scale = std::max(coefficient_scale, std::abs(coefficient));
   }
+  int first_nonzero = 0;
+  while (first_nonzero <= poly_order && coefficient_high_to_low_order[first_nonzero] == 0)
+    ++first_nonzero;
+  const int degree = poly_order - first_nonzero;
+  if (degree <= 0) return poly_roots;
+
+  // Convert to eigen, note the reversed order
+  Eigen::VectorXd eigen_coefficient(degree + 1);
+  for (auto i = 0; i <= degree; i++) {
+    eigen_coefficient[i] = coefficient_high_to_low_order[poly_order - i] / coefficient_scale;
+  }
+  // Scaling can underflow a nonzero leading coefficient.
+  if (eigen_coefficient[degree] == 0) return poly_roots;
 
   // Call eigen solver
-  Eigen::PolynomialSolver<double, poly_order> solver;
+  Eigen::PolynomialSolver<double, Eigen::Dynamic> solver;
   solver.compute(eigen_coefficient);
 
   // The result
-  using RootsType =
-      typename Eigen::PolynomialSolver<double, poly_order>::RootsType;
-  const RootsType& roots = solver.roots();
-  std::array<PolynomialRealRoot, poly_order> poly_roots;
+  const auto& roots = solver.roots();
   for (auto i = 0; i < roots.size(); i++) {
     const std::complex<double>& root_i = roots[i];
-    if (std::abs(root_i.imag()) < 1e-6) {
+    if (std::abs(root_i.imag()) <= 1e-6 * (1 + std::abs(root_i.real()))) {
       const double real_root_i = root_i.real();
+      double residual = eigen_coefficient[degree];
+      double scale = std::abs(residual);
+      for (int j = degree - 1; j >= 0; --j) {
+        residual = residual * real_root_i + eigen_coefficient[j];
+        scale = scale * std::abs(real_root_i) + std::abs(eigen_coefficient[j]);
+      }
+      if (!std::isfinite(residual) || std::abs(residual) > 1e-6 * std::max(1.0, scale)) continue;
       PolynomialRealRoot root_i_return;
       root_i_return.is_valid = true;
       root_i_return.value = real_root_i;
@@ -260,7 +279,8 @@ namespace linear_solver {
 
 template <typename T>
 bool trySolveLinearType2(const Eigen::Ref<Eigen::Matrix<T, 3, 4>>& A,
-                         T& solution_0, T& solution_1) {
+                         T& solution_0, T& solution_1, bool allow_family = true) {
+  if (!A.allFinite()) return false;
   const T a = A(0, 0);
   const T b = A(0, 1);
   const T c = A(1, 0);
@@ -280,11 +300,18 @@ bool trySolveLinearType2(const Eigen::Ref<Eigen::Matrix<T, 3, 4>>& A,
   const Eigen::Matrix<T, 2, 2> B = -A_top2x2_inv * A.template block<2, 2>(0, 2);
   const T e = A(2, 2) + A(2, 0) * B(0, 0) + A(2, 1) * B(1, 0);
   const T f = A(2, 3) + A(2, 0) * B(0, 1) + A(2, 1) * B(1, 1);
-  if (std::abs(e) < zero_tolerance && std::abs(f) < zero_tolerance)
+  if (std::abs(e) < zero_tolerance && std::abs(f) < zero_tolerance) {
+    if (allow_family && (B.transpose() * B - Eigen::Matrix<T, 2, 2>::Identity())
+                            .cwiseAbs().maxCoeff() <= T(1e-10)) {
+      solution_0 = T(0);
+      solution_1 = std::acos(T(-1));
+      return true;
+    }
     return false;
+  }
 
   // The solution should be OK
-  constexpr T local_pi = 3.1415926;
+  constexpr T local_pi = T(3.141592653589793238462643383279502884L);
   solution_0 = std::atan2(-f, e);
   solution_1 = solution_0 + local_pi;
   if (solution_1 > local_pi) solution_1 -= 2 * local_pi;
@@ -299,6 +326,31 @@ bool trySolveLinearType2SpecificRows(
   A_for_given_row.row(0) = A.row(row_0);
   A_for_given_row.row(1) = A.row(row_1);
   A_for_given_row.row(2) = A.row(row_2);
+  if (trySolveLinearType2<double>(A_for_given_row, solution_0, solution_1, false)) return true;
+  if (!A.allFinite()) return false;
+  int best_i = -1, best_j = -1;
+  double best_det = 1e-10;
+  for (int i = 0; i < n_rows; ++i) {
+    for (int j = i + 1; j < n_rows; ++j) {
+      const double det = std::abs(A(i, 0) * A(j, 1) - A(i, 1) * A(j, 0));
+      if (det > best_det) { best_det = det; best_i = i; best_j = j; }
+    }
+  }
+  if (best_i < 0) return false;
+  A_for_given_row.row(0) = A.row(best_i);
+  A_for_given_row.row(1) = A.row(best_j);
+  const Eigen::Matrix2d B = -A_for_given_row.block<2, 2>(0, 0).inverse() * A_for_given_row.block<2, 2>(0, 2);
+  int best_k = -1;
+  double best_residual = -1;
+  for (int k = 0; k < n_rows; ++k) {
+    if (k == best_i || k == best_j) continue;
+    const Eigen::RowVector2d residual = A.row(k).template tail<2>() + A.row(k).template head<2>() * B;
+    if (residual.squaredNorm() > best_residual) {
+      best_residual = residual.squaredNorm(); best_k = k;
+    }
+  }
+  if (best_k < 0) return false;
+  A_for_given_row.row(2) = A.row(best_k);
   return trySolveLinearType2<double>(A_for_given_row, solution_0, solution_1);
 }
 
@@ -553,7 +605,8 @@ void numericalRefinement(
                              Eigen::Matrix<double, 6, robot_nq>&)>&
         twist_jacobian_functor,
     const Eigen::Matrix4d& ee_target, std::array<double, robot_nq>& q,
-    double diagonal_damping = 1e-4) {
+    double diagonal_damping = 1e-4,
+    const std::array<bool, robot_nq>& fixed_joints = {}) {
   Eigen::Matrix<double, 6, robot_nq> jacobian;
   Eigen::Matrix<double, robot_nq, robot_nq> jtj;
   Eigen::Matrix<double, robot_nq, 1> delta_q, jte;
@@ -573,6 +626,9 @@ void numericalRefinement(
 
     // Compute jacobian and solve it
     twist_jacobian_functor(q, jacobian);
+    for (auto j = 0; j < robot_nq; j++) {
+      if (fixed_joints[j]) jacobian.col(j).setZero();
+    }
     jtj = jacobian.transpose() * jacobian;
     jte = jacobian.transpose() * twist_target;
     for (auto j = 0; j < robot_nq; j++) {

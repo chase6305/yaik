@@ -101,7 +101,7 @@ class CodeGenerationCpp(CodeGenerationBase):
     def _generate_constexpr_parameters(self, generate_parameter: bool = True):
         tree = self.skeleton_tree
         robot = self.robot
-        parameter_values = tree.solved_equation_record.parameter_value_dict
+        parameter_values = robot.parameters_value
         self.add_empty_line()
         self.add_code_line('// Constants for solver')
         self.add_code_line('static constexpr int robot_nq = {nq};'.format(nq=len(robot.unknowns)))
@@ -235,7 +235,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         nq = len(robot.unknowns)
         func_arguments = '(const std::array<double, robot_nq>& theta_input_original'
         for symbol_i in free_symbols:
-            func_arguments += ', double' + str(symbol_i)
+            func_arguments += ', double ' + str(symbol_i)
         func_arguments += ')'
 
         # Since we are in namespace, we just use a fixed fk name
@@ -303,7 +303,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         nq = len(robot.unknowns)
         func_arguments = '(const std::array<double, robot_nq>& theta_input_original'
         for symbol_i in free_symbols:
-            func_arguments += ', double' + str(symbol_i)
+            func_arguments += ', double ' + str(symbol_i)
 
         # If this is point jacobian
         if point_jacobian_point_on_ee is not None:
@@ -528,7 +528,7 @@ class CodeGenerationCpp(CodeGenerationBase):
             func_call_arguments = '(' + ee_pose_name
             for symbol_j in free_symbols:
                 # We need to add offset here, since the parameter from unknown used in rawIK is with offset.
-                if symbol_j in unknown_symbols:
+                if symbol_j in unknown_symbols and self.robot.get_unknown_offset() is not None:
                     offset_var_i = self.get_unknown_offset_name(symbol_j.name)
                     func_call_arguments += ', ' + str(symbol_j) + ' + ' + offset_var_i
                 else:
@@ -598,6 +598,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         # The ik define
         self.add_code_line('static void ' + self.ik_function_name(False) + func_arguments)
         self.enter_scope('checked_ik')
+        self.add_code_line('if (!T_ee.allFinite()) { ik_output.clear(); return; }')
 
         # To raw target
         if (self.robot.get_pre_transform_sp() is not None) or (self.robot.get_post_transform_sp() is not None):
@@ -614,7 +615,7 @@ class CodeGenerationCpp(CodeGenerationBase):
             func_call_arguments = '(' + ee_pose_name
             for symbol_j in free_symbols:
                 # We need to add offset here, since the parameter from unknown used in rawIK is with offset.
-                if symbol_j in unknown_symbols:
+                if symbol_j in unknown_symbols and self.robot.get_unknown_offset() is not None:
                     offset_var_j = self.get_unknown_offset_name(symbol_j.name)
                     func_call_arguments += ', ' + str(symbol_j) + ' + ' + offset_var_j
                 else:
@@ -692,13 +693,31 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('Eigen::Matrix4d ee_pose_i = {fk_func}{fk_args};'.
                            format(fk_func=fk_func_name, fk_args=fk_args_call))
         self.add_code_line('double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();')
-        self.add_code_line('if (ee_pose_diff > pose_tolerance_degenerate)')
+        self.add_code_line('if (!std::isfinite(ee_pose_diff) || ee_pose_diff > pose_tolerance_degenerate)')
         self.add_code_line(indent() + 'continue;')
 
         # Try numerical
         self.add_empty_line()
         self.add_code_line('// Try numerical refinement')
-        self.add_code_line('yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i);')
+        fixed_indices = {i for i, unknown in enumerate(self.robot.unknowns)
+                         if unknown.symbol in self.robot.unknown_as_parameter_more_dof}
+        refinement_args = ''
+        if fixed_indices:
+            fixed_mask = ', '.join('true' if i in fixed_indices else 'false' for i in range(self.robot.n_dofs))
+            refinement_args = ', 1e-4, std::array<bool, robot_nq>{{' + fixed_mask + '}}'
+        geometric_symbols = self.free_symbols(include_unknown_as_parameter=False)
+        refinement_fk, refinement_jacobian = 'computeFK', 'computeTwistJacobian'
+        if geometric_symbols:
+            geometric_args = ', ' + ', '.join(map(str, geometric_symbols))
+            self.add_code_line('auto refinement_fk = [&](const std::array<double, robot_nq>& q) { return computeFK(q'
+                               + geometric_args + '); };')
+            self.add_code_line('auto refinement_jacobian = [&](const std::array<double, robot_nq>& q, '
+                               'Eigen::Matrix<double, 6, robot_nq>& jacobian) { computeTwistJacobian(q'
+                               + geometric_args + ', jacobian); };')
+            refinement_fk, refinement_jacobian = 'refinement_fk', 'refinement_jacobian'
+        self.add_code_line('yaik_cpp::numericalRefinement<robot_nq>(' + refinement_fk + ', '
+                           + refinement_jacobian + ', T_ee, ik_out_i'
+                           + refinement_args + ');')
         self.add_code_line('ee_pose_i = {fk_func}{fk_args};'.
                            format(fk_func=fk_func_name, fk_args=fk_args_call))
         self.add_code_line('ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();')
