@@ -98,6 +98,24 @@ class TestModelInputs(TestCase):
         robot = bounded_joint()
         robot.dh_params[0].theta = robot.unknowns[0].symbol
         self.assert_invalid(robot)
+        for field in ('symbolic_parameters', 'parameters_value', 'parameters_bound'):
+            with self.subTest(parameter_field=field):
+                robot = bounded_joint()
+                joint = robot.unknowns[0].symbol
+                if field == 'symbolic_parameters':
+                    robot.symbolic_parameters.add(joint)
+                else:
+                    getattr(robot, field)[joint] = 0 if field == 'parameters_value' else (0, 0.01)
+                self.assert_invalid(robot)  # Parameter substitution must not replace the DH joint.
+                robot.auxiliary_data = RobotAuxiliaryData()
+                robot.auxiliary_data.pre_transform_sp = sp.eye(4)
+                robot.auxiliary_data.pre_transform_sp[0, 3] = joint
+                self.assert_invalid(robot)
+        robot = bounded_joint()
+        alias = sp.Symbol(robot.unknowns[0].symbol.name, real=True)
+        robot.symbolic_parameters.add(alias)
+        robot.parameters_bound[alias] = (0, 0.01)
+        self.assert_invalid(robot)
         for offsets in ([], [0, 0], [np.nan], [np.inf], 0.1):
             robot = bounded_joint()
             robot.auxiliary_data = RobotAuxiliaryData(unknown_offset=offsets)

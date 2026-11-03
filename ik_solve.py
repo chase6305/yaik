@@ -48,6 +48,9 @@ def check_robot(robot: RobotDescription) -> bool:
         print('Invalid robot description: joint variables must be symbols')
         return False
     unknown_set = set(unknown_symbols)
+    parameter_symbols = robot.symbolic_parameters | set(robot.parameters_value) | set(robot.parameters_bound)
+    if {symbol.name for symbol in unknown_symbols} & {str(symbol) for symbol in parameter_symbols}:
+        errors.append('joint symbols must not also be declared as parameters')
     if not unknown_symbols or len({symbol.name for symbol in unknown_symbols}) != len(unknown_symbols):
         errors.append('joint symbols must be nonempty and unique')
     if len(robot.dh_params) != len(robot.unknowns):

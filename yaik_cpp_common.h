@@ -49,7 +49,7 @@ T safe_acos(T a) {
 template <int N>
 void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
                       double tolerance,
-                      const std::array<bool, N>& revolute_joints = {}) {
+                      const std::array<bool, N>& revolute_joints) {
   // Do nothing if size less than 1
   if (ik_output.size() <= 1) return;
 
@@ -116,6 +116,12 @@ void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
   // [0, no_duplicate_until] is the range
   assert(no_duplicate_until < ik_output.size());
   ik_output.resize(no_duplicate_until + 1);
+}
+
+template <int N>
+void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
+                      double tolerance) {
+  removeDuplicate<N>(ik_output, tolerance, {});
 }
 
 // Fixe-size array to hold ik solution

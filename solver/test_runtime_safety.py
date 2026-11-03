@@ -110,7 +110,9 @@ class TestRuntimeSafety(TestCase):
 int main() {
     std::vector<std::array<double, 1>> endpoints{{{-M_PI}}, {{M_PI}}};
     auto linear = endpoints;
-    yaik_cpp::removeDuplicate<1>(linear, 1e-6);
+    using SingleJointOutput = std::vector<std::array<double, 1>>;
+    void (*linear_deduplicate)(SingleJointOutput&, double) = &yaik_cpp::removeDuplicate<1>;
+    linear_deduplicate(linear, 1e-6);
     assert(linear.size() == 2);  // Omitting the mask preserves linear comparison.
     yaik_cpp::removeDuplicate<1>(endpoints, 1e-6, {{true}});
     assert(endpoints.size() == 1 && endpoints[0][0] == -M_PI);
