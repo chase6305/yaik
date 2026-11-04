@@ -1,5 +1,14 @@
 from typing import Optional
 
+__all__ = ['generate_code_python', 'run_python_codegen']
+
+
+def __getattr__(name):
+    if name == 'generate_code_python':
+        from codegen.py_codegen.codegen_py import generate_code_python
+        return generate_code_python
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
+
 
 def run_python_codegen(tree_path: Optional[str] = None):
     from codegen.py_codegen.codegen_py import generate_code_python

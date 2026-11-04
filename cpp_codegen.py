@@ -1,5 +1,14 @@
 from typing import Optional
 
+__all__ = ['generate_code_cpp', 'run_cpp_codegen']
+
+
+def __getattr__(name):
+    if name == 'generate_code_cpp':
+        from codegen.cpp_codegen.codegen_cpp import generate_code_cpp
+        return generate_code_cpp
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
+
 
 def run_cpp_codegen(tree_yaml_path: Optional[str] = None, use_safe_operator: bool = True):
     from codegen.cpp_codegen.codegen_cpp import generate_code_cpp
