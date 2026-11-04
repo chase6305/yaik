@@ -343,7 +343,9 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         assert self._scope_manager.indent_level == 1
 
         # Whether we need to extract value depends on the root
-        if solution_node.is_parent_root_dispatcher():
+        if solution_node.solution.family_critical_equations is not None:
+            self._visit_family_solution_node(solution_node)
+        elif solution_node.is_parent_root_dispatcher():
             self._visit_explicit_solution_node_root(solution_node)
         else:
             self._visit_explicit_solution_node_non_root(solution_node)
@@ -356,6 +358,66 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         self.add_code_line(self.node_processor_name(solution_node) + '();')
         self.add_code_line('// Finish code for explicit solution node {idx}'.format(idx=input_idx))
         assert self.indent_level == 0
+
+    def _visit_family_solution_node(self, node):
+        solution = node.solution
+        expressions = [value for row in solution.family_critical_equations for value in row]
+        root = node.is_parent_root_dispatcher()
+        output = None if node.dispatcher_child is None else node.dispatcher_child.flatten_idx
+        variable = self._symbol_to_index[solution.solved_variable]
+        if not root:
+            self.add_code_line('for (int family_prefix = 0; family_prefix < this_node_input_index.size(); ++family_prefix)')
+            self.enter_scope('family_prefix')
+            self.add_code_line('const int queue_index = this_node_input_index[family_prefix];')
+            self.add_code_line('if (!solution_queue.is_solution_valid(queue_index)) continue;')
+            self.add_code_line('const auto& this_solution = solution_queue.get_solution(queue_index);')
+            requested = self.gather_request_solved_variables(
+                expressions + solution.explicit_solutions + solution.argument_validity_checkers +
+                [solution.family_critical_condition], node)
+            for line in self.extract_solved_variable_codes(requested):
+                self.add_code_line(line)
+        self.add_code_line('std::vector<double> family_values;')
+        for indices, checker, replacements, reduced in cse_by_condition(
+                solution.explicit_solutions, solution.argument_validity_checkers):
+            self.add_code_line(f'if ({self.generate_cxx_code(checker)})')
+            self.enter_scope('family_seed')
+            for symbol, expression in replacements:
+                self.add_code_line(f'const double {symbol} = {self.generate_cxx_code(expression)};')
+            for expression in reduced:
+                self.add_code_line(f'family_values.push_back({self.generate_cxx_code(expression)});')
+            self.exit_scope('family_seed')
+        self.add_code_line(f'if ({self.generate_cxx_code(solution.family_critical_condition)})')
+        self.enter_scope('family_condition')
+        replacements, reduced = sp.cse(expressions)
+        for symbol, expression in replacements:
+            self.add_code_line(f'const double {symbol} = {self.generate_cxx_code(expression)};')
+        rows = ['{{' + ', '.join(self.generate_cxx_code(value) for value in reduced[i:i+3]) + '}}'
+                for i in range(0, len(reduced), 3)]
+        lower, upper = solution.family_bounds
+        self.add_code_line('family_values = ::yaik_cpp::trigFamilyRepresentatives('
+                           + '{' + ', '.join(rows) + '}, '
+                           + f'{lower!r}, {upper!r}, family_values);')
+        self.exit_scope('family_condition')
+        self.add_code_line('for (std::size_t family_index = 0; family_index < family_values.size(); ++family_index)')
+        self.enter_scope('family_candidate')
+        self.add_code_line('auto candidate = make_raw_solution();' if root else 'auto candidate = this_solution;')
+        self.add_code_line(f'candidate[{variable}] = family_values[family_index];')
+        if root:
+            self.add_code_line('const int candidate_index = append_solution_to_queue(candidate);')
+        else:
+            self.add_code_line('int candidate_index;')
+            self.add_code_line('if (family_index+1 == family_values.size())')
+            self.enter_scope('family_reuse')
+            self.add_code_line('solution_queue.get_solution(queue_index) = candidate;')
+            self.add_code_line('candidate_index = queue_index;')
+            self.exit_scope('family_reuse')
+            self.add_code_line('else candidate_index = append_solution_to_queue(candidate);')
+        if output is not None:
+            self.add_code_line(f'add_input_index_to({output}, candidate_index);')
+        self.exit_scope('family_candidate')
+        if not root:
+            self.add_code_line('if (family_values.empty()) solution_queue.solutions_validity[queue_index] = false;')
+            self.exit_scope('family_prefix')
 
     def _visit_explicit_solution_node_root(self, solution_node: ExplicitSolutionNode):
         assert self.indent_level == 1

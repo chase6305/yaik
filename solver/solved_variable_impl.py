@@ -30,6 +30,7 @@ class SolutionMethod(Enum):
     LinearSinCosType_2 = 13
     # A finite set of representatives, checked against FK by the public API.
     FamilyRepresentative = 14
+    SphericalShoulder = 15
 
 
 class VariableSolutionClassKey(Enum):
@@ -110,9 +111,39 @@ class ExplicitVariableSolutionImpl(VariableSolutionImplBase):
         assert len(solution_validity_checkers) == len(solutions)
         self._explicit_solutions = solutions
         self._solution_validity_checkers = solution_validity_checkers
+        self._family_critical_equations = None
+        self._family_bounds = None
+        self._family_critical_condition = sp.S.true
 
     def num_solutions(self):
+        if self._family_critical_equations is not None:
+            # At most two roots per equation, two endpoints, one midpoint per
+            # open cell, and the original representatives as numerical backup.
+            return len(self._explicit_solutions) + 4*len(self._family_critical_equations) + 3
         return len(self._explicit_solutions)
+
+    @property
+    def family_critical_equations(self):
+        return self._family_critical_equations
+
+    @property
+    def family_bounds(self):
+        return self._family_bounds
+
+    @property
+    def family_critical_condition(self):
+        return self._family_critical_condition
+
+    def set_family_critical_equations(self, coefficients, bounds, condition=sp.S.true):
+        import math
+        lower, upper = map(float, bounds)
+        if not (math.isfinite(lower) and math.isfinite(upper) and lower <= upper and upper-lower <= 2*math.pi):
+            raise ValueError('Critical family bounds must span at most one finite revolution')
+        if any(len(row) != 3 for row in coefficients):
+            raise ValueError('Critical equations require cosine, sine, and constant coefficients')
+        self._family_critical_equations = [tuple(map(sp.sympify, row)) for row in coefficients]
+        self._family_bounds = (lower, upper)
+        self._family_critical_condition = sp.sympify(condition)
 
     def class_key(self) -> str:
         return VariableSolutionClassKey.ExplicitSolution.name
@@ -373,6 +404,12 @@ def explicit_solution_to_dict(solution: ExplicitVariableSolutionImpl) -> Dict:
         equation_utils.expression_list_to_string_representation(solution.explicit_solutions)
     datamap['argument_checkers'] = \
         equation_utils.expression_list_to_string_representation(solution.solution_validity_checkers)
+    if solution.family_critical_equations is not None:
+        datamap['family_critical_equations'] = [
+            equation_utils.expression_list_to_string_representation(row)
+            for row in solution.family_critical_equations]
+        datamap['family_bounds'] = list(solution.family_bounds)
+        datamap['family_critical_condition'] = str(solution.family_critical_condition)
     return datamap
 
 
@@ -389,6 +426,10 @@ def explicit_solution_from_dict(datamap: Dict) -> ExplicitVariableSolutionImpl:
         solution_method,
         degenerate_record,
         solved_from_scalar_equations)
+    if 'family_critical_equations' in datamap:
+        solution.set_family_critical_equations([
+            equation_utils.parse_string_expressions(row) for row in datamap['family_critical_equations']],
+            datamap['family_bounds'], parse_sympy_expr(datamap.get('family_critical_condition', 'True')))
     return solution
 
 

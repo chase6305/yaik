@@ -2,6 +2,8 @@ from solver.degenerate_analyse.analyser import \
     DegenerateAnalyser, DegenerateAnalyserContext, DegenerateAnalyserOption
 from solver.degenerate_analyse.numerical_analyser import NumericalCheckDegenerateAnalyzer
 from solver.solved_variable import VariableSolution, DegenerateType, NumericalAnalysedResultType
+from solver.solved_variable import SolutionMethod, SolutionDegenerateRecord
+import sympy as sp
 from solver.solved_variable import VariableSolutionClassKey
 from solver.branch_conditions import formula_degenerates_on_branch
 from typing import List, Set, Dict, Tuple, Optional
@@ -12,6 +14,54 @@ solution_preference_order = {
     VariableSolutionClassKey.LinearSinCosType_2.name: 2,
     VariableSolutionClassKey.General6DoFNumericalReduce.name: 3
 }
+
+
+def combine_linear_alternatives(selected, solutions):
+    """Use the first nonsingular linear pair, keeping all rotation projections.
+
+    Each pair determines the same unique angle if a full IK solution exists.
+    Priority guards select only one pair per prefix; using another column
+    avoids losing an entire branch when one rotation-column projection is zero.
+    """
+    if (selected is None or selected.solution_method != SolutionMethod.LinearSinCosType_1.name or
+            selected.degenerate_record.type != DegenerateType.DegenerateIfAllEquationsZero.name):
+        return selected
+    alternatives = [selected] + sorted(
+        [solution for solution in solutions if solution is not selected and
+         solution.solved_variable == selected.solved_variable and solution.is_explicit_solution and
+         solution.solution_method == SolutionMethod.LinearSinCosType_1.name and
+         solution.num_solutions() == 1 and
+         solution.degenerate_record.type == DegenerateType.DegenerateIfAllEquationsZero.name],
+        key=lambda solution: (solution.count_explicit_solution_total_ops(), str(solution.explicit_solutions)))
+    seen, expressions, checkers, equations, sources = set(), [], [], [], []
+    unique = []
+    for solution in alternatives:
+        expression = solution.explicit_solutions[0]
+        if expression in seen:
+            continue
+        seen.add(expression)
+        unique.append(solution)
+        expressions.append(expression)
+        equations.extend(solution.degenerate_record.equations)
+        sources.extend(solution.solved_from_scalar_equations or [])
+    if len(expressions) < 2:
+        return selected
+    # Prefer the best-conditioned projection; selecting the first barely
+    # nonzero column can amplify roundoff near a joint-limit corner.
+    scores = [sp.Max(*(sp.Abs(value) for value in solution.degenerate_record.equations))
+              for solution in unique]
+    for i, solution in enumerate(unique):
+        checker = solution.argument_validity_checkers[0]
+        for j, other in enumerate(unique):
+            if i == j:
+                continue
+            comparison = scores[i] > scores[j] if j < i else scores[i] >= scores[j]
+            checker &= ~other.argument_validity_checkers[0] | comparison
+        checkers.append(checker)
+    return VariableSolution.make_explicit_solution(
+        selected.solved_variable, expressions, SolutionMethod.LinearSinCosType_1.name,
+        argument_valid_checkers=checkers, solve_from_equations=sources,
+        degenerate_record=SolutionDegenerateRecord.record_all_equations(list(dict.fromkeys(equations))))
 
 
 def select_solution_in_type(

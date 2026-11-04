@@ -364,7 +364,9 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         assert self.indent_level == 1
 
         # Whether we need to extract value depends on the root
-        if solution_node.is_parent_root_dispatcher():
+        if solution_node.solution.family_critical_equations is not None:
+            self._visit_family_solution_node(solution_node)
+        elif solution_node.is_parent_root_dispatcher():
             self._visit_explicit_solution_node_root(solution_node)
         else:
             self._visit_explicit_solution_node_non_root(solution_node)
@@ -377,6 +379,69 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         self.add_code_line(self.node_processor_name(solution_node) + '()')
         self.add_code_line('# Finish code for explicit solution node {idx}'.format(idx=input_idx))
         assert self.indent_level == 0
+
+    def _visit_family_solution_node(self, node):
+        solution = node.solution
+        coefficients = solution.family_critical_equations
+        expressions = [value for row in coefficients for value in row]
+        seeds = solution.explicit_solutions
+        root = node.is_parent_root_dispatcher()
+        output = None if node.dispatcher_child is None else node.dispatcher_child.flatten_idx
+        variable = self._symbol_to_index[solution.solved_variable]
+        if not root:
+            self.add_code_line('for queue_index in this_node_input_index:')
+            self.enter_scope('family_prefix')
+            self.add_code_line('if not queue_element_validity[queue_index]:')
+            self.add_code_line(indent() + 'continue')
+            self.add_code_line('this_solution = solution_queue[queue_index]')
+            requested = self.gather_request_solved_variables(
+                expressions + seeds + solution.argument_validity_checkers + [solution.family_critical_condition], node)
+            for line in self.extract_solved_variable_codes(requested):
+                self.add_code_line(line)
+        self.add_code_line('family_values = []')
+        for indices, checker, replacements, reduced in cse_by_condition(seeds, solution.argument_validity_checkers):
+            self.add_code_line(f'if {self.generate_py_code(checker)}:')
+            self.enter_scope('family_seed')
+            for symbol, expression in replacements:
+                self.add_code_line(f'{symbol} = {self.generate_py_code(expression)}')
+            for expression in reduced:
+                self.add_code_line(f'family_values.append({self.generate_py_code(expression)})')
+            self.exit_scope('family_seed')
+        self.add_code_line(f'if {self.generate_py_code(solution.family_critical_condition)}:')
+        self.enter_scope('family_condition')
+        replacements, reduced = sp.cse(expressions)
+        for symbol, expression in replacements:
+            self.add_code_line(f'{symbol} = {self.generate_py_code(expression)}')
+        rows = ['(' + ', '.join(self.generate_py_code(value) for value in reduced[i:i+3]) + ')'
+                for i in range(0, len(reduced), 3)]
+        lower, upper = solution.family_bounds
+        self.add_code_line(f'family_values = trig_family_representatives([{", ".join(rows)}], '
+                           f'{lower!r}, {upper!r}, family_values)')
+        self.exit_scope('family_condition')
+        self.add_code_line('for family_index, family_value in enumerate(family_values):')
+        self.enter_scope('family_candidate')
+        if root:
+            self.add_code_line('candidate = make_ik_solution()')
+        else:
+            self.add_code_line('candidate = copy.copy(this_solution)')
+        self.add_code_line(f'candidate[{variable}] = family_value')
+        if root:
+            self.add_code_line('candidate_index = append_solution_to_queue(candidate)')
+        else:
+            self.add_code_line('if family_index == len(family_values)-1:')
+            self.enter_scope('family_reuse')
+            self.add_code_line('solution_queue[queue_index] = candidate')
+            self.add_code_line('candidate_index = queue_index')
+            self.exit_scope('family_reuse')
+            self.add_code_line('else:')
+            self.add_code_line(indent() + 'candidate_index = append_solution_to_queue(candidate)')
+        if output is not None:
+            self.add_code_line(f'add_input_index_to({output}, candidate_index)')
+        self.exit_scope('family_candidate')
+        if not root:
+            self.add_code_line('if not family_values:')
+            self.add_code_line(indent() + 'queue_element_validity[queue_index] = False')
+            self.exit_scope('family_prefix')
 
     def _visit_explicit_solution_node_root(self, solution_node: ExplicitSolutionNode):
         assert self.indent_level == 1

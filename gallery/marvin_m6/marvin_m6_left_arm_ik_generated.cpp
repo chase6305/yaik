@@ -6,8 +6,12 @@ struct marvin_m6_left_arm_ik {
 
 // Constants for solver
 static constexpr int robot_nq = 7;
-static constexpr int max_n_solutions = 528;
-static constexpr int n_tree_nodes = 50;
+static constexpr int max_n_solutions = 7326;
+static std::array<double, robot_nq> jointLower() { return {{-3.1066860685499065, -2.094395102393195, -3.1066860685499065, -2.530727415391778, -3.1066860685499065, -1.0471975511965976, -1.5707963267948966}}; }
+static std::array<double, robot_nq> jointUpper() { return {{3.1066860685499065, 2.0943951023931953, 3.1066860685499065, 1.0471975511965974, 3.1066860685499065, 1.0471975511965974, 1.5707963267948966}}; }
+static std::array<bool, robot_nq> periodicLimitJoints() { return {{true, true, true, true, false, true, true}}; }
+static std::array<bool, robot_nq> fixedJoints() { return {{false, false, false, false, true, false, false}}; }
+static constexpr int n_tree_nodes = 28;
 static constexpr int intermediate_solution_size = 6;
 static constexpr double pose_tolerance = 1e-6;
 static constexpr double pose_tolerance_degenerate = 1e-4;
@@ -548,153 +552,161 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(12);
         if (!this_input_valid)
             return;
-
-        // The solution of non-root node 12
-        for(int i = 0; i < this_node_input_index.size(); i++)
+        for (int family_prefix = 0; family_prefix < this_node_input_index.size(); ++family_prefix)
         {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const bool condition_0 = true;
-            if (condition_0)
+            const int queue_index = this_node_input_index[family_prefix];
+            if (!solution_queue.is_solution_valid(queue_index)) continue;
+            const auto& this_solution = solution_queue.get_solution(queue_index);
+            const double th_3 = this_solution[3];
+            std::vector<double> family_values;
+            if (true)
             {
-                RawSolution solution_0(this_solution);
-                solution_0[5] = -3.14159265358979;
-                int appended_idx_0 = append_solution_to_queue(solution_0);
-                add_input_index_to(13, appended_idx_0);
-                RawSolution solution_1(this_solution);
-                solution_1[5] = -3.0434178831651102;
-                int appended_idx_1 = append_solution_to_queue(solution_1);
-                add_input_index_to(13, appended_idx_1);
-                RawSolution solution_2(this_solution);
-                solution_2[5] = -2.9452431127404299;
-                int appended_idx_2 = append_solution_to_queue(solution_2);
-                add_input_index_to(13, appended_idx_2);
-                RawSolution solution_3(this_solution);
-                solution_3[5] = -2.8470683423157501;
-                int appended_idx_3 = append_solution_to_queue(solution_3);
-                add_input_index_to(13, appended_idx_3);
-                RawSolution solution_4(this_solution);
-                solution_4[5] = -2.7488935718910699;
-                int appended_idx_4 = append_solution_to_queue(solution_4);
-                add_input_index_to(13, appended_idx_4);
-                RawSolution solution_5(this_solution);
-                solution_5[5] = -2.6507188014663901;
-                int appended_idx_5 = append_solution_to_queue(solution_5);
-                add_input_index_to(13, appended_idx_5);
-                RawSolution solution_6(this_solution);
-                solution_6[5] = -2.5525440310417098;
-                int appended_idx_6 = append_solution_to_queue(solution_6);
-                add_input_index_to(13, appended_idx_6);
-                RawSolution solution_7(this_solution);
-                solution_7[5] = -2.45436926061703;
-                int appended_idx_7 = append_solution_to_queue(solution_7);
-                add_input_index_to(13, appended_idx_7);
-                RawSolution solution_8(this_solution);
-                solution_8[5] = -2.35619449019234;
-                int appended_idx_8 = append_solution_to_queue(solution_8);
-                add_input_index_to(13, appended_idx_8);
-                RawSolution solution_9(this_solution);
-                solution_9[5] = -2.2580197197676601;
-                int appended_idx_9 = append_solution_to_queue(solution_9);
-                add_input_index_to(13, appended_idx_9);
-                RawSolution solution_10(this_solution);
-                solution_10[5] = -2.1598449493429799;
-                int appended_idx_10 = append_solution_to_queue(solution_10);
-                add_input_index_to(13, appended_idx_10);
-                RawSolution solution_11(this_solution);
-                solution_11[5] = -2.0616701789183001;
-                int appended_idx_11 = append_solution_to_queue(solution_11);
-                add_input_index_to(13, appended_idx_11);
-                RawSolution solution_12(this_solution);
-                solution_12[5] = -1.96349540849362;
-                int appended_idx_12 = append_solution_to_queue(solution_12);
-                add_input_index_to(13, appended_idx_12);
-                RawSolution solution_13(this_solution);
-                solution_13[5] = -1.86532063806894;
-                int appended_idx_13 = append_solution_to_queue(solution_13);
-                add_input_index_to(13, appended_idx_13);
-                RawSolution solution_14(this_solution);
-                solution_14[5] = -1.76714586764426;
-                int appended_idx_14 = append_solution_to_queue(solution_14);
-                add_input_index_to(13, appended_idx_14);
-                RawSolution solution_15(this_solution);
-                solution_15[5] = -1.6689710972195799;
-                int appended_idx_15 = append_solution_to_queue(solution_15);
-                add_input_index_to(13, appended_idx_15);
-                RawSolution solution_16(this_solution);
-                solution_16[5] = -1.5707963267949001;
-                int appended_idx_16 = append_solution_to_queue(solution_16);
-                add_input_index_to(13, appended_idx_16);
-                RawSolution solution_17(this_solution);
-                solution_17[5] = -1.4726215563702201;
-                int appended_idx_17 = append_solution_to_queue(solution_17);
-                add_input_index_to(13, appended_idx_17);
-                RawSolution solution_18(this_solution);
-                solution_18[5] = -1.37444678594553;
-                int appended_idx_18 = append_solution_to_queue(solution_18);
-                add_input_index_to(13, appended_idx_18);
-                RawSolution solution_19(this_solution);
-                solution_19[5] = -1.27627201552085;
-                int appended_idx_19 = append_solution_to_queue(solution_19);
-                add_input_index_to(13, appended_idx_19);
-                RawSolution solution_20(this_solution);
-                solution_20[5] = -1.17809724509617;
-                int appended_idx_20 = append_solution_to_queue(solution_20);
-                add_input_index_to(13, appended_idx_20);
-                RawSolution solution_21(this_solution);
-                solution_21[5] = -1.0799224746714899;
-                int appended_idx_21 = append_solution_to_queue(solution_21);
-                add_input_index_to(13, appended_idx_21);
-                RawSolution solution_22(this_solution);
-                solution_22[5] = -0.98174770424681101;
-                int appended_idx_22 = append_solution_to_queue(solution_22);
-                add_input_index_to(13, appended_idx_22);
-                RawSolution solution_23(this_solution);
-                solution_23[5] = -0.88357293382212898;
-                int appended_idx_23 = append_solution_to_queue(solution_23);
-                add_input_index_to(13, appended_idx_23);
-                RawSolution solution_24(this_solution);
-                solution_24[5] = -0.78539816339744795;
-                int appended_idx_24 = append_solution_to_queue(solution_24);
-                add_input_index_to(13, appended_idx_24);
-                RawSolution solution_25(this_solution);
-                solution_25[5] = -0.68722339297276702;
-                int appended_idx_25 = append_solution_to_queue(solution_25);
-                add_input_index_to(13, appended_idx_25);
-                RawSolution solution_26(this_solution);
-                solution_26[5] = -0.58904862254808599;
-                int appended_idx_26 = append_solution_to_queue(solution_26);
-                add_input_index_to(13, appended_idx_26);
-                RawSolution solution_27(this_solution);
-                solution_27[5] = -0.49087385212340501;
-                int appended_idx_27 = append_solution_to_queue(solution_27);
-                add_input_index_to(13, appended_idx_27);
-                RawSolution solution_28(this_solution);
-                solution_28[5] = -0.39269908169872397;
-                int appended_idx_28 = append_solution_to_queue(solution_28);
-                add_input_index_to(13, appended_idx_28);
-                RawSolution solution_29(this_solution);
-                solution_29[5] = -0.29452431127404299;
-                int appended_idx_29 = append_solution_to_queue(solution_29);
-                add_input_index_to(13, appended_idx_29);
-                RawSolution solution_30(this_solution);
-                solution_30[5] = -0.19634954084936199;
-                int appended_idx_30 = append_solution_to_queue(solution_30);
-                add_input_index_to(13, appended_idx_30);
-                RawSolution solution_31(this_solution);
-                solution_31[5] = -0.098174770424681104;
-                int appended_idx_31 = append_solution_to_queue(solution_31);
-                add_input_index_to(13, appended_idx_31);
-                const double tmp_sol_value = 0.0;
-                solution_queue.get_solution(node_input_i_idx_in_queue)[5] = tmp_sol_value;
-                add_input_index_to(13, node_input_i_idx_in_queue);
+                family_values.push_back(-3.14159265358979);
+                family_values.push_back(-3.0434178831651102);
+                family_values.push_back(-2.9452431127404299);
+                family_values.push_back(-2.8470683423157501);
+                family_values.push_back(-2.7488935718910699);
+                family_values.push_back(-2.6507188014663901);
+                family_values.push_back(-2.5525440310417098);
+                family_values.push_back(-2.45436926061703);
+                family_values.push_back(-2.35619449019234);
+                family_values.push_back(-2.2580197197676601);
+                family_values.push_back(-2.1598449493429799);
+                family_values.push_back(-2.0616701789183001);
+                family_values.push_back(-1.96349540849362);
+                family_values.push_back(-1.86532063806894);
+                family_values.push_back(-1.76714586764426);
+                family_values.push_back(-1.6689710972195799);
+                family_values.push_back(-1.5707963267949001);
+                family_values.push_back(-1.4726215563702201);
+                family_values.push_back(-1.37444678594553);
+                family_values.push_back(-1.27627201552085);
+                family_values.push_back(-1.17809724509617);
+                family_values.push_back(-1.0799224746714899);
+                family_values.push_back(-0.98174770424681101);
+                family_values.push_back(-0.88357293382212898);
+                family_values.push_back(-0.78539816339744795);
+                family_values.push_back(-0.68722339297276702);
+                family_values.push_back(-0.58904862254808599);
+                family_values.push_back(-0.49087385212340501);
+                family_values.push_back(-0.39269908169872397);
+                family_values.push_back(-0.29452431127404299);
+                family_values.push_back(-0.19634954084936199);
+                family_values.push_back(-0.098174770424681104);
+                family_values.push_back(0.0);
             }
-            else
+            if (std::fabs(inv_Pz) >= 9.9999999999999995e-7)
             {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+                const double x0 = std::sin(th_3);
+                const double x1 = std::sin(th_4);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::pow(x3, 2);
+                const double x5 = std::pow(inv_Pz, 2);
+                const double x6 = a_1*x0;
+                const double x7 = d_3*x3;
+                const double x8 = 2*d_0;
+                const double x9 = x5*x8;
+                const double x10 = std::pow(x0, 2);
+                const double x11 = std::pow(a_1, 2)*x5;
+                const double x12 = std::pow(x2, 2);
+                const double x13 = x12*x5;
+                const double x14 = std::pow(d_0, 2);
+                const double x15 = x3*x6;
+                const double x16 = a_2*x13;
+                const double x17 = a_1*x3;
+                const double x18 = x12*x4;
+                const double x19 = std::pow(std::pow(a_2, 2)*x13 + std::pow(d_3, 2)*x5 + 2*d_3*x5*x6 + x0*x16*x8 + x10*x11 + x10*x13*x14 + x11*x18 + x13*x15*x8 + x14*x4*x5 - x15*x9 + 2*x16*x17 - x7*x9, -1.0/2.0);
+                const double x20 = x0*x1;
+                const double x21 = 0.034899496702501101*x20;
+                const double x22 = a_1*x4;
+                const double x23 = inv_Pz*x19;
+                const double x24 = x2*x23;
+                const double x25 = r_11*x24;
+                const double x26 = 0.034899496702501101*x25;
+                const double x27 = a_1*x10;
+                const double x28 = 0.034899496702501101*x3;
+                const double x29 = a_2*x28;
+                const double x30 = d_3*x0;
+                const double x31 = r_12*x21 + x22*x26 + x25*x29 + x26*x27 + x26*x30;
+                const double x32 = 0.99939082701909598*x20;
+                const double x33 = 0.99939082701909598*x2;
+                const double x34 = x23*x33;
+                const double x35 = r_22*x34;
+                const double x36 = x22*x35;
+                const double x37 = x27*x35;
+                const double x38 = a_2*x3;
+                const double x39 = x35*x38;
+                const double x40 = x30*x35;
+                const double x41 = r_12*x24;
+                const double x42 = 0.034899496702501101*x41;
+                const double x43 = -r_11*x21 + x22*x42 + x27*x42 + x29*x41 + x30*x42;
+                const double x44 = 0.99939082701909598*x23;
+                const double x45 = r_23*x44;
+                const double x46 = d_0*x4;
+                const double x47 = x45*x46;
+                const double x48 = x15*x45;
+                const double x49 = a_2*x0;
+                const double x50 = x12*x45;
+                const double x51 = x49*x50;
+                const double x52 = d_0*x10;
+                const double x53 = x50*x52;
+                const double x54 = x12*x48;
+                const double x55 = r_13*x23;
+                const double x56 = 0.034899496702501101*x55;
+                const double x57 = x28*x55;
+                const double x58 = x12*x56;
+                const double x59 = x57*x6;
+                const double x60 = -d_3*x57 + x12*x59 + x46*x56 + x49*x58 + x52*x58 - x59;
+                const double x61 = r_21*x34;
+                const double x62 = r_32*x33;
+                const double x63 = r_31*x1;
+                const double x64 = d_3*x44;
+                const double x65 = r_31*x20;
+                const double x66 = a_1*x44;
+                const double x67 = d_0*x3*x44;
+                const double x68 = x63*x67;
+                const double x69 = r_32*x1;
+                const double x70 = r_31*x24;
+                const double x71 = 0.034899496702501101*x70;
+                const double x72 = d_3*x28;
+                const double x73 = -x28*x69 + x46*x71 + x49*x71 + x52*x71 - x70*x72;
+                const double x74 = r_31*x33;
+                const double x75 = x64*x69;
+                const double x76 = r_32*x20;
+                const double x77 = x66*x76;
+                const double x78 = r_32*x24;
+                const double x79 = 0.034899496702501101*x78;
+                const double x80 = x28*x63 + x46*x79 + x49*x79 + x52*x79 - x72*x78;
+                const double x81 = r_33*x23;
+                const double x82 = x1*x33*x81;
+                const double x83 = a_2*x82;
+                const double x84 = x17*x82;
+                const double x85 = d_0*x81;
+                const double x86 = x20*x33*x85;
+                const double x87 = 0.034899496702501101*x81;
+                const double x88 = x12*x81;
+                const double x89 = x0*x28;
+                const double x90 = a_1*x18*x87 + d_0*x88*x89 + x27*x87 + x29*x88 + x30*x87 - x85*x89;
+                const double x91 = -x22*x70 - x27*x70 - x30*x70 - x38*x70 - x76;
+                const double x92 = x22*x78 + x27*x78 + x30*x78 + x38*x78 - x65;
+                const double x93 = -x15*x81 + x15*x88 + x46*x81 + x49*x88 + x52*x88 - x7*x81;
+                family_values = ::yaik_cpp::trigFamilyRepresentatives({{{0.99939082701909598*a_1*inv_Pz*r_21*x10*x19*x2 + 0.99939082701909598*a_1*inv_Pz*r_21*x19*x2*x4 + 0.99939082701909598*a_2*inv_Pz*r_21*x19*x2*x3 + 0.99939082701909598*d_3*inv_Pz*r_21*x0*x19*x2 + 0.99939082701909598*r_22*x0*x1 - x31, r_21*x32 - x36 - x37 - x39 - x40 + x43, x45*x7 - x47 + x48 - x51 - x53 - x54 + x60}}, {{r_22*x32 + x22*x61 + x27*x61 + x30*x61 + x31 + x38*x61, 0.99939082701909598*r_21*x0*x1 - x36 - x37 - x39 - x40 - x43, 0.99939082701909598*a_1*inv_Pz*r_23*x0*x19*x3 + 0.99939082701909598*d_3*inv_Pz*r_23*x19*x3 - x47 - x51 - x53 - x54 - x60}}, {{-x62 + x63*x64 + x65*x66 - x68 + x73, 0.99939082701909598*d_0*inv_Pz*r_32*x1*x19*x3 - x74 - x75 - x77 - x80, -x83 - x84 - x86 + x90}}, {{0.99939082701909598*a_1*inv_Pz*r_31*x0*x1*x19 + 0.99939082701909598*d_3*inv_Pz*r_31*x1*x19 - x62 - x68 - x73, x67*x69 - x74 - x75 - x77 + x80, -x83 - x84 - x86 - x90}}, {{x91, x92, x93 - 0.499999999999999}}, {{x91, x92, x93 - 0.5}}, {{x91, x92, x93 - 1}}, {{x91, x92, x93 + 1}}}, -3.141592653589793, 0.0, family_values);
             }
+            for (std::size_t family_index = 0; family_index < family_values.size(); ++family_index)
+            {
+                auto candidate = this_solution;
+                candidate[5] = family_values[family_index];
+                int candidate_index;
+                if (family_index+1 == family_values.size())
+                {
+                    solution_queue.get_solution(queue_index) = candidate;
+                    candidate_index = queue_index;
+                }
+                else candidate_index = append_solution_to_queue(candidate);
+                add_input_index_to(13, candidate_index);
+            }
+            if (family_values.empty()) solution_queue.solutions_validity[queue_index] = false;
         }
     };
     // Invoke the processor
@@ -769,8 +781,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
     // Code for non-branch dispatcher node 15
     // Actually, there is no code
 
-    // Code for linear type2 solution node 16, solved variable is th_2
-    auto LinearSinCosType_2_SolverNode_node_16_solve_th_2_processor = [&]() -> void
+    // Code for explicit solution node 16, solved variable is th_2
+    auto ExplicitSolutionNode_node_16_solve_th_2_processor = [&]() -> void
     {
         const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(15);
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(15);
@@ -787,325 +799,317 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             const double th_3 = this_solution[3];
             const double th_5 = this_solution[4];
             const double th_6 = this_solution[5];
-            // Temp variable for efficiency
-            const double x0 = std::sin(th_6);
-            const double x1 = std::sin(th_4);
-            const double x2 = std::cos(th_3);
-            const double x3 = x1*x2;
-            const double x4 = std::sin(th_3);
-            const double x5 = std::sin(th_5);
-            const double x6 = std::cos(th_6);
-            const double x7 = std::cos(th_4);
-            const double x8 = x6*x7;
-            const double x9 = std::cos(th_5);
-            const double x10 = x0*x3 + x2*x8*x9 - x4*x5*x6;
-            const double x11 = x1*x9;
-            const double x12 = -x0*x7 + x11*x6;
-            const double x13 = -x0*x2*x7*x9 + x0*x4*x5 + x3*x6;
-            const double x14 = x0*x11 + x8;
-            const double x15 = x2*x5*x7 + x4*x9;
-            const double x16 = x1*x5;
-            const double x17 = a_1 + a_2*x2 + d_3*x4;
-            // End of temp variables
-            Eigen::Matrix<double, 8, 4> A_matrix;
-            A_matrix.setZero();
-            A_matrix(0, 0) = r_11;
-            A_matrix(0, 1) = -r_21;
-            A_matrix(0, 2) = -x10;
-            A_matrix(0, 3) = x12;
-            A_matrix(1, 0) = r_12;
-            A_matrix(1, 1) = -r_22;
-            A_matrix(1, 2) = -x13;
-            A_matrix(1, 3) = -x14;
-            A_matrix(2, 0) = r_13;
-            A_matrix(2, 1) = -r_23;
-            A_matrix(2, 2) = x15;
-            A_matrix(2, 3) = -x16;
-            A_matrix(3, 0) = Px;
-            A_matrix(3, 1) = -Py;
-            A_matrix(3, 2) = -x17;
-            A_matrix(4, 0) = -r_11;
-            A_matrix(4, 1) = r_21;
-            A_matrix(4, 2) = x10;
-            A_matrix(4, 3) = -x12;
-            A_matrix(5, 0) = -r_12;
-            A_matrix(5, 1) = r_22;
-            A_matrix(5, 2) = x13;
-            A_matrix(5, 3) = x14;
-            A_matrix(6, 0) = -r_13;
-            A_matrix(6, 1) = r_23;
-            A_matrix(6, 2) = -x15;
-            A_matrix(6, 3) = x16;
-            A_matrix(7, 0) = -Px;
-            A_matrix(7, 1) = Py;
-            A_matrix(7, 2) = x17;
-            // Code for solving
+            const bool condition_0 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) > 9.9999999999999992e-25;
+            if (condition_0)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 2, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(17, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(17, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = std::sin(th_4);
+                const double x1 = std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = std::cos(th_5);
+                const double x6 = x0*x5;
+                const double x7 = r_31*(x2*x4 - x3*x6) + r_32*(x2*x3 + x4*x6) + r_33*x0*x1;
+                const double x8 = std::sin(th_3);
+                const double x9 = std::cos(th_3);
+                const double x10 = x0*x9;
+                const double x11 = x1*x8 - x2*x5*x9;
+                const double x12 = r_31*(x10*x4 - x11*x3) + r_32*(x10*x3 + x11*x4) + r_33*(-x1*x2*x9 - x5*x8);
+                RawSolution solution_0(this_solution);
+                solution_0[2] = -std::atan2(-x7, -x12);
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(17, appended_idx_0);
+                RawSolution solution_1(this_solution);
+                solution_1[2] = -std::atan2(x7, x12);
+                int appended_idx_1 = append_solution_to_queue(solution_1);
+                add_input_index_to(17, appended_idx_1);
             }
+            const bool condition_2 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_2)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 3, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(17, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(17, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = 6*M_PI;
+                const double x1 = std::sin(th_4);
+                const double x2 = x1*std::sin(th_5);
+                const double x3 = std::cos(th_4);
+                const double x4 = std::cos(th_6);
+                const double x5 = std::sin(th_6);
+                const double x6 = x1*std::cos(th_5);
+                const double x7 = x3*x4 + x5*x6;
+                const double x8 = x3*x5 - x4*x6;
+                const double x9 = std::atan2(r_11*x8 + r_12*x7 + r_13*x2, -r_21*x8 - r_22*x7 - r_23*x2);
+                RawSolution solution_2(this_solution);
+                solution_2[2] = (1.0/2.0)*std::max(-3.10668606854991, -x0 + x9 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, -x0 + x9 + 3.10668606854991);
+                int appended_idx_2 = append_solution_to_queue(solution_2);
+                add_input_index_to(17, appended_idx_2);
             }
+            const bool condition_3 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) > std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_3)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 6, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(17, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(17, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = 4*M_PI;
+                const double x1 = std::sin(th_4);
+                const double x2 = x1*std::sin(th_5);
+                const double x3 = std::cos(th_4);
+                const double x4 = std::cos(th_6);
+                const double x5 = std::sin(th_6);
+                const double x6 = x1*std::cos(th_5);
+                const double x7 = x3*x4 + x5*x6;
+                const double x8 = x3*x5 - x4*x6;
+                const double x9 = std::atan2(r_11*x8 + r_12*x7 + r_13*x2, -r_21*x8 - r_22*x7 - r_23*x2);
+                RawSolution solution_3(this_solution);
+                solution_3[2] = (1.0/2.0)*std::max(-3.10668606854991, -x0 + x9 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, -x0 + x9 + 3.10668606854991);
+                int appended_idx_3 = append_solution_to_queue(solution_3);
+                add_input_index_to(17, appended_idx_3);
             }
+            const bool condition_4 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_4)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 7, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(17, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(17, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = 2*M_PI;
+                const double x1 = std::sin(th_4);
+                const double x2 = x1*std::sin(th_5);
+                const double x3 = std::cos(th_4);
+                const double x4 = std::cos(th_6);
+                const double x5 = std::sin(th_6);
+                const double x6 = x1*std::cos(th_5);
+                const double x7 = x3*x4 + x5*x6;
+                const double x8 = x3*x5 - x4*x6;
+                const double x9 = std::atan2(r_11*x8 + r_12*x7 + r_13*x2, -r_21*x8 - r_22*x7 - r_23*x2);
+                RawSolution solution_4(this_solution);
+                solution_4[2] = (1.0/2.0)*std::max(-3.10668606854991, -x0 + x9 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, -x0 + x9 + 3.10668606854991);
+                int appended_idx_4 = append_solution_to_queue(solution_4);
+                add_input_index_to(17, appended_idx_4);
             }
+            const bool condition_5 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_5)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 2, 3, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(17, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(17, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = std::sin(th_4);
+                const double x1 = x0*std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = x0*std::cos(th_5);
+                const double x6 = x2*x3 + x4*x5;
+                const double x7 = x2*x4 - x3*x5;
+                const double x8 = std::atan2(r_11*x7 + r_12*x6 + r_13*x1, -r_21*x7 - r_22*x6 - r_23*x1);
+                RawSolution solution_5(this_solution);
+                solution_5[2] = (1.0/2.0)*std::max(-3.10668606854991, x8 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, x8 + 3.10668606854991);
+                int appended_idx_5 = append_solution_to_queue(solution_5);
+                add_input_index_to(17, appended_idx_5);
+            }
+            const bool condition_6 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 2*M_PI) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_6)
+            {
+                const double x0 = std::sin(th_4);
+                const double x1 = x0*std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = x0*std::cos(th_5);
+                const double x6 = x2*x3 + x4*x5;
+                const double x7 = x2*x4 - x3*x5;
+                const double x8 = std::atan2(r_11*x7 + r_12*x6 + r_13*x1, -r_21*x7 - r_22*x6 - r_23*x1) + 2*M_PI;
+                RawSolution solution_6(this_solution);
+                solution_6[2] = (1.0/2.0)*std::max(-3.10668606854991, x8 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, x8 + 3.10668606854991);
+                int appended_idx_6 = append_solution_to_queue(solution_6);
+                add_input_index_to(17, appended_idx_6);
+            }
+            const bool condition_7 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 4*M_PI) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_7)
+            {
+                const double x0 = std::sin(th_4);
+                const double x1 = x0*std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = x0*std::cos(th_5);
+                const double x6 = x2*x3 + x4*x5;
+                const double x7 = x2*x4 - x3*x5;
+                const double x8 = std::atan2(r_11*x7 + r_12*x6 + r_13*x1, -r_21*x7 - r_22*x6 - r_23*x1) + 4*M_PI;
+                RawSolution solution_7(this_solution);
+                solution_7[2] = (1.0/2.0)*std::max(-3.10668606854991, x8 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, x8 + 3.10668606854991);
+                int appended_idx_7 = append_solution_to_queue(solution_7);
+                add_input_index_to(17, appended_idx_7);
+            }
+            const bool condition_8 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 6*M_PI) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_8)
+            {
+                const double x0 = std::sin(th_4);
+                const double x1 = x0*std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = x0*std::cos(th_5);
+                const double x6 = x2*x3 + x4*x5;
+                const double x7 = x2*x4 - x3*x5;
+                const double x8 = std::atan2(r_11*x7 + r_12*x6 + r_13*x1, -r_21*x7 - r_22*x6 - r_23*x1) + 6*M_PI;
+                RawSolution solution_8(this_solution);
+                solution_8[2] = (1.0/2.0)*std::max(-3.10668606854991, x8 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, x8 + 3.10668606854991);
+                int appended_idx_8 = append_solution_to_queue(solution_8);
+                add_input_index_to(17, appended_idx_8);
+            }
+            const bool condition_9 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI);
+            if (condition_9)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5);
+                RawSolution solution_9(this_solution);
+                solution_9[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991 + 6*M_PI) + (1.0/2.0)*std::min(3.10668606854991, -x12 + 3.10668606854991 + 6*M_PI);
+                int appended_idx_9 = append_solution_to_queue(solution_9);
+                add_input_index_to(17, appended_idx_9);
+            }
+            const bool condition_10 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) > std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI);
+            if (condition_10)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5);
+                RawSolution solution_10(this_solution);
+                solution_10[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991 + 4*M_PI) + (1.0/2.0)*std::min(3.10668606854991, -x12 + 3.10668606854991 + 4*M_PI);
+                int appended_idx_10 = append_solution_to_queue(solution_10);
+                add_input_index_to(17, appended_idx_10);
+            }
+            const bool condition_11 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI));
+            if (condition_11)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5);
+                RawSolution solution_11(this_solution);
+                solution_11[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991 + 2*M_PI) + (1.0/2.0)*std::min(3.10668606854991, -x12 + 3.10668606854991 + 2*M_PI);
+                int appended_idx_11 = append_solution_to_queue(solution_11);
+                add_input_index_to(17, appended_idx_11);
+            }
+            const bool condition_12 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991) <= std::min(3.10668606854991, 3.10668606854991 - std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)))) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI));
+            if (condition_12)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5);
+                RawSolution solution_12(this_solution);
+                solution_12[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, 3.10668606854991 - x12);
+                int appended_idx_12 = append_solution_to_queue(solution_12);
+                add_input_index_to(17, appended_idx_12);
+            }
+            const bool condition_13 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI + 3.10668606854991) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991) <= std::min(3.10668606854991, 3.10668606854991 - std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)))) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI));
+            if (condition_13)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 2*M_PI;
+                RawSolution solution_13(this_solution);
+                solution_13[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, 3.10668606854991 - x12);
+                int appended_idx_13 = append_solution_to_queue(solution_13);
+                add_input_index_to(17, appended_idx_13);
+            }
+            const bool condition_14 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 4*M_PI + 3.10668606854991) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991) <= std::min(3.10668606854991, 3.10668606854991 - std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)))) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI + 3.10668606854991));
+            if (condition_14)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 4*M_PI;
+                RawSolution solution_14(this_solution);
+                solution_14[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, 3.10668606854991 - x12);
+                int appended_idx_14 = append_solution_to_queue(solution_14);
+                add_input_index_to(17, appended_idx_14);
+            }
+            const bool condition_15 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 6*M_PI + 3.10668606854991) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991) <= std::min(3.10668606854991, 3.10668606854991 - std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)))) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI + 3.10668606854991));
+            if (condition_15)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 6*M_PI;
+                const double tmp_sol_value = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, 3.10668606854991 - x12);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[2] = tmp_sol_value;
+                add_input_index_to(17, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
             }
         }
     };
     // Invoke the processor
-    LinearSinCosType_2_SolverNode_node_16_solve_th_2_processor();
-    // Finish code for general_6dof solution node 15
+    ExplicitSolutionNode_node_16_solve_th_2_processor();
+    // Finish code for explicit solution node 15
 
-    // Code for equation all-zero dispatcher node 17
-    auto EquationAllZeroDispatcherNode_node_17_processor = [&]() -> void
+    // Code for non-branch dispatcher node 17
+    // Actually, there is no code
+
+    // Code for explicit solution node 18, solved variable is th_1
+    auto ExplicitSolutionNode_node_18_solve_th_1_processor = [&]() -> void
     {
         const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(17);
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(17);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const bool checked_result = std::fabs(Px) <= 9.9999999999999995e-7 && std::fabs(Py) <= 9.9999999999999995e-7 && std::fabs((a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3))*std::sin(th_2)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(18, node_input_i_idx_in_queue);
-            else
-                add_input_index_to(34, node_input_i_idx_in_queue);
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_17_processor();
-    // Finish code for equation all-zero dispatcher node 17
-
-    // Code for equation all-zero dispatcher node 34
-    auto EquationAllZeroDispatcherNode_node_34_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(34);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(34);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(a_1*std::cos(th_2) + a_2*std::cos(th_2)*std::cos(th_3) + d_3*std::sin(th_3)*std::cos(th_2)) <= 9.9999999999999995e-7 && std::fabs(a_2*std::sin(th_3) + d_0 - d_3*std::cos(th_3)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(35, node_input_i_idx_in_queue);
-            else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_34_processor();
-    // Finish code for equation all-zero dispatcher node 34
-
-    // Code for explicit solution node 35, solved variable is th_1
-    auto ExplicitSolutionNode_node_35_solve_th_1_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(35);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(35);
-        if (!this_input_valid)
-            return;
-
-        // The solution of non-root node 35
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const bool condition_0 = std::fabs(Pz) >= zero_tolerance || std::fabs(a_1*std::cos(th_2) + a_2*std::cos(th_2)*std::cos(th_3) + d_3*std::sin(th_3)*std::cos(th_2)) >= zero_tolerance || std::fabs(a_2*std::sin(th_3) + d_0 - d_3*std::cos(th_3)) >= zero_tolerance;
-            if (condition_0)
-            {
-                const double x0 = std::cos(th_2);
-                const double x1 = std::cos(th_3);
-                const double x2 = std::sin(th_3);
-                const double x3 = a_1*x0 + a_2*x0*x1 + d_3*x0*x2;
-                const double x4 = a_2*x2 + d_0 - d_3*x1;
-                const double x5 = std::atan2(x3, x4);
-                const double x6 = safe_sqrt(-std::pow(Pz, 2) + std::pow(x3, 2) + std::pow(x4, 2));
-                const double x7 = -Pz;
-                RawSolution solution_0(this_solution);
-                solution_0[1] = x5 + std::atan2(x6, x7);
-                int appended_idx_0 = append_solution_to_queue(solution_0);
-                add_input_index_to(36, appended_idx_0);
-                const double tmp_sol_value = x5 + std::atan2(-x6, x7);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
-                add_input_index_to(36, node_input_i_idx_in_queue);
-            }
-            else
-            {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-            }
-        }
-    };
-    // Invoke the processor
-    ExplicitSolutionNode_node_35_solve_th_1_processor();
-    // Finish code for explicit solution node 35
-
-    // Code for equation all-zero dispatcher node 36
-    auto EquationAllZeroDispatcherNode_node_36_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(36);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(36);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const bool checked_result = std::fabs(r_13) <= 9.9999999999999995e-7 && std::fabs(r_23) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(37, node_input_i_idx_in_queue);
-            else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_36_processor();
-    // Finish code for equation all-zero dispatcher node 36
-
-    // Code for explicit solution node 37, solved variable is th_0
-    auto ExplicitSolutionNode_node_37_solve_th_0_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(37);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(37);
-        if (!this_input_valid)
-            return;
-
-        // The solution of non-root node 37
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_1 = this_solution[1];
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const double th_5 = this_solution[4];
-            const bool condition_0 = std::fabs(r_13) >= 9.9999999999999995e-7 || std::fabs(r_23) >= 9.9999999999999995e-7;
-            if (condition_0)
-            {
-                const double x0 = std::sin(th_2);
-                const double x1 = std::cos(th_5);
-                const double x2 = std::sin(th_3);
-                const double x3 = x1*x2;
-                const double x4 = std::sin(th_4);
-                const double x5 = std::sin(th_5);
-                const double x6 = std::cos(th_2);
-                const double x7 = std::cos(th_3);
-                const double x8 = x5*std::cos(th_4);
-                const double x9 = x7*x8;
-                const double x10 = -x0*x3 - x0*x9 + x4*x5*x6;
-                const double x11 = std::sin(th_1);
-                const double x12 = std::cos(th_1);
-                const double x13 = x12*x6;
-                const double x14 = x0*x12*x4*x5 + x1*x11*x7 - x11*x2*x8 + x13*x3 + x13*x9;
-                const double tmp_sol_value = std::atan2(r_13*x10 - r_23*x14, -r_13*x14 - r_23*x10);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
-            }
-            else
-            {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-            }
-        }
-    };
-    // Invoke the processor
-    ExplicitSolutionNode_node_37_solve_th_0_processor();
-    // Finish code for explicit solution node 37
-
-    // Code for explicit solution node 18, solved variable is th_0
-    auto ExplicitSolutionNode_node_18_solve_th_0_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(18);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(18);
         if (!this_input_valid)
             return;
 
@@ -1118,20 +1122,29 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_2 = this_solution[2];
             const double th_3 = this_solution[3];
-            const bool condition_0 = std::fabs(Px) >= zero_tolerance || std::fabs(Py) >= zero_tolerance || std::fabs((a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3))*std::sin(th_2)) >= zero_tolerance;
+            const double th_5 = this_solution[4];
+            const double th_6 = this_solution[5];
+            const bool condition_0 = true;
             if (condition_0)
             {
-                const double x0 = std::atan2(Px, -Py);
-                const double x1 = std::sin(th_2);
-                const double x2 = a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3);
-                const double x3 = safe_sqrt(std::pow(Px, 2) + std::pow(Py, 2) - std::pow(x1, 2)*std::pow(x2, 2));
-                const double x4 = x1*x2;
-                RawSolution solution_0(this_solution);
-                solution_0[0] = x0 + std::atan2(x3, x4);
-                int appended_idx_0 = append_solution_to_queue(solution_0);
-                add_input_index_to(19, appended_idx_0);
-                const double tmp_sol_value = x0 + std::atan2(-x3, x4);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
+                const double x0 = std::sin(th_4);
+                const double x1 = std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = std::cos(th_5);
+                const double x6 = x0*x5;
+                const double x7 = std::sin(th_3);
+                const double x8 = x5*x7;
+                const double x9 = std::cos(th_3);
+                const double x10 = x1*x9;
+                const double x11 = x0*x9;
+                const double x12 = x1*x7;
+                const double x13 = x12 - x2*x5*x9;
+                const double x14 = x0*x7;
+                const double x15 = x10 + x2*x8;
+                const double tmp_sol_value = std::atan2((-r_31*(x11*x4 - x13*x3) - r_32*(x11*x3 + x13*x4) - r_33*(-x10*x2 - x8))*std::cos(th_2) - (-r_31*(x2*x4 - x3*x6) - r_32*(x2*x3 + x4*x6) - r_33*x0*x1)*std::sin(th_2), -r_31*(x14*x4 + x15*x3) - r_32*(x14*x3 - x15*x4) - r_33*(-x12*x2 + x5*x9));
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
                 add_input_index_to(19, node_input_i_idx_in_queue);
             }
             else
@@ -1141,110 +1154,17 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
         }
     };
     // Invoke the processor
-    ExplicitSolutionNode_node_18_solve_th_0_processor();
-    // Finish code for explicit solution node 18
+    ExplicitSolutionNode_node_18_solve_th_1_processor();
+    // Finish code for explicit solution node 17
 
-    // Code for equation all-zero dispatcher node 19
-    auto EquationAllZeroDispatcherNode_node_19_processor = [&]() -> void
+    // Code for non-branch dispatcher node 19
+    // Actually, there is no code
+
+    // Code for explicit solution node 20, solved variable is th_0
+    auto ExplicitSolutionNode_node_20_solve_th_0_processor = [&]() -> void
     {
         const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(19);
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(19);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
-            const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(20, node_input_i_idx_in_queue);
-            else
-                add_input_index_to(38, node_input_i_idx_in_queue);
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_19_processor();
-    // Finish code for equation all-zero dispatcher node 19
-
-    // Code for equation all-zero dispatcher node 38
-    auto EquationAllZeroDispatcherNode_node_38_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(38);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(38);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
-            const bool checked_result = std::fabs(r_33) <= 9.9999999999999995e-7 && std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(39, node_input_i_idx_in_queue);
-            else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_38_processor();
-    // Finish code for equation all-zero dispatcher node 38
-
-    // Code for explicit solution node 39, solved variable is th_1
-    auto ExplicitSolutionNode_node_39_solve_th_1_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(39);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(39);
-        if (!this_input_valid)
-            return;
-
-        // The solution of non-root node 39
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const double th_5 = this_solution[4];
-            const bool condition_0 = std::fabs(r_33) >= 9.9999999999999995e-7 || std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) >= 9.9999999999999995e-7;
-            if (condition_0)
-            {
-                const double x0 = std::sin(th_5);
-                const double x1 = std::sin(th_3);
-                const double x2 = std::cos(th_2);
-                const double x3 = std::cos(th_5);
-                const double x4 = std::cos(th_3);
-                const double x5 = x0*std::cos(th_4);
-                const double x6 = x0*std::sin(th_2)*std::sin(th_4) + x1*x2*x3 + x2*x4*x5;
-                const double x7 = -r_13*std::cos(th_0) - r_23*std::sin(th_0);
-                const double x8 = x1*x5 - x3*x4;
-                const double tmp_sol_value = std::atan2(r_33*x6 - x7*x8, r_33*x8 + x6*x7);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
-            }
-            else
-            {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-            }
-        }
-    };
-    // Invoke the processor
-    ExplicitSolutionNode_node_39_solve_th_1_processor();
-    // Finish code for explicit solution node 39
-
-    // Code for explicit solution node 20, solved variable is th_1
-    auto ExplicitSolutionNode_node_20_solve_th_1_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(20);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(20);
         if (!this_input_valid)
             return;
 
@@ -1255,19 +1175,50 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
+            const double th_1 = this_solution[1];
             const double th_2 = this_solution[2];
             const double th_3 = this_solution[3];
-            const bool condition_0 = std::fabs(Pz) >= 9.9999999999999995e-7 || std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0)) >= 9.9999999999999995e-7;
+            const double th_5 = this_solution[4];
+            const double th_6 = this_solution[5];
+            const bool condition_0 = true;
             if (condition_0)
             {
-                const double x0 = std::cos(th_3);
-                const double x1 = std::sin(th_3);
-                const double x2 = (a_1 + a_2*x0 + d_3*x1)*std::cos(th_2);
-                const double x3 = -Px*std::cos(th_0) - Py*std::sin(th_0);
-                const double x4 = -a_2*x1 - d_0 + d_3*x0;
-                const double tmp_sol_value = std::atan2(-Pz*x2 - x3*x4, Pz*x4 - x2*x3);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+                const double x0 = std::cos(th_2);
+                const double x1 = std::sin(th_5);
+                const double x2 = std::sin(th_4);
+                const double x3 = x1*x2;
+                const double x4 = std::cos(th_4);
+                const double x5 = std::cos(th_6);
+                const double x6 = std::sin(th_6);
+                const double x7 = std::cos(th_5);
+                const double x8 = x2*x7;
+                const double x9 = x4*x5 + x6*x8;
+                const double x10 = x4*x6 - x5*x8;
+                const double x11 = r_11*x10 + r_12*x9 + r_13*x3;
+                const double x12 = r_21*x10 + r_22*x9 + r_23*x3;
+                const double x13 = std::sin(th_2);
+                const double x14 = std::cos(th_1);
+                const double x15 = x13*x14;
+                const double x16 = std::sin(th_3);
+                const double x17 = x16*x7;
+                const double x18 = std::cos(th_3);
+                const double x19 = x1*x18;
+                const double x20 = -x17 - x19*x4;
+                const double x21 = x18*x2;
+                const double x22 = x1*x16;
+                const double x23 = -x18*x4*x7 + x22;
+                const double x24 = x21*x6 - x23*x5;
+                const double x25 = x21*x5 + x23*x6;
+                const double x26 = r_11*x24 + r_12*x25 + r_13*x20;
+                const double x27 = std::sin(th_1);
+                const double x28 = x18*x7 - x22*x4;
+                const double x29 = x16*x2;
+                const double x30 = x17*x4 + x19;
+                const double x31 = x29*x6 + x30*x5;
+                const double x32 = x29*x5 - x30*x6;
+                const double x33 = r_21*x24 + r_22*x25 + r_23*x20;
+                const double tmp_sol_value = std::atan2(x0*x11 + x0*x14*x33 - x12*x15 + x13*x26 - x27*(r_21*x31 + r_22*x32 + r_23*x28), -x0*x12 + x0*x14*x26 - x11*x15 - x13*x33 - x27*(r_11*x31 + r_12*x32 + r_13*x28));
+                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
             }
             else
             {
@@ -1276,8 +1227,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
         }
     };
     // Invoke the processor
-    ExplicitSolutionNode_node_20_solve_th_1_processor();
-    // Finish code for explicit solution node 20
+    ExplicitSolutionNode_node_20_solve_th_0_processor();
+    // Finish code for explicit solution node 19
 
     // Code for explicit solution node 3, solved variable is th_6
     auto ExplicitSolutionNode_node_3_solve_th_6_processor = [&]() -> void
@@ -1286,35 +1237,135 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(3);
         if (!this_input_valid)
             return;
-
-        // The solution of non-root node 3
-        for(int i = 0; i < this_node_input_index.size(); i++)
+        for (int family_prefix = 0; family_prefix < this_node_input_index.size(); ++family_prefix)
         {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const int queue_index = this_node_input_index[family_prefix];
+            if (!solution_queue.is_solution_valid(queue_index)) continue;
+            const auto& this_solution = solution_queue.get_solution(queue_index);
             const double th_3 = this_solution[3];
-            const bool condition_0 = std::fabs(inv_Px) >= zero_tolerance || std::fabs(inv_Py) >= zero_tolerance || std::fabs((a_1*std::cos(th_3) + a_2 + d_0*std::sin(th_3))*std::sin(th_4)) >= zero_tolerance;
-            if (condition_0)
+            std::vector<double> family_values;
+            if (std::fabs(inv_Px) >= zero_tolerance || std::fabs(inv_Py) >= zero_tolerance || std::fabs((a_1*std::cos(th_3) + a_2 + d_0*std::sin(th_3))*std::sin(th_4)) >= zero_tolerance)
             {
                 const double x0 = std::atan2(inv_Px, inv_Py);
                 const double x1 = std::sin(th_4);
                 const double x2 = a_1*std::cos(th_3) + a_2 + d_0*std::sin(th_3);
                 const double x3 = safe_sqrt(std::pow(inv_Px, 2) + std::pow(inv_Py, 2) - std::pow(x1, 2)*std::pow(x2, 2));
                 const double x4 = -x1*x2;
-                RawSolution solution_0(this_solution);
-                solution_0[5] = x0 + std::atan2(x3, x4);
-                int appended_idx_0 = append_solution_to_queue(solution_0);
-                add_input_index_to(4, appended_idx_0);
-                const double tmp_sol_value = x0 + std::atan2(-x3, x4);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[5] = tmp_sol_value;
-                add_input_index_to(4, node_input_i_idx_in_queue);
+                family_values.push_back(x0 + std::atan2(x3, x4));
+                family_values.push_back(x0 + std::atan2(-x3, x4));
             }
-            else
+            if (std::fabs(inv_Pz) >= 9.9999999999999995e-7 && std::fabs(std::pow(inv_Px, 2) + std::pow(inv_Py, 2) - std::pow(-a_1*std::cos(th_3) - a_2 - d_0*std::sin(th_3), 2)*std::pow(std::sin(th_4), 2)) <= 2.8421709430404001e-14*std::pow(inv_Px, 2) + 2.8421709430404001e-14*std::pow(inv_Py, 2) + 2.8421709430404001e-14*std::pow(inv_Pz, 2))
             {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+                const double x0 = std::sin(th_3);
+                const double x1 = std::sin(th_4);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::pow(x3, 2);
+                const double x5 = std::pow(inv_Pz, 2);
+                const double x6 = a_1*x0;
+                const double x7 = d_3*x3;
+                const double x8 = 2*d_0;
+                const double x9 = x5*x8;
+                const double x10 = std::pow(x0, 2);
+                const double x11 = std::pow(a_1, 2)*x5;
+                const double x12 = std::pow(x2, 2);
+                const double x13 = x12*x5;
+                const double x14 = std::pow(d_0, 2);
+                const double x15 = x3*x6;
+                const double x16 = a_2*x13;
+                const double x17 = a_1*x3;
+                const double x18 = x12*x4;
+                const double x19 = std::pow(std::pow(a_2, 2)*x13 + std::pow(d_3, 2)*x5 + 2*d_3*x5*x6 + x0*x16*x8 + x10*x11 + x10*x13*x14 + x11*x18 + x13*x15*x8 + x14*x4*x5 - x15*x9 + 2*x16*x17 - x7*x9, -1.0/2.0);
+                const double x20 = x0*x1;
+                const double x21 = 0.034899496702501101*x20;
+                const double x22 = a_1*x4;
+                const double x23 = inv_Pz*x19;
+                const double x24 = x2*x23;
+                const double x25 = r_11*x24;
+                const double x26 = 0.034899496702501101*x25;
+                const double x27 = a_1*x10;
+                const double x28 = 0.034899496702501101*x3;
+                const double x29 = a_2*x28;
+                const double x30 = d_3*x0;
+                const double x31 = r_12*x21 + x22*x26 + x25*x29 + x26*x27 + x26*x30;
+                const double x32 = 0.99939082701909598*x20;
+                const double x33 = 0.99939082701909598*x2;
+                const double x34 = x23*x33;
+                const double x35 = r_22*x34;
+                const double x36 = x22*x35;
+                const double x37 = x27*x35;
+                const double x38 = a_2*x3;
+                const double x39 = x35*x38;
+                const double x40 = x30*x35;
+                const double x41 = r_12*x24;
+                const double x42 = 0.034899496702501101*x41;
+                const double x43 = -r_11*x21 + x22*x42 + x27*x42 + x29*x41 + x30*x42;
+                const double x44 = 0.99939082701909598*x23;
+                const double x45 = r_23*x44;
+                const double x46 = d_0*x4;
+                const double x47 = x45*x46;
+                const double x48 = x15*x45;
+                const double x49 = a_2*x0;
+                const double x50 = x12*x45;
+                const double x51 = x49*x50;
+                const double x52 = d_0*x10;
+                const double x53 = x50*x52;
+                const double x54 = x12*x48;
+                const double x55 = r_13*x23;
+                const double x56 = 0.034899496702501101*x55;
+                const double x57 = x28*x55;
+                const double x58 = x12*x56;
+                const double x59 = x57*x6;
+                const double x60 = -d_3*x57 + x12*x59 + x46*x56 + x49*x58 + x52*x58 - x59;
+                const double x61 = r_21*x34;
+                const double x62 = r_32*x33;
+                const double x63 = r_31*x1;
+                const double x64 = d_3*x44;
+                const double x65 = r_31*x20;
+                const double x66 = a_1*x44;
+                const double x67 = d_0*x3*x44;
+                const double x68 = x63*x67;
+                const double x69 = r_32*x1;
+                const double x70 = r_31*x24;
+                const double x71 = 0.034899496702501101*x70;
+                const double x72 = d_3*x28;
+                const double x73 = -x28*x69 + x46*x71 + x49*x71 + x52*x71 - x70*x72;
+                const double x74 = r_31*x33;
+                const double x75 = x64*x69;
+                const double x76 = r_32*x20;
+                const double x77 = x66*x76;
+                const double x78 = r_32*x24;
+                const double x79 = 0.034899496702501101*x78;
+                const double x80 = x28*x63 + x46*x79 + x49*x79 + x52*x79 - x72*x78;
+                const double x81 = r_33*x23;
+                const double x82 = x1*x33*x81;
+                const double x83 = a_2*x82;
+                const double x84 = x17*x82;
+                const double x85 = d_0*x81;
+                const double x86 = x20*x33*x85;
+                const double x87 = 0.034899496702501101*x81;
+                const double x88 = x12*x81;
+                const double x89 = x0*x28;
+                const double x90 = a_1*x18*x87 + d_0*x88*x89 + x27*x87 + x29*x88 + x30*x87 - x85*x89;
+                const double x91 = -x22*x70 - x27*x70 - x30*x70 - x38*x70 - x76;
+                const double x92 = x22*x78 + x27*x78 + x30*x78 + x38*x78 - x65;
+                const double x93 = -x15*x81 + x15*x88 + x46*x81 + x49*x88 + x52*x88 - x7*x81;
+                family_values = ::yaik_cpp::trigFamilyRepresentatives({{{0.99939082701909598*a_1*inv_Pz*r_21*x10*x19*x2 + 0.99939082701909598*a_1*inv_Pz*r_21*x19*x2*x4 + 0.99939082701909598*a_2*inv_Pz*r_21*x19*x2*x3 + 0.99939082701909598*d_3*inv_Pz*r_21*x0*x19*x2 + 0.99939082701909598*r_22*x0*x1 - x31, r_21*x32 - x36 - x37 - x39 - x40 + x43, x45*x7 - x47 + x48 - x51 - x53 - x54 + x60}}, {{r_22*x32 + x22*x61 + x27*x61 + x30*x61 + x31 + x38*x61, 0.99939082701909598*r_21*x0*x1 - x36 - x37 - x39 - x40 - x43, 0.99939082701909598*a_1*inv_Pz*r_23*x0*x19*x3 + 0.99939082701909598*d_3*inv_Pz*r_23*x19*x3 - x47 - x51 - x53 - x54 - x60}}, {{-x62 + x63*x64 + x65*x66 - x68 + x73, 0.99939082701909598*d_0*inv_Pz*r_32*x1*x19*x3 - x74 - x75 - x77 - x80, -x83 - x84 - x86 + x90}}, {{0.99939082701909598*a_1*inv_Pz*r_31*x0*x1*x19 + 0.99939082701909598*d_3*inv_Pz*r_31*x1*x19 - x62 - x68 - x73, x67*x69 - x74 - x75 - x77 + x80, -x83 - x84 - x86 - x90}}, {{x91, x92, x93 - 0.499999999999999}}, {{x91, x92, x93 - 0.5}}, {{x91, x92, x93 - 1}}, {{x91, x92, x93 + 1}}}, -3.141592653589793, 0.0, family_values);
             }
+            for (std::size_t family_index = 0; family_index < family_values.size(); ++family_index)
+            {
+                auto candidate = this_solution;
+                candidate[5] = family_values[family_index];
+                int candidate_index;
+                if (family_index+1 == family_values.size())
+                {
+                    solution_queue.get_solution(queue_index) = candidate;
+                    candidate_index = queue_index;
+                }
+                else candidate_index = append_solution_to_queue(candidate);
+                add_input_index_to(4, candidate_index);
+            }
+            if (family_values.empty()) solution_queue.solutions_validity[queue_index] = false;
         }
     };
     // Invoke the processor
@@ -1510,8 +1561,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
     // Code for non-branch dispatcher node 22
     // Actually, there is no code
 
-    // Code for linear type2 solution node 23, solved variable is th_2
-    auto LinearSinCosType_2_SolverNode_node_23_solve_th_2_processor = [&]() -> void
+    // Code for explicit solution node 23, solved variable is th_2
+    auto ExplicitSolutionNode_node_23_solve_th_2_processor = [&]() -> void
     {
         const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(22);
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(22);
@@ -1528,325 +1579,317 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             const double th_3 = this_solution[3];
             const double th_5 = this_solution[4];
             const double th_6 = this_solution[5];
-            // Temp variable for efficiency
-            const double x0 = std::sin(th_6);
-            const double x1 = std::sin(th_4);
-            const double x2 = std::cos(th_3);
-            const double x3 = x1*x2;
-            const double x4 = std::sin(th_3);
-            const double x5 = std::sin(th_5);
-            const double x6 = std::cos(th_6);
-            const double x7 = std::cos(th_4);
-            const double x8 = x6*x7;
-            const double x9 = std::cos(th_5);
-            const double x10 = x0*x3 + x2*x8*x9 - x4*x5*x6;
-            const double x11 = x1*x9;
-            const double x12 = -x0*x7 + x11*x6;
-            const double x13 = -x0*x2*x7*x9 + x0*x4*x5 + x3*x6;
-            const double x14 = x0*x11 + x8;
-            const double x15 = x2*x5*x7 + x4*x9;
-            const double x16 = x1*x5;
-            const double x17 = a_1 + a_2*x2 + d_3*x4;
-            // End of temp variables
-            Eigen::Matrix<double, 8, 4> A_matrix;
-            A_matrix.setZero();
-            A_matrix(0, 0) = r_11;
-            A_matrix(0, 1) = -r_21;
-            A_matrix(0, 2) = -x10;
-            A_matrix(0, 3) = x12;
-            A_matrix(1, 0) = r_12;
-            A_matrix(1, 1) = -r_22;
-            A_matrix(1, 2) = -x13;
-            A_matrix(1, 3) = -x14;
-            A_matrix(2, 0) = r_13;
-            A_matrix(2, 1) = -r_23;
-            A_matrix(2, 2) = x15;
-            A_matrix(2, 3) = -x16;
-            A_matrix(3, 0) = Px;
-            A_matrix(3, 1) = -Py;
-            A_matrix(3, 2) = -x17;
-            A_matrix(4, 0) = -r_11;
-            A_matrix(4, 1) = r_21;
-            A_matrix(4, 2) = x10;
-            A_matrix(4, 3) = -x12;
-            A_matrix(5, 0) = -r_12;
-            A_matrix(5, 1) = r_22;
-            A_matrix(5, 2) = x13;
-            A_matrix(5, 3) = x14;
-            A_matrix(6, 0) = -r_13;
-            A_matrix(6, 1) = r_23;
-            A_matrix(6, 2) = -x15;
-            A_matrix(6, 3) = x16;
-            A_matrix(7, 0) = -Px;
-            A_matrix(7, 1) = Py;
-            A_matrix(7, 2) = x17;
-            // Code for solving
+            const bool condition_0 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) > 9.9999999999999992e-25;
+            if (condition_0)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 2, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(24, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(24, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = std::sin(th_4);
+                const double x1 = std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = std::cos(th_5);
+                const double x6 = x0*x5;
+                const double x7 = r_31*(x2*x4 - x3*x6) + r_32*(x2*x3 + x4*x6) + r_33*x0*x1;
+                const double x8 = std::sin(th_3);
+                const double x9 = std::cos(th_3);
+                const double x10 = x0*x9;
+                const double x11 = x1*x8 - x2*x5*x9;
+                const double x12 = r_31*(x10*x4 - x11*x3) + r_32*(x10*x3 + x11*x4) + r_33*(-x1*x2*x9 - x5*x8);
+                RawSolution solution_0(this_solution);
+                solution_0[2] = -std::atan2(-x7, -x12);
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(24, appended_idx_0);
+                RawSolution solution_1(this_solution);
+                solution_1[2] = -std::atan2(x7, x12);
+                int appended_idx_1 = append_solution_to_queue(solution_1);
+                add_input_index_to(24, appended_idx_1);
             }
+            const bool condition_2 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_2)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 3, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(24, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(24, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = 6*M_PI;
+                const double x1 = std::sin(th_4);
+                const double x2 = x1*std::sin(th_5);
+                const double x3 = std::cos(th_4);
+                const double x4 = std::cos(th_6);
+                const double x5 = std::sin(th_6);
+                const double x6 = x1*std::cos(th_5);
+                const double x7 = x3*x4 + x5*x6;
+                const double x8 = x3*x5 - x4*x6;
+                const double x9 = std::atan2(r_11*x8 + r_12*x7 + r_13*x2, -r_21*x8 - r_22*x7 - r_23*x2);
+                RawSolution solution_2(this_solution);
+                solution_2[2] = (1.0/2.0)*std::max(-3.10668606854991, -x0 + x9 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, -x0 + x9 + 3.10668606854991);
+                int appended_idx_2 = append_solution_to_queue(solution_2);
+                add_input_index_to(24, appended_idx_2);
             }
+            const bool condition_3 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) > std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_3)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 6, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(24, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(24, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = 4*M_PI;
+                const double x1 = std::sin(th_4);
+                const double x2 = x1*std::sin(th_5);
+                const double x3 = std::cos(th_4);
+                const double x4 = std::cos(th_6);
+                const double x5 = std::sin(th_6);
+                const double x6 = x1*std::cos(th_5);
+                const double x7 = x3*x4 + x5*x6;
+                const double x8 = x3*x5 - x4*x6;
+                const double x9 = std::atan2(r_11*x8 + r_12*x7 + r_13*x2, -r_21*x8 - r_22*x7 - r_23*x2);
+                RawSolution solution_3(this_solution);
+                solution_3[2] = (1.0/2.0)*std::max(-3.10668606854991, -x0 + x9 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, -x0 + x9 + 3.10668606854991);
+                int appended_idx_3 = append_solution_to_queue(solution_3);
+                add_input_index_to(24, appended_idx_3);
             }
+            const bool condition_4 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_4)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 7, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(24, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(24, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = 2*M_PI;
+                const double x1 = std::sin(th_4);
+                const double x2 = x1*std::sin(th_5);
+                const double x3 = std::cos(th_4);
+                const double x4 = std::cos(th_6);
+                const double x5 = std::sin(th_6);
+                const double x6 = x1*std::cos(th_5);
+                const double x7 = x3*x4 + x5*x6;
+                const double x8 = x3*x5 - x4*x6;
+                const double x9 = std::atan2(r_11*x8 + r_12*x7 + r_13*x2, -r_21*x8 - r_22*x7 - r_23*x2);
+                RawSolution solution_4(this_solution);
+                solution_4[2] = (1.0/2.0)*std::max(-3.10668606854991, -x0 + x9 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, -x0 + x9 + 3.10668606854991);
+                int appended_idx_4 = append_solution_to_queue(solution_4);
+                add_input_index_to(24, appended_idx_4);
             }
+            const bool condition_5 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_5)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 2, 3, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(24, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(24, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = std::sin(th_4);
+                const double x1 = x0*std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = x0*std::cos(th_5);
+                const double x6 = x2*x3 + x4*x5;
+                const double x7 = x2*x4 - x3*x5;
+                const double x8 = std::atan2(r_11*x7 + r_12*x6 + r_13*x1, -r_21*x7 - r_22*x6 - r_23*x1);
+                RawSolution solution_5(this_solution);
+                solution_5[2] = (1.0/2.0)*std::max(-3.10668606854991, x8 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, x8 + 3.10668606854991);
+                int appended_idx_5 = append_solution_to_queue(solution_5);
+                add_input_index_to(24, appended_idx_5);
+            }
+            const bool condition_6 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 2*M_PI) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_6)
+            {
+                const double x0 = std::sin(th_4);
+                const double x1 = x0*std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = x0*std::cos(th_5);
+                const double x6 = x2*x3 + x4*x5;
+                const double x7 = x2*x4 - x3*x5;
+                const double x8 = std::atan2(r_11*x7 + r_12*x6 + r_13*x1, -r_21*x7 - r_22*x6 - r_23*x1) + 2*M_PI;
+                RawSolution solution_6(this_solution);
+                solution_6[2] = (1.0/2.0)*std::max(-3.10668606854991, x8 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, x8 + 3.10668606854991);
+                int appended_idx_6 = append_solution_to_queue(solution_6);
+                add_input_index_to(24, appended_idx_6);
+            }
+            const bool condition_7 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 4*M_PI) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_7)
+            {
+                const double x0 = std::sin(th_4);
+                const double x1 = x0*std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = x0*std::cos(th_5);
+                const double x6 = x2*x3 + x4*x5;
+                const double x7 = x2*x4 - x3*x5;
+                const double x8 = std::atan2(r_11*x7 + r_12*x6 + r_13*x1, -r_21*x7 - r_22*x6 - r_23*x1) + 4*M_PI;
+                RawSolution solution_7(this_solution);
+                solution_7[2] = (1.0/2.0)*std::max(-3.10668606854991, x8 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, x8 + 3.10668606854991);
+                int appended_idx_7 = append_solution_to_queue(solution_7);
+                add_input_index_to(24, appended_idx_7);
+            }
+            const bool condition_8 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 6*M_PI) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_8)
+            {
+                const double x0 = std::sin(th_4);
+                const double x1 = x0*std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = x0*std::cos(th_5);
+                const double x6 = x2*x3 + x4*x5;
+                const double x7 = x2*x4 - x3*x5;
+                const double x8 = std::atan2(r_11*x7 + r_12*x6 + r_13*x1, -r_21*x7 - r_22*x6 - r_23*x1) + 6*M_PI;
+                RawSolution solution_8(this_solution);
+                solution_8[2] = (1.0/2.0)*std::max(-3.10668606854991, x8 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, x8 + 3.10668606854991);
+                int appended_idx_8 = append_solution_to_queue(solution_8);
+                add_input_index_to(24, appended_idx_8);
+            }
+            const bool condition_9 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI);
+            if (condition_9)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5);
+                RawSolution solution_9(this_solution);
+                solution_9[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991 + 6*M_PI) + (1.0/2.0)*std::min(3.10668606854991, -x12 + 3.10668606854991 + 6*M_PI);
+                int appended_idx_9 = append_solution_to_queue(solution_9);
+                add_input_index_to(24, appended_idx_9);
+            }
+            const bool condition_10 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) > std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI);
+            if (condition_10)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5);
+                RawSolution solution_10(this_solution);
+                solution_10[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991 + 4*M_PI) + (1.0/2.0)*std::min(3.10668606854991, -x12 + 3.10668606854991 + 4*M_PI);
+                int appended_idx_10 = append_solution_to_queue(solution_10);
+                add_input_index_to(24, appended_idx_10);
+            }
+            const bool condition_11 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI));
+            if (condition_11)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5);
+                RawSolution solution_11(this_solution);
+                solution_11[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991 + 2*M_PI) + (1.0/2.0)*std::min(3.10668606854991, -x12 + 3.10668606854991 + 2*M_PI);
+                int appended_idx_11 = append_solution_to_queue(solution_11);
+                add_input_index_to(24, appended_idx_11);
+            }
+            const bool condition_12 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991) <= std::min(3.10668606854991, 3.10668606854991 - std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)))) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI));
+            if (condition_12)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5);
+                RawSolution solution_12(this_solution);
+                solution_12[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, 3.10668606854991 - x12);
+                int appended_idx_12 = append_solution_to_queue(solution_12);
+                add_input_index_to(24, appended_idx_12);
+            }
+            const bool condition_13 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI + 3.10668606854991) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991) <= std::min(3.10668606854991, 3.10668606854991 - std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)))) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI));
+            if (condition_13)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 2*M_PI;
+                RawSolution solution_13(this_solution);
+                solution_13[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, 3.10668606854991 - x12);
+                int appended_idx_13 = append_solution_to_queue(solution_13);
+                add_input_index_to(24, appended_idx_13);
+            }
+            const bool condition_14 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 4*M_PI + 3.10668606854991) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991) <= std::min(3.10668606854991, 3.10668606854991 - std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)))) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI + 3.10668606854991));
+            if (condition_14)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 4*M_PI;
+                RawSolution solution_14(this_solution);
+                solution_14[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, 3.10668606854991 - x12);
+                int appended_idx_14 = append_solution_to_queue(solution_14);
+                add_input_index_to(24, appended_idx_14);
+            }
+            const bool condition_15 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 6*M_PI + 3.10668606854991) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991) <= std::min(3.10668606854991, 3.10668606854991 - std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)))) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI + 3.10668606854991));
+            if (condition_15)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 6*M_PI;
+                const double tmp_sol_value = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, 3.10668606854991 - x12);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[2] = tmp_sol_value;
+                add_input_index_to(24, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
             }
         }
     };
     // Invoke the processor
-    LinearSinCosType_2_SolverNode_node_23_solve_th_2_processor();
-    // Finish code for general_6dof solution node 22
+    ExplicitSolutionNode_node_23_solve_th_2_processor();
+    // Finish code for explicit solution node 22
 
-    // Code for equation all-zero dispatcher node 24
-    auto EquationAllZeroDispatcherNode_node_24_processor = [&]() -> void
+    // Code for non-branch dispatcher node 24
+    // Actually, there is no code
+
+    // Code for explicit solution node 25, solved variable is th_1
+    auto ExplicitSolutionNode_node_25_solve_th_1_processor = [&]() -> void
     {
         const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(24);
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(24);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const bool checked_result = std::fabs(Px) <= 9.9999999999999995e-7 && std::fabs(Py) <= 9.9999999999999995e-7 && std::fabs((a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3))*std::sin(th_2)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(25, node_input_i_idx_in_queue);
-            else
-                add_input_index_to(40, node_input_i_idx_in_queue);
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_24_processor();
-    // Finish code for equation all-zero dispatcher node 24
-
-    // Code for equation all-zero dispatcher node 40
-    auto EquationAllZeroDispatcherNode_node_40_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(40);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(40);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(a_1*std::cos(th_2) + a_2*std::cos(th_2)*std::cos(th_3) + d_3*std::sin(th_3)*std::cos(th_2)) <= 9.9999999999999995e-7 && std::fabs(a_2*std::sin(th_3) + d_0 - d_3*std::cos(th_3)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(41, node_input_i_idx_in_queue);
-            else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_40_processor();
-    // Finish code for equation all-zero dispatcher node 40
-
-    // Code for explicit solution node 41, solved variable is th_1
-    auto ExplicitSolutionNode_node_41_solve_th_1_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(41);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(41);
-        if (!this_input_valid)
-            return;
-
-        // The solution of non-root node 41
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const bool condition_0 = std::fabs(Pz) >= zero_tolerance || std::fabs(a_1*std::cos(th_2) + a_2*std::cos(th_2)*std::cos(th_3) + d_3*std::sin(th_3)*std::cos(th_2)) >= zero_tolerance || std::fabs(a_2*std::sin(th_3) + d_0 - d_3*std::cos(th_3)) >= zero_tolerance;
-            if (condition_0)
-            {
-                const double x0 = std::cos(th_2);
-                const double x1 = std::cos(th_3);
-                const double x2 = std::sin(th_3);
-                const double x3 = a_1*x0 + a_2*x0*x1 + d_3*x0*x2;
-                const double x4 = a_2*x2 + d_0 - d_3*x1;
-                const double x5 = std::atan2(x3, x4);
-                const double x6 = safe_sqrt(-std::pow(Pz, 2) + std::pow(x3, 2) + std::pow(x4, 2));
-                const double x7 = -Pz;
-                RawSolution solution_0(this_solution);
-                solution_0[1] = x5 + std::atan2(x6, x7);
-                int appended_idx_0 = append_solution_to_queue(solution_0);
-                add_input_index_to(42, appended_idx_0);
-                const double tmp_sol_value = x5 + std::atan2(-x6, x7);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
-                add_input_index_to(42, node_input_i_idx_in_queue);
-            }
-            else
-            {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-            }
-        }
-    };
-    // Invoke the processor
-    ExplicitSolutionNode_node_41_solve_th_1_processor();
-    // Finish code for explicit solution node 41
-
-    // Code for equation all-zero dispatcher node 42
-    auto EquationAllZeroDispatcherNode_node_42_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(42);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(42);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const bool checked_result = std::fabs(r_13) <= 9.9999999999999995e-7 && std::fabs(r_23) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(43, node_input_i_idx_in_queue);
-            else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_42_processor();
-    // Finish code for equation all-zero dispatcher node 42
-
-    // Code for explicit solution node 43, solved variable is th_0
-    auto ExplicitSolutionNode_node_43_solve_th_0_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(43);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(43);
-        if (!this_input_valid)
-            return;
-
-        // The solution of non-root node 43
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_1 = this_solution[1];
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const double th_5 = this_solution[4];
-            const bool condition_0 = std::fabs(r_13) >= 9.9999999999999995e-7 || std::fabs(r_23) >= 9.9999999999999995e-7;
-            if (condition_0)
-            {
-                const double x0 = std::sin(th_2);
-                const double x1 = std::cos(th_5);
-                const double x2 = std::sin(th_3);
-                const double x3 = x1*x2;
-                const double x4 = std::sin(th_4);
-                const double x5 = std::sin(th_5);
-                const double x6 = std::cos(th_2);
-                const double x7 = std::cos(th_3);
-                const double x8 = x5*std::cos(th_4);
-                const double x9 = x7*x8;
-                const double x10 = -x0*x3 - x0*x9 + x4*x5*x6;
-                const double x11 = std::sin(th_1);
-                const double x12 = std::cos(th_1);
-                const double x13 = x12*x6;
-                const double x14 = x0*x12*x4*x5 + x1*x11*x7 - x11*x2*x8 + x13*x3 + x13*x9;
-                const double tmp_sol_value = std::atan2(r_13*x10 - r_23*x14, -r_13*x14 - r_23*x10);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
-            }
-            else
-            {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-            }
-        }
-    };
-    // Invoke the processor
-    ExplicitSolutionNode_node_43_solve_th_0_processor();
-    // Finish code for explicit solution node 43
-
-    // Code for explicit solution node 25, solved variable is th_0
-    auto ExplicitSolutionNode_node_25_solve_th_0_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(25);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(25);
         if (!this_input_valid)
             return;
 
@@ -1859,20 +1902,29 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_2 = this_solution[2];
             const double th_3 = this_solution[3];
-            const bool condition_0 = std::fabs(Px) >= zero_tolerance || std::fabs(Py) >= zero_tolerance || std::fabs((a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3))*std::sin(th_2)) >= zero_tolerance;
+            const double th_5 = this_solution[4];
+            const double th_6 = this_solution[5];
+            const bool condition_0 = true;
             if (condition_0)
             {
-                const double x0 = std::atan2(Px, -Py);
-                const double x1 = std::sin(th_2);
-                const double x2 = a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3);
-                const double x3 = safe_sqrt(std::pow(Px, 2) + std::pow(Py, 2) - std::pow(x1, 2)*std::pow(x2, 2));
-                const double x4 = x1*x2;
-                RawSolution solution_0(this_solution);
-                solution_0[0] = x0 + std::atan2(x3, x4);
-                int appended_idx_0 = append_solution_to_queue(solution_0);
-                add_input_index_to(26, appended_idx_0);
-                const double tmp_sol_value = x0 + std::atan2(-x3, x4);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
+                const double x0 = std::sin(th_4);
+                const double x1 = std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = std::cos(th_5);
+                const double x6 = x0*x5;
+                const double x7 = std::sin(th_3);
+                const double x8 = x5*x7;
+                const double x9 = std::cos(th_3);
+                const double x10 = x1*x9;
+                const double x11 = x0*x9;
+                const double x12 = x1*x7;
+                const double x13 = x12 - x2*x5*x9;
+                const double x14 = x0*x7;
+                const double x15 = x10 + x2*x8;
+                const double tmp_sol_value = std::atan2((-r_31*(x11*x4 - x13*x3) - r_32*(x11*x3 + x13*x4) - r_33*(-x10*x2 - x8))*std::cos(th_2) - (-r_31*(x2*x4 - x3*x6) - r_32*(x2*x3 + x4*x6) - r_33*x0*x1)*std::sin(th_2), -r_31*(x14*x4 + x15*x3) - r_32*(x14*x3 - x15*x4) - r_33*(-x12*x2 + x5*x9));
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
                 add_input_index_to(26, node_input_i_idx_in_queue);
             }
             else
@@ -1882,110 +1934,17 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
         }
     };
     // Invoke the processor
-    ExplicitSolutionNode_node_25_solve_th_0_processor();
-    // Finish code for explicit solution node 25
+    ExplicitSolutionNode_node_25_solve_th_1_processor();
+    // Finish code for explicit solution node 24
 
-    // Code for equation all-zero dispatcher node 26
-    auto EquationAllZeroDispatcherNode_node_26_processor = [&]() -> void
+    // Code for non-branch dispatcher node 26
+    // Actually, there is no code
+
+    // Code for explicit solution node 27, solved variable is th_0
+    auto ExplicitSolutionNode_node_27_solve_th_0_processor = [&]() -> void
     {
         const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(26);
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(26);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
-            const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(27, node_input_i_idx_in_queue);
-            else
-                add_input_index_to(44, node_input_i_idx_in_queue);
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_26_processor();
-    // Finish code for equation all-zero dispatcher node 26
-
-    // Code for equation all-zero dispatcher node 44
-    auto EquationAllZeroDispatcherNode_node_44_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(44);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(44);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
-            const bool checked_result = std::fabs(r_33) <= 9.9999999999999995e-7 && std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(45, node_input_i_idx_in_queue);
-            else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_44_processor();
-    // Finish code for equation all-zero dispatcher node 44
-
-    // Code for explicit solution node 45, solved variable is th_1
-    auto ExplicitSolutionNode_node_45_solve_th_1_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(45);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(45);
-        if (!this_input_valid)
-            return;
-
-        // The solution of non-root node 45
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const double th_5 = this_solution[4];
-            const bool condition_0 = std::fabs(r_33) >= 9.9999999999999995e-7 || std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) >= 9.9999999999999995e-7;
-            if (condition_0)
-            {
-                const double x0 = std::sin(th_5);
-                const double x1 = std::sin(th_3);
-                const double x2 = std::cos(th_2);
-                const double x3 = std::cos(th_5);
-                const double x4 = std::cos(th_3);
-                const double x5 = x0*std::cos(th_4);
-                const double x6 = x0*std::sin(th_2)*std::sin(th_4) + x1*x2*x3 + x2*x4*x5;
-                const double x7 = -r_13*std::cos(th_0) - r_23*std::sin(th_0);
-                const double x8 = x1*x5 - x3*x4;
-                const double tmp_sol_value = std::atan2(r_33*x6 - x7*x8, r_33*x8 + x6*x7);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
-            }
-            else
-            {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-            }
-        }
-    };
-    // Invoke the processor
-    ExplicitSolutionNode_node_45_solve_th_1_processor();
-    // Finish code for explicit solution node 45
-
-    // Code for explicit solution node 27, solved variable is th_1
-    auto ExplicitSolutionNode_node_27_solve_th_1_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(27);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(27);
         if (!this_input_valid)
             return;
 
@@ -1996,19 +1955,50 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
+            const double th_1 = this_solution[1];
             const double th_2 = this_solution[2];
             const double th_3 = this_solution[3];
-            const bool condition_0 = std::fabs(Pz) >= 9.9999999999999995e-7 || std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0)) >= 9.9999999999999995e-7;
+            const double th_5 = this_solution[4];
+            const double th_6 = this_solution[5];
+            const bool condition_0 = true;
             if (condition_0)
             {
-                const double x0 = std::cos(th_3);
-                const double x1 = std::sin(th_3);
-                const double x2 = (a_1 + a_2*x0 + d_3*x1)*std::cos(th_2);
-                const double x3 = -Px*std::cos(th_0) - Py*std::sin(th_0);
-                const double x4 = -a_2*x1 - d_0 + d_3*x0;
-                const double tmp_sol_value = std::atan2(-Pz*x2 - x3*x4, Pz*x4 - x2*x3);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+                const double x0 = std::cos(th_2);
+                const double x1 = std::sin(th_5);
+                const double x2 = std::sin(th_4);
+                const double x3 = x1*x2;
+                const double x4 = std::cos(th_4);
+                const double x5 = std::cos(th_6);
+                const double x6 = std::sin(th_6);
+                const double x7 = std::cos(th_5);
+                const double x8 = x2*x7;
+                const double x9 = x4*x5 + x6*x8;
+                const double x10 = x4*x6 - x5*x8;
+                const double x11 = r_11*x10 + r_12*x9 + r_13*x3;
+                const double x12 = r_21*x10 + r_22*x9 + r_23*x3;
+                const double x13 = std::sin(th_2);
+                const double x14 = std::cos(th_1);
+                const double x15 = x13*x14;
+                const double x16 = std::sin(th_3);
+                const double x17 = x16*x7;
+                const double x18 = std::cos(th_3);
+                const double x19 = x1*x18;
+                const double x20 = -x17 - x19*x4;
+                const double x21 = x18*x2;
+                const double x22 = x1*x16;
+                const double x23 = -x18*x4*x7 + x22;
+                const double x24 = x21*x6 - x23*x5;
+                const double x25 = x21*x5 + x23*x6;
+                const double x26 = r_11*x24 + r_12*x25 + r_13*x20;
+                const double x27 = std::sin(th_1);
+                const double x28 = x18*x7 - x22*x4;
+                const double x29 = x16*x2;
+                const double x30 = x17*x4 + x19;
+                const double x31 = x29*x6 + x30*x5;
+                const double x32 = x29*x5 - x30*x6;
+                const double x33 = r_21*x24 + r_22*x25 + r_23*x20;
+                const double tmp_sol_value = std::atan2(x0*x11 + x0*x14*x33 - x12*x15 + x13*x26 - x27*(r_21*x31 + r_22*x32 + r_23*x28), -x0*x12 + x0*x14*x26 - x11*x15 - x13*x33 - x27*(r_11*x31 + r_12*x32 + r_13*x28));
+                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
             }
             else
             {
@@ -2017,8 +2007,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
         }
     };
     // Invoke the processor
-    ExplicitSolutionNode_node_27_solve_th_1_processor();
-    // Finish code for explicit solution node 27
+    ExplicitSolutionNode_node_27_solve_th_0_processor();
+    // Finish code for explicit solution node 26
 
     // Code for explicit solution node 5, solved variable is th_5
     auto ExplicitSolutionNode_node_5_solve_th_5_processor = [&]() -> void
@@ -2062,8 +2052,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
     // Code for non-branch dispatcher node 6
     // Actually, there is no code
 
-    // Code for linear type2 solution node 7, solved variable is th_2
-    auto LinearSinCosType_2_SolverNode_node_7_solve_th_2_processor = [&]() -> void
+    // Code for explicit solution node 7, solved variable is th_2
+    auto ExplicitSolutionNode_node_7_solve_th_2_processor = [&]() -> void
     {
         const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(6);
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(6);
@@ -2080,467 +2070,317 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             const double th_3 = this_solution[3];
             const double th_5 = this_solution[4];
             const double th_6 = this_solution[5];
-            // Temp variable for efficiency
-            const double x0 = std::sin(th_6);
-            const double x1 = std::sin(th_4);
-            const double x2 = std::cos(th_3);
-            const double x3 = x1*x2;
-            const double x4 = std::sin(th_3);
-            const double x5 = std::sin(th_5);
-            const double x6 = std::cos(th_6);
-            const double x7 = std::cos(th_4);
-            const double x8 = x6*x7;
-            const double x9 = std::cos(th_5);
-            const double x10 = x0*x3 + x2*x8*x9 - x4*x5*x6;
-            const double x11 = x1*x9;
-            const double x12 = -x0*x7 + x11*x6;
-            const double x13 = -x0*x2*x7*x9 + x0*x4*x5 + x3*x6;
-            const double x14 = x0*x11 + x8;
-            const double x15 = x2*x5*x7 + x4*x9;
-            const double x16 = x1*x5;
-            const double x17 = a_1 + a_2*x2 + d_3*x4;
-            // End of temp variables
-            Eigen::Matrix<double, 8, 4> A_matrix;
-            A_matrix.setZero();
-            A_matrix(0, 0) = r_11;
-            A_matrix(0, 1) = -r_21;
-            A_matrix(0, 2) = -x10;
-            A_matrix(0, 3) = x12;
-            A_matrix(1, 0) = r_12;
-            A_matrix(1, 1) = -r_22;
-            A_matrix(1, 2) = -x13;
-            A_matrix(1, 3) = -x14;
-            A_matrix(2, 0) = r_13;
-            A_matrix(2, 1) = -r_23;
-            A_matrix(2, 2) = x15;
-            A_matrix(2, 3) = -x16;
-            A_matrix(3, 0) = Px;
-            A_matrix(3, 1) = -Py;
-            A_matrix(3, 2) = -x17;
-            A_matrix(4, 0) = -r_11;
-            A_matrix(4, 1) = r_21;
-            A_matrix(4, 2) = x10;
-            A_matrix(4, 3) = -x12;
-            A_matrix(5, 0) = -r_12;
-            A_matrix(5, 1) = r_22;
-            A_matrix(5, 2) = x13;
-            A_matrix(5, 3) = x14;
-            A_matrix(6, 0) = -r_13;
-            A_matrix(6, 1) = r_23;
-            A_matrix(6, 2) = -x15;
-            A_matrix(6, 3) = x16;
-            A_matrix(7, 0) = -Px;
-            A_matrix(7, 1) = Py;
-            A_matrix(7, 2) = x17;
-            // Code for solving
+            const bool condition_0 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) > 9.9999999999999992e-25;
+            if (condition_0)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 2, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(8, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(8, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = std::sin(th_4);
+                const double x1 = std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = std::cos(th_5);
+                const double x6 = x0*x5;
+                const double x7 = r_31*(x2*x4 - x3*x6) + r_32*(x2*x3 + x4*x6) + r_33*x0*x1;
+                const double x8 = std::sin(th_3);
+                const double x9 = std::cos(th_3);
+                const double x10 = x0*x9;
+                const double x11 = x1*x8 - x2*x5*x9;
+                const double x12 = r_31*(x10*x4 - x11*x3) + r_32*(x10*x3 + x11*x4) + r_33*(-x1*x2*x9 - x5*x8);
+                RawSolution solution_0(this_solution);
+                solution_0[2] = -std::atan2(-x7, -x12);
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(8, appended_idx_0);
+                RawSolution solution_1(this_solution);
+                solution_1[2] = -std::atan2(x7, x12);
+                int appended_idx_1 = append_solution_to_queue(solution_1);
+                add_input_index_to(8, appended_idx_1);
             }
+            const bool condition_2 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_2)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 3, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(8, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(8, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = 6*M_PI;
+                const double x1 = std::sin(th_4);
+                const double x2 = x1*std::sin(th_5);
+                const double x3 = std::cos(th_4);
+                const double x4 = std::cos(th_6);
+                const double x5 = std::sin(th_6);
+                const double x6 = x1*std::cos(th_5);
+                const double x7 = x3*x4 + x5*x6;
+                const double x8 = x3*x5 - x4*x6;
+                const double x9 = std::atan2(r_11*x8 + r_12*x7 + r_13*x2, -r_21*x8 - r_22*x7 - r_23*x2);
+                RawSolution solution_2(this_solution);
+                solution_2[2] = (1.0/2.0)*std::max(-3.10668606854991, -x0 + x9 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, -x0 + x9 + 3.10668606854991);
+                int appended_idx_2 = append_solution_to_queue(solution_2);
+                add_input_index_to(8, appended_idx_2);
             }
+            const bool condition_3 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) > std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_3)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 6, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(8, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(8, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = 4*M_PI;
+                const double x1 = std::sin(th_4);
+                const double x2 = x1*std::sin(th_5);
+                const double x3 = std::cos(th_4);
+                const double x4 = std::cos(th_6);
+                const double x5 = std::sin(th_6);
+                const double x6 = x1*std::cos(th_5);
+                const double x7 = x3*x4 + x5*x6;
+                const double x8 = x3*x5 - x4*x6;
+                const double x9 = std::atan2(r_11*x8 + r_12*x7 + r_13*x2, -r_21*x8 - r_22*x7 - r_23*x2);
+                RawSolution solution_3(this_solution);
+                solution_3[2] = (1.0/2.0)*std::max(-3.10668606854991, -x0 + x9 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, -x0 + x9 + 3.10668606854991);
+                int appended_idx_3 = append_solution_to_queue(solution_3);
+                add_input_index_to(8, appended_idx_3);
             }
+            const bool condition_4 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_4)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 7, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(8, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(8, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = 2*M_PI;
+                const double x1 = std::sin(th_4);
+                const double x2 = x1*std::sin(th_5);
+                const double x3 = std::cos(th_4);
+                const double x4 = std::cos(th_6);
+                const double x5 = std::sin(th_6);
+                const double x6 = x1*std::cos(th_5);
+                const double x7 = x3*x4 + x5*x6;
+                const double x8 = x3*x5 - x4*x6;
+                const double x9 = std::atan2(r_11*x8 + r_12*x7 + r_13*x2, -r_21*x8 - r_22*x7 - r_23*x2);
+                RawSolution solution_4(this_solution);
+                solution_4[2] = (1.0/2.0)*std::max(-3.10668606854991, -x0 + x9 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, -x0 + x9 + 3.10668606854991);
+                int appended_idx_4 = append_solution_to_queue(solution_4);
+                add_input_index_to(8, appended_idx_4);
             }
+            const bool condition_5 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_5)
             {
-                // Local variable for solving
-                double var_solution_0 = 0.0;
-                double var_solution_1 = 0.0;
-                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 2, 3, var_solution_0, var_solution_1);
-                if(solved)
-                {
-                    RawSolution solution_0(this_solution);
-                    solution_0[2] = var_solution_0;
-                    int appended_idx = append_solution_to_queue(solution_0);
-                    add_input_index_to(8, appended_idx);
-                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
-                    add_input_index_to(8, node_input_i_idx_in_queue);
-                    continue;
-                }
+                const double x0 = std::sin(th_4);
+                const double x1 = x0*std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = x0*std::cos(th_5);
+                const double x6 = x2*x3 + x4*x5;
+                const double x7 = x2*x4 - x3*x5;
+                const double x8 = std::atan2(r_11*x7 + r_12*x6 + r_13*x1, -r_21*x7 - r_22*x6 - r_23*x1);
+                RawSolution solution_5(this_solution);
+                solution_5[2] = (1.0/2.0)*std::max(-3.10668606854991, x8 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, x8 + 3.10668606854991);
+                int appended_idx_5 = append_solution_to_queue(solution_5);
+                add_input_index_to(8, appended_idx_5);
+            }
+            const bool condition_6 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 2*M_PI) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_6)
+            {
+                const double x0 = std::sin(th_4);
+                const double x1 = x0*std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = x0*std::cos(th_5);
+                const double x6 = x2*x3 + x4*x5;
+                const double x7 = x2*x4 - x3*x5;
+                const double x8 = std::atan2(r_11*x7 + r_12*x6 + r_13*x1, -r_21*x7 - r_22*x6 - r_23*x1) + 2*M_PI;
+                RawSolution solution_6(this_solution);
+                solution_6[2] = (1.0/2.0)*std::max(-3.10668606854991, x8 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, x8 + 3.10668606854991);
+                int appended_idx_6 = append_solution_to_queue(solution_6);
+                add_input_index_to(8, appended_idx_6);
+            }
+            const bool condition_7 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 4*M_PI) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_7)
+            {
+                const double x0 = std::sin(th_4);
+                const double x1 = x0*std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = x0*std::cos(th_5);
+                const double x6 = x2*x3 + x4*x5;
+                const double x7 = x2*x4 - x3*x5;
+                const double x8 = std::atan2(r_11*x7 + r_12*x6 + r_13*x1, -r_21*x7 - r_22*x6 - r_23*x1) + 4*M_PI;
+                RawSolution solution_7(this_solution);
+                solution_7[2] = (1.0/2.0)*std::max(-3.10668606854991, x8 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, x8 + 3.10668606854991);
+                int appended_idx_7 = append_solution_to_queue(solution_7);
+                add_input_index_to(8, appended_idx_7);
+            }
+            const bool condition_8 = std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 6*M_PI) && !(std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 6*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, std::atan2(r_11*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) + r_12*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) + r_13*std::sin(th_4)*std::sin(th_5), -r_21*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_22*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_23*std::sin(th_4)*std::sin(th_5)) - 2*M_PI + 3.10668606854991)) && -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) < 0;
+            if (condition_8)
+            {
+                const double x0 = std::sin(th_4);
+                const double x1 = x0*std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = x0*std::cos(th_5);
+                const double x6 = x2*x3 + x4*x5;
+                const double x7 = x2*x4 - x3*x5;
+                const double x8 = std::atan2(r_11*x7 + r_12*x6 + r_13*x1, -r_21*x7 - r_22*x6 - r_23*x1) + 6*M_PI;
+                RawSolution solution_8(this_solution);
+                solution_8[2] = (1.0/2.0)*std::max(-3.10668606854991, x8 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, x8 + 3.10668606854991);
+                int appended_idx_8 = append_solution_to_queue(solution_8);
+                add_input_index_to(8, appended_idx_8);
+            }
+            const bool condition_9 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI);
+            if (condition_9)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5);
+                RawSolution solution_9(this_solution);
+                solution_9[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991 + 6*M_PI) + (1.0/2.0)*std::min(3.10668606854991, -x12 + 3.10668606854991 + 6*M_PI);
+                int appended_idx_9 = append_solution_to_queue(solution_9);
+                add_input_index_to(8, appended_idx_9);
+            }
+            const bool condition_10 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) > std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI);
+            if (condition_10)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5);
+                RawSolution solution_10(this_solution);
+                solution_10[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991 + 4*M_PI) + (1.0/2.0)*std::min(3.10668606854991, -x12 + 3.10668606854991 + 4*M_PI);
+                int appended_idx_10 = append_solution_to_queue(solution_10);
+                add_input_index_to(8, appended_idx_10);
+            }
+            const bool condition_11 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI));
+            if (condition_11)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5);
+                RawSolution solution_11(this_solution);
+                solution_11[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991 + 2*M_PI) + (1.0/2.0)*std::min(3.10668606854991, -x12 + 3.10668606854991 + 2*M_PI);
+                int appended_idx_11 = append_solution_to_queue(solution_11);
+                add_input_index_to(8, appended_idx_11);
+            }
+            const bool condition_12 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991) <= std::min(3.10668606854991, 3.10668606854991 - std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)))) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI));
+            if (condition_12)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5);
+                RawSolution solution_12(this_solution);
+                solution_12[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, 3.10668606854991 - x12);
+                int appended_idx_12 = append_solution_to_queue(solution_12);
+                add_input_index_to(8, appended_idx_12);
+            }
+            const bool condition_13 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI + 3.10668606854991) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991) <= std::min(3.10668606854991, 3.10668606854991 - std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)))) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI));
+            if (condition_13)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 2*M_PI;
+                RawSolution solution_13(this_solution);
+                solution_13[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, 3.10668606854991 - x12);
+                int appended_idx_13 = append_solution_to_queue(solution_13);
+                add_input_index_to(8, appended_idx_13);
+            }
+            const bool condition_14 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 4*M_PI + 3.10668606854991) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991) <= std::min(3.10668606854991, 3.10668606854991 - std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)))) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI + 3.10668606854991));
+            if (condition_14)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 4*M_PI;
+                RawSolution solution_14(this_solution);
+                solution_14[2] = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, 3.10668606854991 - x12);
+                int appended_idx_14 = append_solution_to_queue(solution_14);
+                add_input_index_to(8, appended_idx_14);
+            }
+            const bool condition_15 = -r_31*((std::sin(th_3)*std::cos(th_4)*std::cos(th_5) + std::sin(th_5)*std::cos(th_3))*std::cos(th_6) + std::sin(th_3)*std::sin(th_4)*std::sin(th_6)) - r_32*((-std::sin(th_3)*std::cos(th_4)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3))*std::sin(th_6) + std::sin(th_3)*std::sin(th_4)*std::cos(th_6)) - r_33*(-std::sin(th_3)*std::sin(th_5)*std::cos(th_4) + std::cos(th_3)*std::cos(th_5)) >= 0 && std::pow(r_31*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_32*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_33*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), 2) + std::pow(-r_31*(-std::sin(th_4)*std::cos(th_5)*std::cos(th_6) + std::sin(th_6)*std::cos(th_4)) - r_32*(std::sin(th_4)*std::sin(th_6)*std::cos(th_5) + std::cos(th_4)*std::cos(th_6)) - r_33*std::sin(th_4)*std::sin(th_5), 2) <= 1.0e-14 && std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 6*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 6*M_PI + 3.10668606854991) && !(std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991) <= std::min(3.10668606854991, 3.10668606854991 - std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)))) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 2*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 2*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 4*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 4*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 3.10668606854991 + 6*M_PI) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) + 3.10668606854991 + 6*M_PI) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 4*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 4*M_PI + 3.10668606854991) || std::max(-3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI - 3.10668606854991) <= std::min(3.10668606854991, -std::atan2(r_21*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_22*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_23*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4)), r_11*((-std::sin(th_3)*std::sin(th_5) + std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::cos(th_6) + std::sin(th_4)*std::sin(th_6)*std::cos(th_3)) + r_12*((std::sin(th_3)*std::sin(th_5) - std::cos(th_3)*std::cos(th_4)*std::cos(th_5))*std::sin(th_6) + std::sin(th_4)*std::cos(th_3)*std::cos(th_6)) + r_13*(-std::sin(th_3)*std::cos(th_5) - std::sin(th_5)*std::cos(th_3)*std::cos(th_4))) - 2*M_PI + 3.10668606854991));
+            if (condition_15)
+            {
+                const double x0 = std::sin(th_3);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_5);
+                const double x3 = std::cos(th_3);
+                const double x4 = std::cos(th_4);
+                const double x5 = -x0*x1 - x2*x3*x4;
+                const double x6 = std::sin(th_6);
+                const double x7 = x3*std::sin(th_4);
+                const double x8 = std::cos(th_6);
+                const double x9 = x0*x2 - x1*x3*x4;
+                const double x10 = x6*x7 - x8*x9;
+                const double x11 = x6*x9 + x7*x8;
+                const double x12 = std::atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 6*M_PI;
+                const double tmp_sol_value = (1.0/2.0)*std::max(-3.10668606854991, -x12 - 3.10668606854991) + (1.0/2.0)*std::min(3.10668606854991, 3.10668606854991 - x12);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[2] = tmp_sol_value;
+                add_input_index_to(8, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
             }
         }
     };
     // Invoke the processor
-    LinearSinCosType_2_SolverNode_node_7_solve_th_2_processor();
-    // Finish code for general_6dof solution node 6
+    ExplicitSolutionNode_node_7_solve_th_2_processor();
+    // Finish code for explicit solution node 6
 
-    // Code for equation all-zero dispatcher node 8
-    auto EquationAllZeroDispatcherNode_node_8_processor = [&]() -> void
+    // Code for non-branch dispatcher node 8
+    // Actually, there is no code
+
+    // Code for explicit solution node 9, solved variable is th_1
+    auto ExplicitSolutionNode_node_9_solve_th_1_processor = [&]() -> void
     {
         const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(8);
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(8);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const bool checked_result = std::fabs(Px) <= 9.9999999999999995e-7 && std::fabs(Py) <= 9.9999999999999995e-7 && std::fabs((a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3))*std::sin(th_2)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(9, node_input_i_idx_in_queue);
-            else
-                add_input_index_to(28, node_input_i_idx_in_queue);
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_8_processor();
-    // Finish code for equation all-zero dispatcher node 8
-
-    // Code for equation all-zero dispatcher node 28
-    auto EquationAllZeroDispatcherNode_node_28_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(28);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(28);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(a_1*std::cos(th_2) + a_2*std::cos(th_2)*std::cos(th_3) + d_3*std::sin(th_3)*std::cos(th_2)) <= 9.9999999999999995e-7 && std::fabs(a_2*std::sin(th_3) + d_0 - d_3*std::cos(th_3)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(29, node_input_i_idx_in_queue);
-            else
-                add_input_index_to(46, node_input_i_idx_in_queue);
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_28_processor();
-    // Finish code for equation all-zero dispatcher node 28
-
-    // Code for equation all-zero dispatcher node 46
-    auto EquationAllZeroDispatcherNode_node_46_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(46);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(46);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const double th_5 = this_solution[4];
-            const bool checked_result = std::fabs(r_13) <= 9.9999999999999995e-7 && std::fabs(r_23) <= 9.9999999999999995e-7 && std::fabs(std::sin(th_2)*std::sin(th_3)*std::cos(th_5) + std::sin(th_2)*std::sin(th_5)*std::cos(th_3)*std::cos(th_4) - std::sin(th_4)*std::sin(th_5)*std::cos(th_2)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(47, node_input_i_idx_in_queue);
-            else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_46_processor();
-    // Finish code for equation all-zero dispatcher node 46
-
-    // Code for explicit solution node 47, solved variable is th_0
-    auto ExplicitSolutionNode_node_47_solve_th_0_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(47);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(47);
-        if (!this_input_valid)
-            return;
-
-        // The solution of non-root node 47
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const double th_5 = this_solution[4];
-            const bool condition_0 = std::fabs(r_13) >= zero_tolerance || std::fabs(r_23) >= zero_tolerance || std::fabs(std::sin(th_2)*std::sin(th_3)*std::cos(th_5) + std::sin(th_2)*std::sin(th_5)*std::cos(th_3)*std::cos(th_4) - std::sin(th_4)*std::sin(th_5)*std::cos(th_2)) >= zero_tolerance;
-            if (condition_0)
-            {
-                const double x0 = std::atan2(r_13, -r_23);
-                const double x1 = std::sin(th_2);
-                const double x2 = std::sin(th_5);
-                const double x3 = -x1*x2*std::cos(th_3)*std::cos(th_4) - x1*std::sin(th_3)*std::cos(th_5) + x2*std::sin(th_4)*std::cos(th_2);
-                const double x4 = safe_sqrt(std::pow(r_13, 2) + std::pow(r_23, 2) - std::pow(x3, 2));
-                RawSolution solution_0(this_solution);
-                solution_0[0] = x0 + std::atan2(x4, x3);
-                int appended_idx_0 = append_solution_to_queue(solution_0);
-                add_input_index_to(48, appended_idx_0);
-                const double tmp_sol_value = x0 + std::atan2(-x4, x3);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
-                add_input_index_to(48, node_input_i_idx_in_queue);
-            }
-            else
-            {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-            }
-        }
-    };
-    // Invoke the processor
-    ExplicitSolutionNode_node_47_solve_th_0_processor();
-    // Finish code for explicit solution node 47
-
-    // Code for equation all-zero dispatcher node 48
-    auto EquationAllZeroDispatcherNode_node_48_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(48);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(48);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
-            const bool checked_result = std::fabs(r_33) <= 9.9999999999999995e-7 && std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(49, node_input_i_idx_in_queue);
-            else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_48_processor();
-    // Finish code for equation all-zero dispatcher node 48
-
-    // Code for explicit solution node 49, solved variable is th_1
-    auto ExplicitSolutionNode_node_49_solve_th_1_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(49);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(49);
-        if (!this_input_valid)
-            return;
-
-        // The solution of non-root node 49
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const double th_5 = this_solution[4];
-            const bool condition_0 = std::fabs(r_33) >= 9.9999999999999995e-7 || std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) >= 9.9999999999999995e-7;
-            if (condition_0)
-            {
-                const double x0 = std::sin(th_5);
-                const double x1 = std::sin(th_3);
-                const double x2 = std::cos(th_2);
-                const double x3 = std::cos(th_5);
-                const double x4 = std::cos(th_3);
-                const double x5 = x0*std::cos(th_4);
-                const double x6 = x0*std::sin(th_2)*std::sin(th_4) + x1*x2*x3 + x2*x4*x5;
-                const double x7 = -r_13*std::cos(th_0) - r_23*std::sin(th_0);
-                const double x8 = x1*x5 - x3*x4;
-                const double tmp_sol_value = std::atan2(r_33*x6 - x7*x8, r_33*x8 + x6*x7);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
-            }
-            else
-            {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-            }
-        }
-    };
-    // Invoke the processor
-    ExplicitSolutionNode_node_49_solve_th_1_processor();
-    // Finish code for explicit solution node 49
-
-    // Code for explicit solution node 29, solved variable is th_1
-    auto ExplicitSolutionNode_node_29_solve_th_1_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(29);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(29);
-        if (!this_input_valid)
-            return;
-
-        // The solution of non-root node 29
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const bool condition_0 = std::fabs(Pz) >= zero_tolerance || std::fabs(a_1*std::cos(th_2) + a_2*std::cos(th_2)*std::cos(th_3) + d_3*std::sin(th_3)*std::cos(th_2)) >= zero_tolerance || std::fabs(a_2*std::sin(th_3) + d_0 - d_3*std::cos(th_3)) >= zero_tolerance;
-            if (condition_0)
-            {
-                const double x0 = std::cos(th_2);
-                const double x1 = std::cos(th_3);
-                const double x2 = std::sin(th_3);
-                const double x3 = a_1*x0 + a_2*x0*x1 + d_3*x0*x2;
-                const double x4 = a_2*x2 + d_0 - d_3*x1;
-                const double x5 = std::atan2(x3, x4);
-                const double x6 = safe_sqrt(-std::pow(Pz, 2) + std::pow(x3, 2) + std::pow(x4, 2));
-                const double x7 = -Pz;
-                RawSolution solution_0(this_solution);
-                solution_0[1] = x5 + std::atan2(x6, x7);
-                int appended_idx_0 = append_solution_to_queue(solution_0);
-                add_input_index_to(30, appended_idx_0);
-                const double tmp_sol_value = x5 + std::atan2(-x6, x7);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
-                add_input_index_to(30, node_input_i_idx_in_queue);
-            }
-            else
-            {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-            }
-        }
-    };
-    // Invoke the processor
-    ExplicitSolutionNode_node_29_solve_th_1_processor();
-    // Finish code for explicit solution node 29
-
-    // Code for equation all-zero dispatcher node 30
-    auto EquationAllZeroDispatcherNode_node_30_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(30);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(30);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const bool checked_result = std::fabs(r_13) <= 9.9999999999999995e-7 && std::fabs(r_23) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(31, node_input_i_idx_in_queue);
-            else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_30_processor();
-    // Finish code for equation all-zero dispatcher node 30
-
-    // Code for explicit solution node 31, solved variable is th_0
-    auto ExplicitSolutionNode_node_31_solve_th_0_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(31);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(31);
-        if (!this_input_valid)
-            return;
-
-        // The solution of non-root node 31
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_1 = this_solution[1];
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const double th_5 = this_solution[4];
-            const bool condition_0 = std::fabs(r_13) >= 9.9999999999999995e-7 || std::fabs(r_23) >= 9.9999999999999995e-7;
-            if (condition_0)
-            {
-                const double x0 = std::sin(th_2);
-                const double x1 = std::cos(th_5);
-                const double x2 = std::sin(th_3);
-                const double x3 = x1*x2;
-                const double x4 = std::sin(th_4);
-                const double x5 = std::sin(th_5);
-                const double x6 = std::cos(th_2);
-                const double x7 = std::cos(th_3);
-                const double x8 = x5*std::cos(th_4);
-                const double x9 = x7*x8;
-                const double x10 = -x0*x3 - x0*x9 + x4*x5*x6;
-                const double x11 = std::sin(th_1);
-                const double x12 = std::cos(th_1);
-                const double x13 = x12*x6;
-                const double x14 = x0*x12*x4*x5 + x1*x11*x7 - x11*x2*x8 + x13*x3 + x13*x9;
-                const double tmp_sol_value = std::atan2(r_13*x10 - r_23*x14, -r_13*x14 - r_23*x10);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
-            }
-            else
-            {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-            }
-        }
-    };
-    // Invoke the processor
-    ExplicitSolutionNode_node_31_solve_th_0_processor();
-    // Finish code for explicit solution node 31
-
-    // Code for explicit solution node 9, solved variable is th_0
-    auto ExplicitSolutionNode_node_9_solve_th_0_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(9);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(9);
         if (!this_input_valid)
             return;
 
@@ -2553,20 +2393,29 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_2 = this_solution[2];
             const double th_3 = this_solution[3];
-            const bool condition_0 = std::fabs(Px) >= zero_tolerance || std::fabs(Py) >= zero_tolerance || std::fabs((a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3))*std::sin(th_2)) >= zero_tolerance;
+            const double th_5 = this_solution[4];
+            const double th_6 = this_solution[5];
+            const bool condition_0 = true;
             if (condition_0)
             {
-                const double x0 = std::atan2(Px, -Py);
-                const double x1 = std::sin(th_2);
-                const double x2 = a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3);
-                const double x3 = safe_sqrt(std::pow(Px, 2) + std::pow(Py, 2) - std::pow(x1, 2)*std::pow(x2, 2));
-                const double x4 = x1*x2;
-                RawSolution solution_0(this_solution);
-                solution_0[0] = x0 + std::atan2(x3, x4);
-                int appended_idx_0 = append_solution_to_queue(solution_0);
-                add_input_index_to(10, appended_idx_0);
-                const double tmp_sol_value = x0 + std::atan2(-x3, x4);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
+                const double x0 = std::sin(th_4);
+                const double x1 = std::sin(th_5);
+                const double x2 = std::cos(th_4);
+                const double x3 = std::cos(th_6);
+                const double x4 = std::sin(th_6);
+                const double x5 = std::cos(th_5);
+                const double x6 = x0*x5;
+                const double x7 = std::sin(th_3);
+                const double x8 = x5*x7;
+                const double x9 = std::cos(th_3);
+                const double x10 = x1*x9;
+                const double x11 = x0*x9;
+                const double x12 = x1*x7;
+                const double x13 = x12 - x2*x5*x9;
+                const double x14 = x0*x7;
+                const double x15 = x10 + x2*x8;
+                const double tmp_sol_value = std::atan2((-r_31*(x11*x4 - x13*x3) - r_32*(x11*x3 + x13*x4) - r_33*(-x10*x2 - x8))*std::cos(th_2) - (-r_31*(x2*x4 - x3*x6) - r_32*(x2*x3 + x4*x6) - r_33*x0*x1)*std::sin(th_2), -r_31*(x14*x4 + x15*x3) - r_32*(x14*x3 - x15*x4) - r_33*(-x12*x2 + x5*x9));
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
                 add_input_index_to(10, node_input_i_idx_in_queue);
             }
             else
@@ -2576,110 +2425,17 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
         }
     };
     // Invoke the processor
-    ExplicitSolutionNode_node_9_solve_th_0_processor();
-    // Finish code for explicit solution node 9
+    ExplicitSolutionNode_node_9_solve_th_1_processor();
+    // Finish code for explicit solution node 8
 
-    // Code for equation all-zero dispatcher node 10
-    auto EquationAllZeroDispatcherNode_node_10_processor = [&]() -> void
+    // Code for non-branch dispatcher node 10
+    // Actually, there is no code
+
+    // Code for explicit solution node 11, solved variable is th_0
+    auto ExplicitSolutionNode_node_11_solve_th_0_processor = [&]() -> void
     {
         const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(10);
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(10);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
-            const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(11, node_input_i_idx_in_queue);
-            else
-                add_input_index_to(32, node_input_i_idx_in_queue);
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_10_processor();
-    // Finish code for equation all-zero dispatcher node 10
-
-    // Code for equation all-zero dispatcher node 32
-    auto EquationAllZeroDispatcherNode_node_32_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(32);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(32);
-        if (!this_input_valid)
-            return;
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
-            const bool checked_result = std::fabs(r_33) <= 9.9999999999999995e-7 && std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) <= 9.9999999999999995e-7;
-            if (!checked_result)  // To non-degenerate node
-                add_input_index_to(33, node_input_i_idx_in_queue);
-            else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-        }
-    };
-
-    // Invoke the processor
-    EquationAllZeroDispatcherNode_node_32_processor();
-    // Finish code for equation all-zero dispatcher node 32
-
-    // Code for explicit solution node 33, solved variable is th_1
-    auto ExplicitSolutionNode_node_33_solve_th_1_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(33);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(33);
-        if (!this_input_valid)
-            return;
-
-        // The solution of non-root node 33
-        for(int i = 0; i < this_node_input_index.size(); i++)
-        {
-            int node_input_i_idx_in_queue = this_node_input_index[i];
-            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
-                continue;
-            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
-            const double th_2 = this_solution[2];
-            const double th_3 = this_solution[3];
-            const double th_5 = this_solution[4];
-            const bool condition_0 = std::fabs(r_33) >= 9.9999999999999995e-7 || std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) >= 9.9999999999999995e-7;
-            if (condition_0)
-            {
-                const double x0 = std::sin(th_5);
-                const double x1 = std::sin(th_3);
-                const double x2 = std::cos(th_2);
-                const double x3 = std::cos(th_5);
-                const double x4 = std::cos(th_3);
-                const double x5 = x0*std::cos(th_4);
-                const double x6 = x0*std::sin(th_2)*std::sin(th_4) + x1*x2*x3 + x2*x4*x5;
-                const double x7 = -r_13*std::cos(th_0) - r_23*std::sin(th_0);
-                const double x8 = x1*x5 - x3*x4;
-                const double tmp_sol_value = std::atan2(r_33*x6 - x7*x8, r_33*x8 + x6*x7);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
-            }
-            else
-            {
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
-            }
-        }
-    };
-    // Invoke the processor
-    ExplicitSolutionNode_node_33_solve_th_1_processor();
-    // Finish code for explicit solution node 33
-
-    // Code for explicit solution node 11, solved variable is th_1
-    auto ExplicitSolutionNode_node_11_solve_th_1_processor = [&]() -> void
-    {
-        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(11);
-        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(11);
         if (!this_input_valid)
             return;
 
@@ -2690,19 +2446,50 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const double th_0 = this_solution[0];
+            const double th_1 = this_solution[1];
             const double th_2 = this_solution[2];
             const double th_3 = this_solution[3];
-            const bool condition_0 = std::fabs(Pz) >= 9.9999999999999995e-7 || std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0)) >= 9.9999999999999995e-7;
+            const double th_5 = this_solution[4];
+            const double th_6 = this_solution[5];
+            const bool condition_0 = true;
             if (condition_0)
             {
-                const double x0 = std::cos(th_3);
-                const double x1 = std::sin(th_3);
-                const double x2 = (a_1 + a_2*x0 + d_3*x1)*std::cos(th_2);
-                const double x3 = -Px*std::cos(th_0) - Py*std::sin(th_0);
-                const double x4 = -a_2*x1 - d_0 + d_3*x0;
-                const double tmp_sol_value = std::atan2(-Pz*x2 - x3*x4, Pz*x4 - x2*x3);
-                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+                const double x0 = std::cos(th_2);
+                const double x1 = std::sin(th_5);
+                const double x2 = std::sin(th_4);
+                const double x3 = x1*x2;
+                const double x4 = std::cos(th_4);
+                const double x5 = std::cos(th_6);
+                const double x6 = std::sin(th_6);
+                const double x7 = std::cos(th_5);
+                const double x8 = x2*x7;
+                const double x9 = x4*x5 + x6*x8;
+                const double x10 = x4*x6 - x5*x8;
+                const double x11 = r_11*x10 + r_12*x9 + r_13*x3;
+                const double x12 = r_21*x10 + r_22*x9 + r_23*x3;
+                const double x13 = std::sin(th_2);
+                const double x14 = std::cos(th_1);
+                const double x15 = x13*x14;
+                const double x16 = std::sin(th_3);
+                const double x17 = x16*x7;
+                const double x18 = std::cos(th_3);
+                const double x19 = x1*x18;
+                const double x20 = -x17 - x19*x4;
+                const double x21 = x18*x2;
+                const double x22 = x1*x16;
+                const double x23 = -x18*x4*x7 + x22;
+                const double x24 = x21*x6 - x23*x5;
+                const double x25 = x21*x5 + x23*x6;
+                const double x26 = r_11*x24 + r_12*x25 + r_13*x20;
+                const double x27 = std::sin(th_1);
+                const double x28 = x18*x7 - x22*x4;
+                const double x29 = x16*x2;
+                const double x30 = x17*x4 + x19;
+                const double x31 = x29*x6 + x30*x5;
+                const double x32 = x29*x5 - x30*x6;
+                const double x33 = r_21*x24 + r_22*x25 + r_23*x20;
+                const double tmp_sol_value = std::atan2(x0*x11 + x0*x14*x33 - x12*x15 + x13*x26 - x27*(r_21*x31 + r_22*x32 + r_23*x28), -x0*x12 + x0*x14*x26 - x11*x15 - x13*x33 - x27*(r_11*x31 + r_12*x32 + r_13*x28));
+                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
             }
             else
             {
@@ -2711,8 +2498,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
         }
     };
     // Invoke the processor
-    ExplicitSolutionNode_node_11_solve_th_1_processor();
-    // Finish code for explicit solution node 11
+    ExplicitSolutionNode_node_11_solve_th_0_processor();
+    // Finish code for explicit solution node 10
 
     // Collect the output
     for(int i = 0; i < solution_queue.size(); i++)
@@ -2812,11 +2599,18 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_4, RawIKWorksace& w
         double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
         if (ee_pose_diff < pose_tolerance)
             ik_output.push_back(ik_out_i);
+        std::array<double, robot_nq> snapped;
+        if (snapNearJointLimits<robot_nq>(ik_out_i, snapped, jointLower(), jointUpper(), periodicLimitJoints(), fixedJoints()))
+        {
+            const Eigen::Matrix4d snapped_pose = computeFK(snapped);
+            if ((snapped_pose.block<3, 1>(0, 3)-T_ee.block<3, 1>(0, 3)).norm() <= 1e-7 && (snapped_pose.block<3, 3>(0, 0)-T_ee.block<3, 3>(0, 0)).cwiseAbs().maxCoeff() <= 1e-7)
+                ik_output.push_back(snapped);
+        }
     }
 
     if (!ik_output.empty())
     {
-        removeDuplicate<robot_nq>(ik_output, zero_tolerance);
+        removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, jointLimitClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints()));
         return;
     }
 
@@ -2850,7 +2644,7 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_4, RawIKWorksace& w
             ik_output.push_back(ik_out_i);
     }
 
-    removeDuplicate<robot_nq>(ik_output, zero_tolerance);
+    removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, jointLimitClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints()));
 }
 
 static std::vector<std::array<double, robot_nq>> computeIK(const Eigen::Matrix4d& T_ee, double th_4)
@@ -2884,4 +2678,5 @@ void test_ik_solve_marvin_m6_left_arm()
 int main()
 {
     test_ik_solve_marvin_m6_left_arm();
+    return 0;
 }

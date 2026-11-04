@@ -448,6 +448,18 @@ class CodeGenerationPython(CodeGenerationBase):
         self._add_code_line('ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))', indent_level=2)
         self._add_code_line('if ee_pose_diff < pose_tolerance:', indent_level=2)
         self._add_code_line('ik_output.append(ik_out_i)', indent_level=3)
+        offsets = self.robot.get_unknown_offset() or [0.]*len(self.robot.unknowns)
+        lower = [float(u.lower_bound)-float(o) for u, o in zip(self.robot.unknowns, offsets)]
+        upper = [float(u.upper_bound)-float(o) for u, o in zip(self.robot.unknowns, offsets)]
+        periodic = [u.is_revolute for u in self.robot.unknowns]
+        fixed = [u.symbol in self.robot.unknown_as_parameter_more_dof for u in self.robot.unknowns]
+        self._add_code_line(f'snapped = snap_near_joint_limits(ik_out_i, {lower!r}, {upper!r}, {periodic!r}, {fixed!r})', indent_level=2)
+        self._add_code_line('if snapped is not None:', indent_level=2)
+        self._add_code_line('snapped = snapped.reshape(ik_out_i.shape)', indent_level=3)
+        self._add_code_line('snapped_pose = '+fk_func_name+fk_args_call.replace('ik_out_i', 'snapped'), indent_level=3)
+        self._add_code_line('if (np.linalg.norm(snapped_pose[:3, 3]-T_ee[:3, 3]) <= 1e-7 and '
+                            'np.max(np.abs(snapped_pose[:3, :3]-T_ee[:3, :3])) <= 1e-7):', indent_level=3)
+        self._add_code_line('ik_output.append(snapped)', indent_level=4)
 
         # Finished
         self._add_code_line('return ik_output', indent_level=1)

@@ -109,6 +109,20 @@ class CodeGenerationCpp(CodeGenerationBase):
         base_n_solutions = 128 if tree.has_general_6dof_solution_node() else 16
         max_n_solution = max(base_n_solutions * self.branch_capacity_multiplier, self.queue_capacity_bound)
         self.add_code_line(f'static constexpr int max_n_solutions = {max_n_solution};')
+        offsets = robot.get_unknown_offset() or [0.]*len(robot.unknowns)
+        lower = ', '.join(repr(float(unknown.lower_bound)-float(offset))
+                          for unknown, offset in zip(robot.unknowns, offsets))
+        upper = ', '.join(repr(float(unknown.upper_bound)-float(offset))
+                          for unknown, offset in zip(robot.unknowns, offsets))
+        periodic = ', '.join('true' if unknown.is_revolute and
+                             unknown.symbol not in robot.unknown_as_parameter_more_dof else 'false'
+                             for unknown in robot.unknowns)
+        self.add_code_line('static std::array<double, robot_nq> jointLower() { return {{' + lower + '}}; }')
+        self.add_code_line('static std::array<double, robot_nq> jointUpper() { return {{' + upper + '}}; }')
+        self.add_code_line('static std::array<bool, robot_nq> periodicLimitJoints() { return {{' + periodic + '}}; }')
+        fixed = ', '.join('true' if unknown.symbol in robot.unknown_as_parameter_more_dof else 'false'
+                          for unknown in robot.unknowns)
+        self.add_code_line('static std::array<bool, robot_nq> fixedJoints() { return {{' + fixed + '}}; }')
         self.add_code_line('static constexpr int n_tree_nodes = {n_tree_nodes};'.
                            format(n_tree_nodes=self.skeleton_tree.num_nodes))
         # The size of intermediate solutions
@@ -659,13 +673,22 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();')
         self.add_code_line('if (ee_pose_diff < pose_tolerance)')
         self.add_code_line(indent() + 'ik_output.push_back(ik_out_i);')
+        self.add_code_line('std::array<double, robot_nq> snapped;')
+        self.add_code_line('if (snapNearJointLimits<robot_nq>(ik_out_i, snapped, jointLower(), jointUpper(), periodicLimitJoints(), fixedJoints()))')
+        self.enter_scope('snapped_candidate')
+        self.add_code_line('const Eigen::Matrix4d snapped_pose = '+fk_func_name+fk_args_call.replace('ik_out_i', 'snapped')+';')
+        self.add_code_line('if ((snapped_pose.block<3, 1>(0, 3)-T_ee.block<3, 1>(0, 3)).norm() <= 1e-7 && '
+                           '(snapped_pose.block<3, 3>(0, 0)-T_ee.block<3, 3>(0, 0)).cwiseAbs().maxCoeff() <= 1e-7)')
+        self.add_code_line(indent() + 'ik_output.push_back(snapped);')
+        self.exit_scope('snapped_candidate')
         self.exit_scope('for')
 
         # We have solutions here
         self.add_empty_line()
         self.add_code_line('if (!ik_output.empty())')
         self.enter_scope('if_valid_solution')
-        self.add_code_line('removeDuplicate<robot_nq>(ik_output, zero_tolerance);')
+        self.add_code_line('removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, '
+                           'jointLimitClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints()));')
         self.add_code_line('return;')
         self.exit_scope('if_valid_solution')
 
@@ -731,7 +754,8 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # De-duplicate and end the function
         self.add_empty_line()
-        self.add_code_line('removeDuplicate<robot_nq>(ik_output, zero_tolerance);')
+        self.add_code_line('removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, '
+                           'jointLimitClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints()));')
         self.exit_scope('checked_ik')
 
     def _generate_handy_ik(self):
@@ -820,6 +844,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('int main()')
         self.enter_scope('main')
         self.add_code_line(ik_test_name + '();')
+        self.add_code_line('return 0;')
         self.exit_scope('main')
 
 

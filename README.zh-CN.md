@@ -127,7 +127,7 @@ python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma
 需要异常堆栈时使用 `python yaik.py --debug ...`。
 
 带限位接口要求位置误差不超过 `1e-7 m`、旋转误差不超过 `1e-6 rad`，保持 J5 输入不变。
-腕轴连续解族使用 33 个确定的 J7 采样代表，有限测试和采样不能证明全工作空间完备性，
+腕轴连续解族按关节限位和角度图边界划分区间，33 个均匀值仅作为数值补充。有限测试不能证明全工作空间完备性，
 空结果也不证明目标不可达。碰撞、轨迹与动力学约束仍需应用层处理。
 标准 `*_ik_generated` 接口保留原先的较宽矩阵误差阈值和无关节限位过滤行为，
 奇异覆盖率与带限位接口分开统计。
@@ -143,7 +143,7 @@ python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma
 python -m pip install pytest
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   test_cli.py gallery/marvin_m6 solver/test_regressions.py \
-  solver/test_codegen_safety.py solver/test_equation_branches.py -q
+  solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py -q
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
   --output build/marvin-validation.json
@@ -154,3 +154,23 @@ python yaik.py marvin validate --samples 1000 --seed 20261103 \
 退出状态要求生成接口和带限位接口对每个已知可达目标均保留至少一个满足严格 FK、
 关节限位和固定 J5 的解，并通过各自的负例检查及全部 FK 检查。JSON 报告记录输入哈希、种子、
 失败案例和误差上限。左右臂的带限位 C++ 接口复用一次编译。
+
+## 完备性与压力验证
+
+`python yaik.py audit TREE.yaml` 列出尚未覆盖的退化条件、连续解族的表示方式和待完成的证明。
+审计或代码导出加 `--require-complete` 时，缺少完整证书就返回 1；严格导出不会改写输出文件。
+目前不能声称全工作空间完备。IK JSON 的 `reachability` 为 `witnessed` 时表示已验证一个合法解，
+为 `undetermined` 时表示没有找到代表解，不能据此断言目标不可达。
+
+要保证固定 J5 后任意可达目标都不漏解，需要穷尽常规与奇异分支、证明被丢弃分支无解、
+把连续解族与全部限位精确求交，并使用经过验证的实根隔离或区间方法处理数值边界。
+有时间或节点预算时，未解决区域必须保留为“未知”。
+[详细数学范围和参考文献](gallery/marvin_m6/README.md#what-would-guarantee-completeness)。
+
+```sh
+python yaik.py marvin validate --samples 1000 --stress-samples 2000 \
+  --seed 20261103 --output build/marvin-validation.json
+```
+
+新增压力样本直接从合法关节向量经独立 URDF FK 构造，覆盖多关节限位交界、肩轴对齐、
+精确与近腕轴姿态；本轮发现的 282 个固定反例也已保存并加入验证。

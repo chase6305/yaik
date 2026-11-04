@@ -7,7 +7,8 @@ from solver.linear_solver.linear_sin_cos_type2 import linear_sin_cos_type2_try_s
 from solver.polynomial_solver.polynomial_solve import polynomial_try_solve
 import solver.sos_transform as sos_transform
 from solver.solved_variable import VariableSolution, DegenerateType, NumericalAnalysedResultType
-from solver.select_solution import select_solution, DegenerateAnalyserContext, DegenerateAnalyserOption
+from solver.select_solution import (select_solution, combine_linear_alternatives,
+                                    DegenerateAnalyserContext, DegenerateAnalyserOption)
 from solver.solver_snapshot import SolverSnapshot
 from solver.degenerate_analyse.detect_soa_solution import detect_soa_solution
 from solver.branch_conditions import formula_degenerates_on_branch
@@ -165,6 +166,8 @@ def solve_equations(equation_input: EquationInput,
             # Keep them on recovery paths instead of repeatedly trying to
             # simplify large trigonometric expressions for a ranking heuristic.
             analyse_degeneracy=not option.direct_solutions_only)
+        if option.direct_solutions_only:
+            selected_sol = combine_linear_alternatives(selected_sol, loop_solutions)
 
         # Detect soa solution
         if selected_sol is None and (not simple_solution_only) and (not option.on_main_branch):

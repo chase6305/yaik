@@ -29,7 +29,7 @@ class TestCLI(TestCase):
 
     def test_help_and_model_list_need_no_third_party_imports(self):
         with tempfile.TemporaryDirectory() as temporary:
-            for arguments in (('--help',), ('marvin', 'ik', '--help'), ('models',)):
+            for arguments in (('--help',), ('marvin', 'ik', '--help'), ('audit', '--help'), ('models',)):
                 with self.subTest(arguments=arguments):
                     result = self.run_cli(*arguments, cwd=temporary, no_site=True)
                     self.assertEqual(result.returncode, 0, result.stderr)
@@ -90,6 +90,25 @@ class TestCLI(TestCase):
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertEqual(json.loads(result.stdout)['status'], 'no_solution')
         self.assertEqual(json.loads(result.stdout)['solutions'], [])
+        self.assertEqual(json.loads(result.stdout)['reachability'], 'undetermined')
+        self.assertFalse(json.loads(result.stdout)['certified_complete'])
+
+    def test_completeness_audit_does_not_promote_regression_coverage_to_a_proof(self):
+        tree = MARVIN / 'marvin_m6_left_arm_ik.yaml'
+        result = self.run_cli('audit', tree)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertFalse(report['certified_complete'])
+        self.assertTrue(report['family_nodes'])
+        self.assertTrue(report['required_proofs'])
+        result = self.run_cli('audit', tree, '--require-complete')
+        self.assertEqual(result.returncode, 1, result.stderr)
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / 'not-created'
+            result = self.run_cli('codegen', tree, '--require-complete', '--output-dir', output)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertEqual(json.loads(result.stdout)['status'], 'not_certified')
+            self.assertFalse(output.exists())
 
     def test_file_output_and_errors_from_another_working_directory(self):
         with tempfile.TemporaryDirectory() as temporary:

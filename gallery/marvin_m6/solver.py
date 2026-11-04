@@ -8,6 +8,7 @@ families have finite representatives, with no workspace completeness guarantee.
 
 import math
 import numpy as np
+from python_run_import import trig_family_representatives
 
 PI = math.pi
 LOWER = np.array([-3.1066860685499065, -2.0943951023931953,
@@ -69,7 +70,7 @@ def _shoulder_candidates(rotation):
             delta = rotation @ zero.T
             t0 = math.atan2(delta[1, 0] - delta[0, 1], delta[0, 0] + delta[1, 1])
             yield t0, t1, t2
-    elif x[2, 2] < 0:
+    if sine <= 1e-7 and x[2, 2] < 0:
         # t1=pi is URDF J2=0; intersect the family t0+t2=delta
         # with both joint limits instead of choosing an invalid t0=0.
         delta = math.atan2(-x[0, 1], x[1, 1])
@@ -81,6 +82,28 @@ def _shoulder_candidates(rotation):
                 t0 = min(max(0., lo), hi)
                 yield t0, PI, total - t0
     # t1=0 would give URDF J2=pi, outside this model's limits.
+
+
+def _wrist_family_candidates(rotation, t3, t4, t5):
+    """Cut the J7 family at every shoulder limit and Euler-chart boundary."""
+    def euler(t6):
+        return rotation @ _distal_rotation(t3, t4, t5, t6).T @ RX_PI
+    zero, plus, minus = euler(0.), euler(PI/2), euler(-PI/2)
+    constant = .5*(plus+minus)
+    cosine, sine = zero-constant, .5*(plus-minus)
+    rows = []
+    for joint in (0, 2):
+        for bound in (LOWER[joint]+OFFSETS[joint], UPPER[joint]+OFFSETS[joint]):
+            c, s = math.cos(bound), math.sin(bound)
+            if joint == 0:
+                rows.append(tuple(matrix[1, 2]*c-matrix[0, 2]*s
+                                  for matrix in (cosine, sine, constant)))
+            else:
+                rows.append(tuple(-matrix[2, 1]*c+matrix[2, 0]*s
+                                  for matrix in (cosine, sine, constant)))
+    for bound in (LOWER[1]+OFFSETS[1], UPPER[1]+OFFSETS[1], 0., PI):
+        rows.append((cosine[2, 2], sine[2, 2], constant[2, 2]-math.cos(bound)))
+    return trig_family_representatives(rows, -PI, 0., np.linspace(-PI, 0., 33))
 
 
 class Solver:
@@ -142,6 +165,29 @@ class Solver:
         v = -r.T @ p
         c = float(v @ v) - 2 * A * A - UPPER_ARM**2 - FOREARM**2
         solutions = []
+        fallbacks = []
+
+        def append_wrists(t3, t5, wrists):
+            for t6 in wrists:
+                distal = _distal_rotation(t3, q5, t5, t6)
+                for t0, t1, t2 in _shoulder_candidates(r @ distal.T):
+                    raw = np.array([t0, t1, t2, t3, q5, t5, t6])
+                    q = (raw - OFFSETS + PI) % (2 * PI) - PI
+                    q[4] = q5
+                    if np.any(q < LOWER - 1e-9) or np.any(q > UPPER + 1e-9):
+                        continue
+                    q = np.clip(q, LOWER, UPPER)
+                    actual = self.fk(q)
+                    delta = actual[:3, :3] @ rotation.T
+                    sine = .5 * np.linalg.norm([delta[2, 1] - delta[1, 2],
+                                               delta[0, 2] - delta[2, 0],
+                                               delta[1, 0] - delta[0, 1]])
+                    angle = math.atan2(sine, (np.trace(delta) - 1) * .5)
+                    if np.linalg.norm(actual[:3, 3] - target[:3, 3]) > 1e-7 or angle > 1e-6:
+                        continue
+                    if not any(np.max(np.abs(q - existing)) < 1e-7 for existing in solutions):
+                        solutions.append(q)
+
         for t3 in _root_pair(2 * A * A - 2 * UPPER_ARM * FOREARM,
                              2 * A * (FOREARM + UPPER_ARM), c):
             h = A * math.cos(t3) + A + UPPER_ARM * math.sin(t3)
@@ -152,7 +198,7 @@ class Solver:
             for t5 in _root_pair(k, h * math.cos(q5), v[2], discriminant):
                 axial = h * math.cos(q5) * math.cos(t5) - k * math.sin(t5)
                 if math.hypot(v[0], v[1]) <= 1e-10:
-                    wrists = np.linspace(-PI, 0, 33)
+                    wrists = _wrist_family_candidates(r, t3, q5, t5)
                 else:
                     wrists = [math.atan2(-v[0] * hsin + v[1] * axial,
                                          -v[0] * axial - v[1] * hsin)]
@@ -165,25 +211,20 @@ class Solver:
                         expected_y = axial * math.sin(boundary) - hsin * math.cos(boundary)
                         if math.hypot(expected_x - v[0], expected_y - v[1]) <= 1e-7:
                             wrists.append(boundary)
-                for t6 in wrists:
-                    distal = _distal_rotation(t3, q5, t5, t6)
-                    for t0, t1, t2 in _shoulder_candidates(r @ distal.T):
-                        raw = np.array([t0, t1, t2, t3, q5, t5, t6])
-                        q = (raw - OFFSETS + PI) % (2 * PI) - PI
-                        q[4] = q5
-                        if np.any(q < LOWER - 1e-9) or np.any(q > UPPER + 1e-9):
-                            continue
-                        q = np.clip(q, LOWER, UPPER)
-                        actual = self.fk(q)
-                        delta = actual[:3, :3] @ rotation.T
-                        sine = .5 * np.linalg.norm([delta[2, 1] - delta[1, 2],
-                                                   delta[0, 2] - delta[2, 0],
-                                                   delta[1, 0] - delta[0, 1]])
-                        angle = math.atan2(sine, (np.trace(delta) - 1) * .5)
-                        if np.linalg.norm(actual[:3, 3] - target[:3, 3]) > 1e-7 or angle > 1e-6:
-                            continue
-                        if not any(np.max(np.abs(q - existing)) < 1e-7 for existing in solutions):
-                            solutions.append(q)
+                fallbacks.append((t3, t5))
+                append_wrists(t3, t5, wrists)
+        if not solutions:
+            for t3, t5 in fallbacks:
+                append_wrists(t3, t5, _wrist_family_candidates(r, t3, q5, t5))
+        if not solutions:
+            # At a repeated wrist root, roundoff can split the two roots to
+            # opposite sides of a joint-limit corner. The limiting center is
+            # admissible only through the same original-target FK gate.
+            for t3 in dict.fromkeys(pair[0] for pair in fallbacks):
+                h = A*math.cos(t3)+A+UPPER_ARM*math.sin(t3)
+                k = A*math.sin(t3)-UPPER_ARM*math.cos(t3)+FOREARM
+                t5 = math.atan2(h*math.cos(q5), k)+(PI if v[2] < 0 else 0.)
+                append_wrists(t3, t5, _wrist_family_candidates(r, t3, q5, t5))
         return solutions
 
 

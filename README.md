@@ -180,7 +180,7 @@ short messages; `python yaik.py --debug ...` shows the traceback for diagnosis.
 
 The bounded Marvin APIs require position error ≤ `1e-7 m` and rotation error
 ≤ `1e-6 rad`, preserve supplied J5, and reject invalid rigid transforms. Wrist-axis
-continua use 33 deterministic bounded J7 samples; an empty result does not prove
+continua use analytical limit/chart cuts with 33 backup samples; an empty result does not prove
 infeasibility or workspace completeness. Collision and trajectory constraints
 need application-level handling.
 
@@ -206,7 +206,7 @@ The stored Marvin trees and both generated languages include this recovery.
 python -m pip install pytest
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   test_cli.py gallery/marvin_m6 solver/test_regressions.py \
-  solver/test_codegen_safety.py solver/test_equation_branches.py -q
+  solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py -q
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
   --output build/marvin-validation.json
@@ -230,3 +230,16 @@ This work was done during the author's employment at Mech-Mind Robotics. We have
 
 For an unsupported model or a failing command, include the model/URDF, exact CLI
 invocation, dependency versions, and a `--debug` traceback in a repository issue.
+
+## Completeness and stress validation
+
+`python yaik.py audit TREE.yaml` reports unresolved branches, finite family
+representations, and proof obligations. Add `--require-complete` to audit or
+codegen to reject uncertified results; the project currently has no end-to-end
+completeness certificate. CLI IK distinguishes a verified witness from empty,
+undetermined output. See the [mathematical scope and certification requirements](gallery/marvin_m6/README.md#what-would-guarantee-completeness).
+
+```sh
+python yaik.py marvin validate --samples 1000 --stress-samples 2000 \
+  --seed 20261103 --output build/marvin-validation.json
+```

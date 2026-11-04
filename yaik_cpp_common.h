@@ -9,6 +9,7 @@
 #include <iostream>
 #include <limits>
 #include <random>
+#include <stdexcept>
 #include <vector>
 
 #include <Eigen/Eigen>
@@ -18,6 +19,72 @@ namespace yaik_cpp {
 
 // Indicate the value is invalid
 constexpr double invalid_value = std::numeric_limits<double>::max();
+
+template <int N>
+bool snapNearJointLimits(const std::array<double, N>& source, std::array<double, N>& result,
+                        const std::array<double, N>& lower, const std::array<double, N>& upper,
+                        const std::array<bool, N>& periodic, const std::array<bool, N>& fixed) {
+  result = source;
+  bool changed = false;
+  for (int i = 0; i < N; ++i) {
+    double value = result[i];
+    if (!std::isfinite(value)) return false;
+    if (fixed[i]) { if (value < lower[i] || value > upper[i]) return false; continue; }
+    if (periodic[i] && (value < lower[i] || value > upper[i]))
+      value += std::ceil((lower[i]-1e-6-value)/(2*M_PI))*2*M_PI;
+    if (value < lower[i]) {
+      if (lower[i]-value > 1e-6) return false;
+      value = lower[i]; changed = true;
+    } else if (value > upper[i]) {
+      if (value-upper[i] > 1e-6) return false;
+      value = upper[i]; changed = true;
+    }
+    result[i] = value;
+  }
+  return changed;
+}
+
+// Analytic cuts of a one-dimensional angular family, followed by one midpoint
+// per open cell. Preserve distinct nearby cuts; feasible intervals may be tiny.
+inline std::vector<double> trigFamilyRepresentatives(
+    const std::vector<std::array<double, 3>>& coefficients,
+    double lower, double upper, const std::vector<double>& seeds = {}) {
+  const double period = 2*M_PI;
+  if (!(std::isfinite(lower) && std::isfinite(upper) && lower <= upper && upper-lower <= period))
+    throw std::invalid_argument("family bounds must span at most one finite revolution");
+  const double epsilon = 64*std::numeric_limits<double>::epsilon();
+  const double margin = epsilon*(1+std::max(std::abs(lower), std::abs(upper)));
+  std::vector<double> points{lower, upper};
+  for (const auto& row : coefficients) {
+    double a = row[0], b = row[1], c = row[2];
+    if (!(std::isfinite(a) && std::isfinite(b) && std::isfinite(c))) continue;
+    const double scale = std::max({std::abs(a), std::abs(b), std::abs(c)});
+    if (!std::isfinite(scale) || scale == 0) continue;
+    a /= scale; b /= scale; c /= scale;
+    const double radius = std::hypot(a, b);
+    if (radius == 0 || std::abs(c) > radius+epsilon) continue;
+    const double center = std::atan2(b, a);
+    const double angle = std::acos(std::max(-1.0, std::min(1.0, -c/radius)));
+    for (double root : {center-angle, center+angle}) {
+      const double first = std::ceil((lower-root)/period);
+      for (int offset : {-1, 0, 1}) {
+        const double value = root+(first+offset)*period;
+        if (value >= lower-margin && value <= upper+margin)
+          points.push_back(std::max(lower, std::min(upper, value)));
+      }
+    }
+  }
+  std::sort(points.begin(), points.end());
+  points.erase(std::unique(points.begin(), points.end()), points.end());
+  auto result = points;
+  for (std::size_t i = 1; i < points.size(); ++i)
+    result.push_back(points[i-1]+.5*(points[i]-points[i-1]));
+  for (double value : seeds)
+    if (std::isfinite(value) && value >= lower && value <= upper) result.push_back(value);
+  std::sort(result.begin(), result.end());
+  result.erase(std::unique(result.begin(), result.end()), result.end());
+  return result;
+}
 
 // Safe operations
 template <typename T>
@@ -47,9 +114,13 @@ T safe_acos(T a) {
 
 // Periodic comparison is opt-in; select limit-compatible representatives first.
 template <int N>
-void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
+void removeDuplicateImpl(std::vector<std::array<double, N>>& ik_output,
                       double tolerance,
-                      const std::array<bool, N>& revolute_joints) {
+                      const std::array<bool, N>& revolute_joints,
+                      const std::vector<int>* classes = nullptr) {
+  if (classes && classes->size() != ik_output.size())
+    throw std::invalid_argument("duplicate classes must match the candidate count");
+  std::vector<int> kept_classes = classes ? *classes : std::vector<int>{};
   // Do nothing if size less than 1
   if (ik_output.size() <= 1) return;
 
@@ -90,7 +161,8 @@ void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
     bool contains_duplicate = false;
     assert(no_duplicate_until + 1 <= next_to_try);
     for (std::size_t i = 0; i <= no_duplicate_until; i++) {
-      if (is_duplicate(ik_output[i], ik_output[next_to_try])) {
+      if ((!classes || kept_classes[i] == (*classes)[next_to_try]) &&
+          is_duplicate(ik_output[i], ik_output[next_to_try])) {
         contains_duplicate = true;
         break;
       }
@@ -106,6 +178,9 @@ void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
       if (copied_to != next_to_try) {
         ik_output[copied_to] = ik_output[next_to_try];
       }
+      if (classes) {
+        kept_classes[copied_to] = (*classes)[next_to_try];
+      }
 
       // Update the index
       no_duplicate_until = copied_to;
@@ -116,6 +191,44 @@ void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
   // [0, no_duplicate_until] is the range
   assert(no_duplicate_until < ik_output.size());
   ik_output.resize(no_duplicate_until + 1);
+}
+
+template <int N>
+void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
+                      double tolerance, const std::array<bool, N>& revolute_joints) {
+  removeDuplicateImpl<N>(ik_output, tolerance, revolute_joints);
+}
+
+template <int N>
+void removeDuplicateWithinClasses(std::vector<std::array<double, N>>& ik_output,
+                                 double tolerance, const std::vector<int>& classes) {
+  removeDuplicateImpl<N>(ik_output, tolerance, {}, &classes);
+}
+
+// Distinguish candidates that admit a bounded periodic representation before
+// deduplication. A nearby out-of-limit root must not erase a legal witness.
+template <int N>
+std::vector<int> jointLimitClasses(const std::vector<std::array<double, N>>& candidates,
+                                 const std::array<double, N>& lower,
+                                 const std::array<double, N>& upper,
+                                 const std::array<bool, N>& periodic) {
+  std::vector<int> result;
+  for (const auto& candidate : candidates) {
+    bool bounded = true;
+    for (int joint = 0; joint < N; ++joint) {
+      const double value = candidate[joint];
+      if (!std::isfinite(value)) { bounded = false; break; }
+      if (periodic[joint]) {
+        const double first = std::ceil((lower[joint]-1e-9-value)/(2*M_PI));
+        const double last = std::floor((upper[joint]+1e-9-value)/(2*M_PI));
+        if (first > last) { bounded = false; break; }
+      } else if (value < lower[joint]-1e-9 || value > upper[joint]+1e-9) {
+        bounded = false; break;
+      }
+    }
+    result.push_back(bounded ? 1 : 0);
+  }
+  return result;
 }
 
 template <int N>
@@ -304,7 +417,7 @@ std::array<PolynomialRealRoot, poly_order> computePolynomialRealRoots(
 namespace linear_solver {
 
 template <typename T>
-bool trySolveLinearType2(const Eigen::Ref<Eigen::Matrix<T, 3, 4>>& A,
+bool trySolveLinearType2(const Eigen::Ref<const Eigen::Matrix<T, 3, 4>>& A,
                          T& solution_0, T& solution_1, bool allow_family = true) {
   if (!A.allFinite()) return false;
   const T a = A(0, 0);
@@ -346,8 +459,26 @@ bool trySolveLinearType2(const Eigen::Ref<Eigen::Matrix<T, 3, 4>>& A,
 
 template <int n_rows>
 bool trySolveLinearType2SpecificRows(
-    const Eigen::Ref<Eigen::Matrix<double, n_rows, 4>>& A, int row_0, int row_1,
+    const Eigen::Ref<const Eigen::Matrix<double, n_rows, 4>>& A, int row_0, int row_1,
     int row_2, double& solution_0, double& solution_1) {
+  if (A.allFinite()) {
+    const double scale = A.cwiseAbs().maxCoeff();
+    if (scale > 0) {
+      const Eigen::Matrix<double, n_rows, 4> normalized = A/scale;
+      Eigen::JacobiSVD<Eigen::Matrix<double, n_rows, 4>> svd(normalized, Eigen::ComputeFullV);
+      const auto& singular = svd.singularValues();
+      if (singular.size() >= 3 && singular[2] > 1e-10*singular[0] &&
+          (singular.size() == 3 || singular[3] <= 1e-8*singular[0])) {
+        const Eigen::Vector2d direction = svd.matrixV().col(3).template tail<2>();
+        if (direction.norm() > 1e-10) {
+          solution_0 = std::atan2(direction[0], direction[1]);
+          solution_1 = solution_0+M_PI;
+          if (solution_1 > M_PI) solution_1 -= 2*M_PI;
+          return true;
+        }
+      }
+    }
+  }
   Eigen::Matrix<double, 3, 4> A_for_given_row;
   A_for_given_row.row(0) = A.row(row_0);
   A_for_given_row.row(1) = A.row(row_1);

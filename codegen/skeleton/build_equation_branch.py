@@ -20,21 +20,17 @@ from solver.solver_snapshot import SolverSnapshot
 
 
 def _interval(expression):
-    """Conservative global bounds; never assume joint or target coordinates."""
+    """Exact rational global bounds; never assume joint or target coordinates."""
     if not expression.free_symbols:
-        try:
-            value = float(expression)
-            return (value, value) if math.isfinite(value) else None
-        except (TypeError, ValueError):
-            return None
+        return (expression, expression) if expression.is_Rational else None
     if expression.func in (sp.sin, sp.cos):
-        return -1.0, 1.0
+        return -sp.S.One, sp.S.One
     if expression.is_Add:
         intervals = [_interval(term) for term in expression.args]
         if all(interval is not None for interval in intervals):
             return sum(interval[0] for interval in intervals), sum(interval[1] for interval in intervals)
     if expression.is_Mul:
-        result = (1.0, 1.0)
+        result = (sp.S.One, sp.S.One)
         for term in expression.args:
             interval = _interval(term)
             if interval is None:
@@ -46,11 +42,16 @@ def _interval(expression):
 
 
 def _provably_nonzero(record, parameter_values):
+    values = {symbol: sp.Rational(value) for symbol, value in parameter_values.items()
+              if math.isfinite(float(value))}
     for equation in record.equations:
-        interval = _interval(sp.expand(equation.subs(parameter_values)))
-        # Leave a margin for floating-point interval arithmetic and the runtime
-        # dispatcher's 1e-6 zero test. Sampling is never used as a proof.
-        if interval is not None and (interval[0] > 1.000001e-6 or interval[1] < -1.000001e-6):
+        equation = sp.sympify(equation)
+        equation = equation.xreplace({value: sp.Rational(value) for value in equation.atoms(sp.Float)})
+        interval = _interval(sp.expand(equation.subs(values)))
+        # A margin above the runtime dispatcher's 1e-6 threshold. Bound
+        # arithmetic itself uses exact rationals rather than rounded doubles.
+        threshold = sp.Rational(1000001, 10**12)
+        if interval is not None and (interval[0] > threshold or interval[1] < -threshold):
             return True
     return False
 
@@ -91,7 +92,7 @@ def _nondegenerate_suffix(node):
     return solutions
 
 
-def _representative_branch(node, remaining, prefix, count):
+def _representative_branch(node, remaining, prefix, count, tree=None):
     if count < 2 or any(solution.solution_method == SolutionMethod.FamilyRepresentative.name
                         for solution in prefix):
         return []
@@ -110,11 +111,16 @@ def _representative_branch(node, remaining, prefix, count):
     first = VariableSolution.make_explicit_solution(
         failed, list(dict.fromkeys(values)), SolutionMethod.FamilyRepresentative.name,
         degenerate_record=SolutionDegenerateRecord.record_always_non_degenerate())
+    if tree is not None:
+        from codegen.skeleton.family_critical import add_spherical_family_cuts
+        add_spherical_family_cuts(tree, node, first, suffix, prefix)
     return [first] + suffix
 
 
 def build_equation_zero_branches(tree, max_num_nodes=50, representative_count=33):
     """Extend complete branches only, keeping one representative joint per path."""
+    from codegen.skeleton.family_critical import correlate_spherical_tail
+    correlate_spherical_tail(tree)
     visited = set()
     cache = {}
     equations = None
@@ -167,7 +173,7 @@ def build_equation_zero_branches(tree, max_num_nodes=50, representative_count=33
                               == {unknown.symbol for unknown in remaining} else [])
             solutions = copy.deepcopy(cache[key])
         if not solutions:
-            solutions = _representative_branch(node, remaining, prefix, representative_count)
+            solutions = _representative_branch(node, remaining, prefix, representative_count, tree=tree)
         if not solutions:
             continue
         preserve = solutions[0].solution_method != SolutionMethod.FamilyRepresentative.name
@@ -176,3 +182,6 @@ def build_equation_zero_branches(tree, max_num_nodes=50, representative_count=33
             print('Coefficient-zero branch exceeds the node budget:', node.flatten_idx)
             continue
         tree.append_branched_solution(solutions, node, 1, preserve_first_dispatcher=preserve)
+    from codegen.skeleton.family_critical import enrich_spherical_families, enrich_spherical_shoulders
+    enrich_spherical_shoulders(tree)
+    enrich_spherical_families(tree)

@@ -123,12 +123,39 @@ def codegen(args):
             raise ValueError('codegen requires an *_ik.yaml solution tree; use generate for a robot model')
         tree = TreeSerializer.load_skeleton_tree(data)
         check_name(tree.robot.name)
-        output.mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(prefix='.yaik-', dir=output) as staging:
-            export_code(tree, staging, args.language)
-            paths = publish(staging, output)
+        if getattr(args, 'require_complete', False):
+            from codegen.skeleton.completeness import audit_completeness
+            report = audit_completeness(tree)
+            if not report['certified_complete']:
+                # JSON is emitted after leaving the diagnostic redirection.
+                incomplete_report = report
+            else:
+                incomplete_report = None
+        else:
+            incomplete_report = None
+        if incomplete_report is None:
+            output.mkdir(parents=True, exist_ok=True)
+            with tempfile.TemporaryDirectory(prefix='.yaik-', dir=output) as staging:
+                export_code(tree, staging, args.language)
+                paths = publish(staging, output)
+    if incomplete_report is not None:
+        emit(incomplete_report)
+        return 1
     emit({'status': 'ok', 'robot': tree.robot.name, 'artifacts': paths})
     return 0
+
+
+def audit(args):
+    from codegen.skeleton.tree_serialize import TreeSerializer
+    from codegen.skeleton.completeness import audit_completeness
+    with redirect_stdout(sys.stderr):
+        data = read_yaml(args.tree)
+        if 'robot' not in data or 'tree_nodes' not in data:
+            raise ValueError('audit requires an *_ik.yaml solution tree')
+        tree = TreeSerializer.load_skeleton_tree(data)
+        report = audit_completeness(tree)
+    emit(report, args.output)
+    return 1 if args.require_complete and not report['certified_complete'] else 0
 
 
 def generate(args):
@@ -204,6 +231,8 @@ def marvin_ik(args):
     solutions = Solver(args.side).ik(target, q5)
     emit({'status': 'ok' if solutions else 'no_solution', 'side': args.side,
           'q5': float(q5), 'count': len(solutions),
+          'reachability': 'witnessed' if solutions else 'undetermined',
+          'certified_complete': False,
           'solutions': [q.tolist() for q in solutions]}, args.output)
     return 0 if solutions else 1
 
@@ -230,6 +259,7 @@ def marvin_check(args):
 def marvin_validate(args):
     from gallery.marvin_m6.validate import main as validate
     argv = ['--samples', str(args.samples), '--seed', str(args.seed),
+            '--stress-samples', str(args.stress_samples),
             '--output', str(args.output.resolve()), '--urdf-dir', str(args.urdf_dir.resolve()),
             '--eigen-dir', str(args.eigen_dir.resolve())]
     if args.python_only:
@@ -255,6 +285,8 @@ def codegen_arguments(command):
     command.add_argument('tree', type=Path, help='Saved *_ik.yaml tree')
     command.add_argument('--output-dir', type=Path, default=Path('build'), help='Output directory (default: build)')
     command.add_argument('--language', choices=('both', 'python', 'cpp'), default='both')
+    command.add_argument('--require-complete', action='store_true',
+                         help='Reject export unless a verified completeness certificate is available')
     command.set_defaults(handler=codegen)
 
 
@@ -278,6 +310,13 @@ def parser(command=None, language=None):
 
     command = commands.add_parser('codegen', help='Export Python/C++ from a saved IK tree, without symbolic search')
     codegen_arguments(command)
+
+    command = commands.add_parser('audit', help='Inspect unresolved branches and completeness proof obligations')
+    command.add_argument('tree', type=Path, help='Saved *_ik.yaml tree')
+    command.add_argument('--output', type=Path, help='Write the audit JSON to a file')
+    command.add_argument('--require-complete', action='store_true',
+                         help='Exit 1 unless completeness is certified; default reports without failing')
+    command.set_defaults(handler=audit)
 
     command = commands.add_parser('marvin', help='Marvin M6 V4.0 bounded FK/IK, export, and validation')
     marvin = command.add_subparsers(dest='marvin_command', required=True)
@@ -308,6 +347,8 @@ def parser(command=None, language=None):
     command.set_defaults(handler=marvin_check)
     command = marvin.add_parser('validate', help='Validate gallery Python/C++ against independent URDF FK')
     command.add_argument('--samples', type=int, default=1000, help='Random samples per arm, plus singular/limit cases')
+    command.add_argument('--stress-samples', type=int, default=0,
+                         help='Additional reachable limit/shoulder/wrist stress cases per arm')
     command.add_argument('--seed', type=seed_value, default=20261103)
     command.add_argument('--output', type=Path, default=Path('build/marvin_m6/validation.json'))
     command.add_argument('--python-only', action='store_true', help='Skip native C++ compilation')

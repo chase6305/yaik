@@ -63,6 +63,17 @@ def step_from_explicit_solution(
     assert next_solution.is_explicit_solution
     solutions = next_solution.explicit_solutions
     argument_checkers = next_solution.argument_validity_checkers
+    if next_solution.family_critical_equations is not None:
+        from python_run_import import trig_family_representatives
+        values = {**parameter_values, **value_subst_map}
+        if next_solution.family_critical_condition.subs(values) == sp.S.true:
+            coefficients = [[float(value.subs(values)) for value in row]
+                            for row in next_solution.family_critical_equations]
+            solutions = [sp.Float(value) for value in trig_family_representatives(
+                coefficients, *next_solution.family_bounds,
+                [float(value.subs(values)) for value, checker in zip(solutions, argument_checkers)
+                 if checker.subs(values) == sp.S.true])]
+        argument_checkers = [sp.S.true]*len(solutions)
     assert len(solutions) == len(argument_checkers)
     variable_subst_map = value_subst_map
     next_variable_values: List[SkeletonNumericalSolution] = list()

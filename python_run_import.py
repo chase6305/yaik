@@ -3,7 +3,75 @@ import math
 from typing import Tuple, Optional, List
 
 
+def trig_family_representatives(coefficients, lower, upper, seeds=()):
+    """Cover every cell cut by a*cos(t)+b*sin(t)+c=0 on one revolution.
+
+    Endpoints and every analytic boundary are retained, plus one midpoint per
+    open cell. No distance-based deduplication is used: a feasible cell can be
+    arbitrarily narrow. Floating-point roots are not certified interval roots.
+    """
+    lower, upper = float(lower), float(upper)
+    period = 2*math.pi
+    if not (math.isfinite(lower) and math.isfinite(upper) and
+            lower <= upper and upper-lower <= period):
+        raise ValueError('family bounds must span at most one finite revolution')
+    points = [lower, upper]
+    margin = 64*np.finfo(float).eps*(1+max(abs(lower), abs(upper)))
+    for a, b, c in coefficients:
+        a, b, c = float(a), float(b), float(c)
+        if not all(math.isfinite(value) for value in (a, b, c)):
+            continue
+        scale = max(abs(a), abs(b), abs(c))
+        if not math.isfinite(scale) or scale == 0:
+            continue
+        a, b, c = a/scale, b/scale, c/scale
+        radius = math.hypot(a, b)
+        if radius == 0 or abs(c) > radius + 64*np.finfo(float).eps:
+            continue
+        center = math.atan2(b, a)
+        angle = math.acos(max(-1., min(1., -c/radius)))
+        for root in (center-angle, center+angle):
+            first = math.ceil((lower-root)/period)
+            for turns in (first-1, first, first+1):
+                value = root+turns*period
+                if lower-margin <= value <= upper+margin:
+                    points.append(min(upper, max(lower, value)))
+    points = sorted(set(points))
+    values = points + [a+.5*(b-a) for a, b in zip(points, points[1:])]
+    values.extend(float(value) for value in seeds
+                  if math.isfinite(float(value)) and lower <= float(value) <= upper)
+    return sorted(set(values))
+
+
 # General utility
+def snap_near_joint_limits(values, lower, upper, periodic, fixed, tolerance=1e-6):
+    result = np.asarray(values, dtype=float).reshape(-1).copy()
+    changed = False
+    for index, value in enumerate(result):
+        lo, hi = lower[index], upper[index]
+        if not math.isfinite(value):
+            return None
+        if fixed[index]:
+            if value < lo or value > hi:
+                return None
+            continue
+        if periodic[index] and (value < lo or value > hi):
+            turns = math.ceil((lo-tolerance-value)/(2*math.pi))
+            value += turns*2*math.pi
+        if value < lo:
+            if lo-value > tolerance:
+                return None
+            value = lo
+            changed = True
+        elif value > hi:
+            if value-hi > tolerance:
+                return None
+            value = hi
+            changed = True
+        result[index] = value
+    return result if changed else None
+
+
 def safe_sqrt(a):
     return math.sqrt(a) if a >= 0 else 0
 
@@ -167,6 +235,25 @@ def try_solve_linear_type2_specific_rows(
     A sin(x) + B cos(x) + C sin(y) + D cos(y) == 0
     Select three equations from row_0/1/2 and solve it
     """
+    # A rank-three homogeneous system has a one-dimensional nullspace.
+    # Recover it from all rows instead of subtracting nearly equal elimination
+    # residuals from a preselected triple near a singular configuration.
+    if np.all(np.isfinite(A_combined)):
+        scale = np.max(np.abs(A_combined))
+        if scale > 0:
+            try:
+                _, singular, vectors = np.linalg.svd(A_combined/scale, full_matrices=len(A_combined) < 4)
+                if (len(singular) >= 3 and singular[2] > 1e-10*singular[0] and
+                        (len(singular) == 3 or singular[3] <= 1e-8*singular[0])):
+                    direction = vectors[-1, 2:]
+                    if np.linalg.norm(direction) > 1e-10:
+                        angle = math.atan2(float(direction[0]), float(direction[1]))
+                        other = angle+math.pi
+                        if other > math.pi:
+                            other -= 2*math.pi
+                        return angle, other
+            except np.linalg.LinAlgError:
+                pass
     A_tmp = np.zeros(shape=(3, 4))
     A_tmp[0, :] = A_combined[row_0, :]
     A_tmp[1, :] = A_combined[row_1, :]

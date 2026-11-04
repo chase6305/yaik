@@ -4,6 +4,8 @@ from codegen.skeleton.tree_node import EquationAllZeroDispatcherNode, SolvedVari
 from typing import List
 import sympy as sp
 import copy
+from functools import lru_cache
+from sympy.core.relational import Relational
 
 
 class CodeGenerationBase(object):
@@ -120,7 +122,7 @@ def queue_capacity_bound(node, has_prefix=False):
     if node is None:
         return 0
     if node.is_solution_node:
-        roots = node.solution.num_solutions()
+        roots = explicit_active_bound(node.solution) if node.solution.is_explicit_solution else node.solution.num_solutions()
         allocated = max(0, roots-1) if has_prefix else roots
         return allocated + roots*queue_capacity_bound(node.dispatcher_child, True)
     costs = [queue_capacity_bound(child, has_prefix) for child in node.children]
@@ -129,6 +131,39 @@ def queue_capacity_bound(node, has_prefix=False):
         copies = max(0, count-1) if has_prefix else 0
         return max(costs[0], copies + sum(costs[1:]))
     return max(costs, default=0)
+
+
+@lru_cache(maxsize=4096)
+def _guards_exclusive(first, second):
+    expression = sp.And(first, second)
+    comparisons, replacements = {}, {}
+    for atom in expression.atoms(Relational):
+        if atom.rel_op in ('<', '>='):
+            key, negate = (atom.lhs, atom.rhs), atom.rel_op == '>='
+        elif atom.rel_op in ('>', '<='):
+            key, negate = (atom.rhs, atom.lhs), atom.rel_op == '<='
+        else:
+            continue
+        symbol = comparisons.setdefault(key, sp.Dummy('comparison', boolean=True))
+        replacements[atom] = ~symbol if negate else symbol
+    return sp.satisfiable(expression.xreplace(replacements)) is False
+
+
+def explicit_active_bound(solution):
+    if solution.family_critical_equations is not None:
+        return solution.num_solutions()
+    groups = {}
+    for checker in solution.argument_validity_checkers:
+        groups[checker] = groups.get(checker, 0)+1
+    buckets = []
+    for checker, multiplicity in groups.items():
+        for bucket in buckets:
+            if all(_guards_exclusive(checker, previous) for previous, _ in bucket):
+                bucket.append((checker, multiplicity))
+                break
+        else:
+            buckets.append([(checker, multiplicity)])
+    return sum(max(count for _, count in bucket) for bucket in buckets)
 
 
 def cse_by_condition(expressions, conditions):

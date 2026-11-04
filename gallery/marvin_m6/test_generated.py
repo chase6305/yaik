@@ -22,7 +22,9 @@ class TestGeneratedSolvers(TestCase):
                 if native:
                     solvers['cpp'] = CppSolver(side, temporary)
                 cases = [(label, q) for label, q in cases_for(arm, 0, 20261103)
-                         if label.startswith(('special/zero', 'special/J4_', 'wrist_axis/', 'wrist_near_axis/'))]
+                         if label.startswith(('special/zero', 'special/J4_', 'wrist_axis/', 'wrist_near_axis/',
+                                              'wrist_narrow_family/', 'wrist_near_limit/', 'wrist_vertical_axis/',
+                                              'shoulder_limit/'))]
                 for language, solver in solvers.items():
                     for label, q in cases:
                         with self.subTest(side=side, language=language, case=label):

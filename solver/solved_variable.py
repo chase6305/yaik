@@ -110,6 +110,18 @@ class VariableSolution(object):
         return self._solution_impl.explicit_solutions
 
     @property
+    def family_critical_equations(self):
+        return self._solution_impl.family_critical_equations if self.is_explicit_solution else None
+
+    @property
+    def family_bounds(self):
+        return self._solution_impl.family_bounds if self.is_explicit_solution else None
+
+    @property
+    def family_critical_condition(self):
+        return self._solution_impl.family_critical_condition if self.is_explicit_solution else sp.S.true
+
+    @property
     def arguments(self):
         return None
 

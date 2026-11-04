@@ -48,6 +48,73 @@ inline Eigen::Matrix3d distal(double t3, double t4, double t5, double t6) {
     const Eigen::Matrix3d plus = rxPlus(), minus = plus.transpose();
     return plus * rz(t3) * plus * rz(t4) * minus * rz(t5) * minus * rz(t6);
 }
+// Kept self-contained so this header still needs only Eigen and the STL.
+inline std::vector<double> familyParameters(
+    const std::vector<std::array<double, 3>>& coefficients,
+    double lower, double upper, const std::vector<double>& seeds = {}) {
+  const double period = 2*pi;
+  if (!(std::isfinite(lower) && std::isfinite(upper) && lower <= upper && upper-lower <= period))
+    throw std::invalid_argument("family bounds must span at most one finite revolution");
+  const double epsilon = 64*std::numeric_limits<double>::epsilon();
+  const double margin = epsilon*(1+std::max(std::abs(lower), std::abs(upper)));
+  std::vector<double> points{lower, upper};
+  for (const auto& row : coefficients) {
+    double a = row[0], b = row[1], c = row[2];
+    if (!(std::isfinite(a) && std::isfinite(b) && std::isfinite(c))) continue;
+    const double scale = std::max({std::abs(a), std::abs(b), std::abs(c)});
+    if (!std::isfinite(scale) || scale == 0) continue;
+    a /= scale; b /= scale; c /= scale;
+    const double radius = std::hypot(a, b);
+    if (radius == 0 || std::abs(c) > radius+epsilon) continue;
+    const double center = std::atan2(b, a);
+    const double angle = std::acos(std::max(-1.0, std::min(1.0, -c/radius)));
+    for (double root : {center-angle, center+angle}) {
+      const double first = std::ceil((lower-root)/period);
+      for (int offset : {-1, 0, 1}) {
+        const double value = root+(first+offset)*period;
+        if (value >= lower-margin && value <= upper+margin)
+          points.push_back(std::max(lower, std::min(upper, value)));
+      }
+    }
+  }
+  std::sort(points.begin(), points.end());
+  points.erase(std::unique(points.begin(), points.end()), points.end());
+  auto result = points;
+  for (std::size_t i = 1; i < points.size(); ++i)
+    result.push_back(points[i-1]+.5*(points[i]-points[i-1]));
+  for (double value : seeds)
+    if (std::isfinite(value) && value >= lower && value <= upper) result.push_back(value);
+  std::sort(result.begin(), result.end());
+  result.erase(std::unique(result.begin(), result.end()), result.end());
+  return result;
+}
+
+inline std::vector<double> wristFamilyCandidates(
+    const Eigen::Matrix3d& rotation, double t3, double t4, double t5) {
+    const auto euler = [&](double t6) -> Eigen::Matrix3d {
+        return rotation * distal(t3, t4, t5, t6).transpose() *
+            Eigen::Vector3d(1, -1, -1).asDiagonal();
+    };
+    const Eigen::Matrix3d zero = euler(0), plus = euler(pi/2), minus = euler(-pi/2);
+    const Eigen::Matrix3d constant = .5*(plus+minus), cosine = zero-constant, sine = .5*(plus-minus);
+    std::vector<std::array<double, 3>> rows;
+    for (int joint : {0, 2}) {
+        for (double bound : {lower[joint]+offsets[joint], upper[joint]+offsets[joint]}) {
+            const double c = std::cos(bound), s = std::sin(bound);
+            if (joint == 0)
+                rows.push_back({{cosine(1, 2)*c-cosine(0, 2)*s,
+                    sine(1, 2)*c-sine(0, 2)*s, constant(1, 2)*c-constant(0, 2)*s}});
+            else
+                rows.push_back({{-cosine(2, 1)*c+cosine(2, 0)*s,
+                    -sine(2, 1)*c+sine(2, 0)*s, -constant(2, 1)*c+constant(2, 0)*s}});
+        }
+    }
+    for (double bound : {lower[1]+offsets[1], upper[1]+offsets[1], 0.0, pi})
+        rows.push_back({{cosine(2, 2), sine(2, 2), constant(2, 2)-std::cos(bound)}});
+    std::vector<double> seeds;
+    for (int i = 0; i <= 32; ++i) seeds.push_back(-pi+pi*i/32);
+    return familyParameters(rows, -pi, 0, seeds);
+}
 inline double wrap(double t) {
     t = std::fmod(t + pi, 2 * pi);
     if (t < 0) t += 2 * pi;
@@ -78,7 +145,8 @@ inline std::vector<std::array<double, 3>> shoulders(const Eigen::Matrix3d& s) {
                                          delta(0, 0) + delta(1, 1));
             result.push_back({{t0, t1, t2}});
         }
-    } else if (x(2, 2) < 0) {
+    }
+    if (sine <= 1e-7 && x(2, 2) < 0) {
         // t1=pi gives URDF J2=0 and t0+t2=delta. Intersect limits.
         const double delta = std::atan2(-x(0, 1), x(1, 1));
         for (int turns : {-1, 0, 1}) {
@@ -146,6 +214,36 @@ inline std::vector<JointVector> solveIK(const Eigen::Matrix4d& target, double q5
     const double c = v.squaredNorm() - 2 * a * a - upper_arm * upper_arm - forearm * forearm;
     const double av = 2 * a * a - 2 * upper_arm * forearm, b = 2 * a * (forearm + upper_arm);
     std::vector<JointVector> solutions;
+    std::vector<std::array<double, 2>> fallbacks;
+    const auto appendWrists = [&](double t3, double t5, const std::vector<double>& wrists) {
+        for (double t6 : wrists) {
+            const Eigen::Matrix3d distal = detail::distal(t3, q5, t5, t6);
+            for (const auto& shoulder : detail::shoulders(r * distal.transpose())) {
+                JointVector raw{{shoulder[0], shoulder[1], shoulder[2], t3, q5, t5, t6}}, q;
+                bool valid = true;
+                for (int i = 0; i < 7; ++i) {
+                    q[i] = i == 4 ? q5 : detail::wrap(raw[i] - offsets[i]);
+                    if (q[i] < lower[i] - 1e-9 || q[i] > upper[i] + 1e-9) valid = false;
+                    q[i] = std::clamp(q[i], lower[i], upper[i]);
+                }
+                if (!valid) continue;
+                const Eigen::Matrix4d actual = computeFK(q, side);
+                const Eigen::Matrix3d delta = actual.block<3, 3>(0, 0) * rotation.transpose();
+                const double sine = .5 * Eigen::Vector3d(delta(2, 1) - delta(1, 2),
+                    delta(0, 2) - delta(2, 0), delta(1, 0) - delta(0, 1)).norm();
+                if ((actual.block<3, 1>(0, 3) - target.block<3, 1>(0, 3)).norm() > 1e-7 ||
+                    std::atan2(sine, (delta.trace() - 1) * .5) > 1e-6) continue;
+                bool duplicate = false;
+                for (const auto& existing : solutions) {
+                    double maximum = 0;
+                    for (int i = 0; i < 7; ++i)
+                        maximum = std::max(maximum, std::abs(q[i] - existing[i]));
+                    if (maximum < 1e-7) { duplicate = true; break; }
+                }
+                if (!duplicate) solutions.push_back(q);
+            }
+        }
+    };
     for (double t3 : detail::roots(av, b, c, av * av + b * b - c * c)) {
         const double h = a * std::cos(t3) + a + upper_arm * std::sin(t3);
         const double k = a * std::sin(t3) - upper_arm * std::cos(t3) + forearm;
@@ -156,7 +254,7 @@ inline std::vector<JointVector> solveIK(const Eigen::Matrix4d& target, double q5
             const double axial = h * std::cos(q5) * std::cos(t5) - k * std::sin(t5);
             std::vector<double> wrists;
             if (std::hypot(v.x(), v.y()) <= 1e-10)
-                for (int i = 0; i <= 32; ++i) wrists.push_back(-pi + pi * i / 32);
+                wrists = detail::wristFamilyCandidates(r, t3, q5, t5);
             else {
                 wrists.push_back(std::atan2(-v.x() * hsin + v.y() * axial,
                                            -v.x() * axial - v.y() * hsin));
@@ -170,33 +268,23 @@ inline std::vector<JointVector> solveIK(const Eigen::Matrix4d& target, double q5
                         wrists.push_back(boundary);
                 }
             }
-            for (double t6 : wrists) {
-                const Eigen::Matrix3d distal = detail::distal(t3, q5, t5, t6);
-                for (const auto& shoulder : detail::shoulders(r * distal.transpose())) {
-                    JointVector raw{{shoulder[0], shoulder[1], shoulder[2], t3, q5, t5, t6}}, q;
-                    bool valid = true;
-                    for (int i = 0; i < 7; ++i) {
-                        q[i] = i == 4 ? q5 : detail::wrap(raw[i] - offsets[i]);
-                        if (q[i] < lower[i] - 1e-9 || q[i] > upper[i] + 1e-9) valid = false;
-                        q[i] = std::clamp(q[i], lower[i], upper[i]);
-                    }
-                    if (!valid) continue;
-                    const Eigen::Matrix4d actual = computeFK(q, side);
-                    const Eigen::Matrix3d delta = actual.block<3, 3>(0, 0) * rotation.transpose();
-                    const double sine = .5 * Eigen::Vector3d(delta(2, 1) - delta(1, 2),
-                        delta(0, 2) - delta(2, 0), delta(1, 0) - delta(0, 1)).norm();
-                    if ((actual.block<3, 1>(0, 3) - target.block<3, 1>(0, 3)).norm() > 1e-7 ||
-                        std::atan2(sine, (delta.trace() - 1) * .5) > 1e-6) continue;
-                    bool duplicate = false;
-                    for (const auto& existing : solutions) {
-                        double maximum = 0;
-                        for (int i = 0; i < 7; ++i)
-                            maximum = std::max(maximum, std::abs(q[i] - existing[i]));
-                        if (maximum < 1e-7) { duplicate = true; break; }
-                    }
-                    if (!duplicate) solutions.push_back(q);
-                }
-            }
+            fallbacks.push_back({{t3, t5}});
+            appendWrists(t3, t5, wrists);
+        }
+    }
+    if (solutions.empty())
+        for (const auto& pair : fallbacks)
+            appendWrists(pair[0], pair[1], detail::wristFamilyCandidates(r, pair[0], q5, pair[1]));
+    if (solutions.empty()) {
+        std::vector<double> elbows;
+        for (const auto& pair : fallbacks) {
+            const double t3 = pair[0];
+            if (std::find(elbows.begin(), elbows.end(), t3) != elbows.end()) continue;
+            elbows.push_back(t3);
+            const double h = a*std::cos(t3)+a+upper_arm*std::sin(t3);
+            const double k = a*std::sin(t3)-upper_arm*std::cos(t3)+forearm;
+            const double t5 = std::atan2(h*std::cos(q5), k)+(v.z() < 0 ? pi : 0);
+            appendWrists(t3, t5, detail::wristFamilyCandidates(r, t3, q5, t5));
         }
     }
     return solutions;

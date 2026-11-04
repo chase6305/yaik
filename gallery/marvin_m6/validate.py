@@ -115,7 +115,48 @@ def pose_error(actual, target):
     return float(np.linalg.norm(actual[:3, 3]-target[:3, 3])), float(np.arctan2(sine, cosine))
 
 
-def cases_for(arm, count, seed):
+def stress_cases_for(arm, count, seed):
+    """Known reachable witnesses biased toward singularities and limit corners."""
+    rng = np.random.default_rng(np.random.SeedSequence([seed, 696, 20261104]))
+    result = []
+    for index in range(count):
+        q = rng.uniform(arm.lower, arm.upper)
+        kind = index % 4
+        if kind == 0:
+            mask = rng.random(7) < .75
+            epsilon = rng.choice([0., 1e-12, 1e-9, 1e-6, 1e-3])
+            edges = np.where(rng.random(7) < .5, arm.lower+epsilon, arm.upper-epsilon)
+            q[mask] = edges[mask]
+            name = 'joint_limits'
+        elif kind == 1:
+            q[1] = rng.choice([-1., 1.])*10.**rng.uniform(-14., -2.)
+            for joint in (0, 2, 3, 5, 6):
+                if rng.random() < .5:
+                    q[joint] = rng.choice([arm.lower[joint], arm.upper[joint]])
+            name = 'shoulder'
+        else:
+            for _ in range(100):
+                elbow = rng.uniform(arm.lower[3], arm.upper[3])
+                t3 = elbow+math.pi
+                h = .018*math.cos(t3)+.018+.287*math.sin(t3)
+                k = .018*math.sin(t3)-.287*math.cos(t3)+.314
+                q5 = 0. if kind == 2 else rng.choice([-1., 1.])*10.**rng.uniform(-14., -3.)
+                q6 = math.atan2(h*math.cos(q5), k)-math.pi/2
+                if arm.lower[5] <= q6 <= arm.upper[5]:
+                    break
+            else:
+                raise ValueError('Could not generate an in-limit wrist-axis witness')
+            q[3:6] = elbow, q5, q6
+            for joint in range(3):
+                if rng.random() < .8:
+                    epsilon = rng.choice([0., 1e-12, 1e-9, 1e-6, 1e-3])
+                    q[joint] = (arm.lower[joint]+epsilon if rng.random() < .5 else arm.upper[joint]-epsilon)
+            name = 'wrist_axis' if kind == 2 else 'wrist_near_axis'
+        result.append((f'stress_{name}/{index}', q))
+    return result
+
+
+def cases_for(arm, count, seed, stress_samples=0):
     rng = np.random.default_rng(seed)
     cases = [('random/' + str(i), q) for i, q in enumerate(rng.uniform(arm.lower, arm.upper, (count, 7)))]
     midpoint = (arm.lower+arm.upper)*0.5
@@ -169,6 +210,10 @@ def cases_for(arm, count, seed):
                 q = rng.uniform(arm.lower, arm.upper)
                 q[3:] = elbow, q5, q6, q7
                 cases.append((f'wrist_near_axis/{elbow:+g}/{q5:+g}/{q7:+g}', q))
+    recorded = json.loads(Path(__file__).with_name('regression_cases.json').read_text())
+    for case in recorded['cases']:
+        cases.append((case['label'], np.asarray(case['q'], dtype=float)))
+    cases.extend(stress_cases_for(arm, stress_samples, seed))
     return cases
 
 
@@ -235,15 +280,28 @@ extern "C" int ik({side_parameter}const double* target, double q5, double* outpu
         # Both bounded arms use one header with a runtime side argument. Reuse
         # that compilation; key it by the source so stale builds are not reused.
         dependency = HERE / ('solver.hpp' if bounded else name + '_ik_generated.cpp')
-        digest = hashlib.sha256(wrapper.encode() + dependency.read_bytes() +
-                                (ROOT / 'yaik_cpp_common.h').read_bytes() +
+        dependency_bytes = dependency.read_bytes()
+        common_bytes = b'' if bounded else (ROOT / 'yaik_cpp_common.h').read_bytes()
+        digest = hashlib.sha256(wrapper.encode() + dependency_bytes + common_bytes +
                                 str(Path(eigen_dir).resolve()).encode()).hexdigest()[:16]
         source = Path(build_dir) / f'{tag}_{digest}.cpp'
         library = source.with_suffix('.so')
         if not library.is_file():
             source.write_text(wrapper)
-            subprocess.run(['g++', '-O2', '-std=c++17', '-shared', '-fPIC', '-I', str(ROOT),
-                            '-I', str(HERE), '-I', str(eigen_dir), str(source), '-o', str(library)], check=True)
+            # Compile immutable input snapshots, then publish atomically. Two
+            # validators sharing a cache must never load a partly written .so.
+            with tempfile.TemporaryDirectory(prefix=f'.{tag}-', dir=build_dir) as staging:
+                staging = Path(staging)
+                staged_source = staging / 'wrapper.cpp'
+                staged_source.write_text(wrapper)
+                (staging / dependency.name).write_bytes(dependency_bytes)
+                if not bounded:
+                    (staging / 'yaik_cpp_common.h').write_bytes(common_bytes)
+                staged_library = staging / 'solver.so'
+                subprocess.run(['g++', '-O2', '-std=c++17', '-shared', '-fPIC', '-I', str(staging),
+                                '-I', str(ROOT), '-I', str(HERE), '-I', str(eigen_dir),
+                                str(staged_source), '-o', str(staged_library)], check=True)
+                staged_library.replace(library)
         self.lib = ctypes.CDLL(str(library))
         array = np.ctypeslib.ndpointer(dtype=np.float64, flags='C_CONTIGUOUS')
         side_types = [ctypes.c_int] if bounded else []
@@ -369,24 +427,28 @@ def negative_checks(solver, arm):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--samples', type=int, default=1000)
+    parser.add_argument('--stress-samples', type=int, default=0,
+                        help='Additional reachable limit/shoulder/wrist stress cases per arm')
     parser.add_argument('--seed', type=int, default=20261103)
     parser.add_argument('--output', type=Path, default=HERE / 'validation_report.json')
     parser.add_argument('--python-only', action='store_true')
     parser.add_argument('--urdf-dir', type=Path, default=HERE / 'urdf')
     parser.add_argument('--eigen-dir', type=Path, default=Path('/usr/include/eigen3'))
     args = parser.parse_args(argv)
-    if args.samples < 0:
-        parser.error('--samples must be nonnegative')
+    if args.samples < 0 or args.stress_samples < 0:
+        parser.error('--samples and --stress-samples must be nonnegative')
     if not args.python_only and shutil.which('g++') is None:
         parser.error('C++ validation requires g++ (or select --python-only)')
     if not args.python_only and not (args.eigen_dir / 'Eigen/Core').is_file():
         parser.error('Eigen3 headers were not found; set --eigen-dir or use --python-only')
     sources = sorted(HERE.glob('*.py')) + sorted(HERE.glob('*.hpp')) + sorted(HERE.glob('*_ik_generated.cpp'))
     sources += sorted(HERE.glob('*.yaml')) + [HERE / 'provenance.json']
+    sources += [Path(__file__).with_name('regression_cases.json')]
     sources += sorted(Path(args.urdf_dir).glob('*_arm.urdf'))
     sources += [ROOT / name for name in ('python_run_import.py', 'yaik_cpp_common.h',
                                        'yaik.py', 'requirements.txt')]
     report = {'seed': args.seed, 'random_samples_per_arm': args.samples,
+              'stress_samples_per_arm': args.stress_samples,
               'position_tolerance_m': 1e-7, 'rotation_tolerance_rad': 1e-6,
               'fk_matrix_tolerance': 1e-11, 'free_joint_tolerance_rad': 1e-8,
               'python_version': platform.python_version(), 'numpy_version': np.__version__,
@@ -396,7 +458,7 @@ def main(argv=None):
     with tempfile.TemporaryDirectory(prefix='marvin-m6-validation-') as temporary:
         for side in ('left', 'right'):
             arm = UrdfArm(side, args.urdf_dir)
-            cases = cases_for(arm, args.samples, args.seed)
+            cases = cases_for(arm, args.samples, args.seed, args.stress_samples)
             for language in ('python',) if args.python_only else ('python', 'cpp'):
                 for bounded in (False, True):
                     key = f'{language}/{side}/' + ('bounded_analytical' if bounded else 'generated')

@@ -142,8 +142,10 @@ int main() {
 An invalid rigid transform or invalid/out-of-limit J5 raises `ValueError` in
 Python or `std::invalid_argument` in C++. Empty output means no accepted
 representative was found for that target and fixed J5. Inverse-wrist-axis
-continua use 33 deterministic bounded J7 samples; this finite sampling does
-not guarantee finding every feasible singular configuration.
+continua are cut at analytical joint-limit and Euler-chart boundaries. Each
+boundary and each intervening cell contributes a candidate; 33 uniform values
+remain as numerical backup. Every candidate still passes the original-target
+FK gate. This is not an end-to-end completeness certificate.
 
 The `*_ik_generated` files retain the standard gallery API and its unbounded
 candidate semantics. Python entry points are `marvin_m6_{side}_arm_fk(q)` and
@@ -155,13 +157,17 @@ API above when you need strict limits and deterministic analytical behavior.
 
 The generic generator now also recovers coefficient-zero branches. It solves
 explicit alternatives from the complete FK equations, retaining their guards,
-and tries 33 bounded representatives of one revolute joint on larger singular
-branches. Only complete alternatives are attached to a tree. C++ workspace
+and derives critical parameter values from shoulder limits for supported
+spherical-shoulder families. Correlated full-rotation angle recovery replaces
+an ill-conditioned linear decomposition; aligned angle families are intersected
+with both joint limits. Only complete alternatives are attached to a tree. C++ workspace
 capacity follows the actual candidate and branch counts; it is no longer
-limited to 16 candidates for these trees.
+limited to 16 candidates for these trees. C++ deduplication preserves candidates
+with different joint-limit feasibility. Near-boundary projections are added only
+after a stricter position/rotation check against the original target.
 
-Recovery retains the 50-node budget and uses at most one representative joint per
-path. Export still reports unresolved conditions in the expanded trees. This
+Recovery retains the 50-node budget; the current Marvin trees use 28 nodes.
+Export still reports unresolved conditions in the expanded trees. This
 does not establish full-workspace completeness, even when all regression
 targets pass; the strict validator below gates the generated APIs themselves.
 
@@ -214,15 +220,16 @@ The report separates standard generated-kernel coverage from the bounded
 analytical API. The validation exit status requires both APIs to solve all
 sampled reachable targets and reject their respective negative-input cases.
 
-A local run with seed `20261103` checked 1,000 random targets and 233 joint-limit,
-singular, and near-singular targets per arm:
+A local run with seed `20261103` checked 3,515 targets per arm: 1,000 random,
+233 existing singular/limit cases, 282 saved regression witnesses, and 2,000
+additional limit/shoulder/wrist stress cases:
 
 | API | Left arm | Right arm |
 | --- | ---: | ---: |
-| Standard generated Python | 1,233 / 1,233 | 1,233 / 1,233 |
-| Standard generated C++ | 1,233 / 1,233 | 1,233 / 1,233 |
-| Bounded analytical Python | 1,233 / 1,233 | 1,233 / 1,233 |
-| Bounded analytical C++ | 1,233 / 1,233 | 1,233 / 1,233 |
+| Standard generated Python | 3,515 / 3,515 | 3,515 / 3,515 |
+| Standard generated C++ | 3,515 / 3,515 | 3,515 / 3,515 |
+| Bounded analytical Python | 3,515 / 3,515 | 3,515 / 3,515 |
+| Bounded analytical C++ | 3,515 / 3,515 | 3,515 / 3,515 |
 
 Each count requires at least one solution passing independent URDF FK, joint
 limits, and fixed-J5 checks. The completed generated kernels recover the zero
@@ -231,14 +238,14 @@ They retain the repository's looser matrix-error contract; their report also
 records candidates outside limits or above the stricter integration pose
 thresholds. The bounded APIs returned no invalid or duplicate candidates, and
 rejected all 21 negative-input cases per arm/backend. Their maximum measured
-position and rotation errors were `6.10e-9 m` and `9.40e-10 rad`.
+position and rotation errors were `9.95e-8 m` and `9.53e-8 rad`.
 
 ```sh
-python yaik.py marvin validate --samples 1000 --seed 20261103 \
+python yaik.py marvin validate --samples 1000 --stress-samples 2000 --seed 20261103 \
     --output /tmp/marvin-m6-validation.json
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
     test_cli.py gallery/marvin_m6 solver/test_regressions.py \
-    solver/test_codegen_safety.py solver/test_equation_branches.py -q
+    solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py -q
 ```
 
 Use `--python-only` without a C++ toolchain, or `--eigen-dir PATH` to select
@@ -249,3 +256,52 @@ Random sampling and finite representatives of singular solution families do
 not establish completeness over the full workspace. These solvers evaluate
 kinematics and joint position limits; collision and trajectory constraints
 need separate handling.
+
+## What would guarantee completeness?
+
+A reachable-target witness and complete inverse kinematics are different claims.
+For fixed J5 and bounded joint domain Q, existence completeness requires
+`for every T in FK(Q), IK(T, J5) contains a legal witness`. Enumerating all
+solutions additionally requires representing continuous families, not just a
+finite list of samples. Passing a finite regression suite proves neither claim.
+
+For a supported spherical shoulder, joint-limit crossings and chart
+singularities reduce to `a*cos(t)+b*sin(t)+c=0`. In exact arithmetic, retaining
+all roots, interval endpoints, and a point in every intervening open cell covers
+all feasible components of that one-dimensional chart, provided the remaining
+IK branches and singular charts are complete. The implementation does not merge
+nearby roots by a distance tolerance, because a legal interval may be arbitrarily
+narrow. Floating-point root evaluation still needs certification before this can
+be promoted to a global proof.
+
+An end-to-end guarantee requires exhaustive regular/singular case coverage,
+proofs for every discarded branch, interval intersection of continuous families
+with every joint limit, and verified root isolation/numerical decisions.
+Resource limits must produce **unknown**, never an assertion of infeasibility.
+Interval branch-and-prune can enclose all solutions, including singular sets;
+see [Castellet and Thomas's interval method](https://www-iri.upc.es/people/thomas/papers/ARK1998.pdf).
+Certified polynomial optimization is another route to per-target optimality or
+infeasibility certificates, rather than a guarantee that every bounded run will
+finish; see [Trutman et al.](https://arxiv.org/abs/2007.12550).
+
+The project currently has no end-to-end completeness certificate. Inspect the
+remaining obligations explicitly:
+
+```sh
+python yaik.py audit gallery/marvin_m6/marvin_m6_left_arm_ik.yaml
+python yaik.py audit gallery/marvin_m6/marvin_m6_left_arm_ik.yaml --require-complete
+python yaik.py codegen gallery/marvin_m6/marvin_m6_left_arm_ik.yaml --require-complete
+```
+
+The audit reports `certified_complete: false`; `--require-complete` exits 1 and
+strict export leaves output files untouched. CLI IK retains its existing status
+and exit codes, and adds `reachability: witnessed` for verified solutions or
+`undetermined` for empty output. Neither an empty result nor a node/time budget
+is treated as a mathematical infeasibility certificate.
+
+Use `marvin validate --stress-samples N` for N additional deterministic
+reachable witnesses near joint corners, shoulder alignment, and exact/near wrist
+axes. The fixed regression file records the 282 witnesses selected during this
+investigation; targets are rebuilt with independent URDF FK, not stored solver
+output. The native compilation cache uses immutable source snapshots and atomic
+library publication so parallel validators cannot load a partial library.
