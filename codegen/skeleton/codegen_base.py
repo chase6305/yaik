@@ -6,6 +6,7 @@ import sympy as sp
 import copy
 from functools import lru_cache
 from sympy.core.relational import Relational
+from codegen.skeleton.branch_certificates import certify_unreachable_branch
 
 
 class CodeGenerationBase(object):
@@ -16,13 +17,18 @@ class CodeGenerationBase(object):
             raise ValueError('Cannot generate code from an empty solution tree')
         required = {unknown.symbol for unknown in tree.solved_unknowns}
         self.unhandled_degenerate_branches = []
+        self.certified_unreachable_branches = []
         # Every additional real branch can require an independent copy of each base candidate.
         self.branch_capacity_multiplier = 1
         complete_branch = False
         missing = required
         for node in tree.node_list:
             if isinstance(node, EquationAllZeroDispatcherNode) and node.degenerate_child is None:
-                self.unhandled_degenerate_branches.append((node.flatten_idx, str(node.degenerate_checker)))
+                certificate = certify_unreachable_branch(tree, node)
+                if certificate is None:
+                    self.unhandled_degenerate_branches.append((node.flatten_idx, str(node.degenerate_checker)))
+                else:
+                    self.certified_unreachable_branches.append((node.flatten_idx, certificate))
             elif isinstance(node, SolvedVariableDispatcherNode):
                 self.branch_capacity_multiplier += max(0, sum(child is not None for child in node.children[1:]) - 1)
                 self.unhandled_degenerate_branches.extend(

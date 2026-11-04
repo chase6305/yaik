@@ -57,7 +57,7 @@ jobs:
       - name: Check generated artifacts
         run: python yaik.py marvin check
       - name: Run regression tests
-        run: python -m pytest test_cli.py gallery/marvin_m6 solver/test_regressions.py solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py -q
+        run: python -m pytest test_cli.py gallery/marvin_m6 solver/test_regressions.py solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py solver/test_completeness.py solver/test_linear_circles.py -q
       - name: Validate Python and compiled C++ against URDF
         run: python yaik.py marvin validate --samples 1000 --stress-samples 2000 --seed 20261103 --output /tmp/marvin-m6-validation.json
       - uses: actions/upload-artifact@v4

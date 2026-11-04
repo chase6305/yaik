@@ -121,7 +121,7 @@ def stress_cases_for(arm, count, seed):
     result = []
     for index in range(count):
         q = rng.uniform(arm.lower, arm.upper)
-        kind = index % 4
+        kind = index % 7
         if kind == 0:
             mask = rng.random(7) < .75
             epsilon = rng.choice([0., 1e-12, 1e-9, 1e-6, 1e-3])
@@ -134,13 +134,14 @@ def stress_cases_for(arm, count, seed):
                 if rng.random() < .5:
                     q[joint] = rng.choice([arm.lower[joint], arm.upper[joint]])
             name = 'shoulder'
-        else:
+        elif kind in (2, 3, 5):
             for _ in range(100):
                 elbow = rng.uniform(arm.lower[3], arm.upper[3])
                 t3 = elbow+math.pi
                 h = .018*math.cos(t3)+.018+.287*math.sin(t3)
                 k = .018*math.sin(t3)-.287*math.cos(t3)+.314
-                q5 = 0. if kind == 2 else rng.choice([-1., 1.])*10.**rng.uniform(-14., -3.)
+                exact = kind == 2 or (kind == 5 and index % 3 == 0)
+                q5 = 0. if exact else rng.choice([-1., 1.])*10.**rng.uniform(-14., -3.)
                 q6 = math.atan2(h*math.cos(q5), k)-math.pi/2
                 if arm.lower[5] <= q6 <= arm.upper[5]:
                     break
@@ -152,6 +153,27 @@ def stress_cases_for(arm, count, seed):
                     epsilon = rng.choice([0., 1e-12, 1e-9, 1e-6, 1e-3])
                     q[joint] = (arm.lower[joint]+epsilon if rng.random() < .5 else arm.upper[joint]-epsilon)
             name = 'wrist_axis' if kind == 2 else 'wrist_near_axis'
+            if kind == 5:
+                q[1] = 0. if index % 4 == 0 else rng.choice([-1., 1.])*10.**rng.uniform(-14., -2.)
+                name = 'combined_shoulder_wrist'
+        elif kind == 4:
+            # Stationary elbow distance: the two analytical elbow roots meet.
+            center = math.atan2(2*.018*(.314+.287), 2*.018**2-2*.287*.314)-math.pi
+            q[3] = center+(0. if index % 4 == 0 else rng.choice([-1., 1.])*10.**rng.uniform(-15., -2.))
+            for joint in (0, 1, 2, 5, 6):
+                if rng.random() < .7:
+                    q[joint] = rng.choice([arm.lower[joint], 0., arm.upper[joint]])
+            name = 'elbow_repeated_root'
+        else:
+            q[4] = rng.choice([-1., 1.])*math.pi/2
+            if index % 3:
+                q[4] += rng.choice([-1., 1.])*10.**rng.uniform(-15., -2.)
+            if index % 2 == 0:
+                q[3] = rng.choice([-1., 1.])*10.**rng.uniform(-15., -2.)
+            for joint in (0, 1, 2, 5, 6):
+                if rng.random() < .7:
+                    q[joint] = rng.choice([arm.lower[joint], 0., arm.upper[joint]])
+            name = 'fixed_j5_half_pi'
         result.append((f'stress_{name}/{index}', q))
     return result
 
@@ -387,6 +409,13 @@ def negative_checks(solver, arm):
     unreachable = target.copy()
     unreachable[:3, 3] = [10, 10, 10]
     cases.append(('unreachable', unreachable, 0.0))
+    # The first three arm axes meet at the shoulder, and the final URDF entry
+    # is the fixed tool transform. Put the wrist center exactly at that common
+    # point: the model's positive inner reach radius makes this pose unreachable.
+    collapsed = np.eye(4)
+    tool = arm.chain[-1][0]
+    collapsed[:3, 3] = arm.chain[0][0][:3, 3]+tool[:3, :3].T@tool[:3, 3]
+    cases.append(('inside_empty_annulus', collapsed, 0.0))
     for invalid in (np.nan, np.inf, -np.inf):
         for row, col in ((0, 0), (0, 3), (3, 0)):
             bad = target.copy()

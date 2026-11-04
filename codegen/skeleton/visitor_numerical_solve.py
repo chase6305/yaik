@@ -73,7 +73,7 @@ def step_from_explicit_solution(
                 coefficients, *next_solution.family_bounds,
                 [float(value.subs(values)) for value, checker in zip(solutions, argument_checkers)
                  if checker.subs(values) == sp.S.true])]
-        argument_checkers = [sp.S.true]*len(solutions)
+            argument_checkers = [sp.S.true]*len(solutions)
     assert len(solutions) == len(argument_checkers)
     variable_subst_map = value_subst_map
     next_variable_values: List[SkeletonNumericalSolution] = list()
@@ -104,22 +104,20 @@ def step_from_linear_type2_solution(
         next_solution_index_in_value: int,
         parameter_values: Dict[sp.Symbol, float]) -> List[SkeletonNumericalSolution]:
     # The internal solution
-    from solver.linear_solver.linear_sin_cos_type2_numerical_solve import try_solve_linear_type2_combined
+    from python_run_import import solve_linear_type2_candidates
     solution_impl = next_solution.internal_solution
     assert solution_impl.class_key() == VariableSolutionClassKey.LinearSinCosType_2.name
 
     # Extract the value
     linear_solution: LinearSinCosType_2_SolutionImpl = solution_impl
     A_symbolic = linear_solution.A_matrix
-    rows_to_try = linear_solution.rows_to_try
-    solved_var = solution_impl.solved_variable
 
     # To numerical
     A_subst = A_symbolic.subs(value_subst_map)
     A_subst = A_subst.subs(parameter_values)
     A_np = np.array(A_subst).astype(np.float64)
-    solutions = try_solve_linear_type2_combined(A_np, rows_to_try)
-    if solutions is None:
+    solutions = solve_linear_type2_candidates(A_np, linear_solution.rows_to_try)
+    if not solutions:
         return list()
 
     # Assign the next value

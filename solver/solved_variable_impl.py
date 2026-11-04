@@ -265,7 +265,8 @@ class LinearSinCosType_2_SolutionImpl(VariableSolutionImplBase):
         return VariableSolutionClassKey.LinearSinCosType_2.name
 
     def num_solutions(self):
-        return 2
+        # Four conic roots plus the legacy pair for approximate saved models.
+        return 6
 
     @property
     def A_matrix(self):

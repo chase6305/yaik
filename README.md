@@ -206,7 +206,8 @@ The stored Marvin trees and both generated languages include this recovery.
 python -m pip install pytest
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   test_cli.py gallery/marvin_m6 solver/test_regressions.py \
-  solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py -q
+  solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
+  solver/test_completeness.py solver/test_linear_circles.py -q
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
   --output build/marvin-validation.json
@@ -222,15 +223,6 @@ Both bounded C++ arms reuse one compilation with a runtime side argument.
 The report records source hashes, seeds, failures, and error maxima. CI runs
 artifact checks, CLI/regression tests, and native validation.
 
-### Acknowledgement
-
-This work was done during the author's employment at Mech-Mind Robotics. We have learned a lot from existing works, in particular [IkFast](https://github.com/rdiankov/openrave) and [IKBT](https://github.com/uw-biorobotics/IKBT).
-
-### Contact
-
-For an unsupported model or a failing command, include the model/URDF, exact CLI
-invocation, dependency versions, and a `--debug` traceback in a repository issue.
-
 ## Completeness and stress validation
 
 `python yaik.py audit TREE.yaml` reports unresolved branches, finite family
@@ -243,3 +235,18 @@ undetermined output. See the [mathematical scope and certification requirements]
 python yaik.py marvin validate --samples 1000 --stress-samples 2000 \
   --seed 20261103 --output build/marvin-validation.json
 ```
+
+The audit separately lists locally certified unreachable branches. For Marvin,
+an exact rational reach bound excludes the last absent branch, but full IK
+coverage and floating-point decisions remain uncertified. Generated C++ retains
+strict-pose witnesses during deduplication. Coupled-circle numerical nodes can
+now retain four isolated rank-two roots plus the legacy tolerance fallback.
+
+### Acknowledgement
+
+This work was done during the author's employment at Mech-Mind Robotics. We have learned a lot from existing works, in particular [IkFast](https://github.com/rdiankov/openrave) and [IKBT](https://github.com/uw-biorobotics/IKBT).
+
+### Contact
+
+For an unsupported model or a failing command, include the model/URDF, exact CLI
+invocation, dependency versions, and a `--debug` traceback in a repository issue.

@@ -48,6 +48,40 @@ inline Eigen::Matrix3d distal(double t3, double t4, double t5, double t6) {
     const Eigen::Matrix3d plus = rxPlus(), minus = plus.transpose();
     return plus * rz(t3) * plus * rz(t4) * minus * rz(t5) * minus * rz(t6);
 }
+// Compensated square products keep distinct near-tangent roots from collapsing
+// through a rounded acos argument. Inputs have already been scaled to [-1,1].
+inline double trigRootOffset(double a, double b, double c) {
+  if (c == 0) return 1.57079632679489661923;
+  const double large = std::max(std::abs(a), std::abs(b));
+  const double small = std::min(std::abs(a), std::abs(b));
+  double root;
+  if (large == std::abs(c)) {
+    root = small;  // Also avoid underflow in small*small.
+  } else {
+    std::array<double, 6> partials{};
+    std::size_t count = 0;
+    for (const auto& term : std::array<std::array<double, 2>, 3>{{{{a, 1}}, {{b, 1}}, {{c, -1}}}}) {
+      const double square = term[0]*term[0];
+      for (double value : {term[1]*square, term[1]*std::fma(term[0], term[0], -square)}) {
+        std::size_t kept = 0;
+        for (std::size_t i = 0; i < count; ++i) {
+          double previous = partials[i];
+          if (std::abs(value) < std::abs(previous)) std::swap(value, previous);
+          const double high = value+previous, low = previous-(high-value);
+          if (low != 0) partials[kept++] = low;
+          value = high;
+        }
+        partials[kept++] = value;
+        count = kept;
+      }
+    }
+    double discriminant = 0;
+    while (count) discriminant += partials[--count];
+    root = std::sqrt(std::max(0.0, discriminant));
+  }
+  return std::atan2(root, -c);
+}
+
 // Kept self-contained so this header still needs only Eigen and the STL.
 inline std::vector<double> familyParameters(
     const std::vector<std::array<double, 3>>& coefficients,
@@ -57,6 +91,8 @@ inline std::vector<double> familyParameters(
     throw std::invalid_argument("family bounds must span at most one finite revolution");
   const double epsilon = 64*std::numeric_limits<double>::epsilon();
   const double margin = epsilon*(1+std::max(std::abs(lower), std::abs(upper)));
+  const bool shifted = std::abs(lower) > period;
+  const double origin_phase = shifted ? std::atan2(std::sin(lower), std::cos(lower)) : 0;
   std::vector<double> points{lower, upper};
   for (const auto& row : coefficients) {
     double a = row[0], b = row[1], c = row[2];
@@ -67,11 +103,12 @@ inline std::vector<double> familyParameters(
     const double radius = std::hypot(a, b);
     if (radius == 0 || std::abs(c) > radius+epsilon) continue;
     const double center = std::atan2(b, a);
-    const double angle = std::acos(std::max(-1.0, std::min(1.0, -c/radius)));
+    const double angle = trigRootOffset(a, b, c);
     for (double root : {center-angle, center+angle}) {
-      const double first = std::ceil((lower-root)/period);
+      const double first = shifted ? 0 : std::ceil((lower-root)/period);
+      const double relative = shifted ? std::remainder(root-origin_phase, period) : 0;
       for (int offset : {-1, 0, 1}) {
-        const double value = root+(first+offset)*period;
+        const double value = shifted ? lower+(relative+offset*period) : root+(first+offset)*period;
         if (value >= lower-margin && value <= upper+margin)
           points.push_back(std::max(lower, std::min(upper, value)));
       }
@@ -91,12 +128,13 @@ inline std::vector<double> familyParameters(
 
 inline std::vector<double> wristFamilyCandidates(
     const Eigen::Matrix3d& rotation, double t3, double t4, double t5) {
-    const auto euler = [&](double t6) -> Eigen::Matrix3d {
-        return rotation * distal(t3, t4, t5, t6).transpose() *
-            Eigen::Vector3d(1, -1, -1).asDiagonal();
-    };
-    const Eigen::Matrix3d zero = euler(0), plus = euler(pi/2), minus = euler(-pi/2);
-    const Eigen::Matrix3d constant = .5*(plus+minus), cosine = zero-constant, sine = .5*(plus-minus);
+    // Distal(t6)=Distal(0) Rz(t6): form the basis without subtracting nearly
+    // equal floating rotation evaluations, or repeating the distal product.
+    const Eigen::Matrix3d basis = distal(t3, t4, t5, 0).transpose()*
+        Eigen::Vector3d(1, -1, -1).asDiagonal();
+    const Eigen::Matrix3d cosine = rotation.col(0)*basis.row(0)+rotation.col(1)*basis.row(1);
+    const Eigen::Matrix3d sine = rotation.col(0)*basis.row(1)-rotation.col(1)*basis.row(0);
+    const Eigen::Matrix3d constant = rotation.col(2)*basis.row(2);
     std::vector<std::array<double, 3>> rows;
     for (int joint : {0, 2}) {
         for (double bound : {lower[joint]+offsets[joint], upper[joint]+offsets[joint]}) {
@@ -191,7 +229,8 @@ inline Eigen::Matrix4d computeFK(const JointVector& q, Side side = Side::Left) {
 
 // Invalid SE(3) / fixed-J5 values throw invalid_argument. Empty output means
 // no accepted solution representative was found for this fixed J5. Wrist-axis
-// continua use 33 deterministic bounded J7 samples, without completeness claims.
+// continua use analytical limit/chart cuts with 33 backup J7 samples; the
+// finite representatives do not establish workspace completeness.
 inline std::vector<JointVector> solveIK(const Eigen::Matrix4d& target, double q5,
                                       Side side = Side::Left) {
     detail::validateSide(side);
@@ -223,7 +262,9 @@ inline std::vector<JointVector> solveIK(const Eigen::Matrix4d& target, double q5
                 bool valid = true;
                 for (int i = 0; i < 7; ++i) {
                     q[i] = i == 4 ? q5 : detail::wrap(raw[i] - offsets[i]);
-                    if (q[i] < lower[i] - 1e-9 || q[i] > upper[i] + 1e-9) valid = false;
+                    // Only nearby limit projections are considered; strict
+                    // original-target FK below still gates every result.
+                    if (q[i] < lower[i] - 1e-6 || q[i] > upper[i] + 1e-6) valid = false;
                     q[i] = std::clamp(q[i], lower[i], upper[i]);
                 }
                 if (!valid) continue;
@@ -244,7 +285,17 @@ inline std::vector<JointVector> solveIK(const Eigen::Matrix4d& target, double q5
             }
         }
     };
-    for (double t3 : detail::roots(av, b, c, av * av + b * b - c * c)) {
+    auto elbows = detail::roots(av, b, c, av * av + b * b - c * c);
+    if (elbows.size() == 2 && elbows[0] == elbows[1]) elbows.resize(1);
+    const double elbow_radius = std::hypot(av, b);
+    if (std::abs(std::abs(c)-elbow_radius) <= 128*std::numeric_limits<double>::epsilon()*
+            std::max(std::abs(c), elbow_radius)) {
+        // Preserve the limiting repeated root when roundoff separates the
+        // ordinary roots to opposite sides of intersecting joint limits.
+        const double center = std::atan2(b, av)+(c < 0 ? pi : 0);
+        if (std::find(elbows.begin(), elbows.end(), center) == elbows.end()) elbows.push_back(center);
+    }
+    for (double t3 : elbows) {
         const double h = a * std::cos(t3) + a + upper_arm * std::sin(t3);
         const double k = a * std::sin(t3) - upper_arm * std::cos(t3) + forearm;
         const double hsin = h * std::sin(q5);

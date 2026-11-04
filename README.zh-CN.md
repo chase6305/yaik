@@ -143,7 +143,8 @@ python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma
 python -m pip install pytest
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   test_cli.py gallery/marvin_m6 solver/test_regressions.py \
-  solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py -q
+  solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
+  solver/test_completeness.py solver/test_linear_circles.py -q
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
   --output build/marvin-validation.json
@@ -173,4 +174,10 @@ python yaik.py marvin validate --samples 1000 --stress-samples 2000 \
 ```
 
 新增压力样本直接从合法关节向量经独立 URDF FK 构造，覆盖多关节限位交界、肩轴对齐、
-精确与近腕轴姿态；本轮发现的 282 个固定反例也已保存并加入验证。
+精确与近腕轴姿态；本轮发现的 300 个固定反例也已保存并加入验证。
+
+审计现在把局部已证明不可达的分支列入 `certified_unreachable_branches`。
+Marvin 的最后一个缺失分支已由精确有理数几何界排除：内部半径至少 9 毫米，
+而该路径要求三个逆向位置分量都不超过 1 微米。这个局部证明仍不等于完整 IK 或浮点计算的完备性证明。
+新增回归覆盖近切点根合并、大角度相位丢失、秩为 2 时的四个离散根、C++ 精确候选去重，
+以及肘部重根和多关节限位交界；有界接口的每个返回解仍通过原目标的严格 FK、限位和固定 J5 检查。

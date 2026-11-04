@@ -19,6 +19,18 @@ from fk.robots import RobotDescription
 
 
 class TestMarvinM6(TestCase):
+    def test_wrist_family_basis_matches_full_rotation_products(self):
+        module = load_module(HERE/'solver.py', 'marvin_m6_family_basis')
+        rng = np.random.default_rng(20261107)
+        for _ in range(30):
+            t3, t4, t5 = rng.uniform(-math.pi, math.pi, 3)
+            rotation = module._rz(float(rng.uniform(-math.pi, math.pi)))@module.RX_PLUS
+            cosine, sine, constant = module._wrist_family_coefficients(rotation, t3, t4, t5)
+            for t6 in (-math.pi, -math.pi/2, 0., 1e-12, math.pi/2, math.pi):
+                expected = rotation@module._distal_rotation(t3, t4, t5, t6).T@module.RX_PI
+                reconstructed = cosine*math.cos(t6)+sine*math.sin(t6)+constant
+                np.testing.assert_allclose(reconstructed, expected, atol=2e-15, rtol=0)
+
     def test_equivalent_pi_offsets_from_blas_keep_the_saved_dh_convention(self):
         from gallery.marvin_m6 import generate
         real_converter = generate.convert_chain_into_robot

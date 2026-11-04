@@ -84,13 +84,19 @@ def _shoulder_candidates(rotation):
     # t1=0 would give URDF J2=pi, outside this model's limits.
 
 
+def _wrist_family_coefficients(rotation, t3, t4, t5):
+    # Distal(t6)=Distal(0) Rz(t6). Use that exact trigonometric basis instead
+    # of subtracting three floating rotation evaluations near cancellation.
+    basis = _distal_rotation(t3, t4, t5, 0.).T@RX_PI
+    cosine = np.outer(rotation[:, 0], basis[0])+np.outer(rotation[:, 1], basis[1])
+    sine = np.outer(rotation[:, 0], basis[1])-np.outer(rotation[:, 1], basis[0])
+    constant = np.outer(rotation[:, 2], basis[2])
+    return cosine, sine, constant
+
+
 def _wrist_family_candidates(rotation, t3, t4, t5):
     """Cut the J7 family at every shoulder limit and Euler-chart boundary."""
-    def euler(t6):
-        return rotation @ _distal_rotation(t3, t4, t5, t6).T @ RX_PI
-    zero, plus, minus = euler(0.), euler(PI/2), euler(-PI/2)
-    constant = .5*(plus+minus)
-    cosine, sine = zero-constant, .5*(plus-minus)
+    cosine, sine, constant = _wrist_family_coefficients(rotation, t3, t4, t5)
     rows = []
     for joint in (0, 2):
         for bound in (LOWER[joint]+OFFSETS[joint], UPPER[joint]+OFFSETS[joint]):
@@ -134,8 +140,8 @@ class Solver:
 
         Invalid SE(3) targets / J5 values raise ValueError. Empty output means
         no accepted representative was found for the specified fixed J5.
-        Inverse-wrist-axis families use 33 deterministic bounded J7 samples;
-        an empty result does not prove infeasibility.
+        Inverse-wrist-axis families use analytical limit/chart cuts with 33
+        bounded J7 samples as backup. Empty output does not prove infeasibility.
         """
         if np.iscomplexobj(target):
             raise ValueError('target must be a real SE(3) transform')
@@ -174,7 +180,10 @@ class Solver:
                     raw = np.array([t0, t1, t2, t3, q5, t5, t6])
                     q = (raw - OFFSETS + PI) % (2 * PI) - PI
                     q[4] = q5
-                    if np.any(q < LOWER - 1e-9) or np.any(q > UPPER + 1e-9):
+                    # Near a repeated root, bounded corners can differ from
+                    # the rounded analytical angle by a few 1e-8 radians.
+                    # Project only nearby angles and verify the original FK.
+                    if np.any(q < LOWER - 1e-6) or np.any(q > UPPER + 1e-6):
                         continue
                     q = np.clip(q, LOWER, UPPER)
                     actual = self.fk(q)
@@ -188,8 +197,16 @@ class Solver:
                     if not any(np.max(np.abs(q - existing)) < 1e-7 for existing in solutions):
                         solutions.append(q)
 
-        for t3 in _root_pair(2 * A * A - 2 * UPPER_ARM * FOREARM,
-                             2 * A * (FOREARM + UPPER_ARM), c):
+        elbow_a = 2*A*A-2*UPPER_ARM*FOREARM
+        elbow_b = 2*A*(FOREARM+UPPER_ARM)
+        elbows = _root_pair(elbow_a, elbow_b, c)
+        elbow_radius = math.hypot(elbow_a, elbow_b)
+        if abs(abs(c)-elbow_radius) <= 128*np.finfo(float).eps*max(abs(c), elbow_radius):
+            # Rounded target distance can split a repeated elbow root across
+            # opposite limit corners. Also try its analytical limiting center;
+            # every resulting candidate still passes the original-target FK gate.
+            elbows += (math.atan2(elbow_b, elbow_a)+(PI if c < 0 else 0.),)
+        for t3 in dict.fromkeys(elbows):
             h = A * math.cos(t3) + A + UPPER_ARM * math.sin(t3)
             k = A * math.sin(t3) - UPPER_ARM * math.cos(t3) + FOREARM
             hsin = h * math.sin(q5)

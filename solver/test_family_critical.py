@@ -20,6 +20,40 @@ from solver.solved_variable import SolutionMethod
 from solver.solved_variable import SolutionDegenerateRecord
 
 
+def precision_tree():
+    from codegen.skeleton.skeleton_tree import SkeletonTree
+    from fk.robots import RobotDescription, DHEntry
+    from solver.equation_types import Unknown, UnknownType
+    from solver.test_equation_branches import explicit
+    z, pz = sp.symbols('z Pz')
+    model = RobotDescription('precision_witness')
+    model.unknowns = [Unknown(z, UnknownType.Translational.name)]
+    model.dh_params = [DHEntry(0, 0, z, 0)]
+    # Squared-position equations can give both signs. Both are accepted by
+    # the legacy loose FK tolerance here, but only +Pz is the exact IK witness.
+    return SkeletonTree([explicit(z, [-pz, pz])], model)
+
+
+def guarded_seed_tree(auxiliary=False):
+    from codegen.skeleton.skeleton_tree import SkeletonTree
+    from fk.robots import RobotDescription, DHEntry
+    from solver.equation_types import Unknown
+    from solver.solved_variable import VariableSolution
+    from solver.test_equation_branches import explicit
+    x, extra, p = sp.symbols('x extra p')
+    model = RobotDescription('guarded_seed_aux' if auxiliary else 'guarded_seed_root')
+    model.unknowns = [Unknown(x)]
+    model.dh_params = [DHEntry(0, 0, 0, x)]
+    model.symbolic_parameters = {p}
+    model.parameters_bound = {p: (0., 1.)}
+    solution = VariableSolution.make_explicit_solution(
+        extra if auxiliary else x, [1/p], SolutionMethod.FamilyRepresentative.name,
+        argument_valid_checkers=[p > 0],
+        degenerate_record=SolutionDegenerateRecord.record_always_non_degenerate())
+    solution.internal_solution.set_family_critical_equations([(1/p, 0, 0)], (-math.pi, math.pi), p > 0)
+    return SkeletonTree([explicit(x, [sp.S.Zero]), solution] if auxiliary else [solution], model)
+
+
 def critical_tree(guarded=False):
     tree = coaxial_tree()
     build_equation_zero_branches(tree)
@@ -39,6 +73,23 @@ def critical_tree(guarded=False):
 
 
 class TestCriticalFamilies(TestCase):
+    def test_disabled_critical_cuts_retain_seed_guards_in_the_numerical_visitor(self):
+        from codegen.skeleton.visitor_numerical_solve import SkeletonNumericalSolution, step_from_explicit_solution
+        tree = guarded_seed_tree()
+        solution = next(node.solution for node in tree.node_list if node.is_solution_node)
+        p = next(iter(tree.robot.symbolic_parameters))
+        current = SkeletonNumericalSolution([0.], [-1])
+        self.assertEqual(step_from_explicit_solution(current, {}, solution, 0, {p: 0.}), [])
+        output = step_from_explicit_solution(current, {}, solution, 0, {p: 1.})
+        self.assertTrue(output)
+        scope = scope_for(tree)
+        self.assertEqual(scope['guarded_seed_root_ik_solve_raw'](np.eye(4), 0.), [])
+
+    def test_optional_guarded_family_does_not_erase_a_complete_prefix(self):
+        tree = guarded_seed_tree(auxiliary=True)
+        scope = scope_for(tree)
+        output = scope['guarded_seed_aux_ik_solve_raw'](np.eye(4), 0.)
+        np.testing.assert_allclose([q.ravel() for q in output], [[0.]])
     def test_offset_axes_keep_the_position_aware_shoulder_solver(self):
         from codegen.skeleton.family_critical import enrich_spherical_shoulders
         from codegen.skeleton.skeleton_tree import SkeletonTree
@@ -79,6 +130,25 @@ class TestCriticalFamilies(TestCase):
         self.assertEqual(output[0], -math.pi)
         self.assertEqual(output[-1], math.pi)
         self.assertLessEqual(len(output), 4*len(equations)+3)
+
+    def test_near_tangent_cuts_do_not_collapse_or_underflow(self):
+        for small in (1e-12, 1e-200):
+            output = trig_family_representatives([(1., small, -1.)], -10*small, 10*small)
+            self.assertIn(0., output)
+            self.assertIn(2*math.atan2(small, 1.), output)
+        for scale in (1e-200, 1e200):
+            small = scale*1e-12
+            output = trig_family_representatives([(scale, small, -scale)], -1e-11, 1e-11)
+            self.assertIn(0., output)
+            self.assertIn(2*math.atan2(small/scale, 1.), output)
+
+    def test_large_joint_origins_preserve_phase_when_adding_turns(self):
+        for target in (1000061.5465403113, 999999989.1289062, 1000000000029.6497,
+                       100000000000060.98, 1000000000000060.6, -1000000000035.2318):
+            rows = [(-math.sin(target), math.cos(target), 0.)]
+            output = trig_family_representatives(rows, target-1., target+1.)
+            self.assertIn(target, output)
+            self.assertLessEqual(len(output), 7)
 
     def test_nonfinite_and_constant_equations_do_not_corrupt_seed_candidates(self):
         for coefficient in range(3):
@@ -121,14 +191,45 @@ class TestCriticalFamilies(TestCase):
             guarded.robot.name = 'guarded_family'
             generate_code_cpp(tree, str(temporary/'critical.cpp'), use_safe_operator=True)
             generate_code_cpp(guarded, str(temporary/'guarded.cpp'), use_safe_operator=True)
+            generate_code_cpp(precision_tree(), str(temporary/'precision.cpp'), use_safe_operator=True)
+            generate_code_cpp(guarded_seed_tree(auxiliary=True), str(temporary/'optional.cpp'), use_safe_operator=True)
             (temporary/'test.cpp').write_text('''#define main critical_demo
 #include "critical.cpp"
 #undef main
 #define main guarded_demo
 #include "guarded.cpp"
 #undef main
+#define main precision_demo
+#include "precision.cpp"
+#undef main
+#define main optional_demo
+#include "optional.cpp"
+#undef main
 #include <cassert>
+#include "gallery/marvin_m6/solver.hpp"
 int main() {
+    assert(guarded_seed_aux_ik::computeIK(Eigen::Matrix4d::Identity(), 0.0).size() == 1);
+    const auto precision_target = precision_witness_ik::computeFK({{2e-7}});
+    const auto precise = precision_witness_ik::computeIK(precision_target);
+    assert(std::any_of(precise.begin(), precise.end(), [](const auto& q) { return q[0] == 2e-7; }));
+    for (double target : {1000061.5465403113, 999999989.1289062, 1000000000029.6497,
+                          100000000000060.98, 1000000000000060.6, -1000000000035.2318}) {
+        const std::vector<std::array<double, 3>> rows{{{-std::sin(target), std::cos(target), 0}}};
+        for (const auto& cuts : {yaik_cpp::trigFamilyRepresentatives(rows, target-1, target+1),
+                                marvin_m6::detail::familyParameters(rows, target-1, target+1)}) {
+            assert(std::find(cuts.begin(), cuts.end(), target) != cuts.end());
+            assert(cuts.size() <= 7);
+        }
+    }
+    for (double small : {1e-12, 1e-200}) {
+        const std::vector<std::array<double, 3>> coefficients{{{1, small, -1}}};
+        const double root = 2*std::atan2(small, 1.0);
+        for (const auto& cuts : {yaik_cpp::trigFamilyRepresentatives(coefficients, -10*small, 10*small),
+                                marvin_m6::detail::familyParameters(coefficients, -10*small, 10*small)}) {
+            assert(std::find(cuts.begin(), cuts.end(), 0.0) != cuts.end());
+            assert(std::find(cuts.begin(), cuts.end(), root) != cuts.end());
+        }
+    }
     std::vector<std::array<double, 1>> near_limit{{{1+1.5e-8}}, {{1-1e-10}}, {{1-2e-10}}};
     const auto classes = yaik_cpp::jointLimitClasses<1>(near_limit, {{-1}}, {{1}}, {{false}});
     yaik_cpp::removeDuplicateWithinClasses<1>(near_limit, 1e-6, classes);

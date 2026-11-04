@@ -147,6 +147,14 @@ boundary and each intervening cell contributes a candidate; 33 uniform values
 remain as numerical backup. Every candidate still passes the original-target
 FK gate. This is not an end-to-end completeness certificate.
 
+Near repeated elbow roots, the bounded solvers also try the analytical limiting
+center. Angles within `1e-6 rad` of a limit may be projected to that limit;
+every returned vector is inside the actual limits and still passes the original
+`1e-7 m` / `1e-6 rad` FK gate. The angular projection radius is an internal
+candidate allowance, not a relaxation of the joint limits or pose thresholds.
+The wrist-family rotation coefficients are constructed directly from the sine,
+cosine, and constant basis, avoiding repeated rotation products and subtraction.
+
 The `*_ik_generated` files retain the standard gallery API and its unbounded
 candidate semantics. Python entry points are `marvin_m6_{side}_arm_fk(q)` and
 `marvin_m6_{side}_arm_ik_solve(target, th_4)`. C++ uses the
@@ -163,13 +171,16 @@ an ill-conditioned linear decomposition; aligned angle families are intersected
 with both joint limits. Only complete alternatives are attached to a tree. C++ workspace
 capacity follows the actual candidate and branch counts; it is no longer
 limited to 16 candidates for these trees. C++ deduplication preserves candidates
-with different joint-limit feasibility. Near-boundary projections are added only
-after a stricter position/rotation check against the original target.
+with different joint-limit feasibility or strict FK accuracy. A coarse accepted
+candidate therefore cannot erase a nearby exact witness. Near-boundary projections
+are added only after a stricter position/rotation check against the original target.
 
 Recovery retains the 50-node budget; the current Marvin trees use 28 nodes.
-Export still reports unresolved conditions in the expanded trees. This
-does not establish full-workspace completeness, even when all regression
-targets pass; the strict validator below gates the generated APIs themselves.
+Audit distinguishes unresolved conditions from locally proved unreachable
+branches. The remaining absent Marvin branch has an exact geometric exclusion
+certificate, described below. This does not establish full-workspace completeness,
+even when all regression targets pass; the strict validator below gates the
+generated APIs themselves.
 
 ## Regeneration
 
@@ -220,16 +231,16 @@ The report separates standard generated-kernel coverage from the bounded
 analytical API. The validation exit status requires both APIs to solve all
 sampled reachable targets and reject their respective negative-input cases.
 
-A local run with seed `20261103` checked 3,515 targets per arm: 1,000 random,
-233 existing singular/limit cases, 282 saved regression witnesses, and 2,000
+A local run with seed `20261103` checked 3,533 targets per arm: 1,000 random,
+233 existing singular/limit cases, 300 saved regression witnesses, and 2,000
 additional limit/shoulder/wrist stress cases:
 
 | API | Left arm | Right arm |
 | --- | ---: | ---: |
-| Standard generated Python | 3,515 / 3,515 | 3,515 / 3,515 |
-| Standard generated C++ | 3,515 / 3,515 | 3,515 / 3,515 |
-| Bounded analytical Python | 3,515 / 3,515 | 3,515 / 3,515 |
-| Bounded analytical C++ | 3,515 / 3,515 | 3,515 / 3,515 |
+| Standard generated Python | 3,533 / 3,533 | 3,533 / 3,533 |
+| Standard generated C++ | 3,533 / 3,533 | 3,533 / 3,533 |
+| Bounded analytical Python | 3,533 / 3,533 | 3,533 / 3,533 |
+| Bounded analytical C++ | 3,533 / 3,533 | 3,533 / 3,533 |
 
 Each count requires at least one solution passing independent URDF FK, joint
 limits, and fixed-J5 checks. The completed generated kernels recover the zero
@@ -237,15 +248,18 @@ pose, its J4 perturbations, and all 96 wrist-axis/near-axis cases in this suite.
 They retain the repository's looser matrix-error contract; their report also
 records candidates outside limits or above the stricter integration pose
 thresholds. The bounded APIs returned no invalid or duplicate candidates, and
-rejected all 21 negative-input cases per arm/backend. Their maximum measured
-position and rotation errors were `9.95e-8 m` and `9.53e-8 rad`.
+rejected all 22 negative-input cases per arm/backend. Their maximum measured
+position error was below `1e-7 m`, and rotation error below `9.87e-7 rad`.
+Generated APIs rejected all 14 negative-input cases. Both include the empty
+inner-reach-radius target in addition to the existing invalid/unreachable inputs.
 
 ```sh
 python yaik.py marvin validate --samples 1000 --stress-samples 2000 --seed 20261103 \
     --output /tmp/marvin-m6-validation.json
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
     test_cli.py gallery/marvin_m6 solver/test_regressions.py \
-    solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py -q
+    solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
+    solver/test_completeness.py solver/test_linear_circles.py -q
 ```
 
 Use `--python-only` without a C++ toolchain, or `--eigen-dir PATH` to select
@@ -284,6 +298,37 @@ Certified polynomial optimization is another route to per-target optimality or
 infeasibility certificates, rather than a guarantee that every bounded run will
 finish; see [Trutman et al.](https://arxiv.org/abs/2007.12550).
 
+The audit can now verify a **local branch exclusion** using exact rational
+arithmetic. Each modified-DH link translation has norm `sqrt(a_i^2+d_i^2)`.
+For any chosen link i, the reverse triangle inequality gives
+
+```text
+||p|| >= max(|a_i|, |d_i|) - sum(j != i)(|a_j|+|d_j|).
+```
+
+For these arms the positive lower bound is `0.009 m`. The remaining missing
+branch and its ancestors require all three inverse-position components to be
+at most `1e-6 m`, so their norm is at most `sqrt(3)*1e-6 m`, a contradiction.
+The checker rederives this certificate from the model values and actual
+serialized path conjunctions each time; it also checks real rotations and
+exactly rigid auxiliary frames. Geometry and guard edits are rechecked; a branch
+remains unresolved if the contradiction no longer holds. Runtime geometry and
+unverified frames also remain unresolved. The audit records
+this separately in `certified_unreachable_branches`; it does not certify
+floating-point evaluation, every regular/singular chart, or the complete IK.
+
+Critical angular roots use compensated discriminants so near-tangent boundaries
+do not collapse through a rounded `acos` argument. Large angle origins use
+library sine/cosine phase reduction rather than multiplying a huge turn count
+by rounded `2*pi`. These improve the numerical calculation without constituting
+verified interval root isolation.
+
+The generic coupled-circle linear kernel additionally handles four isolated
+roots when the matrix drops to rank two. New exports retain the legacy pair
+alongside those roots, so their node allocation bound is six. This keeps the
+existing tolerance fallback for approximate saved models such as Franka Panda;
+root nodes, empty prefixes, and numerical-visitor guards have separate regressions.
+
 The project currently has no end-to-end completeness certificate. Inspect the
 remaining obligations explicitly:
 
@@ -300,8 +345,9 @@ and exit codes, and adds `reachability: witnessed` for verified solutions or
 is treated as a mathematical infeasibility certificate.
 
 Use `marvin validate --stress-samples N` for N additional deterministic
-reachable witnesses near joint corners, shoulder alignment, and exact/near wrist
-axes. The fixed regression file records the 282 witnesses selected during this
-investigation; targets are rebuilt with independent URDF FK, not stored solver
+reachable witnesses near joint corners, shoulder alignment, exact/near wrist
+axes, repeated elbow roots, simultaneous shoulder/wrist singularities, and
+fixed J5 near ±pi/2. The fixed regression file records 300 witnesses from these
+investigations; targets are rebuilt with independent URDF FK, not stored solver
 output. The native compilation cache uses immutable source snapshots and atomic
 library publication so parallel validators cannot load a partial library.

@@ -3,6 +3,34 @@ import math
 from typing import Tuple, Optional, List
 
 
+def _trig_root_offset(a, b, c):
+    """atan2(sqrt(a*a+b*b-c*c), -c) for scaled finite coefficients.
+
+    acos(-c/hypot(a,b)) can round two distinct near-tangent roots together.
+    Error-free square products and fsum retain the small discriminant instead.
+    The exact equal-magnitude case also avoids underflow of the small square.
+    """
+    if c == 0:
+        return math.pi/2
+    large, small = max(abs(a), abs(b)), min(abs(a), abs(b))
+    if large == abs(c):
+        root = small
+    else:
+        terms = []
+        for value, sign in ((a, 1.), (b, 1.), (c, -1.)):
+            product = value*value
+            split = 134217729.*value
+            high = split-(split-value)
+            low = value-high
+            error = product-high*high
+            error -= low*high
+            error -= high*low
+            error = low*low-error
+            terms.extend((sign*product, sign*error))
+        root = math.sqrt(max(0., math.fsum(terms)))
+    return math.atan2(root, -c)
+
+
 def trig_family_representatives(coefficients, lower, upper, seeds=()):
     """Cover every cell cut by a*cos(t)+b*sin(t)+c=0 on one revolution.
 
@@ -17,6 +45,9 @@ def trig_family_representatives(coefficients, lower, upper, seeds=()):
         raise ValueError('family bounds must span at most one finite revolution')
     points = [lower, upper]
     margin = 64*np.finfo(float).eps*(1+max(abs(lower), abs(upper)))
+    # Multiplying a huge turn count by a rounded 2*pi loses the target phase.
+    # The library sin/cos reduction retains it; only small offsets are added.
+    origin_phase = math.atan2(math.sin(lower), math.cos(lower)) if abs(lower) > period else None
     for a, b, c in coefficients:
         a, b, c = float(a), float(b), float(c)
         if not all(math.isfinite(value) for value in (a, b, c)):
@@ -29,11 +60,15 @@ def trig_family_representatives(coefficients, lower, upper, seeds=()):
         if radius == 0 or abs(c) > radius + 64*np.finfo(float).eps:
             continue
         center = math.atan2(b, a)
-        angle = math.acos(max(-1., min(1., -c/radius)))
+        angle = _trig_root_offset(a, b, c)
         for root in (center-angle, center+angle):
-            first = math.ceil((lower-root)/period)
-            for turns in (first-1, first, first+1):
-                value = root+turns*period
+            if origin_phase is None:
+                first = math.ceil((lower-root)/period)
+                candidates = (root+turns*period for turns in (first-1, first, first+1))
+            else:
+                offset = math.remainder(root-origin_phase, period)
+                candidates = (lower+(offset+turns*period) for turns in (-1, 0, 1))
+            for value in candidates:
                 if lower-margin <= value <= upper+margin:
                     points.append(min(upper, max(lower, value)))
     points = sorted(set(points))
@@ -188,6 +223,68 @@ def compute_solution_from_tanhalf_LME(
 
 
 # For linear solver type2
+def solve_linear_type2_all(matrix):
+    """Return up to four candidate y angles for two coupled unit circles.
+
+    Rows multiply (sin(x), cos(x), sin(y), cos(y)). A rank-two nullspace
+    intersects the equal-circle-norm quadratic in up to two projective lines,
+    each giving an antipodal pair. Rank-three systems give at most one pair.
+    Continuous families receive finite representatives. Numerical rank tests
+    and empty output are not completeness or infeasibility certificates.
+    Legacy two-root helpers below retain their existing APIs.
+    """
+    matrix = np.asarray(matrix, dtype=float)
+    if matrix.ndim != 2 or matrix.shape[1] != 4:
+        raise ValueError('linear type2 requires a matrix with four columns')
+    if not matrix.size or not np.all(np.isfinite(matrix)):
+        return []
+    scale = np.max(np.abs(matrix))
+    if scale == 0:
+        return []
+    try:
+        _, singular, vectors = np.linalg.svd(matrix/scale, full_matrices=len(matrix) < 4)
+    except np.linalg.LinAlgError:
+        return []
+    tolerance = 64*np.finfo(float).eps*max(matrix.shape)*singular[0]
+    if len(singular) < 2 or singular[1] <= tolerance:
+        return []
+    if len(singular) >= 3 and singular[2] > tolerance:
+        if len(singular) >= 4 and singular[3] > 1e-8*singular[0]:
+            return []
+        directions = [vectors[-1]]
+    else:
+        basis = vectors[-2:].T
+        quadratic = basis[:2].T@basis[:2]-basis[2:].T@basis[2:]
+        try:
+            eigenvalues, eigenvectors = np.linalg.eigh(quadratic)
+        except np.linalg.LinAlgError:
+            return []
+        low, high = eigenvalues
+        if low < 0 < high:
+            negative = math.sqrt(high)*eigenvectors[:, 0]
+            positive = math.sqrt(-low)*eigenvectors[:, 1]
+            directions = [basis@(negative+positive), basis@(negative-positive)]
+        elif max(abs(low), abs(high)) <= 64*np.finfo(float).eps:
+            return [0., math.pi]
+        else:
+            zero = int(np.argmin(np.abs(eigenvalues)))
+            if abs(eigenvalues[zero]) > 64*np.finfo(float).eps:
+                return []
+            directions = [basis@eigenvectors[:, zero]]
+    angles = []
+    for direction in directions:
+        if math.hypot(float(direction[2]), float(direction[3])) <= 1e-12:
+            continue
+        angle = math.atan2(float(direction[2]), float(direction[3]))
+        other = angle+math.pi
+        if other > math.pi:
+            other -= 2*math.pi
+        for value in (angle, other):
+            if value not in angles:
+                angles.append(value)
+    return angles
+
+
 def try_solve_linear_type2(A: np.ndarray, allow_family: bool = True) -> Optional[Tuple[float, float]]:
     """
     Solve y from three linear equations in the form
@@ -282,3 +379,30 @@ def try_solve_linear_type2_specific_rows(
     remaining = [i for i in range(len(A_combined)) if i not in best_pair]
     third = max(remaining, key=lambda i: float(residual[i] @ residual[i]))
     return try_solve_linear_type2(A_combined[[best_pair[0], best_pair[1], third]])
+
+
+def solve_linear_type2_candidates(matrix, rows_to_try=()):
+    """Preserve the legacy pair and add up to four coupled-circle candidates.
+
+    Approximate legacy models can have a full-rank matrix within the public
+    FK tolerance. Their existing row-selection fallback must remain available.
+    Exact equality is the only deduplication here, preserving nearby branches.
+    """
+    matrix = np.asarray(matrix, dtype=float)
+    conic = solve_linear_type2_all(matrix)
+    if not matrix.size or not np.all(np.isfinite(matrix)):
+        return []
+    scale = np.max(np.abs(matrix))
+    if scale == 0:
+        return []
+    legacy_matrix = matrix/scale if scale < 1e-100 or scale > 1e100 else matrix
+    angles = []
+    for rows in rows_to_try:
+        pair = try_solve_linear_type2_specific_rows(legacy_matrix, *rows)
+        if pair is not None:
+            angles.extend(value for value in pair if math.isfinite(value))
+            break
+    for value in conic:
+        if value not in angles:
+            angles.append(value)
+    return angles

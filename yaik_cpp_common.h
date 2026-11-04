@@ -44,6 +44,40 @@ bool snapNearJointLimits(const std::array<double, N>& source, std::array<double,
   return changed;
 }
 
+// Compensated square products keep distinct near-tangent roots from collapsing
+// through a rounded acos argument. Inputs have already been scaled to [-1,1].
+inline double trigRootOffset(double a, double b, double c) {
+  if (c == 0) return 1.57079632679489661923;
+  const double large = std::max(std::abs(a), std::abs(b));
+  const double small = std::min(std::abs(a), std::abs(b));
+  double root;
+  if (large == std::abs(c)) {
+    root = small;  // Also avoid underflow in small*small.
+  } else {
+    std::array<double, 6> partials{};
+    std::size_t count = 0;
+    for (const auto& term : std::array<std::array<double, 2>, 3>{{{{a, 1}}, {{b, 1}}, {{c, -1}}}}) {
+      const double square = term[0]*term[0];
+      for (double value : {term[1]*square, term[1]*std::fma(term[0], term[0], -square)}) {
+        std::size_t kept = 0;
+        for (std::size_t i = 0; i < count; ++i) {
+          double previous = partials[i];
+          if (std::abs(value) < std::abs(previous)) std::swap(value, previous);
+          const double high = value+previous, low = previous-(high-value);
+          if (low != 0) partials[kept++] = low;
+          value = high;
+        }
+        partials[kept++] = value;
+        count = kept;
+      }
+    }
+    double discriminant = 0;
+    while (count) discriminant += partials[--count];
+    root = std::sqrt(std::max(0.0, discriminant));
+  }
+  return std::atan2(root, -c);
+}
+
 // Analytic cuts of a one-dimensional angular family, followed by one midpoint
 // per open cell. Preserve distinct nearby cuts; feasible intervals may be tiny.
 inline std::vector<double> trigFamilyRepresentatives(
@@ -54,6 +88,8 @@ inline std::vector<double> trigFamilyRepresentatives(
     throw std::invalid_argument("family bounds must span at most one finite revolution");
   const double epsilon = 64*std::numeric_limits<double>::epsilon();
   const double margin = epsilon*(1+std::max(std::abs(lower), std::abs(upper)));
+  const bool shifted = std::abs(lower) > period;
+  const double origin_phase = shifted ? std::atan2(std::sin(lower), std::cos(lower)) : 0;
   std::vector<double> points{lower, upper};
   for (const auto& row : coefficients) {
     double a = row[0], b = row[1], c = row[2];
@@ -64,11 +100,12 @@ inline std::vector<double> trigFamilyRepresentatives(
     const double radius = std::hypot(a, b);
     if (radius == 0 || std::abs(c) > radius+epsilon) continue;
     const double center = std::atan2(b, a);
-    const double angle = std::acos(std::max(-1.0, std::min(1.0, -c/radius)));
+    const double angle = trigRootOffset(a, b, c);
     for (double root : {center-angle, center+angle}) {
-      const double first = std::ceil((lower-root)/period);
+      const double first = shifted ? 0 : std::ceil((lower-root)/period);
+      const double relative = shifted ? std::remainder(root-origin_phase, period) : 0;
       for (int offset : {-1, 0, 1}) {
-        const double value = root+(first+offset)*period;
+        const double value = shifted ? lower+(relative+offset*period) : root+(first+offset)*period;
         if (value >= lower-margin && value <= upper+margin)
           points.push_back(std::max(lower, std::min(upper, value)));
       }
@@ -229,6 +266,34 @@ std::vector<int> jointLimitClasses(const std::vector<std::array<double, N>>& can
     result.push_back(bounded ? 1 : 0);
   }
   return result;
+}
+
+// A coarse FK-accepted candidate must not erase a nearby strict-pose witness.
+// Keep both feasibility and pose-quality classes; the legacy acceptance
+// thresholds and candidate ordering remain unchanged.
+template <int N, typename FK>
+std::vector<int> ikCandidateClasses(const std::vector<std::array<double, N>>& candidates,
+                                  const std::array<double, N>& lower,
+                                  const std::array<double, N>& upper,
+                                  const std::array<bool, N>& periodic,
+                                  FK&& fk, const Eigen::Matrix4d& target,
+                                  double position_tolerance = 1e-7,
+                                  double rotation_tolerance = 1e-6) {
+  auto classes = jointLimitClasses<N>(candidates, lower, upper, periodic);
+  for (std::size_t i = 0; i < candidates.size(); ++i) {
+    classes[i] *= 2;
+    const Eigen::Matrix4d actual = fk(candidates[i]);
+    if (!actual.allFinite() || !target.allFinite() ||
+        actual.template block<3, 3>(0, 0).cwiseAbs().maxCoeff() > 2 ||
+        target.template block<3, 3>(0, 0).cwiseAbs().maxCoeff() > 2) continue;
+    if ((actual.template block<3, 1>(0, 3)-target.template block<3, 1>(0, 3)).norm() > position_tolerance)
+      continue;
+    const Eigen::Matrix3d delta = actual.template block<3, 3>(0, 0)*target.template block<3, 3>(0, 0).transpose();
+    const Eigen::Vector3d skew(delta(2, 1)-delta(1, 2), delta(0, 2)-delta(2, 0), delta(1, 0)-delta(0, 1));
+    const double angle = std::atan2(.5*skew.norm(), .5*(delta.trace()-1));
+    if (angle <= rotation_tolerance) ++classes[i];
+  }
+  return classes;
 }
 
 template <int N>
@@ -509,6 +574,79 @@ bool trySolveLinearType2SpecificRows(
   if (best_k < 0) return false;
   A_for_given_row.row(2) = A.row(best_k);
   return trySolveLinearType2<double>(A_for_given_row, solution_0, solution_1);
+}
+
+// Up to four candidates from the intersection of a rank-two nullspace with
+// ||(sin x, cos x)||^2 = ||(sin y, cos y)||^2. Families use representatives;
+// numerical rank/empty results are not exact completeness certificates.
+template <int n_rows>
+std::vector<double> solveLinearType2All(
+    const Eigen::Ref<const Eigen::Matrix<double, n_rows, 4>>& A) {
+  std::vector<double> angles;
+  if (!A.allFinite()) return angles;
+  const double scale = A.cwiseAbs().maxCoeff();
+  if (!(scale > 0)) return angles;
+  const Eigen::Matrix<double, n_rows, 4> normalized = A/scale;
+  Eigen::JacobiSVD<Eigen::Matrix<double, n_rows, 4>> svd(normalized, Eigen::ComputeFullV);
+  const auto& singular = svd.singularValues();
+  const double epsilon = 64*std::numeric_limits<double>::epsilon();
+  const double tolerance = epsilon*std::max(n_rows, 4)*singular[0];
+  if (singular.size() < 2 || singular[1] <= tolerance) return angles;
+  std::vector<Eigen::Vector4d> directions;
+  if (singular.size() >= 3 && singular[2] > tolerance) {
+    if (singular.size() >= 4 && singular[3] > 1e-8*singular[0]) return angles;
+    directions.push_back(svd.matrixV().col(3));
+  } else {
+    const Eigen::Matrix<double, 4, 2> basis = svd.matrixV().template rightCols<2>();
+    const Eigen::Matrix2d quadratic = basis.template topRows<2>().transpose()*basis.template topRows<2>()-
+        basis.template bottomRows<2>().transpose()*basis.template bottomRows<2>();
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> eigen(quadratic);
+    if (eigen.info() != Eigen::Success) return angles;
+    const double low = eigen.eigenvalues()[0], high = eigen.eigenvalues()[1];
+    if (low < 0 && high > 0) {
+      const Eigen::Vector2d negative = std::sqrt(high)*eigen.eigenvectors().col(0);
+      const Eigen::Vector2d positive = std::sqrt(-low)*eigen.eigenvectors().col(1);
+      directions.push_back(basis*(negative+positive));
+      directions.push_back(basis*(negative-positive));
+    } else if (std::max(std::abs(low), std::abs(high)) <= epsilon) {
+      return {0.0, M_PI};
+    } else {
+      const int zero = std::abs(low) < std::abs(high) ? 0 : 1;
+      if (std::abs(eigen.eigenvalues()[zero]) > epsilon) return angles;
+      directions.push_back(basis*eigen.eigenvectors().col(zero));
+    }
+  }
+  for (const auto& direction : directions) {
+    if (direction.template tail<2>().norm() <= 1e-12) continue;
+    const double angle = std::atan2(direction[2], direction[3]);
+    double other = angle+M_PI;
+    if (other > M_PI) other -= 2*M_PI;
+    for (double value : {angle, other})
+      if (std::find(angles.begin(), angles.end(), value) == angles.end()) angles.push_back(value);
+  }
+  return angles;
+}
+
+template <int n_rows>
+std::vector<double> solveLinearType2Candidates(
+    const Eigen::Ref<const Eigen::Matrix<double, n_rows, 4>>& A,
+    const std::vector<std::array<int, 3>>& rows_to_try = {}) {
+  std::vector<double> angles;
+  if (!A.allFinite()) return angles;
+  const double scale = A.cwiseAbs().maxCoeff();
+  if (!(scale > 0)) return angles;
+  Eigen::Matrix<double, n_rows, 4> legacy = A;
+  if (scale < 1e-100 || scale > 1e100) legacy /= scale;
+  for (const auto& rows : rows_to_try) {
+    double first, second;
+    if (trySolveLinearType2SpecificRows<n_rows>(legacy, rows[0], rows[1], rows[2], first, second)) {
+      for (double value : {first, second}) if (std::isfinite(value)) angles.push_back(value);
+      break;
+    }
+  }
+  for (double value : solveLinearType2All<n_rows>(A))
+    if (std::find(angles.begin(), angles.end(), value) == angles.end()) angles.push_back(value);
+  return angles;
 }
 
 }  // namespace linear_solver

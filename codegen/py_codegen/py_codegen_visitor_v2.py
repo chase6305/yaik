@@ -439,8 +439,9 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
             self.add_code_line(f'add_input_index_to({output}, candidate_index)')
         self.exit_scope('family_candidate')
         if not root:
-            self.add_code_line('if not family_values:')
-            self.add_code_line(indent() + 'queue_element_validity[queue_index] = False')
+            if not candidate_is_complete(self._tree, node):
+                self.add_code_line('if not family_values:')
+                self.add_code_line(indent() + 'queue_element_validity[queue_index] = False')
             self.exit_scope('family_prefix')
 
     def _visit_explicit_solution_node_root(self, solution_node: ExplicitSolutionNode):
@@ -667,10 +668,7 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         self._generate_processor_function_define(solution_node, input_idx)
         assert self.indent_level == 1
 
-        if solution_node.is_parent_root_dispatcher():
-            pass
-        else:
-            self._visit_linear_type2_solution_non_root(solution_node)
+        self._visit_linear_type2_solution_values(solution_node)
 
         # Generation done for this node
         self.exit_scope(None)
@@ -681,93 +679,51 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         self.add_code_line('# Finish code for explicit solution node {idx}'.format(idx=input_idx))
         assert self.indent_level == 0
 
-    def _visit_linear_type2_solution_non_root(self, solution_node: LinearSinCosType_2_SolverNode):
-        assert self.indent_level == 1
-        assert solution_node.solution.impl_class_key == VariableSolutionClassKey.LinearSinCosType_2.name
-        output_idx = None if solution_node.children[0] is None else solution_node.children[0].flatten_idx
-
-        # Gather information
-        solution = solution_node.solution
-        solved_var = solution.solved_variable
-        solved_var_idx = self._symbol_to_index[solved_var]
-        A_matrix: sp.Matrix = solution_node.A_matrix
-        rows_to_try = solution_node.rows_to_try
-
-        # Gather the flat matrix
-        A_matrix_flat_expr: List[sp.Expr] = list()
-        assert A_matrix.cols == 4
-        for r in range(A_matrix.rows):
-            for c in range(A_matrix.cols):
-                rc_expr: sp.Expr = A_matrix[r, c]
-                A_matrix_flat_expr.append(rc_expr)
-
-        # Do cse for solution/checker
-        solution_replacements, reduced_A_matrix_flat = sp.cse(A_matrix_flat_expr)
-        # All variables
-        solution_name = 'this_solution'
-        requested_vars = self.gather_request_solved_variables(A_matrix_flat_expr, solution_node)
-        var_extract_lines = self.extract_solved_variable_codes(requested_vars, solution_name=solution_name)
-
-        # The codegen
-        self.add_code_line('')
-        self.add_code_line('for i in range(len(this_node_input_index)):')
-        self.enter_scope('for_each_solution')
-        self.add_code_line('node_input_i_idx_in_queue = this_node_input_index[i]')
-        # Check the validity of this solution
-        self.add_code_line('if not queue_element_validity[node_input_i_idx_in_queue]:')
-        self.add_code_line(indent() + 'continue')
-        self.add_code_line('{sol_name} = solution_queue[node_input_i_idx_in_queue]'.format(sol_name=solution_name))
-        for this_line in var_extract_lines:
-            self.add_code_line(this_line)
-
-        # The replacement code, we can only place it here as it may contain dangerous code
-        self.add_code_line('# Temp variable for efficiency')
-        for k in range(len(solution_replacements)):
-            symbol_k, expr_k = solution_replacements[k]
-            expr_code = self.generate_py_code(expr_k)
-            self.add_code_line('{var} = {expr_code}'.format(var=str(symbol_k), expr_code=expr_code))
-        self.add_code_line('# End of temp variables')
-
-        # Generate the matrix code
-        self.add_code_line('A_matrix = np.zeros(shape=({rows}, 4))'.format(rows=A_matrix.rows))
-        offset = 0
-        for r in range(A_matrix.rows):
-            for c in range(A_matrix.cols):
-                rc_expr: sp.Expr = reduced_A_matrix_flat[offset]
-                if rc_expr != sp.S.Zero:
-                    rc_expr_code = self.generate_py_code(rc_expr)
-                    self.add_code_line(f'A_matrix[{r}, {c}] = {rc_expr_code}')
-                offset += 1
-
-        # For each rows
-        for i in range(len(rows_to_try)):
-            rows_i = rows_to_try[i]
-            r0, r1, r2 = rows_i
-            self.add_code_line(f'solution_tuple_{i} = try_solve_linear_type2_specific_rows(A_matrix, {r0}, {r1}, {r2})')
-            self.add_code_line(f'if solution_tuple_{i} is not None:')
-            self.enter_scope('if_valid_solution')
-            # The first solution
-            self.add_code_line('solution_0: IkSolution = copy.copy({sol_name})'.
-                               format(sol_name=solution_name))
-            self.add_code_line('solution_0[{var_idx}] = solution_tuple_{i}[0]'.
-                               format(var_idx=solved_var_idx, i=i))
-            self.add_code_line('appended_idx = append_solution_to_queue(solution_0)')
-            if output_idx is not None:
-                self.add_code_line('add_input_index_to({node_idx}, appended_idx)'.format(node_idx=output_idx))
-            self.add_code_line('')
-            # The second solution
-            self.add_code_line('{sol_name}[{var_idx}] = solution_tuple_{i}[1]'.
-                               format(sol_name=solution_name, var_idx=solved_var_idx, i=i))
-            self.add_code_line('solution_queue[node_input_i_idx_in_queue] = {sol_name}'.
-                               format(sol_name=solution_name))
-            if output_idx is not None:
-                self.add_code_line(
-                    'add_input_index_to({node_idx}, node_input_i_idx_in_queue)'.format(node_idx=output_idx))
-            self.add_code_line('continue')
-            self.add_code_line('')
-            self.exit_scope('if_valid_solution')
-
-        self.exit_scope('for_each_solution')
+    def _visit_linear_type2_solution_values(self, node):
+        root = node.is_parent_root_dispatcher()
+        output = None if node.dispatcher_child is None else node.dispatcher_child.flatten_idx
+        variable = self._symbol_to_index[node.solved_variable]
+        matrix = node.A_matrix
+        expressions = list(matrix)
+        requested = self.gather_request_solved_variables(expressions, node)
+        if not root:
+            self.add_code_line('for queue_index in this_node_input_index:')
+            self.enter_scope('linear_prefix')
+            self.add_code_line('if not queue_element_validity[queue_index]:')
+            self.add_code_line(indent() + 'continue')
+            self.add_code_line('this_solution = solution_queue[queue_index]')
+            for line in self.extract_solved_variable_codes(requested):
+                self.add_code_line(line)
+        replacements, reduced = sp.cse(expressions)
+        for symbol, expression in replacements:
+            self.add_code_line(f'{symbol} = {self.generate_py_code(expression)}')
+        self.add_code_line(f'A_matrix = np.zeros(({matrix.rows}, 4))')
+        for index, expression in enumerate(reduced):
+            if expression != sp.S.Zero:
+                self.add_code_line(f'A_matrix[{index//4}, {index%4}] = {self.generate_py_code(expression)}')
+        self.add_code_line(f'linear_values = solve_linear_type2_candidates(A_matrix, {node.rows_to_try!r})')
+        self.add_code_line('for linear_index, linear_value in enumerate(linear_values):')
+        self.enter_scope('linear_candidate')
+        self.add_code_line('candidate = make_ik_solution()' if root else 'candidate = copy.copy(this_solution)')
+        self.add_code_line(f'candidate[{variable}] = linear_value')
+        if root:
+            self.add_code_line('candidate_index = append_solution_to_queue(candidate)')
+        else:
+            self.add_code_line('if linear_index+1 == len(linear_values):')
+            self.enter_scope('linear_reuse')
+            self.add_code_line('solution_queue[queue_index] = candidate')
+            self.add_code_line('candidate_index = queue_index')
+            self.exit_scope('linear_reuse')
+            self.add_code_line('else:')
+            self.add_code_line(indent() + 'candidate_index = append_solution_to_queue(candidate)')
+        if output is not None:
+            self.add_code_line(f'add_input_index_to({output}, candidate_index)')
+        self.exit_scope('linear_candidate')
+        if not root:
+            if not candidate_is_complete(self._tree, node):
+                self.add_code_line('if not linear_values:')
+                self.add_code_line(indent() + 'queue_element_validity[queue_index] = False')
+            self.exit_scope('linear_prefix')
 
     def visit_general_6dof_numerical_reduce_node(self, solution_node: General6DoFNumericalReduceSolutionNode):
         # The shared parts

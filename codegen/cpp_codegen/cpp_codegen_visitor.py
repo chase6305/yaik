@@ -416,7 +416,8 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
             self.add_code_line(f'add_input_index_to({output}, candidate_index);')
         self.exit_scope('family_candidate')
         if not root:
-            self.add_code_line('if (family_values.empty()) solution_queue.solutions_validity[queue_index] = false;')
+            if not candidate_is_complete(self._tree, node):
+                self.add_code_line('if (family_values.empty()) solution_queue.solutions_validity[queue_index] = false;')
             self.exit_scope('family_prefix')
 
     def _visit_explicit_solution_node_root(self, solution_node: ExplicitSolutionNode):
@@ -644,10 +645,7 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         self._generate_processor_function_define(solution_node, input_idx)
         assert self._scope_manager.indent_level == 1
 
-        if solution_node.is_parent_root_dispatcher():
-            raise NotImplementedError
-        else:
-            self._visit_linear_type2_solution_non_root(solution_node)
+        self._visit_linear_type2_solution_values(solution_node)
 
         # Generation done for this node
         self.exit_scope(None, True)
@@ -658,102 +656,53 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         self.add_code_line('// Finish code for general_6dof solution node {idx}'.format(idx=input_idx))
         assert self.indent_level == 0
 
-    def _visit_linear_type2_solution_non_root(self, solution_node: LinearSinCosType_2_SolverNode):
-        assert self.indent_level == 1
-        output_idx = None if solution_node.children[0] is None else solution_node.children[0].flatten_idx
-        self.add_code_line('')
-        self.add_code_line('// The solution of non-root node {idx}'.format(idx=solution_node.flatten_idx))
-        solution = solution_node.solution
-        solved_var = solution.solved_variable
-        solved_var_idx = self._symbol_to_index[solved_var]
-
-        # Gather information
-        solution = solution_node.solution
-        solved_var = solution.solved_variable
-        solved_var_idx = self._symbol_to_index[solved_var]
-        A_matrix: sp.Matrix = solution_node.A_matrix
-        rows_to_try = solution_node.rows_to_try
-
-        # Gather the flat matrix
-        A_matrix_flat_expr: List[sp.Expr] = list()
-        assert A_matrix.cols == 4
-        for r in range(A_matrix.rows):
-            for c in range(A_matrix.cols):
-                rc_expr: sp.Expr = A_matrix[r, c]
-                A_matrix_flat_expr.append(rc_expr)
-
-        # Do cse for solution/checker
-        solution_replacements, reduced_A_matrix_flat = sp.cse(A_matrix_flat_expr)
-
-        # All variables
-        solution_name = 'this_solution'
-        requested_vars = self.gather_request_solved_variables(A_matrix_flat_expr, solution_node)
-        var_extract_lines = self.extract_solved_variable_codes(requested_vars, solution_name=solution_name)
-
-        # The codegen
-        self.add_code_line('for(int i = 0; i < this_node_input_index.size(); i++)')
-        self.enter_scope('for_i')
-        self.add_code_line('int node_input_i_idx_in_queue = this_node_input_index[i];')
-        self.add_code_line('if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))')
-        self.add_code_line(indent() + 'continue;')
-        self.add_code_line('const auto& {sol_name} = solution_queue.get_solution(node_input_i_idx_in_queue);'.format(
-            sol_name=solution_name))
-        for this_line in var_extract_lines:
-            self.add_code_line(this_line)
-
-        # The replacement code, we can only place it here as it may contain dangerous code
-        self.add_code_line('// Temp variable for efficiency')
-        for k in range(len(solution_replacements)):
-            symbol_k, expr_k = solution_replacements[k]
-            expr_code = self.generate_cxx_code(expr_k)
-            self.add_code_line('const double {var} = {expr_code};'.format(var=str(symbol_k), expr_code=expr_code))
-        self.add_code_line('// End of temp variables')
-
-        # The matrix
-        self.add_code_line('Eigen::Matrix<double, {rows}, 4> A_matrix;'.format(rows=A_matrix.rows))
+    def _visit_linear_type2_solution_values(self, node):
+        root = node.is_parent_root_dispatcher()
+        output = None if node.dispatcher_child is None else node.dispatcher_child.flatten_idx
+        variable = self._symbol_to_index[node.solved_variable]
+        matrix = node.A_matrix
+        expressions = list(matrix)
+        requested = self.gather_request_solved_variables(expressions, node)
+        if not root:
+            self.add_code_line('for (int linear_prefix = 0; linear_prefix < this_node_input_index.size(); ++linear_prefix)')
+            self.enter_scope('linear_prefix')
+            self.add_code_line('const int queue_index = this_node_input_index[linear_prefix];')
+            self.add_code_line('if (!solution_queue.is_solution_valid(queue_index)) continue;')
+            self.add_code_line('const auto& this_solution = solution_queue.get_solution(queue_index);')
+            for line in self.extract_solved_variable_codes(requested):
+                self.add_code_line(line)
+        replacements, reduced = sp.cse(expressions)
+        for symbol, expression in replacements:
+            self.add_code_line(f'const double {symbol} = {self.generate_cxx_code(expression)};')
+        self.add_code_line(f'Eigen::Matrix<double, {matrix.rows}, 4> A_matrix;')
         self.add_code_line('A_matrix.setZero();')
-        offset = 0
-        for r in range(A_matrix.rows):
-            for c in range(A_matrix.cols):
-                rc_expr: sp.Expr = reduced_A_matrix_flat[offset]
-                if rc_expr != sp.S.Zero:
-                    rc_expr_code = self.generate_cxx_code(rc_expr)
-                    self.add_code_line(f'A_matrix({r}, {c}) = {rc_expr_code};')
-                offset += 1
-
-        # The solve process
-        self.add_code_line('// Code for solving')
-        for j in range(len(rows_to_try)):
-            rows_j = rows_to_try[j]
-            r0, r1, r2 = rows_j
-            self.enter_scope('case_j')
-            self.add_code_line('// Local variable for solving')
-            self.add_code_line('double var_solution_0 = 0.0;')
-            self.add_code_line('double var_solution_1 = 0.0;')
-            self.add_code_line(f'bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<{A_matrix.rows}>(A_matrix, {r0}, {r1}, {r2}, var_solution_0, var_solution_1);')
-
-            # If solution ok
-            self.add_code_line('if(solved)')
-            self.enter_scope('if_solved')
-            # The first candidate solution
-            self.add_code_line('RawSolution solution_0({sol_name});'.format(sol_name=solution_name))
-            self.add_code_line('solution_0[{var_idx}] = var_solution_0;'.format(var_idx=solved_var_idx))
-            self.add_code_line('int appended_idx = append_solution_to_queue(solution_0);')
-            if output_idx is not None:
-                self.add_code_line('add_input_index_to({node_idx}, appended_idx);'.format(node_idx=output_idx))
-
-            # The second candidate solution
-            self.add_code_line('solution_queue.get_solution(node_input_i_idx_in_queue)[{var_idx}] = var_solution_1;'.
-                               format(var_idx=solved_var_idx))
-            if output_idx is not None:
-                self.add_code_line('add_input_index_to({node_idx}, node_input_i_idx_in_queue);'.
-                                   format(node_idx=output_idx))
-
-            # Note the 'continue' here
-            self.add_code_line('continue;')
-            self.exit_scope('if_solved')
-            self.exit_scope('case_j')
-        self.exit_scope('for_i')
+        for index, expression in enumerate(reduced):
+            if expression != sp.S.Zero:
+                self.add_code_line(f'A_matrix({index//4}, {index%4}) = {self.generate_cxx_code(expression)};')
+        rows = ', '.join('{{' + ', '.join(map(str, row)) + '}}' for row in node.rows_to_try)
+        self.add_code_line(f'const auto linear_values = ::yaik_cpp::linear_solver::solveLinearType2Candidates<{matrix.rows}>(A_matrix, '
+                           + '{' + rows + '});')
+        self.add_code_line('for (std::size_t linear_index = 0; linear_index < linear_values.size(); ++linear_index)')
+        self.enter_scope('linear_candidate')
+        self.add_code_line('auto candidate = make_raw_solution();' if root else 'auto candidate = this_solution;')
+        self.add_code_line(f'candidate[{variable}] = linear_values[linear_index];')
+        if root:
+            self.add_code_line('const int candidate_index = append_solution_to_queue(candidate);')
+        else:
+            self.add_code_line('int candidate_index;')
+            self.add_code_line('if (linear_index+1 == linear_values.size())')
+            self.enter_scope('linear_reuse')
+            self.add_code_line('solution_queue.get_solution(queue_index) = candidate;')
+            self.add_code_line('candidate_index = queue_index;')
+            self.exit_scope('linear_reuse')
+            self.add_code_line('else candidate_index = append_solution_to_queue(candidate);')
+        if output is not None:
+            self.add_code_line(f'add_input_index_to({output}, candidate_index);')
+        self.exit_scope('linear_candidate')
+        if not root:
+            if not candidate_is_complete(self._tree, node):
+                self.add_code_line('if (linear_values.empty()) solution_queue.solutions_validity[queue_index] = false;')
+            self.exit_scope('linear_prefix')
 
     def visit_general_6dof_numerical_reduce_node(self, solution_node: General6DoFNumericalReduceSolutionNode):
         # The shared parts

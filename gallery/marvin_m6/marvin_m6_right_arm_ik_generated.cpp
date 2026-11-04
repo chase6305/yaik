@@ -2601,7 +2601,7 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_4, RawIKWorksace& w
 
     if (!ik_output.empty())
     {
-        removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, jointLimitClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints()));
+        removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, ikCandidateClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints(), [&](const std::array<double, robot_nq>& candidate) { return computeFK(candidate); }, T_ee));
         return;
     }
 
@@ -2635,7 +2635,7 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_4, RawIKWorksace& w
             ik_output.push_back(ik_out_i);
     }
 
-    removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, jointLimitClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints()));
+    removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, ikCandidateClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints(), [&](const std::array<double, robot_nq>& candidate) { return computeFK(candidate); }, T_ee));
 }
 
 static std::vector<std::array<double, robot_nq>> computeIK(const Eigen::Matrix4d& T_ee, double th_4)

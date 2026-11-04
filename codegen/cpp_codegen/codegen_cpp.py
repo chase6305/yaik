@@ -685,10 +685,13 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # We have solutions here
         self.add_empty_line()
+        classify_candidates = ('ikCandidateClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints(), '
+                               '[&](const std::array<double, robot_nq>& candidate) { return '
+                               + fk_func_name + fk_args_call.replace('ik_out_i', 'candidate') + '; }, T_ee)')
         self.add_code_line('if (!ik_output.empty())')
         self.enter_scope('if_valid_solution')
         self.add_code_line('removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, '
-                           'jointLimitClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints()));')
+                           + classify_candidates + ');')
         self.add_code_line('return;')
         self.exit_scope('if_valid_solution')
 
@@ -755,7 +758,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         # De-duplicate and end the function
         self.add_empty_line()
         self.add_code_line('removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, '
-                           'jointLimitClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints()));')
+                           + classify_candidates + ');')
         self.exit_scope('checked_ik')
 
     def _generate_handy_ik(self):

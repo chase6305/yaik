@@ -10,6 +10,7 @@ from typing import Dict, Optional, List, Tuple, Set
 import sympy as sp
 import numpy as np
 import attr
+from python_run_import import solve_linear_type2_all
 
 
 @attr.s
@@ -101,12 +102,12 @@ def verify_linear_coefficient_as_solution(
         A_np = np.array(A_value).astype(np.float64)
         y_solution_tuple = try_solve_linear_type2(A_np)
         if y_solution_tuple is None:
-            continue
+            y_solution_tuple = solve_linear_type2_all(A_np)
 
         y_solved = False
         tolerance = 1e-3
-        for j in range(2):
-            if abs(y_solution_tuple[j] - y_value) < tolerance:
+        for value in y_solution_tuple:
+            if np.hypot(np.sin(value)-np.sin(y_value), np.cos(value)-np.cos(y_value)) < tolerance:
                 y_solved = True
                 break
         if y_solved:
