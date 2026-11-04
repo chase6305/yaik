@@ -346,11 +346,12 @@ class VisitorNumericalSolution(SkeletonNodeVisitor):
         """
         In root, invalid is different from input empty. This dispatcher can only have one validity
         """
-        assert dispatcher.is_root
+        assert not dispatcher.has_solution_ancestor
         flatten_dix = dispatcher.flatten_idx
-        assert flatten_dix == 0
         assert len(self._node_inputs[flatten_dix]) == 0
-        assert self._input_validity[flatten_dix]
+        if not self._input_validity[flatten_dix]:
+            self.assign_invalid_to_children(dispatcher)
+            return
         checker = dispatcher.degenerate_checker
         checker_with_parameter = checker.subs(self._parameter_values)
         if checker_with_parameter == sp.S.BooleanTrue:
@@ -410,7 +411,7 @@ class VisitorNumericalSolution(SkeletonNodeVisitor):
         Just according to whether dispatcher is root
         """
         assert len(dispatcher.children) == 2
-        if dispatcher.is_root:
+        if not dispatcher.has_solution_ancestor:
             self.visit_equation_all_zero_dispatcher_root(dispatcher)
         else:
             self.visit_equation_all_zero_dispatcher_non_root(dispatcher)
@@ -420,19 +421,20 @@ class VisitorNumericalSolution(SkeletonNodeVisitor):
         In this case, the variable solution degenerate record means a PARAMETER (not unknown)
         equals a given value. Only one child can be valid.
         """
-        assert dispatcher.is_root
-        assert dispatcher.flatten_idx == 0
+        assert not dispatcher.has_solution_ancestor
+        if not self._input_validity[dispatcher.flatten_idx]:
+            self.assign_invalid_to_children(dispatcher)
+            return
         taken_by_degenerate = False
         for i in range(len(dispatcher.branch_conditions)):
             condition_i = dispatcher.branch_conditions[i]
             condition_i = condition_i.subs(self._parameter_values)
             if condition_i == sp.S.BooleanTrue:
+                taken_by_degenerate = True
                 # Here the condition for a degenerate child is invoked
                 if dispatcher.degenerate_branch_child(i) is not None:
                     degenerate_child_idx = dispatcher.degenerate_branch_child(i).flatten_idx
                     self._input_validity[degenerate_child_idx] = True
-                    taken_by_degenerate = True
-                    break
 
         # Goes to non-degenerate
         if not taken_by_degenerate:
@@ -495,7 +497,7 @@ class VisitorNumericalSolution(SkeletonNodeVisitor):
         Just according to whether dispatcher is root
         """
         assert len(dispatcher.children) == len(dispatcher.branch_conditions) + 1
-        if dispatcher.is_root:
+        if not dispatcher.has_solution_ancestor:
             self.visit_solved_variable_dispatcher_root(dispatcher)
         else:
             self.visit_solved_variable_dispatcher_non_root(dispatcher)

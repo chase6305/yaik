@@ -64,6 +64,15 @@ class SkeletonTreeNode(object):
         return self.parent is None
 
     @property
+    def has_solution_ancestor(self):
+        parent = self.parent
+        while parent is not None:
+            if parent.is_solution_node:
+                return True
+            parent = parent.parent
+        return False
+
+    @property
     def children(self):
         return self._children
 
@@ -314,7 +323,7 @@ class SolutionNodeBase(SkeletonTreeNode, ABC):
 
     def is_parent_root_dispatcher(self) -> bool:
         assert self.parent is not None
-        return self.parent.is_root
+        return not self.has_solution_ancestor
 
 
 class ExplicitSolutionNode(SolutionNodeBase):

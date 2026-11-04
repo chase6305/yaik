@@ -39,6 +39,7 @@ class CodeGenerationBase(object):
         if self.unhandled_degenerate_branches:
             print('Generation coverage for {name}: {count} unimplemented degenerate branches.'.format(
                 name=tree.robot.name, count=len(self.unhandled_degenerate_branches)))
+        self.queue_capacity_bound = queue_capacity_bound(tree.root)
 
     @property
     def skeleton_tree(self) -> SkeletonTree:
@@ -108,6 +109,26 @@ def candidate_is_complete(tree, node):
     solved = {solution.solved_variable for solution in
               tree.variable_solutions_from_root(node, include_current_node=False)}
     return required <= solved
+
+
+def queue_capacity_bound(node, has_prefix=False):
+    """Bound all queue allocations, including invalid prefixes that retain slots.
+
+    Coefficient-zero branches are exclusive. Variable-value conditions can
+    overlap, in which case every implemented child needs an independent prefix.
+    """
+    if node is None:
+        return 0
+    if node.is_solution_node:
+        roots = node.solution.num_solutions()
+        allocated = max(0, roots-1) if has_prefix else roots
+        return allocated + roots*queue_capacity_bound(node.dispatcher_child, True)
+    costs = [queue_capacity_bound(child, has_prefix) for child in node.children]
+    if isinstance(node, SolvedVariableDispatcherNode):
+        count = sum(child is not None for child in node.children[1:])
+        copies = max(0, count-1) if has_prefix else 0
+        return max(costs[0], copies + sum(costs[1:]))
+    return max(costs, default=0)
 
 
 def cse_by_condition(expressions, conditions):

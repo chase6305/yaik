@@ -132,12 +132,18 @@ python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma
 标准 `*_ik_generated` 接口保留原先的较宽矩阵误差阈值和无关节限位过滤行为，
 奇异覆盖率与带限位接口分开统计。
 
+通用生成器现在补全“方程系数同时为零”的退化分支：从完整 FK 方程重新选择
+解析公式；较大的退化系统还会在一个旋转关节范围内枚举 33 个代表值，再由生成接口
+进行 FK 校验。左右臂保存的解树和生成的 Python/C++ 文件均包含这些分支。
+连续解族仍采用有限代表值，不能据此保证全工作空间完备性。
+
 ## 验证
 
 ```sh
 python -m pip install pytest
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
-  test_cli.py gallery/marvin_m6 solver/test_regressions.py -q
+  test_cli.py gallery/marvin_m6 solver/test_regressions.py \
+  solver/test_codegen_safety.py solver/test_equation_branches.py -q
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
   --output build/marvin-validation.json
@@ -145,5 +151,6 @@ python yaik.py marvin validate --samples 1000 --seed 20261103 \
 
 没有 C++ 工具链时加 `--python-only`；Eigen 位于其他位置时指定 `--eigen-dir`。
 验证直接解析 URDF 计算 FK，检查每个返回解，并分别记录标准生成接口和带限位接口。
-退出状态要求带限位接口和所有 FK 实现通过检查；JSON 报告记录输入哈希、种子、
+退出状态要求生成接口和带限位接口对每个已知可达目标均保留至少一个满足严格 FK、
+关节限位和固定 J5 的解，并通过各自的负例检查及全部 FK 检查。JSON 报告记录输入哈希、种子、
 失败案例和误差上限。左右臂的带限位 C++ 接口复用一次编译。

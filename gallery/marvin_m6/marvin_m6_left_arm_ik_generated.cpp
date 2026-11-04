@@ -6,8 +6,8 @@ struct marvin_m6_left_arm_ik {
 
 // Constants for solver
 static constexpr int robot_nq = 7;
-static constexpr int max_n_solutions = 16;
-static constexpr int n_tree_nodes = 12;
+static constexpr int max_n_solutions = 528;
+static constexpr int n_tree_nodes = 50;
 static constexpr int intermediate_solution_size = 6;
 static constexpr double pose_tolerance = 1e-6;
 static constexpr double pose_tolerance_degenerate = 1e-4;
@@ -533,13 +533,751 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(3, node_input_i_idx_in_queue);
             else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+                add_input_index_to(12, node_input_i_idx_in_queue);
         }
     };
 
     // Invoke the processor
     EquationAllZeroDispatcherNode_node_2_processor();
     // Finish code for equation all-zero dispatcher node 2
+
+    // Code for explicit solution node 12, solved variable is th_6
+    auto ExplicitSolutionNode_node_12_solve_th_6_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(12);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(12);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 12
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const bool condition_0 = true;
+            if (condition_0)
+            {
+                RawSolution solution_0(this_solution);
+                solution_0[5] = -3.14159265358979;
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(13, appended_idx_0);
+                RawSolution solution_1(this_solution);
+                solution_1[5] = -3.0434178831651102;
+                int appended_idx_1 = append_solution_to_queue(solution_1);
+                add_input_index_to(13, appended_idx_1);
+                RawSolution solution_2(this_solution);
+                solution_2[5] = -2.9452431127404299;
+                int appended_idx_2 = append_solution_to_queue(solution_2);
+                add_input_index_to(13, appended_idx_2);
+                RawSolution solution_3(this_solution);
+                solution_3[5] = -2.8470683423157501;
+                int appended_idx_3 = append_solution_to_queue(solution_3);
+                add_input_index_to(13, appended_idx_3);
+                RawSolution solution_4(this_solution);
+                solution_4[5] = -2.7488935718910699;
+                int appended_idx_4 = append_solution_to_queue(solution_4);
+                add_input_index_to(13, appended_idx_4);
+                RawSolution solution_5(this_solution);
+                solution_5[5] = -2.6507188014663901;
+                int appended_idx_5 = append_solution_to_queue(solution_5);
+                add_input_index_to(13, appended_idx_5);
+                RawSolution solution_6(this_solution);
+                solution_6[5] = -2.5525440310417098;
+                int appended_idx_6 = append_solution_to_queue(solution_6);
+                add_input_index_to(13, appended_idx_6);
+                RawSolution solution_7(this_solution);
+                solution_7[5] = -2.45436926061703;
+                int appended_idx_7 = append_solution_to_queue(solution_7);
+                add_input_index_to(13, appended_idx_7);
+                RawSolution solution_8(this_solution);
+                solution_8[5] = -2.35619449019234;
+                int appended_idx_8 = append_solution_to_queue(solution_8);
+                add_input_index_to(13, appended_idx_8);
+                RawSolution solution_9(this_solution);
+                solution_9[5] = -2.2580197197676601;
+                int appended_idx_9 = append_solution_to_queue(solution_9);
+                add_input_index_to(13, appended_idx_9);
+                RawSolution solution_10(this_solution);
+                solution_10[5] = -2.1598449493429799;
+                int appended_idx_10 = append_solution_to_queue(solution_10);
+                add_input_index_to(13, appended_idx_10);
+                RawSolution solution_11(this_solution);
+                solution_11[5] = -2.0616701789183001;
+                int appended_idx_11 = append_solution_to_queue(solution_11);
+                add_input_index_to(13, appended_idx_11);
+                RawSolution solution_12(this_solution);
+                solution_12[5] = -1.96349540849362;
+                int appended_idx_12 = append_solution_to_queue(solution_12);
+                add_input_index_to(13, appended_idx_12);
+                RawSolution solution_13(this_solution);
+                solution_13[5] = -1.86532063806894;
+                int appended_idx_13 = append_solution_to_queue(solution_13);
+                add_input_index_to(13, appended_idx_13);
+                RawSolution solution_14(this_solution);
+                solution_14[5] = -1.76714586764426;
+                int appended_idx_14 = append_solution_to_queue(solution_14);
+                add_input_index_to(13, appended_idx_14);
+                RawSolution solution_15(this_solution);
+                solution_15[5] = -1.6689710972195799;
+                int appended_idx_15 = append_solution_to_queue(solution_15);
+                add_input_index_to(13, appended_idx_15);
+                RawSolution solution_16(this_solution);
+                solution_16[5] = -1.5707963267949001;
+                int appended_idx_16 = append_solution_to_queue(solution_16);
+                add_input_index_to(13, appended_idx_16);
+                RawSolution solution_17(this_solution);
+                solution_17[5] = -1.4726215563702201;
+                int appended_idx_17 = append_solution_to_queue(solution_17);
+                add_input_index_to(13, appended_idx_17);
+                RawSolution solution_18(this_solution);
+                solution_18[5] = -1.37444678594553;
+                int appended_idx_18 = append_solution_to_queue(solution_18);
+                add_input_index_to(13, appended_idx_18);
+                RawSolution solution_19(this_solution);
+                solution_19[5] = -1.27627201552085;
+                int appended_idx_19 = append_solution_to_queue(solution_19);
+                add_input_index_to(13, appended_idx_19);
+                RawSolution solution_20(this_solution);
+                solution_20[5] = -1.17809724509617;
+                int appended_idx_20 = append_solution_to_queue(solution_20);
+                add_input_index_to(13, appended_idx_20);
+                RawSolution solution_21(this_solution);
+                solution_21[5] = -1.0799224746714899;
+                int appended_idx_21 = append_solution_to_queue(solution_21);
+                add_input_index_to(13, appended_idx_21);
+                RawSolution solution_22(this_solution);
+                solution_22[5] = -0.98174770424681101;
+                int appended_idx_22 = append_solution_to_queue(solution_22);
+                add_input_index_to(13, appended_idx_22);
+                RawSolution solution_23(this_solution);
+                solution_23[5] = -0.88357293382212898;
+                int appended_idx_23 = append_solution_to_queue(solution_23);
+                add_input_index_to(13, appended_idx_23);
+                RawSolution solution_24(this_solution);
+                solution_24[5] = -0.78539816339744795;
+                int appended_idx_24 = append_solution_to_queue(solution_24);
+                add_input_index_to(13, appended_idx_24);
+                RawSolution solution_25(this_solution);
+                solution_25[5] = -0.68722339297276702;
+                int appended_idx_25 = append_solution_to_queue(solution_25);
+                add_input_index_to(13, appended_idx_25);
+                RawSolution solution_26(this_solution);
+                solution_26[5] = -0.58904862254808599;
+                int appended_idx_26 = append_solution_to_queue(solution_26);
+                add_input_index_to(13, appended_idx_26);
+                RawSolution solution_27(this_solution);
+                solution_27[5] = -0.49087385212340501;
+                int appended_idx_27 = append_solution_to_queue(solution_27);
+                add_input_index_to(13, appended_idx_27);
+                RawSolution solution_28(this_solution);
+                solution_28[5] = -0.39269908169872397;
+                int appended_idx_28 = append_solution_to_queue(solution_28);
+                add_input_index_to(13, appended_idx_28);
+                RawSolution solution_29(this_solution);
+                solution_29[5] = -0.29452431127404299;
+                int appended_idx_29 = append_solution_to_queue(solution_29);
+                add_input_index_to(13, appended_idx_29);
+                RawSolution solution_30(this_solution);
+                solution_30[5] = -0.19634954084936199;
+                int appended_idx_30 = append_solution_to_queue(solution_30);
+                add_input_index_to(13, appended_idx_30);
+                RawSolution solution_31(this_solution);
+                solution_31[5] = -0.098174770424681104;
+                int appended_idx_31 = append_solution_to_queue(solution_31);
+                add_input_index_to(13, appended_idx_31);
+                const double tmp_sol_value = 0.0;
+                solution_queue.get_solution(node_input_i_idx_in_queue)[5] = tmp_sol_value;
+                add_input_index_to(13, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_12_solve_th_6_processor();
+    // Finish code for explicit solution node 12
+
+    // Code for equation all-zero dispatcher node 13
+    auto EquationAllZeroDispatcherNode_node_13_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(13);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(13);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_6 = this_solution[5];
+            const bool checked_result = std::fabs(inv_Pz) <= 9.9999999999999995e-7 && std::fabs(inv_Px*std::cos(th_6) - inv_Py*std::sin(th_6)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(14, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_13_processor();
+    // Finish code for equation all-zero dispatcher node 13
+
+    // Code for explicit solution node 14, solved variable is th_5
+    auto ExplicitSolutionNode_node_14_solve_th_5_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(14);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(14);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 14
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_3 = this_solution[3];
+            const double th_6 = this_solution[5];
+            const bool condition_0 = std::fabs(inv_Pz) >= 9.9999999999999995e-7 || std::fabs(inv_Px*std::cos(th_6) - inv_Py*std::sin(th_6)) >= 9.9999999999999995e-7;
+            if (condition_0)
+            {
+                const double x0 = std::cos(th_3);
+                const double x1 = std::sin(th_3);
+                const double x2 = (a_1*x0 + a_2 + d_0*x1)*std::cos(th_4);
+                const double x3 = -inv_Px*std::cos(th_6) + inv_Py*std::sin(th_6);
+                const double x4 = a_1*x1 - d_0*x0 + d_3;
+                const double tmp_sol_value = std::atan2(inv_Pz*x2 - x3*x4, inv_Pz*x4 + x2*x3);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[4] = tmp_sol_value;
+                add_input_index_to(15, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_14_solve_th_5_processor();
+    // Finish code for explicit solution node 14
+
+    // Code for non-branch dispatcher node 15
+    // Actually, there is no code
+
+    // Code for linear type2 solution node 16, solved variable is th_2
+    auto LinearSinCosType_2_SolverNode_node_16_solve_th_2_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(15);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(15);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 16
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_3 = this_solution[3];
+            const double th_5 = this_solution[4];
+            const double th_6 = this_solution[5];
+            // Temp variable for efficiency
+            const double x0 = std::sin(th_6);
+            const double x1 = std::sin(th_4);
+            const double x2 = std::cos(th_3);
+            const double x3 = x1*x2;
+            const double x4 = std::sin(th_3);
+            const double x5 = std::sin(th_5);
+            const double x6 = std::cos(th_6);
+            const double x7 = std::cos(th_4);
+            const double x8 = x6*x7;
+            const double x9 = std::cos(th_5);
+            const double x10 = x0*x3 + x2*x8*x9 - x4*x5*x6;
+            const double x11 = x1*x9;
+            const double x12 = -x0*x7 + x11*x6;
+            const double x13 = -x0*x2*x7*x9 + x0*x4*x5 + x3*x6;
+            const double x14 = x0*x11 + x8;
+            const double x15 = x2*x5*x7 + x4*x9;
+            const double x16 = x1*x5;
+            const double x17 = a_1 + a_2*x2 + d_3*x4;
+            // End of temp variables
+            Eigen::Matrix<double, 8, 4> A_matrix;
+            A_matrix.setZero();
+            A_matrix(0, 0) = r_11;
+            A_matrix(0, 1) = -r_21;
+            A_matrix(0, 2) = -x10;
+            A_matrix(0, 3) = x12;
+            A_matrix(1, 0) = r_12;
+            A_matrix(1, 1) = -r_22;
+            A_matrix(1, 2) = -x13;
+            A_matrix(1, 3) = -x14;
+            A_matrix(2, 0) = r_13;
+            A_matrix(2, 1) = -r_23;
+            A_matrix(2, 2) = x15;
+            A_matrix(2, 3) = -x16;
+            A_matrix(3, 0) = Px;
+            A_matrix(3, 1) = -Py;
+            A_matrix(3, 2) = -x17;
+            A_matrix(4, 0) = -r_11;
+            A_matrix(4, 1) = r_21;
+            A_matrix(4, 2) = x10;
+            A_matrix(4, 3) = -x12;
+            A_matrix(5, 0) = -r_12;
+            A_matrix(5, 1) = r_22;
+            A_matrix(5, 2) = x13;
+            A_matrix(5, 3) = x14;
+            A_matrix(6, 0) = -r_13;
+            A_matrix(6, 1) = r_23;
+            A_matrix(6, 2) = -x15;
+            A_matrix(6, 3) = x16;
+            A_matrix(7, 0) = -Px;
+            A_matrix(7, 1) = Py;
+            A_matrix(7, 2) = x17;
+            // Code for solving
+            {
+                // Local variable for solving
+                double var_solution_0 = 0.0;
+                double var_solution_1 = 0.0;
+                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 2, var_solution_0, var_solution_1);
+                if(solved)
+                {
+                    RawSolution solution_0(this_solution);
+                    solution_0[2] = var_solution_0;
+                    int appended_idx = append_solution_to_queue(solution_0);
+                    add_input_index_to(17, appended_idx);
+                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
+                    add_input_index_to(17, node_input_i_idx_in_queue);
+                    continue;
+                }
+            }
+            {
+                // Local variable for solving
+                double var_solution_0 = 0.0;
+                double var_solution_1 = 0.0;
+                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 3, var_solution_0, var_solution_1);
+                if(solved)
+                {
+                    RawSolution solution_0(this_solution);
+                    solution_0[2] = var_solution_0;
+                    int appended_idx = append_solution_to_queue(solution_0);
+                    add_input_index_to(17, appended_idx);
+                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
+                    add_input_index_to(17, node_input_i_idx_in_queue);
+                    continue;
+                }
+            }
+            {
+                // Local variable for solving
+                double var_solution_0 = 0.0;
+                double var_solution_1 = 0.0;
+                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 6, var_solution_0, var_solution_1);
+                if(solved)
+                {
+                    RawSolution solution_0(this_solution);
+                    solution_0[2] = var_solution_0;
+                    int appended_idx = append_solution_to_queue(solution_0);
+                    add_input_index_to(17, appended_idx);
+                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
+                    add_input_index_to(17, node_input_i_idx_in_queue);
+                    continue;
+                }
+            }
+            {
+                // Local variable for solving
+                double var_solution_0 = 0.0;
+                double var_solution_1 = 0.0;
+                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 7, var_solution_0, var_solution_1);
+                if(solved)
+                {
+                    RawSolution solution_0(this_solution);
+                    solution_0[2] = var_solution_0;
+                    int appended_idx = append_solution_to_queue(solution_0);
+                    add_input_index_to(17, appended_idx);
+                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
+                    add_input_index_to(17, node_input_i_idx_in_queue);
+                    continue;
+                }
+            }
+            {
+                // Local variable for solving
+                double var_solution_0 = 0.0;
+                double var_solution_1 = 0.0;
+                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 2, 3, var_solution_0, var_solution_1);
+                if(solved)
+                {
+                    RawSolution solution_0(this_solution);
+                    solution_0[2] = var_solution_0;
+                    int appended_idx = append_solution_to_queue(solution_0);
+                    add_input_index_to(17, appended_idx);
+                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
+                    add_input_index_to(17, node_input_i_idx_in_queue);
+                    continue;
+                }
+            }
+        }
+    };
+    // Invoke the processor
+    LinearSinCosType_2_SolverNode_node_16_solve_th_2_processor();
+    // Finish code for general_6dof solution node 15
+
+    // Code for equation all-zero dispatcher node 17
+    auto EquationAllZeroDispatcherNode_node_17_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(17);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(17);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const bool checked_result = std::fabs(Px) <= 9.9999999999999995e-7 && std::fabs(Py) <= 9.9999999999999995e-7 && std::fabs((a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3))*std::sin(th_2)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(18, node_input_i_idx_in_queue);
+            else
+                add_input_index_to(34, node_input_i_idx_in_queue);
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_17_processor();
+    // Finish code for equation all-zero dispatcher node 17
+
+    // Code for equation all-zero dispatcher node 34
+    auto EquationAllZeroDispatcherNode_node_34_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(34);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(34);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(a_1*std::cos(th_2) + a_2*std::cos(th_2)*std::cos(th_3) + d_3*std::sin(th_3)*std::cos(th_2)) <= 9.9999999999999995e-7 && std::fabs(a_2*std::sin(th_3) + d_0 - d_3*std::cos(th_3)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(35, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_34_processor();
+    // Finish code for equation all-zero dispatcher node 34
+
+    // Code for explicit solution node 35, solved variable is th_1
+    auto ExplicitSolutionNode_node_35_solve_th_1_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(35);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(35);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 35
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const bool condition_0 = std::fabs(Pz) >= zero_tolerance || std::fabs(a_1*std::cos(th_2) + a_2*std::cos(th_2)*std::cos(th_3) + d_3*std::sin(th_3)*std::cos(th_2)) >= zero_tolerance || std::fabs(a_2*std::sin(th_3) + d_0 - d_3*std::cos(th_3)) >= zero_tolerance;
+            if (condition_0)
+            {
+                const double x0 = std::cos(th_2);
+                const double x1 = std::cos(th_3);
+                const double x2 = std::sin(th_3);
+                const double x3 = a_1*x0 + a_2*x0*x1 + d_3*x0*x2;
+                const double x4 = a_2*x2 + d_0 - d_3*x1;
+                const double x5 = std::atan2(x3, x4);
+                const double x6 = safe_sqrt(-std::pow(Pz, 2) + std::pow(x3, 2) + std::pow(x4, 2));
+                const double x7 = -Pz;
+                RawSolution solution_0(this_solution);
+                solution_0[1] = x5 + std::atan2(x6, x7);
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(36, appended_idx_0);
+                const double tmp_sol_value = x5 + std::atan2(-x6, x7);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+                add_input_index_to(36, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_35_solve_th_1_processor();
+    // Finish code for explicit solution node 35
+
+    // Code for equation all-zero dispatcher node 36
+    auto EquationAllZeroDispatcherNode_node_36_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(36);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(36);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const bool checked_result = std::fabs(r_13) <= 9.9999999999999995e-7 && std::fabs(r_23) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(37, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_36_processor();
+    // Finish code for equation all-zero dispatcher node 36
+
+    // Code for explicit solution node 37, solved variable is th_0
+    auto ExplicitSolutionNode_node_37_solve_th_0_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(37);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(37);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 37
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_1 = this_solution[1];
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const double th_5 = this_solution[4];
+            const bool condition_0 = std::fabs(r_13) >= 9.9999999999999995e-7 || std::fabs(r_23) >= 9.9999999999999995e-7;
+            if (condition_0)
+            {
+                const double x0 = std::sin(th_2);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_3);
+                const double x3 = x1*x2;
+                const double x4 = std::sin(th_4);
+                const double x5 = std::sin(th_5);
+                const double x6 = std::cos(th_2);
+                const double x7 = std::cos(th_3);
+                const double x8 = x5*std::cos(th_4);
+                const double x9 = x7*x8;
+                const double x10 = -x0*x3 - x0*x9 + x4*x5*x6;
+                const double x11 = std::sin(th_1);
+                const double x12 = std::cos(th_1);
+                const double x13 = x12*x6;
+                const double x14 = x0*x12*x4*x5 + x1*x11*x7 - x11*x2*x8 + x13*x3 + x13*x9;
+                const double tmp_sol_value = std::atan2(r_13*x10 - r_23*x14, -r_13*x14 - r_23*x10);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_37_solve_th_0_processor();
+    // Finish code for explicit solution node 37
+
+    // Code for explicit solution node 18, solved variable is th_0
+    auto ExplicitSolutionNode_node_18_solve_th_0_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(18);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(18);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 18
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const bool condition_0 = std::fabs(Px) >= zero_tolerance || std::fabs(Py) >= zero_tolerance || std::fabs((a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3))*std::sin(th_2)) >= zero_tolerance;
+            if (condition_0)
+            {
+                const double x0 = std::atan2(Px, -Py);
+                const double x1 = std::sin(th_2);
+                const double x2 = a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3);
+                const double x3 = safe_sqrt(std::pow(Px, 2) + std::pow(Py, 2) - std::pow(x1, 2)*std::pow(x2, 2));
+                const double x4 = x1*x2;
+                RawSolution solution_0(this_solution);
+                solution_0[0] = x0 + std::atan2(x3, x4);
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(19, appended_idx_0);
+                const double tmp_sol_value = x0 + std::atan2(-x3, x4);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
+                add_input_index_to(19, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_18_solve_th_0_processor();
+    // Finish code for explicit solution node 18
+
+    // Code for equation all-zero dispatcher node 19
+    auto EquationAllZeroDispatcherNode_node_19_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(19);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(19);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(20, node_input_i_idx_in_queue);
+            else
+                add_input_index_to(38, node_input_i_idx_in_queue);
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_19_processor();
+    // Finish code for equation all-zero dispatcher node 19
+
+    // Code for equation all-zero dispatcher node 38
+    auto EquationAllZeroDispatcherNode_node_38_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(38);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(38);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const bool checked_result = std::fabs(r_33) <= 9.9999999999999995e-7 && std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(39, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_38_processor();
+    // Finish code for equation all-zero dispatcher node 38
+
+    // Code for explicit solution node 39, solved variable is th_1
+    auto ExplicitSolutionNode_node_39_solve_th_1_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(39);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(39);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 39
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const double th_5 = this_solution[4];
+            const bool condition_0 = std::fabs(r_33) >= 9.9999999999999995e-7 || std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) >= 9.9999999999999995e-7;
+            if (condition_0)
+            {
+                const double x0 = std::sin(th_5);
+                const double x1 = std::sin(th_3);
+                const double x2 = std::cos(th_2);
+                const double x3 = std::cos(th_5);
+                const double x4 = std::cos(th_3);
+                const double x5 = x0*std::cos(th_4);
+                const double x6 = x0*std::sin(th_2)*std::sin(th_4) + x1*x2*x3 + x2*x4*x5;
+                const double x7 = -r_13*std::cos(th_0) - r_23*std::sin(th_0);
+                const double x8 = x1*x5 - x3*x4;
+                const double tmp_sol_value = std::atan2(r_33*x6 - x7*x8, r_33*x8 + x6*x7);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_39_solve_th_1_processor();
+    // Finish code for explicit solution node 39
+
+    // Code for explicit solution node 20, solved variable is th_1
+    auto ExplicitSolutionNode_node_20_solve_th_1_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(20);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(20);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 20
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const bool condition_0 = std::fabs(Pz) >= 9.9999999999999995e-7 || std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0)) >= 9.9999999999999995e-7;
+            if (condition_0)
+            {
+                const double x0 = std::cos(th_3);
+                const double x1 = std::sin(th_3);
+                const double x2 = (a_1 + a_2*x0 + d_3*x1)*std::cos(th_2);
+                const double x3 = -Px*std::cos(th_0) - Py*std::sin(th_0);
+                const double x4 = -a_2*x1 - d_0 + d_3*x0;
+                const double tmp_sol_value = std::atan2(-Pz*x2 - x3*x4, Pz*x4 - x2*x3);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_20_solve_th_1_processor();
+    // Finish code for explicit solution node 20
 
     // Code for explicit solution node 3, solved variable is th_6
     auto ExplicitSolutionNode_node_3_solve_th_6_processor = [&]() -> void
@@ -601,13 +1339,686 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue);
             else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+                add_input_index_to(21, node_input_i_idx_in_queue);
         }
     };
 
     // Invoke the processor
     EquationAllZeroDispatcherNode_node_4_processor();
     // Finish code for equation all-zero dispatcher node 4
+
+    // Code for explicit solution node 21, solved variable is th_5
+    auto ExplicitSolutionNode_node_21_solve_th_5_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(21);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(21);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 21
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const bool condition_0 = true;
+            if (condition_0)
+            {
+                RawSolution solution_0(this_solution);
+                solution_0[4] = 0.52359877559829904;
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(22, appended_idx_0);
+                RawSolution solution_1(this_solution);
+                solution_1[4] = 0.58904862254808599;
+                int appended_idx_1 = append_solution_to_queue(solution_1);
+                add_input_index_to(22, appended_idx_1);
+                RawSolution solution_2(this_solution);
+                solution_2[4] = 0.65449846949787405;
+                int appended_idx_2 = append_solution_to_queue(solution_2);
+                add_input_index_to(22, appended_idx_2);
+                RawSolution solution_3(this_solution);
+                solution_3[4] = 0.719948316447661;
+                int appended_idx_3 = append_solution_to_queue(solution_3);
+                add_input_index_to(22, appended_idx_3);
+                RawSolution solution_4(this_solution);
+                solution_4[4] = 0.78539816339744795;
+                int appended_idx_4 = append_solution_to_queue(solution_4);
+                add_input_index_to(22, appended_idx_4);
+                RawSolution solution_5(this_solution);
+                solution_5[4] = 0.85084801034723601;
+                int appended_idx_5 = append_solution_to_queue(solution_5);
+                add_input_index_to(22, appended_idx_5);
+                RawSolution solution_6(this_solution);
+                solution_6[4] = 0.91629785729702296;
+                int appended_idx_6 = append_solution_to_queue(solution_6);
+                add_input_index_to(22, appended_idx_6);
+                RawSolution solution_7(this_solution);
+                solution_7[4] = 0.98174770424681002;
+                int appended_idx_7 = append_solution_to_queue(solution_7);
+                add_input_index_to(22, appended_idx_7);
+                RawSolution solution_8(this_solution);
+                solution_8[4] = 1.0471975511966001;
+                int appended_idx_8 = append_solution_to_queue(solution_8);
+                add_input_index_to(22, appended_idx_8);
+                RawSolution solution_9(this_solution);
+                solution_9[4] = 1.11264739814638;
+                int appended_idx_9 = append_solution_to_queue(solution_9);
+                add_input_index_to(22, appended_idx_9);
+                RawSolution solution_10(this_solution);
+                solution_10[4] = 1.17809724509617;
+                int appended_idx_10 = append_solution_to_queue(solution_10);
+                add_input_index_to(22, appended_idx_10);
+                RawSolution solution_11(this_solution);
+                solution_11[4] = 1.2435470920459599;
+                int appended_idx_11 = append_solution_to_queue(solution_11);
+                add_input_index_to(22, appended_idx_11);
+                RawSolution solution_12(this_solution);
+                solution_12[4] = 1.3089969389957501;
+                int appended_idx_12 = append_solution_to_queue(solution_12);
+                add_input_index_to(22, appended_idx_12);
+                RawSolution solution_13(this_solution);
+                solution_13[4] = 1.37444678594553;
+                int appended_idx_13 = append_solution_to_queue(solution_13);
+                add_input_index_to(22, appended_idx_13);
+                RawSolution solution_14(this_solution);
+                solution_14[4] = 1.43989663289532;
+                int appended_idx_14 = append_solution_to_queue(solution_14);
+                add_input_index_to(22, appended_idx_14);
+                RawSolution solution_15(this_solution);
+                solution_15[4] = 1.5053464798451099;
+                int appended_idx_15 = append_solution_to_queue(solution_15);
+                add_input_index_to(22, appended_idx_15);
+                RawSolution solution_16(this_solution);
+                solution_16[4] = 1.5707963267949001;
+                int appended_idx_16 = append_solution_to_queue(solution_16);
+                add_input_index_to(22, appended_idx_16);
+                RawSolution solution_17(this_solution);
+                solution_17[4] = 1.6362461737446801;
+                int appended_idx_17 = append_solution_to_queue(solution_17);
+                add_input_index_to(22, appended_idx_17);
+                RawSolution solution_18(this_solution);
+                solution_18[4] = 1.70169602069447;
+                int appended_idx_18 = append_solution_to_queue(solution_18);
+                add_input_index_to(22, appended_idx_18);
+                RawSolution solution_19(this_solution);
+                solution_19[4] = 1.76714586764426;
+                int appended_idx_19 = append_solution_to_queue(solution_19);
+                add_input_index_to(22, appended_idx_19);
+                RawSolution solution_20(this_solution);
+                solution_20[4] = 1.8325957145940499;
+                int appended_idx_20 = append_solution_to_queue(solution_20);
+                add_input_index_to(22, appended_idx_20);
+                RawSolution solution_21(this_solution);
+                solution_21[4] = 1.8980455615438301;
+                int appended_idx_21 = append_solution_to_queue(solution_21);
+                add_input_index_to(22, appended_idx_21);
+                RawSolution solution_22(this_solution);
+                solution_22[4] = 1.96349540849362;
+                int appended_idx_22 = append_solution_to_queue(solution_22);
+                add_input_index_to(22, appended_idx_22);
+                RawSolution solution_23(this_solution);
+                solution_23[4] = 2.0289452554434102;
+                int appended_idx_23 = append_solution_to_queue(solution_23);
+                add_input_index_to(22, appended_idx_23);
+                RawSolution solution_24(this_solution);
+                solution_24[4] = 2.0943951023931899;
+                int appended_idx_24 = append_solution_to_queue(solution_24);
+                add_input_index_to(22, appended_idx_24);
+                RawSolution solution_25(this_solution);
+                solution_25[4] = 2.1598449493429799;
+                int appended_idx_25 = append_solution_to_queue(solution_25);
+                add_input_index_to(22, appended_idx_25);
+                RawSolution solution_26(this_solution);
+                solution_26[4] = 2.2252947962927698;
+                int appended_idx_26 = append_solution_to_queue(solution_26);
+                add_input_index_to(22, appended_idx_26);
+                RawSolution solution_27(this_solution);
+                solution_27[4] = 2.2907446432425602;
+                int appended_idx_27 = append_solution_to_queue(solution_27);
+                add_input_index_to(22, appended_idx_27);
+                RawSolution solution_28(this_solution);
+                solution_28[4] = 2.35619449019234;
+                int appended_idx_28 = append_solution_to_queue(solution_28);
+                add_input_index_to(22, appended_idx_28);
+                RawSolution solution_29(this_solution);
+                solution_29[4] = 2.4216443371421299;
+                int appended_idx_29 = append_solution_to_queue(solution_29);
+                add_input_index_to(22, appended_idx_29);
+                RawSolution solution_30(this_solution);
+                solution_30[4] = 2.4870941840919198;
+                int appended_idx_30 = append_solution_to_queue(solution_30);
+                add_input_index_to(22, appended_idx_30);
+                RawSolution solution_31(this_solution);
+                solution_31[4] = 2.5525440310417098;
+                int appended_idx_31 = append_solution_to_queue(solution_31);
+                add_input_index_to(22, appended_idx_31);
+                const double tmp_sol_value = 2.61799387799149;
+                solution_queue.get_solution(node_input_i_idx_in_queue)[4] = tmp_sol_value;
+                add_input_index_to(22, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_21_solve_th_5_processor();
+    // Finish code for explicit solution node 21
+
+    // Code for non-branch dispatcher node 22
+    // Actually, there is no code
+
+    // Code for linear type2 solution node 23, solved variable is th_2
+    auto LinearSinCosType_2_SolverNode_node_23_solve_th_2_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(22);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(22);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 23
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_3 = this_solution[3];
+            const double th_5 = this_solution[4];
+            const double th_6 = this_solution[5];
+            // Temp variable for efficiency
+            const double x0 = std::sin(th_6);
+            const double x1 = std::sin(th_4);
+            const double x2 = std::cos(th_3);
+            const double x3 = x1*x2;
+            const double x4 = std::sin(th_3);
+            const double x5 = std::sin(th_5);
+            const double x6 = std::cos(th_6);
+            const double x7 = std::cos(th_4);
+            const double x8 = x6*x7;
+            const double x9 = std::cos(th_5);
+            const double x10 = x0*x3 + x2*x8*x9 - x4*x5*x6;
+            const double x11 = x1*x9;
+            const double x12 = -x0*x7 + x11*x6;
+            const double x13 = -x0*x2*x7*x9 + x0*x4*x5 + x3*x6;
+            const double x14 = x0*x11 + x8;
+            const double x15 = x2*x5*x7 + x4*x9;
+            const double x16 = x1*x5;
+            const double x17 = a_1 + a_2*x2 + d_3*x4;
+            // End of temp variables
+            Eigen::Matrix<double, 8, 4> A_matrix;
+            A_matrix.setZero();
+            A_matrix(0, 0) = r_11;
+            A_matrix(0, 1) = -r_21;
+            A_matrix(0, 2) = -x10;
+            A_matrix(0, 3) = x12;
+            A_matrix(1, 0) = r_12;
+            A_matrix(1, 1) = -r_22;
+            A_matrix(1, 2) = -x13;
+            A_matrix(1, 3) = -x14;
+            A_matrix(2, 0) = r_13;
+            A_matrix(2, 1) = -r_23;
+            A_matrix(2, 2) = x15;
+            A_matrix(2, 3) = -x16;
+            A_matrix(3, 0) = Px;
+            A_matrix(3, 1) = -Py;
+            A_matrix(3, 2) = -x17;
+            A_matrix(4, 0) = -r_11;
+            A_matrix(4, 1) = r_21;
+            A_matrix(4, 2) = x10;
+            A_matrix(4, 3) = -x12;
+            A_matrix(5, 0) = -r_12;
+            A_matrix(5, 1) = r_22;
+            A_matrix(5, 2) = x13;
+            A_matrix(5, 3) = x14;
+            A_matrix(6, 0) = -r_13;
+            A_matrix(6, 1) = r_23;
+            A_matrix(6, 2) = -x15;
+            A_matrix(6, 3) = x16;
+            A_matrix(7, 0) = -Px;
+            A_matrix(7, 1) = Py;
+            A_matrix(7, 2) = x17;
+            // Code for solving
+            {
+                // Local variable for solving
+                double var_solution_0 = 0.0;
+                double var_solution_1 = 0.0;
+                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 2, var_solution_0, var_solution_1);
+                if(solved)
+                {
+                    RawSolution solution_0(this_solution);
+                    solution_0[2] = var_solution_0;
+                    int appended_idx = append_solution_to_queue(solution_0);
+                    add_input_index_to(24, appended_idx);
+                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
+                    add_input_index_to(24, node_input_i_idx_in_queue);
+                    continue;
+                }
+            }
+            {
+                // Local variable for solving
+                double var_solution_0 = 0.0;
+                double var_solution_1 = 0.0;
+                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 3, var_solution_0, var_solution_1);
+                if(solved)
+                {
+                    RawSolution solution_0(this_solution);
+                    solution_0[2] = var_solution_0;
+                    int appended_idx = append_solution_to_queue(solution_0);
+                    add_input_index_to(24, appended_idx);
+                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
+                    add_input_index_to(24, node_input_i_idx_in_queue);
+                    continue;
+                }
+            }
+            {
+                // Local variable for solving
+                double var_solution_0 = 0.0;
+                double var_solution_1 = 0.0;
+                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 6, var_solution_0, var_solution_1);
+                if(solved)
+                {
+                    RawSolution solution_0(this_solution);
+                    solution_0[2] = var_solution_0;
+                    int appended_idx = append_solution_to_queue(solution_0);
+                    add_input_index_to(24, appended_idx);
+                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
+                    add_input_index_to(24, node_input_i_idx_in_queue);
+                    continue;
+                }
+            }
+            {
+                // Local variable for solving
+                double var_solution_0 = 0.0;
+                double var_solution_1 = 0.0;
+                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 1, 7, var_solution_0, var_solution_1);
+                if(solved)
+                {
+                    RawSolution solution_0(this_solution);
+                    solution_0[2] = var_solution_0;
+                    int appended_idx = append_solution_to_queue(solution_0);
+                    add_input_index_to(24, appended_idx);
+                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
+                    add_input_index_to(24, node_input_i_idx_in_queue);
+                    continue;
+                }
+            }
+            {
+                // Local variable for solving
+                double var_solution_0 = 0.0;
+                double var_solution_1 = 0.0;
+                bool solved = ::yaik_cpp::linear_solver::trySolveLinearType2SpecificRows<8>(A_matrix, 0, 2, 3, var_solution_0, var_solution_1);
+                if(solved)
+                {
+                    RawSolution solution_0(this_solution);
+                    solution_0[2] = var_solution_0;
+                    int appended_idx = append_solution_to_queue(solution_0);
+                    add_input_index_to(24, appended_idx);
+                    solution_queue.get_solution(node_input_i_idx_in_queue)[2] = var_solution_1;
+                    add_input_index_to(24, node_input_i_idx_in_queue);
+                    continue;
+                }
+            }
+        }
+    };
+    // Invoke the processor
+    LinearSinCosType_2_SolverNode_node_23_solve_th_2_processor();
+    // Finish code for general_6dof solution node 22
+
+    // Code for equation all-zero dispatcher node 24
+    auto EquationAllZeroDispatcherNode_node_24_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(24);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(24);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const bool checked_result = std::fabs(Px) <= 9.9999999999999995e-7 && std::fabs(Py) <= 9.9999999999999995e-7 && std::fabs((a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3))*std::sin(th_2)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(25, node_input_i_idx_in_queue);
+            else
+                add_input_index_to(40, node_input_i_idx_in_queue);
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_24_processor();
+    // Finish code for equation all-zero dispatcher node 24
+
+    // Code for equation all-zero dispatcher node 40
+    auto EquationAllZeroDispatcherNode_node_40_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(40);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(40);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(a_1*std::cos(th_2) + a_2*std::cos(th_2)*std::cos(th_3) + d_3*std::sin(th_3)*std::cos(th_2)) <= 9.9999999999999995e-7 && std::fabs(a_2*std::sin(th_3) + d_0 - d_3*std::cos(th_3)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(41, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_40_processor();
+    // Finish code for equation all-zero dispatcher node 40
+
+    // Code for explicit solution node 41, solved variable is th_1
+    auto ExplicitSolutionNode_node_41_solve_th_1_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(41);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(41);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 41
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const bool condition_0 = std::fabs(Pz) >= zero_tolerance || std::fabs(a_1*std::cos(th_2) + a_2*std::cos(th_2)*std::cos(th_3) + d_3*std::sin(th_3)*std::cos(th_2)) >= zero_tolerance || std::fabs(a_2*std::sin(th_3) + d_0 - d_3*std::cos(th_3)) >= zero_tolerance;
+            if (condition_0)
+            {
+                const double x0 = std::cos(th_2);
+                const double x1 = std::cos(th_3);
+                const double x2 = std::sin(th_3);
+                const double x3 = a_1*x0 + a_2*x0*x1 + d_3*x0*x2;
+                const double x4 = a_2*x2 + d_0 - d_3*x1;
+                const double x5 = std::atan2(x3, x4);
+                const double x6 = safe_sqrt(-std::pow(Pz, 2) + std::pow(x3, 2) + std::pow(x4, 2));
+                const double x7 = -Pz;
+                RawSolution solution_0(this_solution);
+                solution_0[1] = x5 + std::atan2(x6, x7);
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(42, appended_idx_0);
+                const double tmp_sol_value = x5 + std::atan2(-x6, x7);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+                add_input_index_to(42, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_41_solve_th_1_processor();
+    // Finish code for explicit solution node 41
+
+    // Code for equation all-zero dispatcher node 42
+    auto EquationAllZeroDispatcherNode_node_42_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(42);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(42);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const bool checked_result = std::fabs(r_13) <= 9.9999999999999995e-7 && std::fabs(r_23) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(43, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_42_processor();
+    // Finish code for equation all-zero dispatcher node 42
+
+    // Code for explicit solution node 43, solved variable is th_0
+    auto ExplicitSolutionNode_node_43_solve_th_0_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(43);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(43);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 43
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_1 = this_solution[1];
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const double th_5 = this_solution[4];
+            const bool condition_0 = std::fabs(r_13) >= 9.9999999999999995e-7 || std::fabs(r_23) >= 9.9999999999999995e-7;
+            if (condition_0)
+            {
+                const double x0 = std::sin(th_2);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_3);
+                const double x3 = x1*x2;
+                const double x4 = std::sin(th_4);
+                const double x5 = std::sin(th_5);
+                const double x6 = std::cos(th_2);
+                const double x7 = std::cos(th_3);
+                const double x8 = x5*std::cos(th_4);
+                const double x9 = x7*x8;
+                const double x10 = -x0*x3 - x0*x9 + x4*x5*x6;
+                const double x11 = std::sin(th_1);
+                const double x12 = std::cos(th_1);
+                const double x13 = x12*x6;
+                const double x14 = x0*x12*x4*x5 + x1*x11*x7 - x11*x2*x8 + x13*x3 + x13*x9;
+                const double tmp_sol_value = std::atan2(r_13*x10 - r_23*x14, -r_13*x14 - r_23*x10);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_43_solve_th_0_processor();
+    // Finish code for explicit solution node 43
+
+    // Code for explicit solution node 25, solved variable is th_0
+    auto ExplicitSolutionNode_node_25_solve_th_0_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(25);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(25);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 25
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const bool condition_0 = std::fabs(Px) >= zero_tolerance || std::fabs(Py) >= zero_tolerance || std::fabs((a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3))*std::sin(th_2)) >= zero_tolerance;
+            if (condition_0)
+            {
+                const double x0 = std::atan2(Px, -Py);
+                const double x1 = std::sin(th_2);
+                const double x2 = a_1 + a_2*std::cos(th_3) + d_3*std::sin(th_3);
+                const double x3 = safe_sqrt(std::pow(Px, 2) + std::pow(Py, 2) - std::pow(x1, 2)*std::pow(x2, 2));
+                const double x4 = x1*x2;
+                RawSolution solution_0(this_solution);
+                solution_0[0] = x0 + std::atan2(x3, x4);
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(26, appended_idx_0);
+                const double tmp_sol_value = x0 + std::atan2(-x3, x4);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
+                add_input_index_to(26, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_25_solve_th_0_processor();
+    // Finish code for explicit solution node 25
+
+    // Code for equation all-zero dispatcher node 26
+    auto EquationAllZeroDispatcherNode_node_26_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(26);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(26);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(27, node_input_i_idx_in_queue);
+            else
+                add_input_index_to(44, node_input_i_idx_in_queue);
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_26_processor();
+    // Finish code for equation all-zero dispatcher node 26
+
+    // Code for equation all-zero dispatcher node 44
+    auto EquationAllZeroDispatcherNode_node_44_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(44);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(44);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const bool checked_result = std::fabs(r_33) <= 9.9999999999999995e-7 && std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(45, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_44_processor();
+    // Finish code for equation all-zero dispatcher node 44
+
+    // Code for explicit solution node 45, solved variable is th_1
+    auto ExplicitSolutionNode_node_45_solve_th_1_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(45);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(45);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 45
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const double th_5 = this_solution[4];
+            const bool condition_0 = std::fabs(r_33) >= 9.9999999999999995e-7 || std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) >= 9.9999999999999995e-7;
+            if (condition_0)
+            {
+                const double x0 = std::sin(th_5);
+                const double x1 = std::sin(th_3);
+                const double x2 = std::cos(th_2);
+                const double x3 = std::cos(th_5);
+                const double x4 = std::cos(th_3);
+                const double x5 = x0*std::cos(th_4);
+                const double x6 = x0*std::sin(th_2)*std::sin(th_4) + x1*x2*x3 + x2*x4*x5;
+                const double x7 = -r_13*std::cos(th_0) - r_23*std::sin(th_0);
+                const double x8 = x1*x5 - x3*x4;
+                const double tmp_sol_value = std::atan2(r_33*x6 - x7*x8, r_33*x8 + x6*x7);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_45_solve_th_1_processor();
+    // Finish code for explicit solution node 45
+
+    // Code for explicit solution node 27, solved variable is th_1
+    auto ExplicitSolutionNode_node_27_solve_th_1_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(27);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(27);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 27
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const bool condition_0 = std::fabs(Pz) >= 9.9999999999999995e-7 || std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0)) >= 9.9999999999999995e-7;
+            if (condition_0)
+            {
+                const double x0 = std::cos(th_3);
+                const double x1 = std::sin(th_3);
+                const double x2 = (a_1 + a_2*x0 + d_3*x1)*std::cos(th_2);
+                const double x3 = -Px*std::cos(th_0) - Py*std::sin(th_0);
+                const double x4 = -a_2*x1 - d_0 + d_3*x0;
+                const double tmp_sol_value = std::atan2(-Pz*x2 - x3*x4, Pz*x4 - x2*x3);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_27_solve_th_1_processor();
+    // Finish code for explicit solution node 27
 
     // Code for explicit solution node 5, solved variable is th_5
     auto ExplicitSolutionNode_node_5_solve_th_5_processor = [&]() -> void
@@ -827,13 +2238,303 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(9, node_input_i_idx_in_queue);
             else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+                add_input_index_to(28, node_input_i_idx_in_queue);
         }
     };
 
     // Invoke the processor
     EquationAllZeroDispatcherNode_node_8_processor();
     // Finish code for equation all-zero dispatcher node 8
+
+    // Code for equation all-zero dispatcher node 28
+    auto EquationAllZeroDispatcherNode_node_28_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(28);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(28);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(a_1*std::cos(th_2) + a_2*std::cos(th_2)*std::cos(th_3) + d_3*std::sin(th_3)*std::cos(th_2)) <= 9.9999999999999995e-7 && std::fabs(a_2*std::sin(th_3) + d_0 - d_3*std::cos(th_3)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(29, node_input_i_idx_in_queue);
+            else
+                add_input_index_to(46, node_input_i_idx_in_queue);
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_28_processor();
+    // Finish code for equation all-zero dispatcher node 28
+
+    // Code for equation all-zero dispatcher node 46
+    auto EquationAllZeroDispatcherNode_node_46_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(46);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(46);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const double th_5 = this_solution[4];
+            const bool checked_result = std::fabs(r_13) <= 9.9999999999999995e-7 && std::fabs(r_23) <= 9.9999999999999995e-7 && std::fabs(std::sin(th_2)*std::sin(th_3)*std::cos(th_5) + std::sin(th_2)*std::sin(th_5)*std::cos(th_3)*std::cos(th_4) - std::sin(th_4)*std::sin(th_5)*std::cos(th_2)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(47, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_46_processor();
+    // Finish code for equation all-zero dispatcher node 46
+
+    // Code for explicit solution node 47, solved variable is th_0
+    auto ExplicitSolutionNode_node_47_solve_th_0_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(47);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(47);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 47
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const double th_5 = this_solution[4];
+            const bool condition_0 = std::fabs(r_13) >= zero_tolerance || std::fabs(r_23) >= zero_tolerance || std::fabs(std::sin(th_2)*std::sin(th_3)*std::cos(th_5) + std::sin(th_2)*std::sin(th_5)*std::cos(th_3)*std::cos(th_4) - std::sin(th_4)*std::sin(th_5)*std::cos(th_2)) >= zero_tolerance;
+            if (condition_0)
+            {
+                const double x0 = std::atan2(r_13, -r_23);
+                const double x1 = std::sin(th_2);
+                const double x2 = std::sin(th_5);
+                const double x3 = -x1*x2*std::cos(th_3)*std::cos(th_4) - x1*std::sin(th_3)*std::cos(th_5) + x2*std::sin(th_4)*std::cos(th_2);
+                const double x4 = safe_sqrt(std::pow(r_13, 2) + std::pow(r_23, 2) - std::pow(x3, 2));
+                RawSolution solution_0(this_solution);
+                solution_0[0] = x0 + std::atan2(x4, x3);
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(48, appended_idx_0);
+                const double tmp_sol_value = x0 + std::atan2(-x4, x3);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
+                add_input_index_to(48, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_47_solve_th_0_processor();
+    // Finish code for explicit solution node 47
+
+    // Code for equation all-zero dispatcher node 48
+    auto EquationAllZeroDispatcherNode_node_48_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(48);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(48);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const bool checked_result = std::fabs(r_33) <= 9.9999999999999995e-7 && std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(49, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_48_processor();
+    // Finish code for equation all-zero dispatcher node 48
+
+    // Code for explicit solution node 49, solved variable is th_1
+    auto ExplicitSolutionNode_node_49_solve_th_1_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(49);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(49);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 49
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const double th_5 = this_solution[4];
+            const bool condition_0 = std::fabs(r_33) >= 9.9999999999999995e-7 || std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) >= 9.9999999999999995e-7;
+            if (condition_0)
+            {
+                const double x0 = std::sin(th_5);
+                const double x1 = std::sin(th_3);
+                const double x2 = std::cos(th_2);
+                const double x3 = std::cos(th_5);
+                const double x4 = std::cos(th_3);
+                const double x5 = x0*std::cos(th_4);
+                const double x6 = x0*std::sin(th_2)*std::sin(th_4) + x1*x2*x3 + x2*x4*x5;
+                const double x7 = -r_13*std::cos(th_0) - r_23*std::sin(th_0);
+                const double x8 = x1*x5 - x3*x4;
+                const double tmp_sol_value = std::atan2(r_33*x6 - x7*x8, r_33*x8 + x6*x7);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_49_solve_th_1_processor();
+    // Finish code for explicit solution node 49
+
+    // Code for explicit solution node 29, solved variable is th_1
+    auto ExplicitSolutionNode_node_29_solve_th_1_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(29);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(29);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 29
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const bool condition_0 = std::fabs(Pz) >= zero_tolerance || std::fabs(a_1*std::cos(th_2) + a_2*std::cos(th_2)*std::cos(th_3) + d_3*std::sin(th_3)*std::cos(th_2)) >= zero_tolerance || std::fabs(a_2*std::sin(th_3) + d_0 - d_3*std::cos(th_3)) >= zero_tolerance;
+            if (condition_0)
+            {
+                const double x0 = std::cos(th_2);
+                const double x1 = std::cos(th_3);
+                const double x2 = std::sin(th_3);
+                const double x3 = a_1*x0 + a_2*x0*x1 + d_3*x0*x2;
+                const double x4 = a_2*x2 + d_0 - d_3*x1;
+                const double x5 = std::atan2(x3, x4);
+                const double x6 = safe_sqrt(-std::pow(Pz, 2) + std::pow(x3, 2) + std::pow(x4, 2));
+                const double x7 = -Pz;
+                RawSolution solution_0(this_solution);
+                solution_0[1] = x5 + std::atan2(x6, x7);
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(30, appended_idx_0);
+                const double tmp_sol_value = x5 + std::atan2(-x6, x7);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+                add_input_index_to(30, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_29_solve_th_1_processor();
+    // Finish code for explicit solution node 29
+
+    // Code for equation all-zero dispatcher node 30
+    auto EquationAllZeroDispatcherNode_node_30_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(30);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(30);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const bool checked_result = std::fabs(r_13) <= 9.9999999999999995e-7 && std::fabs(r_23) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(31, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_30_processor();
+    // Finish code for equation all-zero dispatcher node 30
+
+    // Code for explicit solution node 31, solved variable is th_0
+    auto ExplicitSolutionNode_node_31_solve_th_0_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(31);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(31);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 31
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_1 = this_solution[1];
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const double th_5 = this_solution[4];
+            const bool condition_0 = std::fabs(r_13) >= 9.9999999999999995e-7 || std::fabs(r_23) >= 9.9999999999999995e-7;
+            if (condition_0)
+            {
+                const double x0 = std::sin(th_2);
+                const double x1 = std::cos(th_5);
+                const double x2 = std::sin(th_3);
+                const double x3 = x1*x2;
+                const double x4 = std::sin(th_4);
+                const double x5 = std::sin(th_5);
+                const double x6 = std::cos(th_2);
+                const double x7 = std::cos(th_3);
+                const double x8 = x5*std::cos(th_4);
+                const double x9 = x7*x8;
+                const double x10 = -x0*x3 - x0*x9 + x4*x5*x6;
+                const double x11 = std::sin(th_1);
+                const double x12 = std::cos(th_1);
+                const double x13 = x12*x6;
+                const double x14 = x0*x12*x4*x5 + x1*x11*x7 - x11*x2*x8 + x13*x3 + x13*x9;
+                const double tmp_sol_value = std::atan2(r_13*x10 - r_23*x14, -r_13*x14 - r_23*x10);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_31_solve_th_0_processor();
+    // Finish code for explicit solution node 31
 
     // Code for explicit solution node 9, solved variable is th_0
     auto ExplicitSolutionNode_node_9_solve_th_0_processor = [&]() -> void
@@ -896,13 +2597,83 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(11, node_input_i_idx_in_queue);
             else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+                add_input_index_to(32, node_input_i_idx_in_queue);
         }
     };
 
     // Invoke the processor
     EquationAllZeroDispatcherNode_node_10_processor();
     // Finish code for equation all-zero dispatcher node 10
+
+    // Code for equation all-zero dispatcher node 32
+    auto EquationAllZeroDispatcherNode_node_32_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(32);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(32);
+        if (!this_input_valid)
+            return;
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const bool checked_result = std::fabs(r_33) <= 9.9999999999999995e-7 && std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) <= 9.9999999999999995e-7;
+            if (!checked_result)  // To non-degenerate node
+                add_input_index_to(33, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+        }
+    };
+
+    // Invoke the processor
+    EquationAllZeroDispatcherNode_node_32_processor();
+    // Finish code for equation all-zero dispatcher node 32
+
+    // Code for explicit solution node 33, solved variable is th_1
+    auto ExplicitSolutionNode_node_33_solve_th_1_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(33);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(33);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 33
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const double th_2 = this_solution[2];
+            const double th_3 = this_solution[3];
+            const double th_5 = this_solution[4];
+            const bool condition_0 = std::fabs(r_33) >= 9.9999999999999995e-7 || std::fabs(r_13*std::cos(th_0) + r_23*std::sin(th_0)) >= 9.9999999999999995e-7;
+            if (condition_0)
+            {
+                const double x0 = std::sin(th_5);
+                const double x1 = std::sin(th_3);
+                const double x2 = std::cos(th_2);
+                const double x3 = std::cos(th_5);
+                const double x4 = std::cos(th_3);
+                const double x5 = x0*std::cos(th_4);
+                const double x6 = x0*std::sin(th_2)*std::sin(th_4) + x1*x2*x3 + x2*x4*x5;
+                const double x7 = -r_13*std::cos(th_0) - r_23*std::sin(th_0);
+                const double x8 = x1*x5 - x3*x4;
+                const double tmp_sol_value = std::atan2(r_33*x6 - x7*x8, r_33*x8 + x6*x7);
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_33_solve_th_1_processor();
+    // Finish code for explicit solution node 33
 
     // Code for explicit solution node 11, solved variable is th_1
     auto ExplicitSolutionNode_node_11_solve_th_1_processor = [&]() -> void

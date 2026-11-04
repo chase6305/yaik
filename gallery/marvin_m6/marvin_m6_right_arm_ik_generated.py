@@ -6,7 +6,7 @@ from python_run_import import *
 
 # Constants for solver
 robot_nq: int = 7
-n_tree_nodes: int = 12
+n_tree_nodes: int = 50
 pose_tolerance: float = 1e-4
 zero_tolerance: float = 1e-6
 
@@ -454,7 +454,7 @@ def marvin_m6_right_arm_ik_solve_raw(T_ee: np.ndarray, th_4):
     max_n_solutions: int = 16
     node_input_index: List[List[int]] = list()
     node_input_validity: List[bool] = list()
-    for i in range(12):
+    for i in range(50):
         node_input_index.append(list())
         node_input_validity.append(False)
     def add_input_index_to(node_idx: int, solution_idx: int):
@@ -512,11 +512,642 @@ def marvin_m6_right_arm_ik_solve_raw(T_ee: np.ndarray, th_4):
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(3, node_input_i_idx_in_queue)
             else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
+                add_input_index_to(12, node_input_i_idx_in_queue)
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_2_processor()
     # Finish code for equation all-zero dispatcher node 2
+
+    # Code for explicit solution node 12, solved variable is th_6
+    def ExplicitSolutionNode_node_12_solve_th_6_processor():
+        this_node_input_index: List[int] = node_input_index[12]
+        this_input_valid: bool = node_input_validity[12]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 12
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            condition_0: bool = True
+            if condition_0:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[5] = -3.14159265358979
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(13, appended_idx)
+                solution_1: IkSolution = copy.copy(this_solution)
+                solution_1[5] = -3.04341788316511
+                appended_idx = append_solution_to_queue(solution_1)
+                add_input_index_to(13, appended_idx)
+                solution_2: IkSolution = copy.copy(this_solution)
+                solution_2[5] = -2.94524311274043
+                appended_idx = append_solution_to_queue(solution_2)
+                add_input_index_to(13, appended_idx)
+                solution_3: IkSolution = copy.copy(this_solution)
+                solution_3[5] = -2.84706834231575
+                appended_idx = append_solution_to_queue(solution_3)
+                add_input_index_to(13, appended_idx)
+                solution_4: IkSolution = copy.copy(this_solution)
+                solution_4[5] = -2.74889357189107
+                appended_idx = append_solution_to_queue(solution_4)
+                add_input_index_to(13, appended_idx)
+                solution_5: IkSolution = copy.copy(this_solution)
+                solution_5[5] = -2.65071880146639
+                appended_idx = append_solution_to_queue(solution_5)
+                add_input_index_to(13, appended_idx)
+                solution_6: IkSolution = copy.copy(this_solution)
+                solution_6[5] = -2.55254403104171
+                appended_idx = append_solution_to_queue(solution_6)
+                add_input_index_to(13, appended_idx)
+                solution_7: IkSolution = copy.copy(this_solution)
+                solution_7[5] = -2.45436926061703
+                appended_idx = append_solution_to_queue(solution_7)
+                add_input_index_to(13, appended_idx)
+                solution_8: IkSolution = copy.copy(this_solution)
+                solution_8[5] = -2.35619449019234
+                appended_idx = append_solution_to_queue(solution_8)
+                add_input_index_to(13, appended_idx)
+                solution_9: IkSolution = copy.copy(this_solution)
+                solution_9[5] = -2.25801971976766
+                appended_idx = append_solution_to_queue(solution_9)
+                add_input_index_to(13, appended_idx)
+                solution_10: IkSolution = copy.copy(this_solution)
+                solution_10[5] = -2.15984494934298
+                appended_idx = append_solution_to_queue(solution_10)
+                add_input_index_to(13, appended_idx)
+                solution_11: IkSolution = copy.copy(this_solution)
+                solution_11[5] = -2.06167017891830
+                appended_idx = append_solution_to_queue(solution_11)
+                add_input_index_to(13, appended_idx)
+                solution_12: IkSolution = copy.copy(this_solution)
+                solution_12[5] = -1.96349540849362
+                appended_idx = append_solution_to_queue(solution_12)
+                add_input_index_to(13, appended_idx)
+                solution_13: IkSolution = copy.copy(this_solution)
+                solution_13[5] = -1.86532063806894
+                appended_idx = append_solution_to_queue(solution_13)
+                add_input_index_to(13, appended_idx)
+                solution_14: IkSolution = copy.copy(this_solution)
+                solution_14[5] = -1.76714586764426
+                appended_idx = append_solution_to_queue(solution_14)
+                add_input_index_to(13, appended_idx)
+                solution_15: IkSolution = copy.copy(this_solution)
+                solution_15[5] = -1.66897109721958
+                appended_idx = append_solution_to_queue(solution_15)
+                add_input_index_to(13, appended_idx)
+                solution_16: IkSolution = copy.copy(this_solution)
+                solution_16[5] = -1.57079632679490
+                appended_idx = append_solution_to_queue(solution_16)
+                add_input_index_to(13, appended_idx)
+                solution_17: IkSolution = copy.copy(this_solution)
+                solution_17[5] = -1.47262155637022
+                appended_idx = append_solution_to_queue(solution_17)
+                add_input_index_to(13, appended_idx)
+                solution_18: IkSolution = copy.copy(this_solution)
+                solution_18[5] = -1.37444678594553
+                appended_idx = append_solution_to_queue(solution_18)
+                add_input_index_to(13, appended_idx)
+                solution_19: IkSolution = copy.copy(this_solution)
+                solution_19[5] = -1.27627201552085
+                appended_idx = append_solution_to_queue(solution_19)
+                add_input_index_to(13, appended_idx)
+                solution_20: IkSolution = copy.copy(this_solution)
+                solution_20[5] = -1.17809724509617
+                appended_idx = append_solution_to_queue(solution_20)
+                add_input_index_to(13, appended_idx)
+                solution_21: IkSolution = copy.copy(this_solution)
+                solution_21[5] = -1.07992247467149
+                appended_idx = append_solution_to_queue(solution_21)
+                add_input_index_to(13, appended_idx)
+                solution_22: IkSolution = copy.copy(this_solution)
+                solution_22[5] = -0.981747704246811
+                appended_idx = append_solution_to_queue(solution_22)
+                add_input_index_to(13, appended_idx)
+                solution_23: IkSolution = copy.copy(this_solution)
+                solution_23[5] = -0.883572933822129
+                appended_idx = append_solution_to_queue(solution_23)
+                add_input_index_to(13, appended_idx)
+                solution_24: IkSolution = copy.copy(this_solution)
+                solution_24[5] = -0.785398163397448
+                appended_idx = append_solution_to_queue(solution_24)
+                add_input_index_to(13, appended_idx)
+                solution_25: IkSolution = copy.copy(this_solution)
+                solution_25[5] = -0.687223392972767
+                appended_idx = append_solution_to_queue(solution_25)
+                add_input_index_to(13, appended_idx)
+                solution_26: IkSolution = copy.copy(this_solution)
+                solution_26[5] = -0.589048622548086
+                appended_idx = append_solution_to_queue(solution_26)
+                add_input_index_to(13, appended_idx)
+                solution_27: IkSolution = copy.copy(this_solution)
+                solution_27[5] = -0.490873852123405
+                appended_idx = append_solution_to_queue(solution_27)
+                add_input_index_to(13, appended_idx)
+                solution_28: IkSolution = copy.copy(this_solution)
+                solution_28[5] = -0.392699081698724
+                appended_idx = append_solution_to_queue(solution_28)
+                add_input_index_to(13, appended_idx)
+                solution_29: IkSolution = copy.copy(this_solution)
+                solution_29[5] = -0.294524311274043
+                appended_idx = append_solution_to_queue(solution_29)
+                add_input_index_to(13, appended_idx)
+                solution_30: IkSolution = copy.copy(this_solution)
+                solution_30[5] = -0.196349540849362
+                appended_idx = append_solution_to_queue(solution_30)
+                add_input_index_to(13, appended_idx)
+                solution_31: IkSolution = copy.copy(this_solution)
+                solution_31[5] = -0.0981747704246811
+                appended_idx = append_solution_to_queue(solution_31)
+                add_input_index_to(13, appended_idx)
+                this_solution[5] = 0.0
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(13, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_12_solve_th_6_processor()
+    # Finish code for explicit solution node 12
+
+    # Code for equation all-zero dispatcher node 13
+    def EquationAllZeroDispatcherNode_node_13_processor():
+        this_node_input_index: List[int] = node_input_index[13]
+        this_input_valid: bool = node_input_validity[13]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_6 = this_solution[5]
+            checked_result: bool = (abs(inv_Pz) <= 1.0e-6) and (abs(inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(14, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_13_processor()
+    # Finish code for equation all-zero dispatcher node 13
+
+    # Code for explicit solution node 14, solved variable is th_5
+    def ExplicitSolutionNode_node_14_solve_th_5_processor():
+        this_node_input_index: List[int] = node_input_index[14]
+        this_input_valid: bool = node_input_validity[14]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 14
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_3 = this_solution[3]
+            th_6 = this_solution[5]
+            condition_0: bool = (abs(inv_Pz) >= 1.0e-6) or (abs(inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6)) >= 1.0e-6)
+            if condition_0:
+                x0 = math.cos(th_3)
+                x1 = math.sin(th_3)
+                x2 = (a_1*x0 + a_2 + d_0*x1)*math.cos(th_4)
+                x3 = -inv_Px*math.cos(th_6) + inv_Py*math.sin(th_6)
+                x4 = a_1*x1 - d_0*x0 + d_3
+                this_solution[4] = math.atan2(inv_Pz*x2 - x3*x4, inv_Pz*x4 + x2*x3)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(15, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_14_solve_th_5_processor()
+    # Finish code for explicit solution node 14
+
+    # Code for non-branch dispatcher node 15
+    # Actually, there is no code
+
+    # Code for linear solution type2 node 16, solved variable is th_2
+    def LinearSinCosType_2_SolverNode_node_16_solve_th_2_processor():
+        this_node_input_index: List[int] = node_input_index[15]
+        this_input_valid: bool = node_input_validity[15]
+        if not this_input_valid:
+            return
+
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_3 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            # Temp variable for efficiency
+            x0 = math.sin(th_6)
+            x1 = math.sin(th_4)
+            x2 = math.cos(th_3)
+            x3 = x1*x2
+            x4 = math.sin(th_3)
+            x5 = math.sin(th_5)
+            x6 = math.cos(th_6)
+            x7 = math.cos(th_4)
+            x8 = x6*x7
+            x9 = math.cos(th_5)
+            x10 = x0*x3 + x2*x8*x9 - x4*x5*x6
+            x11 = x1*x9
+            x12 = -x0*x7 + x11*x6
+            x13 = -x0*x2*x7*x9 + x0*x4*x5 + x3*x6
+            x14 = x0*x11 + x8
+            x15 = x2*x5*x7 + x4*x9
+            x16 = x1*x5
+            x17 = a_1 + a_2*x2 + d_3*x4
+            # End of temp variables
+            A_matrix = np.zeros(shape=(8, 4))
+            A_matrix[0, 0] = r_11
+            A_matrix[0, 1] = -r_21
+            A_matrix[0, 2] = -x10
+            A_matrix[0, 3] = x12
+            A_matrix[1, 0] = r_12
+            A_matrix[1, 1] = -r_22
+            A_matrix[1, 2] = -x13
+            A_matrix[1, 3] = -x14
+            A_matrix[2, 0] = r_13
+            A_matrix[2, 1] = -r_23
+            A_matrix[2, 2] = x15
+            A_matrix[2, 3] = -x16
+            A_matrix[3, 0] = Px
+            A_matrix[3, 1] = -Py
+            A_matrix[3, 2] = -x17
+            A_matrix[4, 0] = -r_11
+            A_matrix[4, 1] = r_21
+            A_matrix[4, 2] = x10
+            A_matrix[4, 3] = -x12
+            A_matrix[5, 0] = -r_12
+            A_matrix[5, 1] = r_22
+            A_matrix[5, 2] = x13
+            A_matrix[5, 3] = x14
+            A_matrix[6, 0] = -r_13
+            A_matrix[6, 1] = r_23
+            A_matrix[6, 2] = -x15
+            A_matrix[6, 3] = x16
+            A_matrix[7, 0] = -Px
+            A_matrix[7, 1] = Py
+            A_matrix[7, 2] = x17
+            solution_tuple_0 = try_solve_linear_type2_specific_rows(A_matrix, 0, 1, 2)
+            if solution_tuple_0 is not None:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[2] = solution_tuple_0[0]
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(17, appended_idx)
+
+                this_solution[2] = solution_tuple_0[1]
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(17, node_input_i_idx_in_queue)
+                continue
+
+            solution_tuple_1 = try_solve_linear_type2_specific_rows(A_matrix, 0, 1, 3)
+            if solution_tuple_1 is not None:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[2] = solution_tuple_1[0]
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(17, appended_idx)
+
+                this_solution[2] = solution_tuple_1[1]
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(17, node_input_i_idx_in_queue)
+                continue
+
+            solution_tuple_2 = try_solve_linear_type2_specific_rows(A_matrix, 0, 1, 6)
+            if solution_tuple_2 is not None:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[2] = solution_tuple_2[0]
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(17, appended_idx)
+
+                this_solution[2] = solution_tuple_2[1]
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(17, node_input_i_idx_in_queue)
+                continue
+
+            solution_tuple_3 = try_solve_linear_type2_specific_rows(A_matrix, 0, 1, 7)
+            if solution_tuple_3 is not None:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[2] = solution_tuple_3[0]
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(17, appended_idx)
+
+                this_solution[2] = solution_tuple_3[1]
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(17, node_input_i_idx_in_queue)
+                continue
+
+            solution_tuple_4 = try_solve_linear_type2_specific_rows(A_matrix, 0, 2, 3)
+            if solution_tuple_4 is not None:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[2] = solution_tuple_4[0]
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(17, appended_idx)
+
+                this_solution[2] = solution_tuple_4[1]
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(17, node_input_i_idx_in_queue)
+                continue
+
+    # Invoke the processor
+    LinearSinCosType_2_SolverNode_node_16_solve_th_2_processor()
+    # Finish code for explicit solution node 15
+
+    # Code for equation all-zero dispatcher node 17
+    def EquationAllZeroDispatcherNode_node_17_processor():
+        this_node_input_index: List[int] = node_input_index[17]
+        this_input_valid: bool = node_input_validity[17]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            checked_result: bool = (abs(Px) <= 1.0e-6) and (abs(Py) <= 1.0e-6) and (abs((a_1 + a_2*math.cos(th_3) + d_3*math.sin(th_3))*math.sin(th_2)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(18, node_input_i_idx_in_queue)
+            else:
+                add_input_index_to(34, node_input_i_idx_in_queue)
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_17_processor()
+    # Finish code for equation all-zero dispatcher node 17
+
+    # Code for equation all-zero dispatcher node 34
+    def EquationAllZeroDispatcherNode_node_34_processor():
+        this_node_input_index: List[int] = node_input_index[34]
+        this_input_valid: bool = node_input_validity[34]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            checked_result: bool = (abs(Pz) <= 1.0e-6) and (abs(a_1*math.cos(th_2) + a_2*math.cos(th_2)*math.cos(th_3) + d_3*math.sin(th_3)*math.cos(th_2)) <= 1.0e-6) and (abs(a_2*math.sin(th_3) + d_0 - d_3*math.cos(th_3)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(35, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_34_processor()
+    # Finish code for equation all-zero dispatcher node 34
+
+    # Code for explicit solution node 35, solved variable is th_1
+    def ExplicitSolutionNode_node_35_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[35]
+        this_input_valid: bool = node_input_validity[35]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 35
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            condition_0: bool = (abs(Pz) >= zero_tolerance) or (abs(a_1*math.cos(th_2) + a_2*math.cos(th_2)*math.cos(th_3) + d_3*math.sin(th_3)*math.cos(th_2)) >= zero_tolerance) or (abs(a_2*math.sin(th_3) + d_0 - d_3*math.cos(th_3)) >= zero_tolerance)
+            if condition_0:
+                x0 = math.cos(th_2)
+                x1 = math.cos(th_3)
+                x2 = math.sin(th_3)
+                x3 = a_1*x0 + a_2*x0*x1 + d_3*x0*x2
+                x4 = a_2*x2 + d_0 - d_3*x1
+                x5 = math.atan2(x3, x4)
+                x6 = safe_sqrt(-Pz**2 + x3**2 + x4**2)
+                x7 = -Pz
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[1] = x5 + math.atan2(x6, x7)
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(36, appended_idx)
+                this_solution[1] = x5 + math.atan2(-x6, x7)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(36, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_35_solve_th_1_processor()
+    # Finish code for explicit solution node 35
+
+    # Code for equation all-zero dispatcher node 36
+    def EquationAllZeroDispatcherNode_node_36_processor():
+        this_node_input_index: List[int] = node_input_index[36]
+        this_input_valid: bool = node_input_validity[36]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            checked_result: bool = (abs(r_13) <= 1.0e-6) and (abs(r_23) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(37, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_36_processor()
+    # Finish code for equation all-zero dispatcher node 36
+
+    # Code for explicit solution node 37, solved variable is th_0
+    def ExplicitSolutionNode_node_37_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[37]
+        this_input_valid: bool = node_input_validity[37]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 37
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_1 = this_solution[1]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            th_5 = this_solution[4]
+            condition_0: bool = (abs(r_13) >= 1.0e-6) or (abs(r_23) >= 1.0e-6)
+            if condition_0:
+                x0 = math.sin(th_2)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_3)
+                x3 = x1*x2
+                x4 = math.sin(th_4)
+                x5 = math.sin(th_5)
+                x6 = math.cos(th_2)
+                x7 = math.cos(th_3)
+                x8 = x5*math.cos(th_4)
+                x9 = x7*x8
+                x10 = -x0*x3 - x0*x9 + x4*x5*x6
+                x11 = math.sin(th_1)
+                x12 = math.cos(th_1)
+                x13 = x12*x6
+                x14 = x0*x12*x4*x5 + x1*x11*x7 - x11*x2*x8 + x13*x3 + x13*x9
+                this_solution[0] = math.atan2(r_13*x10 - r_23*x14, -r_13*x14 - r_23*x10)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_37_solve_th_0_processor()
+    # Finish code for explicit solution node 37
+
+    # Code for explicit solution node 18, solved variable is th_0
+    def ExplicitSolutionNode_node_18_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[18]
+        this_input_valid: bool = node_input_validity[18]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 18
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            condition_0: bool = (abs(Px) >= zero_tolerance) or (abs(Py) >= zero_tolerance) or (abs((a_1 + a_2*math.cos(th_3) + d_3*math.sin(th_3))*math.sin(th_2)) >= zero_tolerance)
+            if condition_0:
+                x0 = math.atan2(Px, -Py)
+                x1 = math.sin(th_2)
+                x2 = a_1 + a_2*math.cos(th_3) + d_3*math.sin(th_3)
+                x3 = safe_sqrt(Px**2 + Py**2 - x1**2*x2**2)
+                x4 = x1*x2
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[0] = x0 + math.atan2(x3, x4)
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(19, appended_idx)
+                this_solution[0] = x0 + math.atan2(-x3, x4)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(19, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_18_solve_th_0_processor()
+    # Finish code for explicit solution node 18
+
+    # Code for equation all-zero dispatcher node 19
+    def EquationAllZeroDispatcherNode_node_19_processor():
+        this_node_input_index: List[int] = node_input_index[19]
+        this_input_valid: bool = node_input_validity[19]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            checked_result: bool = (abs(Pz) <= 1.0e-6) and (abs(Px*math.cos(th_0) + Py*math.sin(th_0)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(20, node_input_i_idx_in_queue)
+            else:
+                add_input_index_to(38, node_input_i_idx_in_queue)
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_19_processor()
+    # Finish code for equation all-zero dispatcher node 19
+
+    # Code for equation all-zero dispatcher node 38
+    def EquationAllZeroDispatcherNode_node_38_processor():
+        this_node_input_index: List[int] = node_input_index[38]
+        this_input_valid: bool = node_input_validity[38]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            checked_result: bool = (abs(r_33) <= 1.0e-6) and (abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(39, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_38_processor()
+    # Finish code for equation all-zero dispatcher node 38
+
+    # Code for explicit solution node 39, solved variable is th_1
+    def ExplicitSolutionNode_node_39_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[39]
+        this_input_valid: bool = node_input_validity[39]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 39
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            th_5 = this_solution[4]
+            condition_0: bool = (abs(r_33) >= 1.0e-6) or (abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) >= 1.0e-6)
+            if condition_0:
+                x0 = math.sin(th_5)
+                x1 = math.sin(th_3)
+                x2 = math.cos(th_2)
+                x3 = math.cos(th_5)
+                x4 = math.cos(th_3)
+                x5 = x0*math.cos(th_4)
+                x6 = x0*math.sin(th_2)*math.sin(th_4) + x1*x2*x3 + x2*x4*x5
+                x7 = -r_13*math.cos(th_0) - r_23*math.sin(th_0)
+                x8 = x1*x5 - x3*x4
+                this_solution[1] = math.atan2(r_33*x6 - x7*x8, r_33*x8 + x6*x7)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_39_solve_th_1_processor()
+    # Finish code for explicit solution node 39
+
+    # Code for explicit solution node 20, solved variable is th_1
+    def ExplicitSolutionNode_node_20_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[20]
+        this_input_valid: bool = node_input_validity[20]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 20
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            condition_0: bool = (abs(Pz) >= 1.0e-6) or (abs(Px*math.cos(th_0) + Py*math.sin(th_0)) >= 1.0e-6)
+            if condition_0:
+                x0 = math.cos(th_3)
+                x1 = math.sin(th_3)
+                x2 = (a_1 + a_2*x0 + d_3*x1)*math.cos(th_2)
+                x3 = -Px*math.cos(th_0) - Py*math.sin(th_0)
+                x4 = -a_2*x1 - d_0 + d_3*x0
+                this_solution[1] = math.atan2(-Pz*x2 - x3*x4, Pz*x4 - x2*x3)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_20_solve_th_1_processor()
+    # Finish code for explicit solution node 20
 
     # Code for explicit solution node 3, solved variable is th_6
     def ExplicitSolutionNode_node_3_solve_th_6_processor():
@@ -568,11 +1199,589 @@ def marvin_m6_right_arm_ik_solve_raw(T_ee: np.ndarray, th_4):
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue)
             else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
+                add_input_index_to(21, node_input_i_idx_in_queue)
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_4_processor()
     # Finish code for equation all-zero dispatcher node 4
+
+    # Code for explicit solution node 21, solved variable is th_5
+    def ExplicitSolutionNode_node_21_solve_th_5_processor():
+        this_node_input_index: List[int] = node_input_index[21]
+        this_input_valid: bool = node_input_validity[21]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 21
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            condition_0: bool = True
+            if condition_0:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[4] = 0.523598775598299
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(22, appended_idx)
+                solution_1: IkSolution = copy.copy(this_solution)
+                solution_1[4] = 0.589048622548086
+                appended_idx = append_solution_to_queue(solution_1)
+                add_input_index_to(22, appended_idx)
+                solution_2: IkSolution = copy.copy(this_solution)
+                solution_2[4] = 0.654498469497874
+                appended_idx = append_solution_to_queue(solution_2)
+                add_input_index_to(22, appended_idx)
+                solution_3: IkSolution = copy.copy(this_solution)
+                solution_3[4] = 0.719948316447661
+                appended_idx = append_solution_to_queue(solution_3)
+                add_input_index_to(22, appended_idx)
+                solution_4: IkSolution = copy.copy(this_solution)
+                solution_4[4] = 0.785398163397448
+                appended_idx = append_solution_to_queue(solution_4)
+                add_input_index_to(22, appended_idx)
+                solution_5: IkSolution = copy.copy(this_solution)
+                solution_5[4] = 0.850848010347236
+                appended_idx = append_solution_to_queue(solution_5)
+                add_input_index_to(22, appended_idx)
+                solution_6: IkSolution = copy.copy(this_solution)
+                solution_6[4] = 0.916297857297023
+                appended_idx = append_solution_to_queue(solution_6)
+                add_input_index_to(22, appended_idx)
+                solution_7: IkSolution = copy.copy(this_solution)
+                solution_7[4] = 0.981747704246810
+                appended_idx = append_solution_to_queue(solution_7)
+                add_input_index_to(22, appended_idx)
+                solution_8: IkSolution = copy.copy(this_solution)
+                solution_8[4] = 1.04719755119660
+                appended_idx = append_solution_to_queue(solution_8)
+                add_input_index_to(22, appended_idx)
+                solution_9: IkSolution = copy.copy(this_solution)
+                solution_9[4] = 1.11264739814638
+                appended_idx = append_solution_to_queue(solution_9)
+                add_input_index_to(22, appended_idx)
+                solution_10: IkSolution = copy.copy(this_solution)
+                solution_10[4] = 1.17809724509617
+                appended_idx = append_solution_to_queue(solution_10)
+                add_input_index_to(22, appended_idx)
+                solution_11: IkSolution = copy.copy(this_solution)
+                solution_11[4] = 1.24354709204596
+                appended_idx = append_solution_to_queue(solution_11)
+                add_input_index_to(22, appended_idx)
+                solution_12: IkSolution = copy.copy(this_solution)
+                solution_12[4] = 1.30899693899575
+                appended_idx = append_solution_to_queue(solution_12)
+                add_input_index_to(22, appended_idx)
+                solution_13: IkSolution = copy.copy(this_solution)
+                solution_13[4] = 1.37444678594553
+                appended_idx = append_solution_to_queue(solution_13)
+                add_input_index_to(22, appended_idx)
+                solution_14: IkSolution = copy.copy(this_solution)
+                solution_14[4] = 1.43989663289532
+                appended_idx = append_solution_to_queue(solution_14)
+                add_input_index_to(22, appended_idx)
+                solution_15: IkSolution = copy.copy(this_solution)
+                solution_15[4] = 1.50534647984511
+                appended_idx = append_solution_to_queue(solution_15)
+                add_input_index_to(22, appended_idx)
+                solution_16: IkSolution = copy.copy(this_solution)
+                solution_16[4] = 1.57079632679490
+                appended_idx = append_solution_to_queue(solution_16)
+                add_input_index_to(22, appended_idx)
+                solution_17: IkSolution = copy.copy(this_solution)
+                solution_17[4] = 1.63624617374468
+                appended_idx = append_solution_to_queue(solution_17)
+                add_input_index_to(22, appended_idx)
+                solution_18: IkSolution = copy.copy(this_solution)
+                solution_18[4] = 1.70169602069447
+                appended_idx = append_solution_to_queue(solution_18)
+                add_input_index_to(22, appended_idx)
+                solution_19: IkSolution = copy.copy(this_solution)
+                solution_19[4] = 1.76714586764426
+                appended_idx = append_solution_to_queue(solution_19)
+                add_input_index_to(22, appended_idx)
+                solution_20: IkSolution = copy.copy(this_solution)
+                solution_20[4] = 1.83259571459405
+                appended_idx = append_solution_to_queue(solution_20)
+                add_input_index_to(22, appended_idx)
+                solution_21: IkSolution = copy.copy(this_solution)
+                solution_21[4] = 1.89804556154383
+                appended_idx = append_solution_to_queue(solution_21)
+                add_input_index_to(22, appended_idx)
+                solution_22: IkSolution = copy.copy(this_solution)
+                solution_22[4] = 1.96349540849362
+                appended_idx = append_solution_to_queue(solution_22)
+                add_input_index_to(22, appended_idx)
+                solution_23: IkSolution = copy.copy(this_solution)
+                solution_23[4] = 2.02894525544341
+                appended_idx = append_solution_to_queue(solution_23)
+                add_input_index_to(22, appended_idx)
+                solution_24: IkSolution = copy.copy(this_solution)
+                solution_24[4] = 2.09439510239319
+                appended_idx = append_solution_to_queue(solution_24)
+                add_input_index_to(22, appended_idx)
+                solution_25: IkSolution = copy.copy(this_solution)
+                solution_25[4] = 2.15984494934298
+                appended_idx = append_solution_to_queue(solution_25)
+                add_input_index_to(22, appended_idx)
+                solution_26: IkSolution = copy.copy(this_solution)
+                solution_26[4] = 2.22529479629277
+                appended_idx = append_solution_to_queue(solution_26)
+                add_input_index_to(22, appended_idx)
+                solution_27: IkSolution = copy.copy(this_solution)
+                solution_27[4] = 2.29074464324256
+                appended_idx = append_solution_to_queue(solution_27)
+                add_input_index_to(22, appended_idx)
+                solution_28: IkSolution = copy.copy(this_solution)
+                solution_28[4] = 2.35619449019234
+                appended_idx = append_solution_to_queue(solution_28)
+                add_input_index_to(22, appended_idx)
+                solution_29: IkSolution = copy.copy(this_solution)
+                solution_29[4] = 2.42164433714213
+                appended_idx = append_solution_to_queue(solution_29)
+                add_input_index_to(22, appended_idx)
+                solution_30: IkSolution = copy.copy(this_solution)
+                solution_30[4] = 2.48709418409192
+                appended_idx = append_solution_to_queue(solution_30)
+                add_input_index_to(22, appended_idx)
+                solution_31: IkSolution = copy.copy(this_solution)
+                solution_31[4] = 2.55254403104171
+                appended_idx = append_solution_to_queue(solution_31)
+                add_input_index_to(22, appended_idx)
+                this_solution[4] = 2.61799387799149
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(22, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_21_solve_th_5_processor()
+    # Finish code for explicit solution node 21
+
+    # Code for non-branch dispatcher node 22
+    # Actually, there is no code
+
+    # Code for linear solution type2 node 23, solved variable is th_2
+    def LinearSinCosType_2_SolverNode_node_23_solve_th_2_processor():
+        this_node_input_index: List[int] = node_input_index[22]
+        this_input_valid: bool = node_input_validity[22]
+        if not this_input_valid:
+            return
+
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_3 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            # Temp variable for efficiency
+            x0 = math.sin(th_6)
+            x1 = math.sin(th_4)
+            x2 = math.cos(th_3)
+            x3 = x1*x2
+            x4 = math.sin(th_3)
+            x5 = math.sin(th_5)
+            x6 = math.cos(th_6)
+            x7 = math.cos(th_4)
+            x8 = x6*x7
+            x9 = math.cos(th_5)
+            x10 = x0*x3 + x2*x8*x9 - x4*x5*x6
+            x11 = x1*x9
+            x12 = -x0*x7 + x11*x6
+            x13 = -x0*x2*x7*x9 + x0*x4*x5 + x3*x6
+            x14 = x0*x11 + x8
+            x15 = x2*x5*x7 + x4*x9
+            x16 = x1*x5
+            x17 = a_1 + a_2*x2 + d_3*x4
+            # End of temp variables
+            A_matrix = np.zeros(shape=(8, 4))
+            A_matrix[0, 0] = r_11
+            A_matrix[0, 1] = -r_21
+            A_matrix[0, 2] = -x10
+            A_matrix[0, 3] = x12
+            A_matrix[1, 0] = r_12
+            A_matrix[1, 1] = -r_22
+            A_matrix[1, 2] = -x13
+            A_matrix[1, 3] = -x14
+            A_matrix[2, 0] = r_13
+            A_matrix[2, 1] = -r_23
+            A_matrix[2, 2] = x15
+            A_matrix[2, 3] = -x16
+            A_matrix[3, 0] = Px
+            A_matrix[3, 1] = -Py
+            A_matrix[3, 2] = -x17
+            A_matrix[4, 0] = -r_11
+            A_matrix[4, 1] = r_21
+            A_matrix[4, 2] = x10
+            A_matrix[4, 3] = -x12
+            A_matrix[5, 0] = -r_12
+            A_matrix[5, 1] = r_22
+            A_matrix[5, 2] = x13
+            A_matrix[5, 3] = x14
+            A_matrix[6, 0] = -r_13
+            A_matrix[6, 1] = r_23
+            A_matrix[6, 2] = -x15
+            A_matrix[6, 3] = x16
+            A_matrix[7, 0] = -Px
+            A_matrix[7, 1] = Py
+            A_matrix[7, 2] = x17
+            solution_tuple_0 = try_solve_linear_type2_specific_rows(A_matrix, 0, 1, 2)
+            if solution_tuple_0 is not None:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[2] = solution_tuple_0[0]
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(24, appended_idx)
+
+                this_solution[2] = solution_tuple_0[1]
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(24, node_input_i_idx_in_queue)
+                continue
+
+            solution_tuple_1 = try_solve_linear_type2_specific_rows(A_matrix, 0, 1, 3)
+            if solution_tuple_1 is not None:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[2] = solution_tuple_1[0]
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(24, appended_idx)
+
+                this_solution[2] = solution_tuple_1[1]
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(24, node_input_i_idx_in_queue)
+                continue
+
+            solution_tuple_2 = try_solve_linear_type2_specific_rows(A_matrix, 0, 1, 6)
+            if solution_tuple_2 is not None:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[2] = solution_tuple_2[0]
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(24, appended_idx)
+
+                this_solution[2] = solution_tuple_2[1]
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(24, node_input_i_idx_in_queue)
+                continue
+
+            solution_tuple_3 = try_solve_linear_type2_specific_rows(A_matrix, 0, 1, 7)
+            if solution_tuple_3 is not None:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[2] = solution_tuple_3[0]
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(24, appended_idx)
+
+                this_solution[2] = solution_tuple_3[1]
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(24, node_input_i_idx_in_queue)
+                continue
+
+            solution_tuple_4 = try_solve_linear_type2_specific_rows(A_matrix, 0, 2, 3)
+            if solution_tuple_4 is not None:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[2] = solution_tuple_4[0]
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(24, appended_idx)
+
+                this_solution[2] = solution_tuple_4[1]
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(24, node_input_i_idx_in_queue)
+                continue
+
+    # Invoke the processor
+    LinearSinCosType_2_SolverNode_node_23_solve_th_2_processor()
+    # Finish code for explicit solution node 22
+
+    # Code for equation all-zero dispatcher node 24
+    def EquationAllZeroDispatcherNode_node_24_processor():
+        this_node_input_index: List[int] = node_input_index[24]
+        this_input_valid: bool = node_input_validity[24]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            checked_result: bool = (abs(Px) <= 1.0e-6) and (abs(Py) <= 1.0e-6) and (abs((a_1 + a_2*math.cos(th_3) + d_3*math.sin(th_3))*math.sin(th_2)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(25, node_input_i_idx_in_queue)
+            else:
+                add_input_index_to(40, node_input_i_idx_in_queue)
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_24_processor()
+    # Finish code for equation all-zero dispatcher node 24
+
+    # Code for equation all-zero dispatcher node 40
+    def EquationAllZeroDispatcherNode_node_40_processor():
+        this_node_input_index: List[int] = node_input_index[40]
+        this_input_valid: bool = node_input_validity[40]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            checked_result: bool = (abs(Pz) <= 1.0e-6) and (abs(a_1*math.cos(th_2) + a_2*math.cos(th_2)*math.cos(th_3) + d_3*math.sin(th_3)*math.cos(th_2)) <= 1.0e-6) and (abs(a_2*math.sin(th_3) + d_0 - d_3*math.cos(th_3)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(41, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_40_processor()
+    # Finish code for equation all-zero dispatcher node 40
+
+    # Code for explicit solution node 41, solved variable is th_1
+    def ExplicitSolutionNode_node_41_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[41]
+        this_input_valid: bool = node_input_validity[41]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 41
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            condition_0: bool = (abs(Pz) >= zero_tolerance) or (abs(a_1*math.cos(th_2) + a_2*math.cos(th_2)*math.cos(th_3) + d_3*math.sin(th_3)*math.cos(th_2)) >= zero_tolerance) or (abs(a_2*math.sin(th_3) + d_0 - d_3*math.cos(th_3)) >= zero_tolerance)
+            if condition_0:
+                x0 = math.cos(th_2)
+                x1 = math.cos(th_3)
+                x2 = math.sin(th_3)
+                x3 = a_1*x0 + a_2*x0*x1 + d_3*x0*x2
+                x4 = a_2*x2 + d_0 - d_3*x1
+                x5 = math.atan2(x3, x4)
+                x6 = safe_sqrt(-Pz**2 + x3**2 + x4**2)
+                x7 = -Pz
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[1] = x5 + math.atan2(x6, x7)
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(42, appended_idx)
+                this_solution[1] = x5 + math.atan2(-x6, x7)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(42, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_41_solve_th_1_processor()
+    # Finish code for explicit solution node 41
+
+    # Code for equation all-zero dispatcher node 42
+    def EquationAllZeroDispatcherNode_node_42_processor():
+        this_node_input_index: List[int] = node_input_index[42]
+        this_input_valid: bool = node_input_validity[42]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            checked_result: bool = (abs(r_13) <= 1.0e-6) and (abs(r_23) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(43, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_42_processor()
+    # Finish code for equation all-zero dispatcher node 42
+
+    # Code for explicit solution node 43, solved variable is th_0
+    def ExplicitSolutionNode_node_43_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[43]
+        this_input_valid: bool = node_input_validity[43]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 43
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_1 = this_solution[1]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            th_5 = this_solution[4]
+            condition_0: bool = (abs(r_13) >= 1.0e-6) or (abs(r_23) >= 1.0e-6)
+            if condition_0:
+                x0 = math.sin(th_2)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_3)
+                x3 = x1*x2
+                x4 = math.sin(th_4)
+                x5 = math.sin(th_5)
+                x6 = math.cos(th_2)
+                x7 = math.cos(th_3)
+                x8 = x5*math.cos(th_4)
+                x9 = x7*x8
+                x10 = -x0*x3 - x0*x9 + x4*x5*x6
+                x11 = math.sin(th_1)
+                x12 = math.cos(th_1)
+                x13 = x12*x6
+                x14 = x0*x12*x4*x5 + x1*x11*x7 - x11*x2*x8 + x13*x3 + x13*x9
+                this_solution[0] = math.atan2(r_13*x10 - r_23*x14, -r_13*x14 - r_23*x10)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_43_solve_th_0_processor()
+    # Finish code for explicit solution node 43
+
+    # Code for explicit solution node 25, solved variable is th_0
+    def ExplicitSolutionNode_node_25_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[25]
+        this_input_valid: bool = node_input_validity[25]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 25
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            condition_0: bool = (abs(Px) >= zero_tolerance) or (abs(Py) >= zero_tolerance) or (abs((a_1 + a_2*math.cos(th_3) + d_3*math.sin(th_3))*math.sin(th_2)) >= zero_tolerance)
+            if condition_0:
+                x0 = math.atan2(Px, -Py)
+                x1 = math.sin(th_2)
+                x2 = a_1 + a_2*math.cos(th_3) + d_3*math.sin(th_3)
+                x3 = safe_sqrt(Px**2 + Py**2 - x1**2*x2**2)
+                x4 = x1*x2
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[0] = x0 + math.atan2(x3, x4)
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(26, appended_idx)
+                this_solution[0] = x0 + math.atan2(-x3, x4)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(26, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_25_solve_th_0_processor()
+    # Finish code for explicit solution node 25
+
+    # Code for equation all-zero dispatcher node 26
+    def EquationAllZeroDispatcherNode_node_26_processor():
+        this_node_input_index: List[int] = node_input_index[26]
+        this_input_valid: bool = node_input_validity[26]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            checked_result: bool = (abs(Pz) <= 1.0e-6) and (abs(Px*math.cos(th_0) + Py*math.sin(th_0)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(27, node_input_i_idx_in_queue)
+            else:
+                add_input_index_to(44, node_input_i_idx_in_queue)
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_26_processor()
+    # Finish code for equation all-zero dispatcher node 26
+
+    # Code for equation all-zero dispatcher node 44
+    def EquationAllZeroDispatcherNode_node_44_processor():
+        this_node_input_index: List[int] = node_input_index[44]
+        this_input_valid: bool = node_input_validity[44]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            checked_result: bool = (abs(r_33) <= 1.0e-6) and (abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(45, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_44_processor()
+    # Finish code for equation all-zero dispatcher node 44
+
+    # Code for explicit solution node 45, solved variable is th_1
+    def ExplicitSolutionNode_node_45_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[45]
+        this_input_valid: bool = node_input_validity[45]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 45
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            th_5 = this_solution[4]
+            condition_0: bool = (abs(r_33) >= 1.0e-6) or (abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) >= 1.0e-6)
+            if condition_0:
+                x0 = math.sin(th_5)
+                x1 = math.sin(th_3)
+                x2 = math.cos(th_2)
+                x3 = math.cos(th_5)
+                x4 = math.cos(th_3)
+                x5 = x0*math.cos(th_4)
+                x6 = x0*math.sin(th_2)*math.sin(th_4) + x1*x2*x3 + x2*x4*x5
+                x7 = -r_13*math.cos(th_0) - r_23*math.sin(th_0)
+                x8 = x1*x5 - x3*x4
+                this_solution[1] = math.atan2(r_33*x6 - x7*x8, r_33*x8 + x6*x7)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_45_solve_th_1_processor()
+    # Finish code for explicit solution node 45
+
+    # Code for explicit solution node 27, solved variable is th_1
+    def ExplicitSolutionNode_node_27_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[27]
+        this_input_valid: bool = node_input_validity[27]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 27
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            condition_0: bool = (abs(Pz) >= 1.0e-6) or (abs(Px*math.cos(th_0) + Py*math.sin(th_0)) >= 1.0e-6)
+            if condition_0:
+                x0 = math.cos(th_3)
+                x1 = math.sin(th_3)
+                x2 = (a_1 + a_2*x0 + d_3*x1)*math.cos(th_2)
+                x3 = -Px*math.cos(th_0) - Py*math.sin(th_0)
+                x4 = -a_2*x1 - d_0 + d_3*x0
+                this_solution[1] = math.atan2(-Pz*x2 - x3*x4, Pz*x4 - x2*x3)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_27_solve_th_1_processor()
+    # Finish code for explicit solution node 27
 
     # Code for explicit solution node 5, solved variable is th_5
     def ExplicitSolutionNode_node_5_solve_th_5_processor():
@@ -755,11 +1964,253 @@ def marvin_m6_right_arm_ik_solve_raw(T_ee: np.ndarray, th_4):
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(9, node_input_i_idx_in_queue)
             else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
+                add_input_index_to(28, node_input_i_idx_in_queue)
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_8_processor()
     # Finish code for equation all-zero dispatcher node 8
+
+    # Code for equation all-zero dispatcher node 28
+    def EquationAllZeroDispatcherNode_node_28_processor():
+        this_node_input_index: List[int] = node_input_index[28]
+        this_input_valid: bool = node_input_validity[28]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            checked_result: bool = (abs(Pz) <= 1.0e-6) and (abs(a_1*math.cos(th_2) + a_2*math.cos(th_2)*math.cos(th_3) + d_3*math.sin(th_3)*math.cos(th_2)) <= 1.0e-6) and (abs(a_2*math.sin(th_3) + d_0 - d_3*math.cos(th_3)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(29, node_input_i_idx_in_queue)
+            else:
+                add_input_index_to(46, node_input_i_idx_in_queue)
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_28_processor()
+    # Finish code for equation all-zero dispatcher node 28
+
+    # Code for equation all-zero dispatcher node 46
+    def EquationAllZeroDispatcherNode_node_46_processor():
+        this_node_input_index: List[int] = node_input_index[46]
+        this_input_valid: bool = node_input_validity[46]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            th_5 = this_solution[4]
+            checked_result: bool = (abs(r_13) <= 1.0e-6) and (abs(r_23) <= 1.0e-6) and (abs(math.sin(th_2)*math.sin(th_3)*math.cos(th_5) + math.sin(th_2)*math.sin(th_5)*math.cos(th_3)*math.cos(th_4) - math.sin(th_4)*math.sin(th_5)*math.cos(th_2)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(47, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_46_processor()
+    # Finish code for equation all-zero dispatcher node 46
+
+    # Code for explicit solution node 47, solved variable is th_0
+    def ExplicitSolutionNode_node_47_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[47]
+        this_input_valid: bool = node_input_validity[47]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 47
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            th_5 = this_solution[4]
+            condition_0: bool = (abs(r_13) >= zero_tolerance) or (abs(r_23) >= zero_tolerance) or (abs(math.sin(th_2)*math.sin(th_3)*math.cos(th_5) + math.sin(th_2)*math.sin(th_5)*math.cos(th_3)*math.cos(th_4) - math.sin(th_4)*math.sin(th_5)*math.cos(th_2)) >= zero_tolerance)
+            if condition_0:
+                x0 = math.atan2(r_13, -r_23)
+                x1 = math.sin(th_2)
+                x2 = math.sin(th_5)
+                x3 = -x1*x2*math.cos(th_3)*math.cos(th_4) - x1*math.sin(th_3)*math.cos(th_5) + x2*math.sin(th_4)*math.cos(th_2)
+                x4 = safe_sqrt(r_13**2 + r_23**2 - x3**2)
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[0] = x0 + math.atan2(x4, x3)
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(48, appended_idx)
+                this_solution[0] = x0 + math.atan2(-x4, x3)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(48, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_47_solve_th_0_processor()
+    # Finish code for explicit solution node 47
+
+    # Code for equation all-zero dispatcher node 48
+    def EquationAllZeroDispatcherNode_node_48_processor():
+        this_node_input_index: List[int] = node_input_index[48]
+        this_input_valid: bool = node_input_validity[48]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            checked_result: bool = (abs(r_33) <= 1.0e-6) and (abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(49, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_48_processor()
+    # Finish code for equation all-zero dispatcher node 48
+
+    # Code for explicit solution node 49, solved variable is th_1
+    def ExplicitSolutionNode_node_49_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[49]
+        this_input_valid: bool = node_input_validity[49]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 49
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            th_5 = this_solution[4]
+            condition_0: bool = (abs(r_33) >= 1.0e-6) or (abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) >= 1.0e-6)
+            if condition_0:
+                x0 = math.sin(th_5)
+                x1 = math.sin(th_3)
+                x2 = math.cos(th_2)
+                x3 = math.cos(th_5)
+                x4 = math.cos(th_3)
+                x5 = x0*math.cos(th_4)
+                x6 = x0*math.sin(th_2)*math.sin(th_4) + x1*x2*x3 + x2*x4*x5
+                x7 = -r_13*math.cos(th_0) - r_23*math.sin(th_0)
+                x8 = x1*x5 - x3*x4
+                this_solution[1] = math.atan2(r_33*x6 - x7*x8, r_33*x8 + x6*x7)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_49_solve_th_1_processor()
+    # Finish code for explicit solution node 49
+
+    # Code for explicit solution node 29, solved variable is th_1
+    def ExplicitSolutionNode_node_29_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[29]
+        this_input_valid: bool = node_input_validity[29]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 29
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            condition_0: bool = (abs(Pz) >= zero_tolerance) or (abs(a_1*math.cos(th_2) + a_2*math.cos(th_2)*math.cos(th_3) + d_3*math.sin(th_3)*math.cos(th_2)) >= zero_tolerance) or (abs(a_2*math.sin(th_3) + d_0 - d_3*math.cos(th_3)) >= zero_tolerance)
+            if condition_0:
+                x0 = math.cos(th_2)
+                x1 = math.cos(th_3)
+                x2 = math.sin(th_3)
+                x3 = a_1*x0 + a_2*x0*x1 + d_3*x0*x2
+                x4 = a_2*x2 + d_0 - d_3*x1
+                x5 = math.atan2(x3, x4)
+                x6 = safe_sqrt(-Pz**2 + x3**2 + x4**2)
+                x7 = -Pz
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[1] = x5 + math.atan2(x6, x7)
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(30, appended_idx)
+                this_solution[1] = x5 + math.atan2(-x6, x7)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(30, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_29_solve_th_1_processor()
+    # Finish code for explicit solution node 29
+
+    # Code for equation all-zero dispatcher node 30
+    def EquationAllZeroDispatcherNode_node_30_processor():
+        this_node_input_index: List[int] = node_input_index[30]
+        this_input_valid: bool = node_input_validity[30]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            checked_result: bool = (abs(r_13) <= 1.0e-6) and (abs(r_23) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(31, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_30_processor()
+    # Finish code for equation all-zero dispatcher node 30
+
+    # Code for explicit solution node 31, solved variable is th_0
+    def ExplicitSolutionNode_node_31_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[31]
+        this_input_valid: bool = node_input_validity[31]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 31
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_1 = this_solution[1]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            th_5 = this_solution[4]
+            condition_0: bool = (abs(r_13) >= 1.0e-6) or (abs(r_23) >= 1.0e-6)
+            if condition_0:
+                x0 = math.sin(th_2)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_3)
+                x3 = x1*x2
+                x4 = math.sin(th_4)
+                x5 = math.sin(th_5)
+                x6 = math.cos(th_2)
+                x7 = math.cos(th_3)
+                x8 = x5*math.cos(th_4)
+                x9 = x7*x8
+                x10 = -x0*x3 - x0*x9 + x4*x5*x6
+                x11 = math.sin(th_1)
+                x12 = math.cos(th_1)
+                x13 = x12*x6
+                x14 = x0*x12*x4*x5 + x1*x11*x7 - x11*x2*x8 + x13*x3 + x13*x9
+                this_solution[0] = math.atan2(r_13*x10 - r_23*x14, -r_13*x14 - r_23*x10)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_31_solve_th_0_processor()
+    # Finish code for explicit solution node 31
 
     # Code for explicit solution node 9, solved variable is th_0
     def ExplicitSolutionNode_node_9_solve_th_0_processor():
@@ -812,11 +2263,69 @@ def marvin_m6_right_arm_ik_solve_raw(T_ee: np.ndarray, th_4):
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(11, node_input_i_idx_in_queue)
             else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
+                add_input_index_to(32, node_input_i_idx_in_queue)
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_10_processor()
     # Finish code for equation all-zero dispatcher node 10
+
+    # Code for equation all-zero dispatcher node 32
+    def EquationAllZeroDispatcherNode_node_32_processor():
+        this_node_input_index: List[int] = node_input_index[32]
+        this_input_valid: bool = node_input_validity[32]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            checked_result: bool = (abs(r_33) <= 1.0e-6) and (abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) <= 1.0e-6)
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(33, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_32_processor()
+    # Finish code for equation all-zero dispatcher node 32
+
+    # Code for explicit solution node 33, solved variable is th_1
+    def ExplicitSolutionNode_node_33_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[33]
+        this_input_valid: bool = node_input_validity[33]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 33
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_2 = this_solution[2]
+            th_3 = this_solution[3]
+            th_5 = this_solution[4]
+            condition_0: bool = (abs(r_33) >= 1.0e-6) or (abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) >= 1.0e-6)
+            if condition_0:
+                x0 = math.sin(th_5)
+                x1 = math.sin(th_3)
+                x2 = math.cos(th_2)
+                x3 = math.cos(th_5)
+                x4 = math.cos(th_3)
+                x5 = x0*math.cos(th_4)
+                x6 = x0*math.sin(th_2)*math.sin(th_4) + x1*x2*x3 + x2*x4*x5
+                x7 = -r_13*math.cos(th_0) - r_23*math.sin(th_0)
+                x8 = x1*x5 - x3*x4
+                this_solution[1] = math.atan2(r_33*x6 - x7*x8, r_33*x8 + x6*x7)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_33_solve_th_1_processor()
+    # Finish code for explicit solution node 33
 
     # Code for explicit solution node 11, solved variable is th_1
     def ExplicitSolutionNode_node_11_solve_th_1_processor():

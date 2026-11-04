@@ -3,6 +3,7 @@ from codegen.skeleton.tree_node import SolutionNodeBase, SolvedVariableDispatche
 from codegen.skeleton.tree_serialize import save_ik_tree, save_ik_list
 from solver.solve_equations import solve_from_snapshot, SolveEquationOption
 from solver.solve_branched import branched_equations_at_solved_variable_degeneration
+from codegen.skeleton.build_equation_branch import build_equation_zero_branches
 from typing import Optional, Set, Dict, List
 import sympy as sp
 
@@ -81,6 +82,12 @@ def build_solved_variable_branches(
             solution_i = solve_from_snapshot(solver_input_i, option=solve_option)
             if len(solution_i) > 0:
                 new_solution_i.extend(solution_i)
+                solved = {solution.solved_variable for solution in
+                          tree.variable_solutions_from_root(current_solution_node, include_current_node=False)}
+                solved.update(solution.solved_variable for solution in new_solution_i)
+                if not {unknown.symbol for unknown in tree.solved_unknowns} <= solved:
+                    print('Discarding incomplete variable-value branch at node', current_solution_node.flatten_idx)
+                    continue
                 tree.append_branched_solution(new_solution_i, parent, i + 1)
 
                 # Save in each update
@@ -89,6 +96,8 @@ def build_solved_variable_branches(
                 save_tree_name = 'branch_tree_at_{idx}.yaml'.format(idx=save_counter)
                 save_ik_list(solution_i, save_list_name)
                 save_ik_tree(tree, save_tree_name)
+
+    build_equation_zero_branches(tree, max_num_nodes=max_num_nodes)
 
 
 # Debug code

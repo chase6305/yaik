@@ -107,7 +107,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('static constexpr int robot_nq = {nq};'.format(nq=len(robot.unknowns)))
 
         base_n_solutions = 128 if tree.has_general_6dof_solution_node() else 16
-        max_n_solution = base_n_solutions * self.branch_capacity_multiplier
+        max_n_solution = max(base_n_solutions * self.branch_capacity_multiplier, self.queue_capacity_bound)
         self.add_code_line(f'static constexpr int max_n_solutions = {max_n_solution};')
         self.add_code_line('static constexpr int n_tree_nodes = {n_tree_nodes};'.
                            format(n_tree_nodes=self.skeleton_tree.num_nodes))

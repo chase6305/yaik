@@ -10,6 +10,7 @@ from solver.solved_variable import VariableSolution, DegenerateType, NumericalAn
 from solver.select_solution import select_solution, DegenerateAnalyserContext, DegenerateAnalyserOption
 from solver.solver_snapshot import SolverSnapshot
 from solver.degenerate_analyse.detect_soa_solution import detect_soa_solution
+from solver.branch_conditions import formula_degenerates_on_branch
 from typing import List, Dict, Set, Tuple, Optional
 import attr
 import sympy as sp
@@ -18,6 +19,10 @@ import copy
 
 @attr.s
 class SolveEquationOption(object):
+    # Branch recovery must not reselect the formula whose coefficients vanished.
+    zero_equations: Tuple[sp.Expr, ...] = attr.ib(factory=tuple)
+    initially_deferred_symbols: Set[sp.Symbol] = attr.ib(factory=set)
+    direct_solutions_only: bool = attr.ib(default=False)
     # We are solving the main-branch or degenerate branch
     on_main_branch: bool = True
 
@@ -88,7 +93,7 @@ def solve_equations(equation_input: EquationInput,
     unknown_symbols = [elem.symbol for elem in current_unknowns]
 
     # Perform soa transform, only once
-    if len(current_unknowns) >= 2:
+    if len(current_unknowns) >= 2 and not option.direct_solutions_only:
         accumulator = soa_transform.sum_of_angle_transform_parallel(scalar_equations, unknown_symbols)
         scalar_equations.extend(accumulator.soa_equation)
         for new_var in accumulator.new_soa_var:
@@ -126,6 +131,11 @@ def solve_equations(equation_input: EquationInput,
             loop_remaining_unknowns: List[Unknown],
             simple_solution_only: bool,
             use_numerical_test: bool) -> Optional[VariableSolution]:
+        loop_solutions = [solution for solution in loop_solutions
+                          if (loop_solved_variable or solution.solved_variable not in option.initially_deferred_symbols)
+                          and not formula_degenerates_on_branch(solution, option.zero_equations)]
+        if not loop_solutions:
+            return None
         # Select which solution to go
         test_cases = list()
         if use_numerical_test:
@@ -149,7 +159,12 @@ def solve_equations(equation_input: EquationInput,
         selected_sol = select_solution(
             loop_solutions,
             degenerate_context=degenerate_context,
-            degenerate_option=degenerate_option)
+            degenerate_option=degenerate_option,
+            zero_equations=option.zero_equations,
+            # Unary solvers already provide conservative coefficient guards.
+            # Keep them on recovery paths instead of repeatedly trying to
+            # simplify large trigonometric expressions for a ranking heuristic.
+            analyse_degeneracy=not option.direct_solutions_only)
 
         # Detect soa solution
         if selected_sol is None and (not simple_solution_only) and (not option.on_main_branch):
@@ -185,6 +200,7 @@ def solve_equations(equation_input: EquationInput,
         collected_equations = equation_utils.scalar_equation_by_unknowns(scalar_equations, unknown_symbols)
         solutions: List[VariableSolution] = list()
         use_complex_processing = True
+        direct_selected_solution = None
         if len(collected_equations.one_unknown_equations) > 0:
             print('Start the rule solver directly')
             simple_solutions = unary_solver_step.solve_step_parallel(collected_equations, unknown_symbols, with_timeout=True)
@@ -193,11 +209,18 @@ def solve_equations(equation_input: EquationInput,
                 collected_equations,
                 simple_solutions, solved_variables,
                 loop_remaining_unknowns=current_unknowns,
-                simple_solution_only=True,
+                simple_solution_only=not option.direct_solutions_only,
                 use_numerical_test=False)
             if select_simple_solution is not None:
                 print('Find a good solution in direct solve, thus skip SOS and substitute transform')
                 use_complex_processing = False
+                if option.direct_solutions_only:
+                    direct_selected_solution = select_simple_solution
+
+        if option.direct_solutions_only and direct_selected_solution is None:
+            # Recovery is bounded: retain only a complete explicit alternative,
+            # or let the branch builder try finite family representatives.
+            return solved_variables
 
         # We don't have good solutions with simple solve
         if use_complex_processing:
@@ -290,7 +313,7 @@ def solve_equations(equation_input: EquationInput,
             continue
         else:
             # Select which solution to go
-            sol = select_loop_solution(
+            sol = direct_selected_solution or select_loop_solution(
                 collected_equations,
                 loop_solutions=solutions,
                 loop_solved_variable=solved_variables,

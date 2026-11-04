@@ -28,6 +28,8 @@ class SolutionMethod(Enum):
     General6DoFNumericalReduce = 12
     # Linear solver
     LinearSinCosType_2 = 13
+    # A finite set of representatives, checked against FK by the public API.
+    FamilyRepresentative = 14
 
 
 class VariableSolutionClassKey(Enum):

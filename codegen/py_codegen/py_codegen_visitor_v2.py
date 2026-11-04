@@ -170,7 +170,7 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         self.add_code_line('# Code for equation all-zero dispatcher node {idx}'.format(idx=input_idx))
 
         # Depends on root or not
-        if dispatcher.is_root:
+        if not dispatcher.has_solution_ancestor:
             self._visit_equation_all_zero_dispatcher_root(dispatcher)
         else:
             self._visit_equation_all_zero_dispatcher_non_root(dispatcher)
@@ -191,6 +191,8 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         # We do not need to expand the variable as this is the root
         self.add_code_line('def ' + self.node_processor_name(dispatcher) + '():')
         self.enter_scope('checker_processor')
+        self.add_code_line('if not node_input_validity[{idx}]:'.format(idx=dispatcher.flatten_idx))
+        self.add_code_line(indent() + 'return')
         self.add_code_line('checked_result: bool = {check_code}'.format(check_code=checker_i_code))
         self.add_code_line('if not checked_result:  # To non-degenerate node')
         self.add_code_line(indent() + 'node_input_validity[{out_idx}] = True'.
@@ -259,7 +261,7 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         self._generate_processor_function_define(dispatcher, input_idx)
 
         # Depends on root or not
-        if dispatcher.is_root:
+        if not dispatcher.has_solution_ancestor:
             self._visit_solved_variable_dispatcher_root(dispatcher)
         else:
             self._visit_solved_variable_dispatcher_non_root(dispatcher)
@@ -276,7 +278,16 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
 
     def _visit_solved_variable_dispatcher_root(self, dispatcher: SolvedVariableDispatcherNode):
         assert self.indent_level == 1
-        raise NotImplementedError
+        self.add_code_line('taken_by_degenerate = False')
+        for condition, child in zip(dispatcher.branch_conditions, dispatcher.children[1:]):
+            self.add_code_line('if {code}:'.format(code=self.generate_py_code(condition)))
+            self.enter_scope('if_degenerate')
+            self.add_code_line('taken_by_degenerate = True')
+            if child is not None:
+                self.add_code_line(f'node_input_validity[{child.flatten_idx}] = True')
+            self.exit_scope('if_degenerate')
+        self.add_code_line('if not taken_by_degenerate:')
+        self.add_code_line(indent() + f'node_input_validity[{dispatcher.non_degenerate_child.flatten_idx}] = True')
 
     def _visit_solved_variable_dispatcher_non_root(self, dispatcher: SolvedVariableDispatcherNode):
         assert self.indent_level == 1

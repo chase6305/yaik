@@ -193,12 +193,20 @@ representation; C++ normalizes other revolute joints before FK verification.
 periodic comparison after normalization and limit filtering. Its default keeps
 distinct `-pi`/`+pi` representations, which can differ in limit feasibility.
 
+Generation now completes coefficient-zero branches as well as variable-value
+branches. It returns to the full FK equations to recover alternative formulas;
+larger singular systems also try 33 bounded representatives of one revolute
+joint. These candidates pass the generated wrapper's FK checks. This is finite
+coverage of continuous families, with no guarantee of full-workspace completeness.
+The stored Marvin trees and both generated languages include this recovery.
+
 ## Validation
 
 ```sh
 python -m pip install pytest
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
-  test_cli.py gallery/marvin_m6 solver/test_regressions.py -q
+  test_cli.py gallery/marvin_m6 solver/test_regressions.py \
+  solver/test_codegen_safety.py solver/test_equation_branches.py -q
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
   --output build/marvin-validation.json
@@ -207,7 +215,9 @@ python yaik.py marvin validate --samples 1000 --seed 20261103 \
 Use `--python-only` without a native toolchain, or `--eigen-dir PATH` for another
 Eigen installation. Validation uses independent XML FK, checks every returned
 candidate, and separates standard-kernel coverage from bounded-API results.
-Its exit status requires bounded-API checks and all FK implementations to pass.
+Its exit status requires both generated and bounded APIs to retain a valid
+bounded solution for every reachable case, reject their negative-input cases,
+and pass all FK checks.
 Both bounded C++ arms reuse one compilation with a runtime side argument.
 The report records source hashes, seeds, failures, and error maxima. CI runs
 artifact checks, CLI/regression tests, and native validation.

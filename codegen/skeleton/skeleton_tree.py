@@ -158,7 +158,8 @@ class SkeletonTree(object):
             self,
             variable_solutions: List[VariableSolution],
             parent: DispatcherNodeBase,
-            index_in_parent_children_list: int):
+            index_in_parent_children_list: int,
+            preserve_first_dispatcher: bool = False):
         """
         :param variable_solutions
         :param parent
@@ -170,10 +171,18 @@ class SkeletonTree(object):
         for i in range(len(variable_solutions)):
             solution_i = variable_solutions[i]
             if i == 0:
-                # Here we discard a dispatcher
+                # Constant assignments need no additional guard. Alternative
+                # formulas must retain their own dispatcher, including at root.
                 solution_node = self.new_solution_node(solution_i)
-                solution_node.set_parent(parent)
-                parent.set_child_by_index(solution_node, index_in_parent_children_list)
+                if preserve_first_dispatcher:
+                    dispatcher = self.new_dispatcher_node(solution_i.degenerate_record)
+                    dispatcher.set_parent(parent)
+                    parent.set_child_by_index(dispatcher, index_in_parent_children_list)
+                    dispatcher.set_non_degenerate_child(solution_node)
+                    self.add_node(dispatcher)
+                else:
+                    solution_node.set_parent(parent)
+                    parent.set_child_by_index(solution_node, index_in_parent_children_list)
                 current_parent = solution_node
                 self.add_node(solution_node)
             else:

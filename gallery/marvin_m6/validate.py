@@ -1,8 +1,8 @@
 """Check both Marvin IK APIs against the original URDF, in Python and C++.
 
 Targets and candidate residuals use XML origins/axes directly, without DH
-conversion or generated FK. Raw generator coverage is reported separately;
-the bounded analytical integration is required to solve every reachable case.
+conversion or generated FK. Both generated kernels and the bounded analytical
+integration must solve every reachable regression case.
 """
 
 from __future__ import annotations
@@ -262,7 +262,10 @@ extern "C" int ik({side_parameter}const double* target, double q5, double* outpu
         side = (self.side_index,) if self.bounded else ()
         count = self.lib.ik(*side, np.ascontiguousarray(target, dtype=np.float64), float(q5), output, len(output))
         if count < 0:
-            raise RuntimeError('C++ IK output exceeds validation buffer')
+            output = np.empty((-count, 7))
+            count = self.lib.ik(*side, np.ascontiguousarray(target, dtype=np.float64), float(q5), output, len(output))
+            if count < 0:
+                raise RuntimeError('C++ IK output changed between identical calls')
         return output[:count].copy()
 
 
@@ -306,8 +309,8 @@ def run_solver(solver, arm, cases, position_tolerance=1e-7, rotation_tolerance=1
         group = groups.setdefault(label.split('/')[0], Counter())
         group['samples'] += 1
         group['with_valid_solution'] += bool(accepted)
-        # Generated kernels deliberately expose unbounded branches; their
-        # deficits are measured without making the integration gate ambiguous.
+        # Generated kernels expose unbounded branches, but each reachable
+        # target must still retain at least one strict, bounded solution.
         if not accepted or (solver.bounded and invalid):
             failures.append({'case': label, 'q': q.tolist(), 'target': target.tolist(),
                              'returned': len(raw), 'valid': len(accepted), 'invalid': invalid})
@@ -404,11 +407,10 @@ def main(argv=None):
                     result['passed'] &= result['negative_checks']['passed']
                     report['results'][key] = result
                     print(f"  {result['groups']}; failures={len(result['failures'])}; FK={result['max_fk_matrix_error']:.3g}", flush=True)
-    report['passed'] = all(result['passed'] for key, result in report['results'].items() if key.endswith('/bounded_analytical'))
-    report['passed'] &= all(result['max_fk_matrix_error'] < 1e-11 for result in report['results'].values())
+    report['passed'] = all(result['passed'] for result in report['results'].values())
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, allow_nan=False)+'\n')
-    print(f"Bounded analytical validation: {'PASS' if report['passed'] else 'FAIL'}; {args.output}", flush=True)
+    print(f"Generated and bounded analytical validation: {'PASS' if report['passed'] else 'FAIL'}; {args.output}", flush=True)
     return 0 if report['passed'] else 1
 
 

@@ -3,6 +3,7 @@ from solver.degenerate_analyse.analyser import \
 from solver.degenerate_analyse.numerical_analyser import NumericalCheckDegenerateAnalyzer
 from solver.solved_variable import VariableSolution, DegenerateType, NumericalAnalysedResultType
 from solver.solved_variable import VariableSolutionClassKey
+from solver.branch_conditions import formula_degenerates_on_branch
 from typing import List, Set, Dict, Tuple, Optional
 
 solution_preference_order = {
@@ -141,7 +142,9 @@ def select_solution_in_type_old(
 def select_solution(
         solution_list: List[VariableSolution],
         degenerate_context: DegenerateAnalyserContext(),
-        degenerate_option: DegenerateAnalyserOption()) -> Optional[VariableSolution]:
+        degenerate_option: DegenerateAnalyserOption(),
+        zero_equations=(),
+        analyse_degeneracy=True) -> Optional[VariableSolution]:
     """
     Give a list of solutions, perform analyse of their degenerate record and select the one with most
     desirable type of degeneration and least number of solutions.
@@ -152,7 +155,7 @@ def select_solution(
     """
     # Do analyse for each solution
     analyser = DegenerateAnalyser()
-    for i in range(len(solution_list)):
+    for i in range(len(solution_list)) if analyse_degeneracy else ():
         solution_i = solution_list[i]
         degenerate_record_i = solution_i.degenerate_record
         new_record = analyser.perform_analyse(
@@ -161,6 +164,14 @@ def select_solution(
             option=degenerate_option)
         if new_record is not None:
             solution_list[i].update_degenerate_record(new_record)
+
+    # Analysis can change the degeneration type. Filter afterwards so that a
+    # branch cannot select the same singular formula under a different layout.
+    if zero_equations:
+        solution_list = [solution for solution in solution_list
+                         if not formula_degenerates_on_branch(solution, zero_equations)]
+        if not solution_list:
+            return None
 
     # According to the preferred order, find the solution
     # If we have always non-degenerate, just select from them

@@ -153,6 +153,18 @@ requires the repository's `yaik_cpp_common.h`. Its checked `computeIK`
 retains the generator's perturbation/refinement fallback. Use the bounded
 API above when you need strict limits and deterministic analytical behavior.
 
+The generic generator now also recovers coefficient-zero branches. It solves
+explicit alternatives from the complete FK equations, retaining their guards,
+and tries 33 bounded representatives of one revolute joint on larger singular
+branches. Only complete alternatives are attached to a tree. C++ workspace
+capacity follows the actual candidate and branch counts; it is no longer
+limited to 16 candidates for these trees.
+
+Recovery retains the 50-node budget and uses at most one representative joint per
+path. Export still reports unresolved conditions in the expanded trees. This
+does not establish full-workspace completeness, even when all regression
+targets pass; the strict validator below gates the generated APIs themselves.
+
 ## Regeneration
 
 Run from the repository root with NumPy, SymPy, PyYAML, and attrs installed:
@@ -199,23 +211,24 @@ random poses, joint limits, and singular configurations, with J5 fixed to
 the value used to create each target. C++ validation compiles the actual
 generated source and requires a C++17 compiler and Eigen3 headers.
 The report separates standard generated-kernel coverage from the bounded
-analytical API; the validation exit status requires the bounded API to pass
-all sampled reachable targets and reject its negative-input cases.
+analytical API. The validation exit status requires both APIs to solve all
+sampled reachable targets and reject their respective negative-input cases.
 
 A local run with seed `20261103` checked 1,000 random targets and 233 joint-limit,
 singular, and near-singular targets per arm:
 
 | API | Left arm | Right arm |
 | --- | ---: | ---: |
-| Standard generated Python | 1,133 / 1,233 | 1,133 / 1,233 |
-| Standard generated C++ | 1,200 / 1,233 | 1,197 / 1,233 |
+| Standard generated Python | 1,233 / 1,233 | 1,233 / 1,233 |
+| Standard generated C++ | 1,233 / 1,233 | 1,233 / 1,233 |
 | Bounded analytical Python | 1,233 / 1,233 | 1,233 / 1,233 |
 | Bounded analytical C++ | 1,233 / 1,233 | 1,233 / 1,233 |
 
 Each count requires at least one solution passing independent URDF FK, joint
-limits, and fixed-J5 checks. Standard kernels have four unimplemented degenerate
-branches and retain the repository's looser matrix-error contract; their report
-also records candidates outside limits or above the stricter integration pose
+limits, and fixed-J5 checks. The completed generated kernels recover the zero
+pose, its J4 perturbations, and all 96 wrist-axis/near-axis cases in this suite.
+They retain the repository's looser matrix-error contract; their report also
+records candidates outside limits or above the stricter integration pose
 thresholds. The bounded APIs returned no invalid or duplicate candidates, and
 rejected all 21 negative-input cases per arm/backend. Their maximum measured
 position and rotation errors were `6.10e-9 m` and `9.40e-10 rad`.
@@ -224,7 +237,8 @@ position and rotation errors were `6.10e-9 m` and `9.40e-10 rad`.
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
     --output /tmp/marvin-m6-validation.json
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
-    test_cli.py gallery/marvin_m6 solver/test_regressions.py -q
+    test_cli.py gallery/marvin_m6 solver/test_regressions.py \
+    solver/test_codegen_safety.py solver/test_equation_branches.py -q
 ```
 
 Use `--python-only` without a C++ toolchain, or `--eigen-dir PATH` to select
