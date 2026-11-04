@@ -26,6 +26,10 @@ gallery/
         {robot_name}_ik_generated.py
 ```
 
+The [Marvin M6 V4.0 example](./gallery/marvin_m6/README.md) provides separate
+left and right arm models, serialized IK trees, and Python/C++ solvers for the
+`Marvin_M6_S_CCS_696_V4.0` URDFs, with independent URDF validation.
+
 To use the generated C++ solver, you need to include the [yaik_cpp_common.h](./yaik_cpp_common.h) file, which further depends on Eigen. Please refer to the [yaik_cpp](https://bitbucket.org/gaowei19951004/yaik_cpp/src/master/) repo for an example.
 
 To use the generated Python solver, you need to import [python_run_import.py](./python_run_import.py), which further depends on numpy.
