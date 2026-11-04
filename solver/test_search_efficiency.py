@@ -9,6 +9,7 @@ import time
 import tracemalloc
 from unittest import TestCase, mock, skipUnless
 
+import numpy as np
 import sympy as sp
 
 from solver.equation_types import CollectedEquations, ScalarEquation, Unknown
@@ -123,6 +124,52 @@ class TestSearchEfficiency(TestCase):
         for equations, sample in cases:
             with self.subTest(equations=equations, sample=sample):
                 self.assertFalse(_check_soa_equations_numerically(equations, [sample]))
+
+    def test_batched_soa_checks_constant_sides_and_every_sample(self):
+        x, y, total = sp.symbols('x y total')
+        equations = [ScalarEquation(total, x + y),
+                     ScalarEquation(sp.cos(total), sp.cos(x + y)),
+                     ScalarEquation(sp.S.One, sp.S.One)]
+        rng = np.random.default_rng(20261104)
+        samples = [{x: a, y: b, total: a + b} for a, b in rng.uniform(-3, 3, (500, 2))]
+        self.assertTrue(_check_soa_equations_numerically(equations, samples))
+        samples[-1] = {**samples[-1], total: samples[-1][total] + 1e-4}
+        self.assertFalse(_check_soa_equations_numerically(equations, samples))
+        samples[-1][total] = np.nan
+        self.assertFalse(_check_soa_equations_numerically(equations, samples))
+        for residual, accepted in ((np.nextafter(1e-6, 0), True), (1e-6, False),
+                                   (np.nextafter(1e-6, np.inf), False)):
+            self.assertEqual(_check_soa_equations_numerically(
+                [ScalarEquation(sp.S.Zero, x)], [{x: 0.0}, {x: residual}]), accepted)
+
+    def test_batched_soa_retains_scalar_only_expression_support(self):
+        x = sp.Symbol('x')
+        positive_part = sp.Piecewise((0, x < 0), (x, True))
+        equation = ScalarEquation(sp.Max(0, x), positive_part)
+        self.assertTrue(_check_soa_equations_numerically(
+            [equation], [{x: value} for value in (-2.0, 0.0, 0.5, 3.0)]))
+
+    def test_batched_soa_keeps_custom_callbacks_scalar(self):
+        from sympy.utilities.lambdify import implemented_function
+        x = sp.Symbol('x')
+        scalar_sum = implemented_function('scalar_sum', np.sum)
+        # f(x)=x for scalar inputs; summing the batch would incorrectly cancel.
+        self.assertFalse(_check_soa_equations_numerically(
+            [ScalarEquation(sp.S.Zero, scalar_sum(x))], [{x: 1.0}, {x: -1.0}]))
+
+    def test_batched_soa_preserves_scalar_exception_semantics(self):
+        x = sp.Symbol('x')
+        reciprocal_square = sp.Pow(sp.Pow(x, 2, evaluate=False), -1, evaluate=False)
+        # NumPy can otherwise hide an overflow behind a finite reciprocal.
+        self.assertFalse(_check_soa_equations_numerically(
+            [ScalarEquation(reciprocal_square, sp.S.Zero)], [{x: 1e200}, {x: -1e200}]))
+        piecewise = sp.Piecewise((0, sp.Eq(x, 0)), (1 / x, True))
+        # Scalar evaluation rejects the undefined inactive branch at x=0.
+        self.assertFalse(_check_soa_equations_numerically(
+            [ScalarEquation(piecewise, piecewise)], [{x: 0.0}, {x: 1.0}]))
+        # Scalar NumPy evaluation already permits this underflow to zero.
+        self.assertTrue(_check_soa_equations_numerically(
+            [ScalarEquation(sp.exp(-x), sp.S.Zero)], [{x: 1000.0}, {x: 1100.0}]))
 
     def test_soa_detection_keeps_zero_representative_without_processes(self):
         x, y, total = sp.symbols('x y total')

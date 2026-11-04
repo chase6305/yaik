@@ -31,12 +31,33 @@ def _check_soa_equations_numerically(equations, test_maps) -> bool:
         expressions = [side for equation in equations for side in (equation.lhs, equation.rhs)]
         symbols = sorted(set().union(*(expr.free_symbols for expr in expressions)), key=str)
         evaluate = sp.lambdify(symbols, expressions, modules='numpy', cse=False)
-        for test_map in test_maps:
-            arguments = [float(test_map[symbol]) for symbol in symbols]
-            if not np.all(np.isfinite(arguments)):
-                return False
+        arguments = [[float(test_map[symbol]) for symbol in symbols] for test_map in test_maps]
+        if not np.all(np.isfinite(arguments)):
+            return False
+
+        if (len(arguments) > 1 and expressions and all(isinstance(expr, sp.Expr) for expr in expressions)
+                # User-provided lambdify callbacks need not be elementwise.
+                and not any(hasattr(function.func, '_imp_')
+                            for expr in expressions for function in expr.atoms(sp.Function))):
+            try:
+                # Broadcast constant sides alongside vector-valued sides. Strict
+                # error handling sends exceptional intermediates back through
+                # the scalar path, preserving its evaluation semantics.
+                with np.errstate(all='raise'):
+                    output = evaluate(*np.asarray(arguments).T)
+                    values = np.stack([np.broadcast_to(np.asarray(value, dtype=complex),
+                                                        (len(arguments),)) for value in output])
+                    if values.shape == (len(expressions), len(arguments)):
+                        return bool(np.all(np.isfinite(values)) and not np.any(values.imag != 0)
+                                    and np.all(np.abs(values[::2] - values[1::2]) < 1e-6))
+            except Exception:
+                # NumPy printers for some scalar expressions (e.g. Min/Max)
+                # cannot broadcast mixed scalar/vector arguments.
+                pass
+
+        for sample_arguments in arguments:
             with np.errstate(divide='ignore', invalid='ignore', over='ignore'):
-                values = np.asarray(evaluate(*arguments), dtype=complex)
+                values = np.asarray(evaluate(*sample_arguments), dtype=complex)
                 if (values.shape != (len(expressions),) or not np.all(np.isfinite(values))
                         or np.any(values.imag != 0)
                         or not np.all(np.abs(values[::2] - values[1::2]) < 1e-6)):
