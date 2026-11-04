@@ -202,24 +202,26 @@ class PythonSolver:
 
 class CppSolver:
     def __init__(self, side, build_dir, bounded=False, eigen_dir='/usr/include/eigen3'):
+        if side not in ('left', 'right'):
+            raise ValueError('side must be left or right')
         self.bounded = bounded
+        self.side_index = 0 if side == 'left' else 1
         name = 'marvin_m6_' + side + '_arm'
-        tag = side + ('_bounded' if bounded else '_generated')
-        source = Path(build_dir) / (tag+'.cpp')
-        library = Path(build_dir) / (tag+'.so')
+        tag = 'bounded' if bounded else side + '_generated'
         includes = '#include "solver.hpp"' if bounded else ('#define main marvin_generated_demo_main\n#include "'+name+'_ik_generated.cpp"\n#undef main')
-        side_arg = 'marvin_m6::Side::' + side.title()
+        side_arg = 'static_cast<marvin_m6::Side>(side)'
+        side_parameter = 'int side, ' if bounded else ''
         ik_call = f'marvin_m6::solveIK(pose, q5, {side_arg})' if bounded else f'{name}_ik::computeIK(pose, q5)'
         fk_call = f'marvin_m6::computeFK(angles, {side_arg})' if bounded else f'{name}_ik::computeFK(angles)'
-        source.write_text(f'''{includes}
+        wrapper = f'''{includes}
 #include <stdexcept>
-extern "C" void fk(const double* q, double* output) {{
+extern "C" void fk({side_parameter}const double* q, double* output) {{
     std::array<double, 7> angles;
     std::copy(q, q+7, angles.begin());
     auto pose = {fk_call};
     for (int i=0; i<4; ++i) for (int j=0; j<4; ++j) output[4*i+j]=pose(i,j);
 }}
-extern "C" int ik(const double* target, double q5, double* output, int capacity) {{
+extern "C" int ik({side_parameter}const double* target, double q5, double* output, int capacity) {{
     try {{
     Eigen::Matrix4d pose;
     for (int i=0; i<4; ++i) for (int j=0; j<4; ++j) pose(i,j)=target[4*i+j];
@@ -229,23 +231,36 @@ extern "C" int ik(const double* target, double q5, double* output, int capacity)
     return static_cast<int>(solutions.size());
     }} catch (const std::invalid_argument&) {{ return 0; }}
 }}
-''')
-        subprocess.run(['g++', '-O2', '-std=c++17', '-shared', '-fPIC', '-I', str(ROOT),
-                        '-I', str(HERE), '-I', str(eigen_dir), str(source), '-o', str(library)], check=True)
+'''
+        # Both bounded arms use one header with a runtime side argument. Reuse
+        # that compilation; key it by the source so stale builds are not reused.
+        dependency = HERE / ('solver.hpp' if bounded else name + '_ik_generated.cpp')
+        digest = hashlib.sha256(wrapper.encode() + dependency.read_bytes() +
+                                (ROOT / 'yaik_cpp_common.h').read_bytes() +
+                                str(Path(eigen_dir).resolve()).encode()).hexdigest()[:16]
+        source = Path(build_dir) / f'{tag}_{digest}.cpp'
+        library = source.with_suffix('.so')
+        if not library.is_file():
+            source.write_text(wrapper)
+            subprocess.run(['g++', '-O2', '-std=c++17', '-shared', '-fPIC', '-I', str(ROOT),
+                            '-I', str(HERE), '-I', str(eigen_dir), str(source), '-o', str(library)], check=True)
         self.lib = ctypes.CDLL(str(library))
         array = np.ctypeslib.ndpointer(dtype=np.float64, flags='C_CONTIGUOUS')
-        self.lib.fk.argtypes, self.lib.fk.restype = [array, array], None
-        self.lib.ik.argtypes = [array, ctypes.c_double, array, ctypes.c_int]
+        side_types = [ctypes.c_int] if bounded else []
+        self.lib.fk.argtypes, self.lib.fk.restype = side_types + [array, array], None
+        self.lib.ik.argtypes = side_types + [array, ctypes.c_double, array, ctypes.c_int]
         self.lib.ik.restype = ctypes.c_int
 
     def fk(self, q):
         output = np.empty((4, 4))
-        self.lib.fk(np.ascontiguousarray(q, dtype=np.float64).reshape(7), output)
+        side = (self.side_index,) if self.bounded else ()
+        self.lib.fk(*side, np.ascontiguousarray(q, dtype=np.float64).reshape(7), output)
         return output
 
     def ik(self, target, q5):
         output = np.empty((256, 7))
-        count = self.lib.ik(np.ascontiguousarray(target, dtype=np.float64), float(q5), output, len(output))
+        side = (self.side_index,) if self.bounded else ()
+        count = self.lib.ik(*side, np.ascontiguousarray(target, dtype=np.float64), float(q5), output, len(output))
         if count < 0:
             raise RuntimeError('C++ IK output exceeds validation buffer')
         return output[:count].copy()
@@ -348,7 +363,7 @@ def negative_checks(solver, arm):
             'passed': not failures and (not solver.bounded or warning_count == 0)}
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--samples', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=20261103)
@@ -356,14 +371,18 @@ def main():
     parser.add_argument('--python-only', action='store_true')
     parser.add_argument('--urdf-dir', type=Path, default=HERE / 'urdf')
     parser.add_argument('--eigen-dir', type=Path, default=Path('/usr/include/eigen3'))
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if args.samples < 0:
         parser.error('--samples must be nonnegative')
     if not args.python_only and shutil.which('g++') is None:
         parser.error('C++ validation requires g++ (or select --python-only)')
+    if not args.python_only and not (args.eigen_dir / 'Eigen/Core').is_file():
+        parser.error('Eigen3 headers were not found; set --eigen-dir or use --python-only')
     sources = sorted(HERE.glob('*.py')) + sorted(HERE.glob('*.hpp')) + sorted(HERE.glob('*_ik_generated.cpp'))
     sources += sorted(HERE.glob('*.yaml')) + [HERE / 'provenance.json']
-    sources += sorted(Path(args.urdf_dir).glob('*_arm.urdf')) + [ROOT / 'python_run_import.py', ROOT / 'yaik_cpp_common.h']
+    sources += sorted(Path(args.urdf_dir).glob('*_arm.urdf'))
+    sources += [ROOT / name for name in ('python_run_import.py', 'yaik_cpp_common.h',
+                                       'yaik.py', 'requirements.txt')]
     report = {'seed': args.seed, 'random_samples_per_arm': args.samples,
               'position_tolerance_m': 1e-7, 'rotation_tolerance_rad': 1e-6,
               'fk_matrix_tolerance': 1e-11, 'free_joint_tolerance_rad': 1e-8,

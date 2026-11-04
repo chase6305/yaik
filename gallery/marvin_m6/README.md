@@ -1,5 +1,7 @@
 # Marvin M6 S CCS 696 V4.0
 
+[CLI overview](../../README.md) · [中文使用说明](../../README.zh-CN.md)
+
 This example provides separate analytical IK solvers for the left and right
 seven-joint arms in `HumanoidAssets/Marvin_M6_S_CCS_696_V4.0`. Each arm has:
 
@@ -38,6 +40,51 @@ permutation or sign changes. `th_4` means the fifth joint, not J4. A target
 reachable at one J5 value may be unreachable at another; the fixed parameter
 is a hard constraint. To use a whole-robot base or a different TCP, convert
 the full target transform into the corresponding standalone arm/EE frames.
+
+Both arms share the same internal geometry, joint axes, limits, and fixed EE
+transform. Their URDF shoulder mounting transforms differ:
+
+| First-joint origin | Left | Right |
+| --- | --- | --- |
+| XYZ, metres | `(0.2215, 0.000029142, 1.121)` | `(-0.2215, 0.000029142, 1.121)` |
+| RPY, radians | `(-pi/2, 0, -pi/2)` | `(pi/2, 0, -pi/2)` |
+
+The search can be shared while each saved tree retains its own base transform.
+The same joint vector gives different left/right poses; users pass their original
+URDF angles directly, without mirroring or changing signs.
+
+## Command-line FK and IK
+
+Run from the repository root. These commands use the bounded analytical API:
+
+```sh
+python yaik.py marvin fk --side right \
+    --joints '[0.3, -0.5, 0.7, -1.0, 0.4, -0.2, 0.1]' \
+    --output build/right-target.json
+
+python yaik.py marvin ik --side right \
+    --target build/right-target.json --output build/right-solutions.json
+```
+
+`--joints` takes a quoted JSON array of seven URDF angles in radians. FK JSON
+includes the 4x4 `target`, `q5`, `side`, `base_frame`, and `tip_frame`. IK reads
+that object or a raw 4x4 JSON matrix; raw matrices need an explicit `--q5`.
+An explicit `--q5` overrides a recorded value. Side/frame metadata must match
+`--side`. The output contains `status`, `count`, and `solutions`.
+
+Without `--output`, results go to stdout. `--target -` reads stdin:
+
+```sh
+python yaik.py marvin fk --side left \
+    --joints '[0.3, -0.5, 0.7, -1.0, 0.4, -0.2, 0.1]' \
+    | python yaik.py marvin ik --side left --target -
+```
+
+Exit code `0` means success, `1` means no accepted representative was found,
+and `2` means an input, dependency, or file error. Errors go to stderr; use
+`python yaik.py --debug ...` for a traceback. Empty output does not establish
+mathematical infeasibility. See [the root README](../../README.md) for installation
+and generic generation commands.
 
 ## Using the bounded analytical API
 
@@ -111,22 +158,36 @@ API above when you need strict limits and deterministic analytical behavior.
 Run from the repository root with NumPy, SymPy, PyYAML, and attrs installed:
 
 ```sh
-# Validate snapshots/models and regenerate code from the saved solution trees.
-python gallery/marvin_m6/generate.py --codegen-only
+# Export from saved trees to a new directory; no offline search.
+python yaik.py marvin generate --output-dir build/marvin_m6
 
-# Check committed artifacts without modifying the gallery.
-python gallery/marvin_m6/generate.py --check
+# Check the exported files, or omit --output-dir to check the gallery.
+python yaik.py marvin check --output-dir build/marvin_m6
 
-# Repeat the offline symbolic search (can take substantially longer).
-python gallery/marvin_m6/generate.py --seed 42
+# Repeat the offline symbolic search explicitly (can take substantially longer).
+python yaik.py marvin generate --solve --seed 42 --output-dir build/marvin-regenerated
 ```
 
 The internal DH chain is shared, so the offline search runs once. The script
 then saves each tree with its own base transform and original angle mapping.
-It rejects code generation when the saved tree's model differs from the
-input URDF. A fixed seed controls offline sampling; process deadlines and
-dependency versions can still change the symbolic search result. Code
-generation from a saved tree is checked separately for reproducibility.
+For code export, existing output trees are used if present, otherwise the gallery
+trees; `--tree-dir` selects a source explicitly. Both models are checked against
+the supplied URDFs before output files change, and all requested artifacts are
+staged before publication. Unrelated files are preserved. `--models-only` exports
+just the modified-DH models. `--solve` and `--models-only` are mutually exclusive.
+
+`--urdf-dir` selects another directory containing the two arm URDFs. A modified
+snapshot records a null source revision instead of claiming the original commit.
+Code export preserves a search seed only when source provenance matches both tree
+hashes; otherwise it records `null`. `--seed` controls the new search with
+`--solve`. A fixed seed controls offline sampling, while process deadlines and
+dependency versions can still change the symbolic result. Code generation from
+a saved tree is checked separately for reproducibility.
+
+The direct `generate.py` script remains available for compatibility:
+`python gallery/marvin_m6/generate.py --codegen-only --output-dir build/marvin_m6`
+and `python gallery/marvin_m6/generate.py --check`. With no mode flag that script
+performs a full search; the unified CLI requires `--solve` for that operation.
 
 ## Validation
 
@@ -158,11 +219,15 @@ rejected all 21 negative-input cases per arm/backend. Their maximum measured
 position and rotation errors were `6.10e-9 m` and `9.40e-10 rad`.
 
 ```sh
-python gallery/marvin_m6/validate.py --samples 1000 --seed 20261103 \
+python yaik.py marvin validate --samples 1000 --seed 20261103 \
     --output /tmp/marvin-m6-validation.json
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
-    gallery/marvin_m6 solver/test_regressions.py -q
+    test_cli.py gallery/marvin_m6 solver/test_regressions.py -q
 ```
+
+Use `--python-only` without a C++ toolchain, or `--eigen-dir PATH` to select
+another Eigen3 include directory. Both bounded arms share one compiled native
+library with a runtime side argument; generated kernels are compiled separately.
 
 Random sampling and finite representatives of singular solution families do
 not establish completeness over the full workspace. These solvers evaluate

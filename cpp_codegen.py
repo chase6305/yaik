@@ -1,8 +1,8 @@
-from codegen.cpp_codegen.codegen_cpp import generate_code_cpp
 from typing import Optional
 
 
 def run_cpp_codegen(tree_yaml_path: Optional[str] = None, use_safe_operator: bool = True):
+    from codegen.cpp_codegen.codegen_cpp import generate_code_cpp
     # Make the tree
     import yaml
     from codegen.skeleton.tree_serialize import TreeSerializer
@@ -18,4 +18,6 @@ def run_cpp_codegen(tree_yaml_path: Optional[str] = None, use_safe_operator: boo
 
 
 if __name__ == '__main__':
-    run_cpp_codegen()
+    import sys
+    from yaik import main
+    raise SystemExit(main(sys.argv[1:], command='codegen', language='cpp'))

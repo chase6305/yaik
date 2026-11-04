@@ -13,6 +13,9 @@ on:
       - 'convert_kinematic_chain.py'
       - 'python_run_import.py'
       - 'yaik_cpp_common.h'
+      - 'yaik.py'
+      - 'test_cli.py'
+      - 'requirements.txt'
       - '.github/workflows/marvin-m6.yml'
   push:
     branches: [main]
@@ -27,6 +30,9 @@ on:
       - 'convert_kinematic_chain.py'
       - 'python_run_import.py'
       - 'yaik_cpp_common.h'
+      - 'yaik.py'
+      - 'test_cli.py'
+      - 'requirements.txt'
       - '.github/workflows/marvin-m6.yml'
 
 permissions:
@@ -47,13 +53,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libeigen3-dev
-          python -m pip install numpy==2.2.6 sympy==1.14.0 PyYAML==6.0.3 attrs pytest
+          python -m pip install -r requirements.txt pytest
       - name: Check generated artifacts
-        run: python gallery/marvin_m6/generate.py --check
+        run: python yaik.py marvin check
       - name: Run regression tests
-        run: python -m pytest gallery/marvin_m6 solver/test_regressions.py -q
+        run: python -m pytest test_cli.py gallery/marvin_m6 solver/test_regressions.py -q
       - name: Validate Python and compiled C++ against URDF
-        run: python gallery/marvin_m6/validate.py --samples 1000 --seed 20261103 --output /tmp/marvin-m6-validation.json
+        run: python yaik.py marvin validate --samples 1000 --seed 20261103 --output /tmp/marvin-m6-validation.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -33,6 +33,10 @@ from solver.equation_types import Unknown
 from utility.rotation_utils import rotation_x, rotation_y, rotation_z
 
 HERE = Path(__file__).resolve().parent
+SOURCE_HASHES = {
+    'left_arm.urdf': '4633ac755a42066161b4f756d21a1a2573c40e4c861737a84c8a8c9abeeafcee',
+    'right_arm.urdf': '7769f5144e025c52242b92e7d144a09b3f5885c0bf673445b5331a204a54393a',
+}
 
 
 def urdf_model(path, side):
@@ -107,9 +111,13 @@ def model_dict(robot):
     return result
 
 
-def generate(urdf_dir=HERE / "urdf", output_dir=HERE, seed=42, codegen_only=False, models_only=False):
+def generate(urdf_dir=HERE / 'urdf', output_dir=HERE, seed=42, codegen_only=False,
+             models_only=False, tree_dir=None):
+    if codegen_only and models_only:
+        raise ValueError('Choose either code generation or models only')
+    if tree_dir is not None and not codegen_only:
+        raise ValueError('tree_dir is only used for code generation from saved trees')
     output_dir = Path(output_dir).resolve()
-    output_dir.mkdir(parents=True, exist_ok=True)
     models = {}
     provenance = {
         'source': 'HumanoidAssets/Marvin_M6_S_CCS_696_V4.0',
@@ -124,14 +132,37 @@ def generate(urdf_dir=HERE / "urdf", output_dir=HERE, seed=42, codegen_only=Fals
     for side in ('left', 'right'):
         source = Path(urdf_dir) / (side + '_arm.urdf')
         provenance['urdf_sha256'][source.name] = hashlib.sha256(source.read_bytes()).hexdigest()
-        robot = urdf_model(source, side)
-        models[side] = robot
-        with (output_dir / (robot.name + '.yaml')).open('w') as stream:
-            yaml.safe_dump(model_dict(robot), stream, sort_keys=True)
-    if models_only:
-        return
+        models[side] = urdf_model(source, side)
+    if provenance['urdf_sha256'] != SOURCE_HASHES:
+        provenance['source_revision'] = None
 
-    if not codegen_only:
+    trees = {}
+    if codegen_only:
+        names = [robot.name + '_ik.yaml' for robot in models.values()]
+        if tree_dir is None:
+            tree_dir = output_dir if any((output_dir / name).exists() for name in names) else HERE
+        tree_dir = Path(tree_dir).resolve()
+        for side, robot in models.items():
+            path = tree_dir / (robot.name + '_ik.yaml')
+            if not path.is_file():
+                raise FileNotFoundError(f'{path}; use --tree-dir to select saved IK trees')
+            try:
+                tree = read_skeleton_tree(str(path))
+            except yaml.YAMLError as error:
+                raise ValueError(f'{path}: invalid IK tree YAML: {error}') from None
+            if tree is None or model_dict(tree.robot) != model_dict(robot):
+                raise ValueError('IK tree model does not match the supplied URDF: ' + robot.name)
+            trees[side] = tree
+        # Code generation does not run the random search. Preserve a recorded
+        # seed only when the source provenance actually describes both trees.
+        provenance['seed'] = None
+        metadata_path = tree_dir / 'provenance.json'
+        if metadata_path.is_file():
+            recorded = json.loads(metadata_path.read_text())
+            if all(recorded.get('artifact_sha256', {}).get(name) ==
+                   hashlib.sha256((tree_dir / name).read_bytes()).hexdigest() for name in names):
+                provenance['seed'] = recorded.get('seed')
+    elif not models_only:
         left, right = models['left'], models['right']
         dh_symbols = set().union(*(sp.sympify(value).free_symbols
                                    for dh in left.dh_params for value in dh.flatten()))
@@ -155,36 +186,49 @@ def generate(urdf_dir=HERE / "urdf", output_dir=HERE, seed=42, codegen_only=Fals
             for side, robot in models.items():
                 data = copy.deepcopy(tree)
                 data._robot = robot
-                save_ik_tree(data, str(output_dir / (robot.name + '_ik.yaml')))
-    for robot in models.values():
-        tree = read_skeleton_tree(str(output_dir / (robot.name + '_ik.yaml')))
-        if model_dict(tree.robot) != model_dict(robot):
-            raise ValueError('IK tree model does not match the supplied URDF: ' + robot.name)
-        generate_code_python(tree, str(output_dir / (robot.name + '_ik_generated.py')))
-        generate_code_cpp(tree, str(output_dir / (robot.name + '_ik_generated.cpp')),
-                          use_safe_operator=True)
-        # Remove padding from generated blank lines before recording hashes.
-        for extension in ('py', 'cpp'):
-            generated = output_dir / f'{robot.name}_ik_generated.{extension}'
-            generated.write_text('\n'.join(line.rstrip() for line in
-                                           generated.read_text().splitlines()) + '\n')
-    provenance['artifact_sha256'] = {
-        path.name: hashlib.sha256(path.read_bytes()).hexdigest()
-        for path in sorted(output_dir.glob('marvin_m6_*'))
-        if path.is_file() and path.suffix in ('.yaml', '.py', '.cpp')
-    }
-    (output_dir / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
+                trees[side] = data
+
+    # Validate both input trees before changing output files, and publish only
+    # after every requested artifact has been generated successfully.
+    output_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='.marvin-m6-', dir=output_dir) as temporary:
+        staging = Path(temporary)
+        for side, robot in models.items():
+            (staging / (robot.name + '.yaml')).write_text(yaml.safe_dump(model_dict(robot), sort_keys=True))
+            if models_only:
+                continue
+            tree = trees[side]
+            if codegen_only:
+                shutil.copyfile(tree_dir / (robot.name + '_ik.yaml'), staging / (robot.name + '_ik.yaml'))
+            else:
+                save_ik_tree(tree, str(staging / (robot.name + '_ik.yaml')))
+            generate_code_python(tree, str(staging / (robot.name + '_ik_generated.py')))
+            generate_code_cpp(tree, str(staging / (robot.name + '_ik_generated.cpp')),
+                              use_safe_operator=True)
+            for extension in ('py', 'cpp'):
+                generated = staging / f'{robot.name}_ik_generated.{extension}'
+                generated.write_text('\n'.join(line.rstrip() for line in
+                                               generated.read_text().splitlines()) + '\n')
+        if not models_only:
+            provenance['artifact_sha256'] = {
+                path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in sorted(staging.iterdir())
+            }
+            (staging / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
+        for path in sorted(staging.iterdir()):
+            path.replace(output_dir / path.name)
 
 
-def check(urdf_dir=HERE / 'urdf', output_dir=HERE, seed=42):
+def check(urdf_dir=HERE / 'urdf', output_dir=HERE, seed=None):
     """Verify committed models and generated code without changing the gallery."""
     output_dir = Path(output_dir).resolve()
+    if seed is not None:
+        recorded = json.loads((output_dir / 'provenance.json').read_text())
+        if recorded.get('seed') != seed:
+            raise ValueError(f'Recorded search seed is {recorded.get("seed")}, not {seed}')
     with tempfile.TemporaryDirectory(prefix='marvin-m6-check-') as temporary:
         temporary = Path(temporary)
-        for side in ('left', 'right'):
-            filename = 'marvin_m6_' + side + '_arm_ik.yaml'
-            shutil.copyfile(output_dir / filename, temporary / filename)
-        generate(urdf_dir, temporary, seed, codegen_only=True)
+        generate(urdf_dir, temporary, codegen_only=True, tree_dir=output_dir)
         for generated in sorted(temporary.iterdir()):
             committed = output_dir / generated.name
             if not committed.is_file():
@@ -204,23 +248,28 @@ def check(urdf_dir=HERE / 'urdf', output_dir=HERE, seed=42):
     print('Marvin M6 models, generated solvers, and provenance are up to date.')
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--urdf-dir', type=Path, default=HERE / 'urdf')
     parser.add_argument('--output-dir', type=Path, default=HERE)
-    parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--codegen-only', action='store_true',
+    parser.add_argument('--tree-dir', type=Path, help='Source trees for --codegen-only')
+    parser.add_argument('--seed', type=int, help='Offline seed (default: 42); --check verifies a recorded seed')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--codegen-only', action='store_true',
                         help='Regenerate Python/C++ from the checked-in IK trees')
-    parser.add_argument('--models-only', action='store_true')
-    parser.add_argument('--check', action='store_true',
+    mode.add_argument('--models-only', action='store_true')
+    mode.add_argument('--check', action='store_true',
                         help='Fail if models, generated code, or provenance are stale; write nothing')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if args.check:
-        if args.models_only or args.codegen_only:
-            parser.error('--check cannot be combined with --models-only or --codegen-only')
+        if args.tree_dir:
+            parser.error('--tree-dir is only used with --codegen-only')
         check(args.urdf_dir, args.output_dir, args.seed)
     else:
-        generate(args.urdf_dir, args.output_dir, args.seed, args.codegen_only, args.models_only)
+        if args.tree_dir and not args.codegen_only:
+            parser.error('--tree-dir is only used with --codegen-only')
+        generate(args.urdf_dir, args.output_dir, 42 if args.seed is None else args.seed,
+                 args.codegen_only, args.models_only, args.tree_dir)
 
 
 if __name__ == '__main__':

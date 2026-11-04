@@ -228,6 +228,6 @@ def extend_main_branch_tree():
 
 
 if __name__ == '__main__':
-    # run_robot_from_script()
-    run_robot_ik_from_yaml()
-    # extend_main_branch_tree()
+    import sys
+    from yaik import main
+    raise SystemExit(main(sys.argv[1:], command='generate'))

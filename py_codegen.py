@@ -1,8 +1,8 @@
-from codegen.py_codegen.codegen_py import generate_code_python
 from typing import Optional
 
 
 def run_python_codegen(tree_path: Optional[str] = None):
+    from codegen.py_codegen.codegen_py import generate_code_python
     # Make the tree
     import yaml
     from codegen.skeleton.tree_serialize import TreeSerializer
@@ -18,4 +18,6 @@ def run_python_codegen(tree_path: Optional[str] = None):
 
 
 if __name__ == '__main__':
-    run_python_codegen()
+    import sys
+    from yaik import main
+    raise SystemExit(main(sys.argv[1:], command='codegen', language='python'))
