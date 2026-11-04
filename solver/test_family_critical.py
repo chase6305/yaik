@@ -73,6 +73,34 @@ def critical_tree(guarded=False):
 
 
 class TestCriticalFamilies(TestCase):
+    def test_shoulder_tail_recovery_preserves_implemented_prefix_branches(self):
+        from codegen.skeleton.family_critical import correlate_spherical_tail, enrich_spherical_shoulders
+        from codegen.skeleton.skeleton_tree import SkeletonTree
+        from fk.robots import RobotDescription, DHEntry
+        from solver.equation_types import Unknown
+        from solver.solved_variable import VariableSolution
+        from solver.solved_variable_impl import LinearSinCosType_2_SolutionImpl
+        from solver.test_equation_branches import explicit
+        symbols = sp.symbols('q0:5')
+        for variable_branch in (False, True):
+            model = RobotDescription('branched_shoulder')
+            model.unknowns = [Unknown(symbol) for symbol in symbols]
+            model.dh_params = [DHEntry(alpha, 0, 0, symbol) for alpha, symbol in
+                               zip((0, -sp.pi/2, -sp.pi/2, sp.pi/2, 0), symbols)]
+            record = (SolutionDegenerateRecord.record_variable_value({symbols[3]: [sp.Float('.2')]})
+                      if variable_branch else SolutionDegenerateRecord.record_all_equations([sp.Symbol('Px')]))
+            linear = VariableSolution(LinearSinCosType_2_SolutionImpl(symbols[2], sp.eye(4), [(0, 1, 2)]))
+            tree = SkeletonTree([explicit(symbols[3], [sp.Float('.2'), sp.Float('.5')]),
+                                 explicit(symbols[4], [sp.Float('.3')], record), linear,
+                                 explicit(symbols[1], [sp.S.Zero]), explicit(symbols[0], [sp.S.Zero])], model)
+            branch = tree.node_list[2]
+            tree.append_branched_solution([explicit(symbols[i], [sp.Float(value)])
+                                           for i, value in ((4, '.7'), (2, '.2'), (1, '.4'), (0, '.6'))], branch, 1)
+            original = list(tree.node_list)
+            self.assertEqual(enrich_spherical_shoulders(tree), 0)
+            self.assertFalse(correlate_spherical_tail(tree))
+            self.assertEqual(tree.node_list, original)
+            self.assertTrue(tree.is_node_in_tree(branch.children[1]))
     def test_disabled_critical_cuts_retain_seed_guards_in_the_numerical_visitor(self):
         from codegen.skeleton.visitor_numerical_solve import SkeletonNumericalSolution, step_from_explicit_solution
         tree = guarded_seed_tree()

@@ -168,7 +168,9 @@ explicit alternatives from the complete FK equations, retaining their guards,
 and derives critical parameter values from shoulder limits for supported
 spherical-shoulder families. Correlated full-rotation angle recovery replaces
 an ill-conditioned linear decomposition; aligned angle families are intersected
-with both joint limits. Only complete alternatives are attached to a tree. C++ workspace
+with both joint limits. A shoulder rewrite is skipped when its prefix already
+has implemented alternatives, preserving those branches. Only complete
+alternatives are attached to a tree. C++ workspace
 capacity follows the actual candidate and branch counts; it is no longer
 limited to 16 candidates for these trees. C++ deduplication preserves candidates
 with different joint-limit feasibility or strict FK accuracy. A coarse accepted
@@ -211,7 +213,9 @@ Code export preserves a search seed only when source provenance matches both tre
 hashes; otherwise it records `null`. `--seed` controls the new search with
 `--solve`. A fixed seed controls offline sampling, while process deadlines and
 dependency versions can still change the symbolic result. Code generation from
-a saved tree is checked separately for reproducibility.
+a saved tree is checked separately for reproducibility. Parameter declarations
+are emitted in name order, so freshly searched and saved-tree exports agree
+regardless of the model dictionary insertion order.
 Equivalent `+pi`/`-pi` offsets use a fixed DH convention across BLAS backends;
 model mismatches report the first differing field and its saved/URDF values.
 
@@ -328,6 +332,9 @@ roots when the matrix drops to rank two. New exports retain the legacy pair
 alongside those roots, so their node allocation bound is six. This keeps the
 existing tolerance fallback for approximate saved models such as Franka Panda;
 root nodes, empty prefixes, and numerical-visitor guards have separate regressions.
+Offline polynomial verification retries coefficient evaluation and root-to-angle
+conversion at higher precision when machine roots fail the original scalar
+equations; original denominator guards and residual thresholds are retained.
 
 The project currently has no end-to-end completeness certificate. Inspect the
 remaining obligations explicitly:

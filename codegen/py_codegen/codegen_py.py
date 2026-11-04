@@ -63,7 +63,7 @@ class CodeGenerationPython(CodeGenerationBase):
         parameter_values = robot.parameters_value
         self._add_empty_line()
         self._add_code_line('# Robot parameters')
-        for parameter in parameter_values:
+        for parameter in sorted(parameter_values, key=str):
             parameter_value = parameter_values[parameter]
             variable_name = parameter.name
             define_line = "{var_name}: float = {var_value}". \

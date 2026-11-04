@@ -121,6 +121,18 @@ def rational_polynomial_tree():
 
 
 class TestCodegenSafety(TestCase):
+    def test_parameter_declarations_do_not_depend_on_dictionary_insertion_order(self):
+        x, a, b, pz = sp.symbols('x a b Pz')
+        model = robot('parameter_order', [x])
+        model.symbolic_parameters = {a, b}
+        model.parameters_value = {b: .2, a: .1}
+        model.dh_params[0].a = a+b
+        tree = SkeletonTree([explicit(x, [pz])], model)
+        before_python = CodeGenerationPython(tree).generate_code()
+        before_cpp = CodeGenerationCpp(tree, use_safe_operator=True).generate_code()
+        model.parameters_value = {a: .1, b: .2}
+        self.assertEqual(before_python, CodeGenerationPython(tree).generate_code())
+        self.assertEqual(before_cpp, CodeGenerationCpp(tree, use_safe_operator=True).generate_code())
     def test_polynomial_large_integer_coefficients(self):
         x = sp.Symbol('x')
         target = np.eye(4)

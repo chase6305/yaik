@@ -16,6 +16,15 @@ from solver.solved_variable import SolutionMethod
 from solver.solved_variable import VariableSolution, SolutionDegenerateRecord
 
 
+def _has_branched_prefix(node):
+    parent = node.parent
+    while parent is not None:
+        if parent.is_dispatcher_node and any(child is not None for child in parent.children[1:]):
+            return True
+        parent = parent.parent
+    return False
+
+
 def add_spherical_family_cuts(tree, dispatcher, family, suffix, prefix, supplement_condition=sp.S.true):
     robot = tree.robot
     if len(robot.unknowns) < 4 or not all(unknown.is_revolute for unknown in robot.unknowns):
@@ -153,6 +162,10 @@ def enrich_spherical_shoulders(tree):
         remaining = {unknown.symbol for unknown in tree.solved_unknowns}-solved
         if remaining != {unknown.symbol for unknown in robot.unknowns[:3]}:
             continue
+        if _has_branched_prefix(node):
+            # Rebuilding the main shoulder tail must not discard already
+            # implemented alternatives in its prefix. Keep this decomposition.
+            continue
         distal = sp.eye(3)
         for dh in robot.dh_params[3:]:
             distal = distal*modified_dh_transform(dh)[:3, :3]
@@ -202,6 +215,8 @@ def correlate_spherical_tail(tree):
             break
         node = node.dispatcher_child
     if node is None or node.solved_variable != robot.unknowns[2].symbol:
+        return False
+    if _has_branched_prefix(node):
         return False
     prefix = tree.variable_solutions_from_root(node, False)
     remaining = {unknown.symbol for unknown in tree.solved_unknowns}-{solution.solved_variable for solution in prefix}

@@ -3,6 +3,57 @@ from python_run_import import compute_polynomial_real_roots
 from typing import List, Dict, Tuple
 import sympy as sp
 import numpy as np
+from mpmath.libmp.libhyper import NoConvergence
+
+
+def _high_precision_candidates(numerators, denominators, symbols, values, method):
+    """Retry offline algebraic verification when double roots lose accuracy.
+
+    Re-evaluate the original coefficient expressions before rounding, and
+    convert sin/cos roots to angles before casting them to machine floats.
+    Original denominators remain mandatory; this does not certify runtime IK.
+    """
+    try:
+        exact = {}
+        for symbol in symbols:
+            value = sp.sympify(values[symbol])
+            if value.is_real is not True or value.is_finite is not True:
+                return []
+            exact[symbol] = sp.Rational(value) if value.is_Float else value
+        coefficients = []
+        for numerator, denominator in zip(numerators, denominators):
+            denominator = denominator.subs(exact)
+            if denominator.is_zero is not False:
+                return []
+            value = (numerator.subs(exact)/denominator).evalf(50)
+            if value.is_real is not True or value.is_finite is not True:
+                return []
+            coefficients.append(value)
+        polynomial = sp.Poly.from_list(coefficients, sp.Dummy('verification_root'))
+        if polynomial.degree() <= 0:
+            return []
+        roots = polynomial.nroots(n=40, maxsteps=100)
+        candidates = []
+        for root in roots:
+            real, imaginary = root.as_real_imag()
+            value = float(real)
+            if not np.isfinite(value) or abs(float(imaginary)) > 1e-6*(1+abs(value)):
+                continue
+            if method == SolutionMethod.PolynomialDirect.name:
+                candidates.append(value)
+                continue
+            if abs(value) > 1+1e-6:
+                continue
+            real = sp.Min(sp.S.One, sp.Max(-sp.S.One, real))
+            if method == SolutionMethod.PolynomialSin.name:
+                angle = sp.asin(real).evalf(40)
+                candidates.extend((float(angle), float(sp.pi-angle)))
+            elif method == SolutionMethod.PolynomialCos.name:
+                angle = float(sp.acos(real).evalf(40))
+                candidates.extend((angle, -angle))
+        return candidates
+    except (KeyError, TypeError, ValueError, ZeroDivisionError, OverflowError, NoConvergence):
+        return []
 
 
 def verify_polynomial_solution(
@@ -81,9 +132,15 @@ def verify_polynomial_solution(
         # Try the root
         contain_solution = False
         diff_values = list()
-        for j in range(len(solutions)):
+        def candidates():
+            yield from solutions
+            # Lazy: ordinary candidates that pass keep the fast path.
+            yield from _high_precision_candidates(numerators, denominators, coefficient_symbols,
+                                                  value_map_i, solution_method)
+
+        for candidate in candidates():
             try:
-                values = [solutions[j] if symbol == solved_unknown.symbol else float(value_map_i[symbol])
+                values = [candidate if symbol == solved_unknown.symbol else float(value_map_i[symbol])
                           for symbol in equation_symbols]
                 with np.errstate(divide='ignore', invalid='ignore', over='ignore'):
                     residuals = np.asarray(evaluate_equations(*values), dtype=complex)

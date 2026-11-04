@@ -142,7 +142,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         # We also need to generate parameters
         self.add_empty_line()
         self.add_code_line('// Robot parameters')
-        for parameter in parameter_values:
+        for parameter in sorted(parameter_values, key=str):
             parameter_value = parameter_values[parameter]
             variable_name = parameter.name
             define_line = "static constexpr double {var_name} = {var_value};". \
