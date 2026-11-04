@@ -3,6 +3,7 @@ import copy
 import random
 import multiprocessing
 import time
+import math
 from typing import List, Optional, Dict
 from fk.fk_equations import expr_include_translation_target
 from solver.equation_types import MatrixEquation, ScalarEquation, SumOfSquareHint, ScalarEquationType
@@ -89,7 +90,7 @@ def parallel_processor_dict(dict_in: Dict):
     return sos_equ
 
 
-def parallel_processor_list_output(dict_in: Dict, output_list: List[ScalarEquation], lock=None):
+def parallel_processor_list_output(dict_in: Dict, output_list, lock=None, task_index: int = 0):
     this_output = parallel_processor_dict(dict_in)
     if this_output is None:
         return
@@ -97,7 +98,7 @@ def parallel_processor_list_output(dict_in: Dict, output_list: List[ScalarEquati
     # Append a result
     if lock is not None:
         lock.acquire()
-    output_list.append(this_output)
+    output_list.append((task_index, this_output))
     if lock is not None:
         lock.release()
 
@@ -111,36 +112,36 @@ def parallel_run(input_args: List[Dict], timeout_seconds: int = 30) -> List[Scal
     manager = multiprocessing.Manager()
     shared_result_list = manager.list()
     processed_offset = 0
-    while processed_offset < len(input_args):
-        processor_list = list()
-        for i in range(n_processor):
-            offset_i = processed_offset + i
-            if offset_i < len(input_args):
-                # OK, make the processor
-                processor = multiprocessing.Process(
-                    target=parallel_processor_list_output,
-                    args=(input_args[offset_i], shared_result_list, lock))
-                processor_list.append(processor)
+    processor_list = []
+    try:
+        while processed_offset < len(input_args):
+            processor_list = []
+            for i in range(n_processor):
+                offset_i = processed_offset + i
+                if offset_i < len(input_args):
+                    processor = multiprocessing.Process(
+                        target=parallel_processor_list_output,
+                        args=(input_args[offset_i], shared_result_list, lock, offset_i))
+                    processor_list.append(processor)
 
-        # Start the processor with time-out
-        deadline = time.monotonic() + timeout_seconds
+            deadline = time.monotonic() + timeout_seconds
+            for p in processor_list:
+                p.start()
+            for p in processor_list:
+                p.join(timeout=max(0.0, deadline - time.monotonic()))
+                if p.is_alive():
+                    p.terminate()
+                p.join()
+
+            processed_offset += n_processor
+        return [copy.deepcopy(elem) for _, elem in sorted(shared_result_list, key=lambda item: item[0])]
+    finally:
         for p in processor_list:
-            p.start()
-        for p in processor_list:
-            p.join(timeout=max(0.0, deadline - time.monotonic()))
-            if p.is_alive():
-                p.terminate()
-            p.join()
-
-        # Update the offset
-        processed_offset += n_processor
-
-    # To usual list
-    output_list = list()
-    for elem in shared_result_list:
-        output_list.append(copy.deepcopy(elem))
-    manager.shutdown()
-    return output_list
+            if p.pid is not None:
+                if p.is_alive():
+                    p.terminate()
+                p.join()
+        manager.shutdown()
 
 
 def sum_of_square_transform_pairwise(equations: List[ScalarEquation],
@@ -178,24 +179,23 @@ def sum_of_square_transform_pairwise(equations: List[ScalarEquation],
     if len(equation_to_test) <= 1:
         return list()
 
-    # Collect the args
+    # Sample unordered pair indices before allocating candidate dictionaries.
+    n_equations = len(equation_to_test)
+    n_pairs = n_equations * (n_equations - 1) // 2
+    indices = range(n_pairs)
+    if n_pairs > max_pairwise_sos_candidates:
+        indices = random.sample(indices, max_pairwise_sos_candidates)
     parallel_args = list()
-    for i in range(len(equation_to_test)):
-        for j in range(i + 1, len(equation_to_test)):
-            input_dict = dict()
-            input_dict['index'] = len(parallel_args)
-            input_dict['equ_1'] = equation_to_test[i]
-            input_dict['equ_2'] = equation_to_test[j]
-            input_dict['unknowns'] = unknowns
-            input_dict['accumulator'] = accumulator
-            parallel_args.append(input_dict)
-
-    # Try parallel processing
-    if len(parallel_args) > max_pairwise_sos_candidates:
-        sampled_parallel_args = random.sample(parallel_args, max_pairwise_sos_candidates)
-        parallel_args = sampled_parallel_args
-        for i in range(len(parallel_args)):
-            parallel_args[i]['index'] = i
+    for index in indices:
+        # Row i starts at i * (2*n - i - 1) / 2 in lexicographic pair order.
+        i = (2 * n_equations - 1 - math.isqrt((2 * n_equations - 1) ** 2 - 8 * index)) // 2
+        row_start = i * (2 * n_equations - i - 1) // 2
+        if row_start > index:
+            i -= 1
+            row_start = i * (2 * n_equations - i - 1) // 2
+        j = i + 1 + index - row_start
+        parallel_args.append(dict(index=len(parallel_args), equ_1=equation_to_test[i],
+                                  equ_2=equation_to_test[j], unknowns=unknowns, accumulator=accumulator))
     print('Try pairwise sum-of-square transform. The candidate number: ', len(parallel_args))
 
     # Run processor

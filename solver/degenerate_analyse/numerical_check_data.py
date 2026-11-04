@@ -85,11 +85,16 @@ def generate_test_cases(
     :param ik_input:
     :param subset_variable_value: explicitly request the value of a subset of variables.
                                   Typically, this is used in branched solution
+                                  Explicit branch values may lie outside the model bounds.
     :param n_test_cases
     :param degenerate_ratio: if subset_variable_value.empty(), then set a subset of variables to some interesting values
                              else, do nothing.
     """
     # Check the size
+    if n_test_cases < 0 or not 0 <= degenerate_ratio <= 1:
+        raise ValueError('Sample count must be nonnegative and degenerate_ratio must be in [0, 1]')
+    if n_test_cases == 0:
+        return []
     n_degenerate = int(n_test_cases * degenerate_ratio)
 
     # The parameter need generate
@@ -116,13 +121,24 @@ def generate_test_cases(
         # OK, append to map_list
         subst_map_list.append(subst_map)
 
+    # Keep automatic special samples inside the actual joint range, including its ends.
+    special_values = []
+    if not subset_variable_value and n_degenerate > 0:
+        for unknown in ik_input.used_unknowns:
+            lower, upper = float(unknown.lower_bound), float(unknown.upper_bound)
+            values = [float(value) for value in unknown.degenerate_check_value]
+            special_values.append(sorted(set([lower, upper] + [
+                value for value in values if np.isfinite(value) and lower <= value <= upper])))
+
     # Next the degenerate, set one value to degenerate
     def set_degenerate_value_for_first_n_element(n_element: int):
+        if not ik_input.used_unknowns or n_element == 0:
+            return
         random_idx = np.random.randint(0, high=len(ik_input.used_unknowns), size=(n_element, ))
         for i in range(n_element):
             perturbed_unknown_idx_i = random_idx[i]
             this_unknown: Unknown = ik_input.used_unknowns[perturbed_unknown_idx_i]
-            value_to_check = this_unknown.degenerate_check_value
+            value_to_check = special_values[perturbed_unknown_idx_i]
             value_to_check_idx = np.random.randint(low=0, high=len(value_to_check), size=1)[0]
 
             # Randomly set some unknown to special value

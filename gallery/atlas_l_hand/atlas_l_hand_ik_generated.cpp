@@ -6,7 +6,7 @@ struct atlas_l_hand_ik {
 
 // Constants for solver
 static constexpr int robot_nq = 7;
-static constexpr int max_n_solutions = 128;
+static constexpr int max_n_solutions = 384;
 static constexpr int n_tree_nodes = 52;
 static constexpr int intermediate_solution_size = 12;
 static constexpr double pose_tolerance = 1e-6;
@@ -2192,20 +2192,29 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             bool taken_by_degenerate = false;
+            bool forwarded_to_child = false;
             const double th_3 = this_solution[7];
             
             const bool degenerate_valid_0 = std::fabs(th_3 - M_PI + 3.0801531643337001) <= 9.9999999999999995e-7;
             if (degenerate_valid_0)
             {
                 taken_by_degenerate = true;
-                add_input_index_to(12, node_input_i_idx_in_queue);
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(12, branch_input_index);
             }
             
             const bool degenerate_valid_1 = std::fabs(th_3 - 3.3383391319530303e-5 + M_PI) <= 9.9999999999999995e-7;
             if (degenerate_valid_1)
             {
                 taken_by_degenerate = true;
-                add_input_index_to(27, node_input_i_idx_in_queue);
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(27, branch_input_index);
             }
             
             if (!taken_by_degenerate)
@@ -2355,6 +2364,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             
             if (!taken_by_degenerate)
                 add_input_index_to(31, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
     
@@ -2769,6 +2780,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             
             if (!taken_by_degenerate)
                 add_input_index_to(16, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
     
@@ -3181,20 +3194,29 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             bool taken_by_degenerate = false;
+            bool forwarded_to_child = false;
             const double th_5 = this_solution[10];
             
             const bool degenerate_valid_0 = std::fabs(th_5) <= 9.9999999999999995e-7;
             if (degenerate_valid_0)
             {
                 taken_by_degenerate = true;
-                add_input_index_to(42, node_input_i_idx_in_queue);
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(42, branch_input_index);
             }
             
             const bool degenerate_valid_1 = std::fabs(th_5 - M_PI) <= 9.9999999999999995e-7;
             if (degenerate_valid_1)
             {
                 taken_by_degenerate = true;
-                add_input_index_to(47, node_input_i_idx_in_queue);
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(47, branch_input_index);
             }
             
             if (!taken_by_degenerate)
@@ -3612,6 +3634,7 @@ static void computeIKUnChecked(const Eigen::Matrix4d& T_ee, double th_0, RawIKWo
 static void computeIK(const Eigen::Matrix4d& T_ee, double th_0, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output)
 {
     if (!T_ee.allFinite()) { ik_output.clear(); return; }
+    if (!std::isfinite(th_0)) { ik_output.clear(); return; }
     const Eigen::Matrix4d& T_ee_raw = endEffectorTargetOriginalToRaw(T_ee);
     computeRawIK(T_ee_raw, th_0 + th_0_offset_original2raw, workspace);
     const auto& raw_ik_out = workspace.raw_ik_out;

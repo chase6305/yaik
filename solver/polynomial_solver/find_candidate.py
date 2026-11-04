@@ -87,7 +87,7 @@ def collect_equation_by_variables(collected_equations: CollectedEquations,
     # First pop the variable tuple
     variable_tuples = pop_variable_tuples(equations, unknowns, length_limit)
     variable_to_equations: Dict[Tuple[str], List[sp.Expr]] = dict()
-    for variables in variable_tuples:
+    for variables in sorted(variable_tuples):
         equation_of_vars = find_equation_of_variables(variables, unknowns, equations)
         if len(equation_of_vars) >= len(variables):
             variable_to_equations[variables] = equation_of_vars

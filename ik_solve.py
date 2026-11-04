@@ -1,4 +1,5 @@
 import os.path
+import random
 import solver.build_equations as build_equations
 from fk.robots import RobotDescription
 import fk.robot_models as robot_models
@@ -18,87 +19,127 @@ class RunIKOption(object):
     use_all_intersection_pair_axis_equation: bool = False
     try_intersecting_axis_equation: bool = True
     use_polynomial_solver_in_main_branch: bool = True
+    random_seed: Optional[int] = attr.ib(default=None)
 
 
 def check_robot(robot: RobotDescription) -> bool:
     """
     Everything in robot.dh_params should be declared in either unknown or robot.symbolic_parameters,
-    and everything in robot.symbolic_parameters must be valued and bounded.
+    and everything in robot.symbolic_parameters must be valued or bounded.
     The Unknown should contain bound by themselves.
     """
-    # Verify everything in robot.dh_params are in parameters
-    unknown_set: Set[sp.Symbol] = set([elem.symbol for elem in robot.unknowns])
-    uncollected_parameters: Set[sp.Symbol] = set()
-    for dh_param in robot.dh_params:
-        this_param_list = dh_param.flatten()
-        for elem in this_param_list:
-            if isinstance(elem, sp.Symbol):
-                if elem in unknown_set:
-                    continue
-                if elem in robot.symbolic_parameters:
-                    continue
-                # Collect it
-                uncollected_parameters.add(elem)
+    errors = []
 
-    # Do warning
-    if len(uncollected_parameters) > 0:
-        print('Not all parameters are declared in robot.symbolic_parameters, those are not ', uncollected_parameters)
+    def finite(value):
+        try:
+            return bool(np.isfinite(float(value)))
+        except (TypeError, ValueError, OverflowError):
+            return False
 
-    # Check all unknowns are bounded
-    unbounded_unknown: Set[sp.Symbol] = set()
-    for unknown_i in robot.unknowns:
-        lb_i = unknown_i.lower_bound
-        ub_i = unknown_i.upper_bound
-        # Not none
-        if lb_i is None or ub_i is None:
-            unbounded_unknown.add(unknown_i.symbol)
+    def valid_bounds(bounds):
+        try:
+            lower, upper = bounds
+            return finite(lower) and finite(upper) and float(lower) <= float(upper)
+        except (TypeError, ValueError):
+            return False
+
+    unknown_symbols = [unknown.symbol for unknown in robot.unknowns]
+    if any(not isinstance(symbol, sp.Symbol) for symbol in unknown_symbols):
+        print('Invalid robot description: joint variables must be symbols')
+        return False
+    unknown_set = set(unknown_symbols)
+    parameter_symbols = robot.symbolic_parameters | set(robot.parameters_value) | set(robot.parameters_bound)
+    if {symbol.name for symbol in unknown_symbols} & {str(symbol) for symbol in parameter_symbols}:
+        errors.append('joint symbols must not also be declared as parameters')
+    if not unknown_symbols or len({symbol.name for symbol in unknown_symbols}) != len(unknown_symbols):
+        errors.append('joint symbols must be nonempty and unique')
+    if len(robot.dh_params) != len(robot.unknowns):
+        errors.append('each DH entry must correspond to one joint')
+
+    declared = unknown_set | robot.symbolic_parameters
+    undeclared = set()
+    for dh in robot.dh_params:
+        for value in dh.flatten():
+            expression = sp.sympify(value)
+            undeclared.update(expression.free_symbols - declared)
+            if not expression.free_symbols and not finite(expression):
+                errors.append('DH constants must be finite real numbers')
+    if undeclared:
+        errors.append('undeclared DH parameters: ' + ', '.join(sorted(map(str, undeclared))))
+
+    for unknown in robot.unknowns:
+        if not valid_bounds((unknown.lower_bound, unknown.upper_bound)):
+            errors.append('invalid joint bounds: ' + str(unknown.symbol))
+        if not (unknown.is_revolute or unknown.is_translational):
+            errors.append('unsupported joint type: ' + str(unknown.symbol))
+    for unknown, dh in zip(robot.unknowns, robot.dh_params):
+        joint_parameter = dh.theta if unknown.is_revolute else dh.d
+        if joint_parameter != unknown.symbol:
+            errors.append('joint must match its DH theta/d symbol: ' + str(unknown.symbol))
+        fixed_entries = (dh.alpha, dh.a, dh.d if unknown.is_revolute else dh.theta)
+        if any(sp.sympify(value).free_symbols & unknown_set for value in fixed_entries):
+            errors.append('fixed DH entries must not depend on joints: ' + str(unknown.symbol))
+
+    offsets = robot.get_unknown_offset()
+    if offsets is not None:
+        try:
+            valid_offsets = len(offsets) == len(robot.unknowns) and all(map(finite, offsets))
+        except TypeError:
+            valid_offsets = False
+        if not valid_offsets:
+            errors.append('joint offsets must contain one finite value per joint')
+    frame_parameters = robot.symbolic_parameters | set(robot.parameters_value)
+    for transform in (robot.get_pre_transform_sp(), robot.get_post_transform_sp()):
+        if transform is None:
             continue
-
-        # Not inf
-        if np.isinf(lb_i) or np.isinf(ub_i):
-            print('Infinite bound for unknown {name}'.format(name=unknown_i.symbol.name))
-            unbounded_unknown.add(unknown_i.symbol)
+        if not isinstance(transform, sp.MatrixBase) or transform.shape != (4, 4):
+            errors.append('base/tool transforms must be 4x4 symbolic matrices')
             continue
-
-        # lb < ub
-        if ub_i < lb_i:
-            print('Incorrect bound for unknown {name}'.format(name=unknown_i.symbol.name))
-            unbounded_unknown.add(unknown_i.symbol)
-            continue
-
-    # Do warning
-    if len(unbounded_unknown) > 0:
-        print('Not all unknown are associated with valid bounds, those are not ', unbounded_unknown)
-
-    # Check the element in symbolic parameters
-    unbounded_parameters: Set[sp.Symbol] = set()
+        if transform.free_symbols - frame_parameters:
+            errors.append('base/tool transforms contain undeclared parameters or joint variables')
+        if any(not value.free_symbols and not finite(value) for value in transform):
+            errors.append('base/tool transform constants must be finite real numbers')
     for parameter in robot.symbolic_parameters:
-        in_bound = parameter in robot.parameters_bound
-        in_value = parameter in robot.parameters_value
-        if in_value or in_bound:
-            continue
-        else:
-            unbounded_parameters.add(parameter)
+        if parameter not in robot.parameters_value and parameter not in robot.parameters_bound:
+            errors.append('missing parameter value or bounds: ' + str(parameter))
+    for parameter, value in robot.parameters_value.items():
+        if not finite(value):
+            errors.append('invalid parameter value: ' + str(parameter))
+    for parameter, bounds in robot.parameters_bound.items():
+        if not valid_bounds(bounds):
+            errors.append('invalid parameter bounds: ' + str(parameter))
 
-    # Do warning
-    if len(unbounded_parameters) > 0:
-        print('Not all parameters are bounded, those are not ', unbounded_parameters)
-
-    # Check the dof
-    if len(robot.unknowns) != robot.n_dofs or len(robot.dh_params) != robot.n_dofs:
-        print('The unknowns, DoF number or dh-parameters are not matched. It is required that each dh parameter'
-              'corresponds to ONE unknown.')
-        return False
-    if len(robot.unknowns) >= 7 and len(robot.unknown_as_parameter_more_dof) == 0:
-        print('You must specify unknown that can be treated as parameter if DoF >= 7')
-        return False
-
-    # Check pass if everything collected and bounded
-    ok = len(uncollected_parameters) == 0 and len(unbounded_parameters) == 0 and len(unbounded_unknown) == 0
-    return ok
+    fixed = robot.unknown_as_parameter_more_dof
+    if len(set(fixed)) != len(fixed) or not set(fixed).issubset(unknown_set):
+        errors.append('redundant parameters must be distinct joint symbols')
+    if len(unknown_set - set(fixed)) > 6:
+        errors.append('fix enough redundant joints to leave at most six unknowns')
+    if errors:
+        print('Invalid robot description: ' + '; '.join(errors))
+    return not errors
 
 
 def run_ik(
+        robot: RobotDescription,
+        numerical_test_cases_path: Optional[str] = None,
+        run_ik_option: Optional[RunIKOption] = None):
+    option = run_ik_option if run_ik_option is not None else RunIKOption()
+    if option.random_seed is None:
+        return _run_ik(robot, numerical_test_cases_path, option)
+    if not isinstance(option.random_seed, (int, np.integer)):
+        raise ValueError('random_seed must be an integer')
+    python_state, numpy_state = random.getstate(), np.random.get_state()
+    try:
+        np.random.seed(int(option.random_seed))
+        random.seed(int(option.random_seed))
+        print('Offline generation random seed:', option.random_seed)
+        return _run_ik(robot, numerical_test_cases_path, option)
+    finally:
+        random.setstate(python_state)
+        np.random.set_state(numpy_state)
+
+
+def _run_ik(
         robot: RobotDescription,
         numerical_test_cases_path: Optional[str] = None,
         run_ik_option: Optional[RunIKOption] = None):

@@ -1,5 +1,6 @@
 from fk.robots import RobotDescription
 from codegen.skeleton.skeleton_tree import SkeletonTree
+from codegen.skeleton.tree_node import EquationAllZeroDispatcherNode, SolvedVariableDispatcherNode
 from typing import List
 import sympy as sp
 import copy
@@ -12,9 +13,19 @@ class CodeGenerationBase(object):
         if tree.root is None:
             raise ValueError('Cannot generate code from an empty solution tree')
         required = {unknown.symbol for unknown in tree.solved_unknowns}
+        self.unhandled_degenerate_branches = []
+        # Every additional real branch can require an independent copy of each base candidate.
+        self.branch_capacity_multiplier = 1
         complete_branch = False
         missing = required
         for node in tree.node_list:
+            if isinstance(node, EquationAllZeroDispatcherNode) and node.degenerate_child is None:
+                self.unhandled_degenerate_branches.append((node.flatten_idx, str(node.degenerate_checker)))
+            elif isinstance(node, SolvedVariableDispatcherNode):
+                self.branch_capacity_multiplier += max(0, sum(child is not None for child in node.children[1:]) - 1)
+                self.unhandled_degenerate_branches.extend(
+                    (node.flatten_idx, str(condition)) for condition, child in
+                    zip(node.branch_conditions, node.children[1:]) if child is None)
             if not node.is_solution_node:
                 continue
             if node.solution.is_polynomial and not node.is_parent_root_dispatcher():
@@ -25,6 +36,9 @@ class CodeGenerationBase(object):
                 complete_branch = complete_branch or not missing
         if not complete_branch:
             raise ValueError('No complete solution branch; missing ' + ', '.join(sorted(map(str, missing))))
+        if self.unhandled_degenerate_branches:
+            print('Generation coverage for {name}: {count} unimplemented degenerate branches.'.format(
+                name=tree.robot.name, count=len(self.unhandled_degenerate_branches)))
 
     @property
     def skeleton_tree(self) -> SkeletonTree:
@@ -87,6 +101,25 @@ class CodeGenerationBase(object):
         new_str = copy.copy(string_to_remove)
         new_str.replace(' ', '')
         return new_str
+
+
+def candidate_is_complete(tree, node):
+    required = {unknown.symbol for unknown in tree.solved_unknowns}
+    solved = {solution.solved_variable for solution in
+              tree.variable_solutions_from_root(node, include_current_node=False)}
+    return required <= solved
+
+
+def cse_by_condition(expressions, conditions):
+    """Share temporaries only within adjacent equal guards, preserving candidate order."""
+    start = 0
+    while start < len(expressions):
+        end = start + 1
+        while end < len(expressions) and conditions[end] == conditions[start]:
+            end += 1
+        replacements, reduced = sp.cse(expressions[start:end])
+        yield range(start, end), conditions[start], replacements, reduced
+        start = end
 
 
 # The indent string

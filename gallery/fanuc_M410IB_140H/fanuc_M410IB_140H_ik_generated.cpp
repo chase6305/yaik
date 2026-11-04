@@ -512,6 +512,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const bool checked_result = std::fabs(Pz - d_3*r_33) <= 9.9999999999999995e-7 && std::fabs(-Px*std::cos(th_0) - Py*std::sin(th_0) + a_0 + d_3*r_13*std::cos(th_0) + d_3*r_23*std::sin(th_0)) <= 9.9999999999999995e-7;
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
     

@@ -76,3 +76,9 @@ For real-robot validation, compare candidates against independent model FK after
 converting the base and tool frames. Check position error, rotation error, joint
 limits, and preservation of any fixed redundant joint separately. A round trip
 through generated FK alone cannot detect a shared model or frame error.
+
+Code generation reports the number of unimplemented degenerate branches and exposes
+their node indices and conditions through `unhandled_degenerate_branches`. This is a
+structural report, not a count of reachable failures. Candidates dropped at such a
+branch are excluded from raw output if their actual robot joints are still incomplete;
+already complete joint values are retained even when an auxiliary variable is unresolved.

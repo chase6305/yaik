@@ -1,6 +1,6 @@
 import copy
 
-from codegen.skeleton.codegen_base import indent
+from codegen.skeleton.codegen_base import indent, cse_by_condition, candidate_is_complete
 from codegen.skeleton.skeleton_tree import SkeletonTree
 from codegen.skeleton.tree_node import SkeletonTreeNode, NoBranchDispatcherNode, DispatcherNodeBase
 from codegen.skeleton.tree_node import EquationAllZeroDispatcherNode, SolvedVariableDispatcherNode
@@ -216,6 +216,9 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
             self.add_code_line('else')
             self.add_code_line(indent() + 'add_input_index_to({node_idx}, node_input_i_idx_in_queue);'.
                                format(node_idx=degenerate_child_idx))
+        elif not candidate_is_complete(self._tree, dispatcher):
+            self.add_code_line('else')
+            self.add_code_line(indent() + 'solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;')
         self.exit_scope('for_i')
         self.exit_scope(None, True)  # The processor scope
 
@@ -263,6 +266,10 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         self.add_code_line('const auto& {sol_name} = solution_queue.get_solution(node_input_i_idx_in_queue);'.format(
             sol_name=solution_name))
         self.add_code_line('bool taken_by_degenerate = false;')
+        implemented = [f'degenerate_valid_{i}' for i in range(n_child)
+                       if dispatcher.degenerate_branch_child(i) is not None]
+        if len(implemented) > 1:
+            self.add_code_line('bool forwarded_to_child = false;')
 
         # The case of taken by degenerated child
         for i in range(n_child):
@@ -285,8 +292,15 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
             self.enter_scope('if_degenerate')
             self.add_code_line('taken_by_degenerate = true;')
             if child_i_idx is not None:
-                self.add_code_line('add_input_index_to({node_idx}, node_input_i_idx_in_queue);'.
-                                   format(node_idx=child_i_idx))
+                if len(implemented) > 1:
+                    self.add_code_line('int branch_input_index = node_input_i_idx_in_queue;')
+                    self.add_code_line('if (forwarded_to_child)')
+                    self.add_code_line(indent() + 'branch_input_index = append_solution_to_queue(this_solution);')
+                    self.add_code_line('forwarded_to_child = true;')
+                    self.add_code_line(f'add_input_index_to({child_i_idx}, branch_input_index);')
+                else:
+                    self.add_code_line('add_input_index_to({node_idx}, node_input_i_idx_in_queue);'.
+                                       format(node_idx=child_i_idx))
             self.exit_scope('if_degenerate')
 
         # The case of non-degenerate
@@ -294,6 +308,9 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         self.add_code_line('if (!taken_by_degenerate)')
         self.add_code_line(indent() + 'add_input_index_to({node_idx}, node_input_i_idx_in_queue);'.
                            format(node_idx=non_degenerate_child_idx))
+        if len(implemented) < n_child and not candidate_is_complete(self._tree, dispatcher):
+            self.add_code_line('else if (!(' + ' || '.join(implemented) + '))' if implemented else 'else')
+            self.add_code_line(indent() + 'solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;')
 
         # For loop finished
         self.exit_scope('for_i')
@@ -338,46 +355,25 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         solved_var = solution.solved_variable
         solved_var_idx = self._symbol_to_index[solved_var]
 
-        # The cse
-        n_solution = len(solution.explicit_solutions)
-        solution_list: List[sp.Expr] = list()
-        for i in range(n_solution):
-            solution_i = solution.explicit_solutions[i]
-            checker_i = solution.argument_validity_checkers[i]
-            solution_list.append(solution_i)
+        solution_list = solution.explicit_solutions
 
-        # Do cse for solution/checker
-        replacements, reduced_solutions = sp.cse(solution_list)
-        shared_condition = n_solution > 1 and len(set(solution.argument_validity_checkers)) == 1
-
-        # The code gen
-        for i in range(n_solution):
-            # The reduced code
-            reduced_solution_i = reduced_solutions[i]
-            checker_i = solution.argument_validity_checkers[i]
-            solution_i_code = self.generate_cxx_code(reduced_solution_i)
-            checker_i_code = self.generate_cxx_code(checker_i)
-            if not shared_condition or i == 0:
-                self.add_code_line('const bool condition_{sol_idx} = {cond_code};'.
-                                   format(sol_idx=i, cond_code=checker_i_code))
-                self.add_code_line('if (condition_{sol_idx})'.format(sol_idx=i))
-                self.enter_scope('if_condition')
-                for symbol_k, expr_k in replacements:
-                    expr_code = self.generate_cxx_code(expr_k)
-                    self.add_code_line('const double {var} = {expr_code};'.format(var=str(symbol_k), expr_code=expr_code))
-
-            # Actual solution
-            self.add_empty_line()
-            self.add_code_line('auto solution_{sol_idx} = make_raw_solution();'.format(sol_idx=i))
-            self.add_code_line('solution_{sol_idx}[{var_idx}] = {sol_code};'.
-                               format(sol_idx=i, var_idx=solved_var_idx, sol_code=solution_i_code))
-            self.add_code_line('int appended_idx_{sol_idx} = append_solution_to_queue(solution_{sol_idx});'.format(sol_idx=i))
-            if output_idx is not None:
-                self.add_code_line('add_input_index_to({node_idx}, appended_idx_{sol_idx});'.format(node_idx=output_idx, sol_idx=i))
-            if not shared_condition:
-                self.exit_scope('if_condition')
-            self.add_empty_line()
-        if shared_condition:
+        for indices, checker, replacements, reduced in cse_by_condition(
+                solution_list, solution.argument_validity_checkers):
+            self.add_code_line('const bool condition_{idx} = {code};'.format(
+                idx=indices[0], code=self.generate_cxx_code(checker)))
+            self.add_code_line('if (condition_{idx})'.format(idx=indices[0]))
+            self.enter_scope('if_condition')
+            for symbol, expression in replacements:
+                self.add_code_line('const double {var} = {code};'.format(
+                    var=str(symbol), code=self.generate_cxx_code(expression)))
+            for i, expression in zip(indices, reduced):
+                self.add_code_line('auto solution_{idx} = make_raw_solution();'.format(idx=i))
+                self.add_code_line('solution_{idx}[{var_idx}] = {code};'.format(
+                    idx=i, var_idx=solved_var_idx, code=self.generate_cxx_code(expression)))
+                self.add_code_line('int appended_idx_{idx} = append_solution_to_queue(solution_{idx});'.format(idx=i))
+                if output_idx is not None:
+                    self.add_code_line('add_input_index_to({node_idx}, appended_idx_{idx});'.format(node_idx=output_idx, idx=i))
+                self.add_empty_line()
             self.exit_scope('if_condition')
 
     def _visit_explicit_solution_node_non_root(self, solution_node: ExplicitSolutionNode):
@@ -389,18 +385,9 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         solved_var = solution.solved_variable
         solved_var_idx = self._symbol_to_index[solved_var]
 
-        # Gather the solution and checker
-        n_solution = len(solution.explicit_solutions)
-        solution_list: List[sp.Expr] = list()
-        checker_list: List[sp.Expr] = list()
-        for i in range(n_solution):
-            solution_i = solution.explicit_solutions[i]
-            checker_i = solution.argument_validity_checkers[i]
-            solution_list.append(solution_i)
-            checker_list.append(checker_i)
-
-        # Do cse for solution/checker
-        solution_replacements, reduced_solutions = sp.cse(solution_list)
+        solution_list = solution.explicit_solutions
+        checker_list = solution.argument_validity_checkers
+        n_solution = len(solution_list)
 
         # All variables
         solution_name = 'this_solution'
@@ -417,56 +404,34 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         for this_line in var_extract_lines:
             self.add_code_line(this_line)
 
-        # For each solution
-        for i in range(n_solution):
-            # The reduced code
-            reduced_solution_i = reduced_solutions[i]
-            checker_i = checker_list[i]
-            solution_i_code = self.generate_cxx_code(reduced_solution_i)
-            checker_i_code = self.generate_cxx_code(checker_i)
-
-            # Extraction done, do solving
-            self.add_code_line('')
-            self.add_code_line('const bool condition_{sol_idx} = {cond_code};'.
-                               format(sol_idx=i, cond_code=checker_i_code))
-            self.add_code_line('if (condition_{sol_idx})'.format(sol_idx=i))
+        for indices, checker, replacements, reduced in cse_by_condition(solution_list, checker_list):
+            self.add_code_line('const bool condition_{idx} = {code};'.format(
+                idx=indices[0], code=self.generate_cxx_code(checker)))
+            self.add_code_line('if (condition_{idx})'.format(idx=indices[0]))
             self.enter_scope('if_condition')
-
-            # The replacement code, we can only place it here as it may contain dangerous code
-            self.add_code_line('// Temp variable for efficiency')
-            for k in range(len(solution_replacements)):
-                symbol_k, expr_k = solution_replacements[k]
-                expr_code = self.generate_cxx_code(expr_k)
-                self.add_code_line('const double {var} = {expr_code};'.format(var=str(symbol_k), expr_code=expr_code))
-            self.add_code_line('// End of temp variables')
-
-            # The actual solve code
-            if i != n_solution - 1:
-                self.add_code_line('RawSolution solution_{sol_idx}({sol_name});'.
-                                   format(sol_idx=i, sol_name=solution_name))
-                self.add_code_line('solution_{sol_idx}[{var_idx}] = {sol_code};'.
-                                   format(sol_idx=i, var_idx=solved_var_idx, sol_code=solution_i_code))
-                self.add_code_line('int appended_idx = append_solution_to_queue(solution_{sol_idx});'.format(sol_idx=i))
-                if output_idx is not None:
-                    self.add_code_line('add_input_index_to({node_idx}, appended_idx);'.format(node_idx=output_idx))
-            else:
-                # Directly assign to this_solution
-                self.add_code_line('const double tmp_sol_value = {sol_code};'.
-                                   format(sol_code=solution_i_code))
-                self.add_code_line('solution_queue.get_solution(node_input_i_idx_in_queue)[{var_idx}] = tmp_sol_value;'.
-                                   format(var_idx=solved_var_idx))
-                if output_idx is not None:
-                    self.add_code_line('add_input_index_to({node_idx}, node_input_i_idx_in_queue);'.
-                                       format(node_idx=output_idx))
+            for symbol, expression in replacements:
+                self.add_code_line('const double {var} = {code};'.format(
+                    var=str(symbol), code=self.generate_cxx_code(expression)))
+            for i, expression in zip(indices, reduced):
+                solution_i_code = self.generate_cxx_code(expression)
+                if i != n_solution - 1:
+                    self.add_code_line('RawSolution solution_{idx}({name});'.format(idx=i, name=solution_name))
+                    self.add_code_line('solution_{idx}[{var_idx}] = {code};'.format(
+                        idx=i, var_idx=solved_var_idx, code=solution_i_code))
+                    self.add_code_line('int appended_idx_{idx} = append_solution_to_queue(solution_{idx});'.format(idx=i))
+                    if output_idx is not None:
+                        self.add_code_line('add_input_index_to({node_idx}, appended_idx_{idx});'.format(node_idx=output_idx, idx=i))
+                else:
+                    self.add_code_line('const double tmp_sol_value = {code};'.format(code=solution_i_code))
+                    self.add_code_line('solution_queue.get_solution(node_input_i_idx_in_queue)[{var_idx}] = tmp_sol_value;'.format(var_idx=solved_var_idx))
+                    if output_idx is not None:
+                        self.add_code_line('add_input_index_to({node_idx}, node_input_i_idx_in_queue);'.format(node_idx=output_idx))
             self.exit_scope('if_condition')
-
-            # Set validity for the last idx
-            if i == n_solution - 1:
+            if indices[-1] == n_solution - 1:
                 self.add_code_line('else')
                 self.enter_scope('else')
                 self.add_code_line('solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;')
                 self.exit_scope('else')
-
         self.exit_scope('for_i')
 
     def visit_polynomial_solution_node(self, solution_node: PolynomialSolutionNode):
@@ -519,8 +484,12 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
             self.add_code_line('const double poly_coefficient_{order}_num = {code};'.
                                format(order=order, code=numerator_code))
             self.add_code_line('const double poly_coefficient_{order}_denom = {code};'.format(order=order, code=denominator_code))
+            self.add_code_line('if (!std::isfinite(poly_coefficient_{order}_num) || '
+                               '!std::isfinite(poly_coefficient_{order}_denom) || '
+                               'poly_coefficient_{order}_denom == 0) return;'.format(order=order))
             self.add_code_line('const double poly_coefficient_{order} = poly_'
                                'coefficient_{order}_num / poly_coefficient_{order}_denom;'.format(order=order))
+            self.add_code_line('if (!std::isfinite(poly_coefficient_{order})) return;'.format(order=order))
             if order > poly_order:
                 poly_order = order
 

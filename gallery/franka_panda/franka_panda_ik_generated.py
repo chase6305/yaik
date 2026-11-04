@@ -553,15 +553,24 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             degenerate_valid_0 = (abs(th_3 - math.pi) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(12, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(12, branch_input_index)
             
             degenerate_valid_1 = (abs(th_3 - 3.08938932227154 + math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(13, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(13, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(3, node_input_i_idx_in_queue)
@@ -726,6 +735,8 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             checked_result: bool = (abs(inv_Pz) <= 1.0e-6) and (abs(a_5 + inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6)) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_4_processor()
@@ -922,6 +933,8 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             checked_result: bool = (abs(r_13) <= 1.0e-6) and (abs(r_23) <= 1.0e-6) and (abs(math.sin(th_2)*math.sin(th_3)*math.cos(th_5) + math.sin(th_2)*math.sin(th_5)*math.cos(th_3)*math.cos(th_4) - math.sin(th_4)*math.sin(th_5)*math.cos(th_2)) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(9, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_8_processor()
@@ -991,6 +1004,8 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             checked_result: bool = (abs(Pz) <= 1.0e-6) and (abs(Px*math.cos(th_0) + Py*math.sin(th_0)) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(11, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_10_processor()
@@ -1063,6 +1078,8 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
 
 def franka_panda_ik_solve(T_ee: np.ndarray, th_3):
     if not np.all(np.isfinite(T_ee)):
+        return []
+    if not (math.isfinite(th_3)):
         return []
     T_ee_raw_in = franka_panda_ik_target_original_to_raw(T_ee)
     ik_output_raw = franka_panda_ik_solve_raw(T_ee_raw_in, th_3 + th_3_offset_original2raw)

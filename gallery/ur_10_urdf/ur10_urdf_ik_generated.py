@@ -509,6 +509,8 @@ def ur10_urdf_ik_solve_raw(T_ee: np.ndarray):
             
             if not taken_by_degenerate:
                 add_input_index_to(5, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     SolvedVariableDispatcherNode_node_4_processor()
@@ -641,6 +643,8 @@ def ur10_urdf_ik_solve_raw(T_ee: np.ndarray):
             checked_result: bool = (abs(Pz + d_4*r_31*math.sin(th_5) + d_4*r_32*math.cos(th_5)) <= 1.0e-6) and (abs(Px*math.cos(th_0) + Py*math.sin(th_0) + d_4*r_11*math.sin(th_5)*math.cos(th_0) + d_4*r_12*math.cos(th_0)*math.cos(th_5) + d_4*r_21*math.sin(th_0)*math.sin(th_5) + d_4*r_22*math.sin(th_0)*math.cos(th_5)) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(11, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_10_processor()

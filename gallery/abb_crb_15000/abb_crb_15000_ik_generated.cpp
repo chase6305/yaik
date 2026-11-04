@@ -6,7 +6,7 @@ struct abb_crb_15000_ik {
 
 // Constants for solver
 static constexpr int robot_nq = 6;
-static constexpr int max_n_solutions = 128;
+static constexpr int max_n_solutions = 384;
 static constexpr int n_tree_nodes = 28;
 static constexpr int intermediate_solution_size = 8;
 static constexpr double pose_tolerance = 1e-6;
@@ -1928,6 +1928,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const bool checked_result = std::fabs(a_3*r_11*std::sin(th_0) - a_3*r_21*std::cos(th_0)) <= 9.9999999999999995e-7 && std::fabs(a_3*r_12*std::sin(th_0) - a_3*r_22*std::cos(th_0)) <= 9.9999999999999995e-7 && std::fabs(Px*std::sin(th_0) - Py*std::cos(th_0) - d_4*r_13*std::sin(th_0) + d_4*r_23*std::cos(th_0)) <= 9.9999999999999995e-7;
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(3, node_input_i_idx_in_queue);
+            else
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
     
@@ -2176,20 +2178,29 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             bool taken_by_degenerate = false;
+            bool forwarded_to_child = false;
             const double th_3 = this_solution[5];
             
             const bool degenerate_valid_0 = std::fabs(th_3) <= 9.9999999999999995e-7;
             if (degenerate_valid_0)
             {
                 taken_by_degenerate = true;
-                add_input_index_to(14, node_input_i_idx_in_queue);
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(14, branch_input_index);
             }
             
             const bool degenerate_valid_1 = std::fabs(th_3 - M_PI) <= 9.9999999999999995e-7;
             if (degenerate_valid_1)
             {
                 taken_by_degenerate = true;
-                add_input_index_to(17, node_input_i_idx_in_queue);
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(17, branch_input_index);
             }
             
             if (!taken_by_degenerate)
@@ -2252,20 +2263,29 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             bool taken_by_degenerate = false;
+            bool forwarded_to_child = false;
             const double th_2 = this_solution[4];
             
             const bool degenerate_valid_0 = std::fabs(th_2 - M_PI + 1.3408918986629901) <= 9.9999999999999995e-7;
             if (degenerate_valid_0)
             {
                 taken_by_degenerate = true;
-                add_input_index_to(22, node_input_i_idx_in_queue);
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(22, branch_input_index);
             }
             
             const bool degenerate_valid_1 = std::fabs(th_2 - 2*M_PI + 1.3408918986629901) <= 9.9999999999999995e-7;
             if (degenerate_valid_1)
             {
                 taken_by_degenerate = true;
-                add_input_index_to(25, node_input_i_idx_in_queue);
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(25, branch_input_index);
             }
             
             if (!taken_by_degenerate)

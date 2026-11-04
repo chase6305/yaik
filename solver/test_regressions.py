@@ -16,7 +16,8 @@ from fk.robots import DHEntry, RobotDescription
 from python_run_import import (compute_polynomial_real_roots, try_solve_linear_type2,
                                try_solve_linear_type2_specific_rows)
 from solver.build_equations import IkEquationCollection
-from solver.degenerate_analyse.analyser_step import DegenerateAnalyserContext
+from solver.degenerate_analyse.analyser_step import (
+    CheckConstantAnalyserStep, DegenerateAnalyserContext, DegenerateAnalyserOption)
 from solver.degenerate_analyse.numerical_analyser import NumericalCheckDegenerateAnalyzer
 from solver.degenerate_analyse.numerical_check_data import generate_test_cases
 from solver.equation_types import EquationInput, NumericalAnalyseContext, ScalarEquation, Unknown, UnknownType
@@ -82,6 +83,11 @@ class TestRegressions(TestCase):
                 target = np.eye(4)
                 target[:3, 3] = 100
                 self.assertFalse(ik(target, *(float(q[index]) for index in indices)))
+                for invalid in (np.nan, np.inf, -np.inf):
+                    for argument in range(len(indices)):
+                        parameters = [float(q[index]) for index in indices]
+                        parameters[argument] = invalid
+                        self.assertEqual(ik(fk(q), *parameters), [])
                 for row in range(4):
                     for col in range(4):
                         for invalid in (np.nan, np.inf, -np.inf):
@@ -227,6 +233,15 @@ class TestRegressions(TestCase):
             kind, ratio = analyser.perform_analyse(record, [], {x}, {}, {})
         self.assertEqual(kind, NumericalAnalysedResultType.NumericalDegenerate.name)
         self.assertAlmostEqual(ratio, 2 / 3)
+
+    def test_constant_degeneration_checks_do_not_certify_nonfinite_values(self):
+        analyser = CheckConstantAnalyserStep()
+        context, option = DegenerateAnalyserContext(), DegenerateAnalyserOption()
+        for value in (sp.oo, -sp.oo, sp.nan, sp.S.Zero, sp.Float(0.0), sp.Float(-0.0)):
+            record = SolutionDegenerateRecord.record_all_equations([value])
+            self.assertIsNone(analyser.perform_analyse(record, context, option))
+        record = SolutionDegenerateRecord.record_all_equations([sp.S.One])
+        self.assertEqual(analyser.perform_analyse(record, context, option).type, 'AlwaysNonDegenerate')
 
     def test_degenerate_branch_can_solve_a_previously_unknown_variable(self):
         x, y = sp.symbols('x y')

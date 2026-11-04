@@ -106,7 +106,8 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('// Constants for solver')
         self.add_code_line('static constexpr int robot_nq = {nq};'.format(nq=len(robot.unknowns)))
 
-        max_n_solution = 128 if tree.has_general_6dof_solution_node() else 16
+        base_n_solutions = 128 if tree.has_general_6dof_solution_node() else 16
+        max_n_solution = base_n_solutions * self.branch_capacity_multiplier
         self.add_code_line(f'static constexpr int max_n_solutions = {max_n_solution};')
         self.add_code_line('static constexpr int n_tree_nodes = {n_tree_nodes};'.
                            format(n_tree_nodes=self.skeleton_tree.num_nodes))
@@ -562,27 +563,25 @@ class CodeGenerationCpp(CodeGenerationBase):
 
     def _generate_warp_angle(self):
         self.add_empty_line()
-        self.add_code_line('static void wrapAngleToPi(std::vector<std::array<double, robot_nq>>& ik_output)')
+        self.add_code_line('static void wrapAngleToPi(std::array<double, robot_nq>& solution_i)')
         self.enter_scope('wrap_angle')
-        self.add_code_line('for(int i = 0; i < ik_output.size(); i++)')
-        self.enter_scope('for_each_solution')
         self.add_code_line('// Wrap angular value to [-pi, pi]')
-        self.add_code_line('auto& solution_i = ik_output[i];')
         unknowns = self.robot.unknowns
         for j in range(len(unknowns)):
             unknown_j = unknowns[j]
-            if not unknown_j.is_revolute:
+            if not unknown_j.is_revolute or unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
                 continue
             # Do wrapping
             self.add_code_line('// Revolute unknown {symbol_name}'.format(symbol_name=unknown_j.symbol.name))
-            self.add_code_line('while(solution_i[{j}] > M_PI)'.format(j=j))
-            self.add_code_line(indent() + 'solution_i[{j}] -= 2 * M_PI;'.format(j=j))
-            self.add_code_line('while(solution_i[{j}] < - M_PI)'.format(j=j))
-            self.add_code_line(indent() + 'solution_i[{j}] += 2 * M_PI;'.format(j=j))
+            self.add_code_line('solution_i[{j}] = std::atan2(std::sin(solution_i[{j}]), std::cos(solution_i[{j}]));'.format(j=j))
 
-        # Done with solving
-        self.exit_scope('for_each_solution')
         self.exit_scope('wrap_angle')
+        self.add_empty_line()
+        self.add_code_line('static void wrapAngleToPi(std::vector<std::array<double, robot_nq>>& ik_output)')
+        self.enter_scope('wrap_angles')
+        self.add_code_line('for (auto& solution_i : ik_output)')
+        self.add_code_line(indent() + 'wrapAngleToPi(solution_i);')
+        self.exit_scope('wrap_angles')
 
     def _generate_checked_ik_method(self):
         # The function argument
@@ -599,6 +598,9 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('static void ' + self.ik_function_name(False) + func_arguments)
         self.enter_scope('checked_ik')
         self.add_code_line('if (!T_ee.allFinite()) { ik_output.clear(); return; }')
+        if free_symbols:
+            invalid_parameters = ' || '.join('!std::isfinite(' + str(symbol) + ')' for symbol in free_symbols)
+            self.add_code_line('if (' + invalid_parameters + ') { ik_output.clear(); return; }')
 
         # To raw target
         if (self.robot.get_pre_transform_sp() is not None) or (self.robot.get_post_transform_sp() is not None):
@@ -651,6 +653,7 @@ class CodeGenerationCpp(CodeGenerationBase):
             if symbol_i not in unknown_symbols:
                 fk_args_call += ',' + str(symbol_i)
         fk_args_call += ')'
+        self.add_code_line('wrapAngleToPi(ik_out_i);')
         self.add_code_line('const Eigen::Matrix4d ee_pose_i = {fk_func}{fk_args};'.
                            format(fk_func=fk_func_name, fk_args=fk_args_call))
         self.add_code_line('double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();')
@@ -662,7 +665,6 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_empty_line()
         self.add_code_line('if (!ik_output.empty())')
         self.enter_scope('if_valid_solution')
-        self.add_code_line('wrapAngleToPi(ik_output);')
         self.add_code_line('removeDuplicate<robot_nq>(ik_output, zero_tolerance);')
         self.add_code_line('return;')
         self.exit_scope('if_valid_solution')
@@ -690,6 +692,7 @@ class CodeGenerationCpp(CodeGenerationBase):
                                    format(j=j, offset_j=self.get_unknown_offset_name(unknown_j.symbol.name)))
 
         # Compute the pose again, note that we can use same fk_func_args
+        self.add_code_line('wrapAngleToPi(ik_out_i);')
         self.add_code_line('Eigen::Matrix4d ee_pose_i = {fk_func}{fk_args};'.
                            format(fk_func=fk_func_name, fk_args=fk_args_call))
         self.add_code_line('double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();')
@@ -718,6 +721,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('yaik_cpp::numericalRefinement<robot_nq>(' + refinement_fk + ', '
                            + refinement_jacobian + ', T_ee, ik_out_i'
                            + refinement_args + ');')
+        self.add_code_line('wrapAngleToPi(ik_out_i);')
         self.add_code_line('ee_pose_i = {fk_func}{fk_args};'.
                            format(fk_func=fk_func_name, fk_args=fk_args_call))
         self.add_code_line('ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();')
@@ -727,7 +731,6 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # De-duplicate and end the function
         self.add_empty_line()
-        self.add_code_line('wrapAngleToPi(ik_output);')
         self.add_code_line('removeDuplicate<robot_nq>(ik_output, zero_tolerance);')
         self.exit_scope('checked_ik')
 

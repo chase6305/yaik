@@ -219,6 +219,9 @@ class TreeSerializer(SkeletonNodeVisitor):
         degenerate_record = SolutionDegenerateRecord()
         degenerate_record.from_dict(degenerate_record_map)
         node = EquationAllZeroDispatcherNode(degenerate_record)
+        if 'degenerate_checker' in data_map:
+            parsed = equation_utils.parse_string_expressions([data_map['degenerate_checker']])
+            node._degenerate_checker = parsed[0]
         return node
 
     @staticmethod
@@ -228,6 +231,11 @@ class TreeSerializer(SkeletonNodeVisitor):
         degenerate_record = SolutionDegenerateRecord()
         degenerate_record.from_dict(degenerate_record_map)
         node = SolvedVariableDispatcherNode(degenerate_record)
+        if 'branch_conditions' in data_map:
+            conditions = equation_utils.parse_string_expressions(data_map['branch_conditions'])
+            if len(conditions) != node.num_degenerate_branches:
+                raise ValueError('Saved branch conditions do not match the degenerate record')
+            node._branch_conditions = conditions
         return node
 
     @staticmethod

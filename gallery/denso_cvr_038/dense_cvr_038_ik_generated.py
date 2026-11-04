@@ -2107,17 +2107,26 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_3 = this_solution[5]
             degenerate_valid_0 = (abs(th_3) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(14, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(14, branch_input_index)
             
             th_3 = this_solution[5]
             degenerate_valid_1 = (abs(th_3 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(19, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(19, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(7, node_input_i_idx_in_queue)
@@ -2213,6 +2222,8 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
             
             if not taken_by_degenerate:
                 add_input_index_to(23, node_input_i_idx_in_queue)
+            elif not (degenerate_valid_0):
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     SolvedVariableDispatcherNode_node_22_processor()
@@ -2429,17 +2440,26 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_2 = this_solution[4]
             degenerate_valid_0 = (abs(th_2 - math.pi + 1.50329340913167) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(26, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(26, branch_input_index)
             
             th_2 = this_solution[4]
             degenerate_valid_1 = (abs(th_2 - 2*math.pi + 1.50329340913167) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(29, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(29, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(16, node_input_i_idx_in_queue)
@@ -2777,6 +2797,8 @@ def dense_cvr_038_ik_solve_raw(T_ee: np.ndarray):
             checked_result: bool = (abs(Pz) <= 1.0e-6) and (abs(Px*math.cos(th_0) + Py*math.sin(th_0)) <= 1.0e-6)
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(9, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
     
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_8_processor()

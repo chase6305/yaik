@@ -45,17 +45,37 @@ T safe_acos(T a) {
     return std::acos(a);
 }
 
+// Periodic comparison is opt-in; select limit-compatible representatives first.
 template <int N>
 void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
-                      double tolerance) {
+                      double tolerance,
+                      const std::array<bool, N>& revolute_joints) {
   // Do nothing if size less than 1
   if (ik_output.size() <= 1) return;
 
   // Functor to compare two vectors
-  auto is_duplicate = [tolerance](const std::array<double, N>& a,
+  auto is_duplicate = [tolerance, &revolute_joints](const std::array<double, N>& a,
                                   const std::array<double, N>& b) -> bool {
     for (std::size_t j = 0; j < a.size(); j++) {
-      if (std::abs(a[j] - b[j]) > tolerance) return false;
+      if (revolute_joints[j]) {
+        if (!std::isfinite(a[j]) || !std::isfinite(b[j])) return false;
+        if (std::signbit(a[j]) != std::signbit(b[j]) &&
+            std::abs(a[j]) > std::numeric_limits<double>::max() - std::abs(b[j])) return false;
+      }
+      double difference = std::abs(a[j] - b[j]);
+      if (revolute_joints[j]) {
+        if (!std::isfinite(difference)) return false;
+        if (difference > tolerance) {
+          // Generated angles are normalized; reduce unusual inputs individually.
+          if (difference > 2 * M_PI) {
+            const double angle_a = std::atan2(std::sin(a[j]), std::cos(a[j]));
+            const double angle_b = std::atan2(std::sin(b[j]), std::cos(b[j]));
+            difference = std::abs(angle_a - angle_b);
+          }
+          difference = std::min(difference, std::abs(difference - 2 * M_PI));
+        }
+      }
+      if (difference > tolerance) return false;
     }
     return true;
   };
@@ -96,6 +116,12 @@ void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
   // [0, no_duplicate_until] is the range
   assert(no_duplicate_until < ik_output.size());
   ik_output.resize(no_duplicate_until + 1);
+}
+
+template <int N>
+void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
+                      double tolerance) {
+  removeDuplicate<N>(ik_output, tolerance, {});
 }
 
 // Fixe-size array to hold ik solution
@@ -607,6 +633,10 @@ void numericalRefinement(
     const Eigen::Matrix4d& ee_target, std::array<double, robot_nq>& q,
     double diagonal_damping = 1e-4,
     const std::array<bool, robot_nq>& fixed_joints = {}) {
+  if (!ee_target.allFinite() || !std::isfinite(diagonal_damping)) return;
+  for (double value : q) {
+    if (!std::isfinite(value)) return;
+  }
   Eigen::Matrix<double, 6, robot_nq> jacobian;
   Eigen::Matrix<double, robot_nq, robot_nq> jtj;
   Eigen::Matrix<double, robot_nq, 1> delta_q, jte;
@@ -616,6 +646,9 @@ void numericalRefinement(
   for (auto i = 0; i < n_iterations; i++) {
     // Compute the twist target
     Eigen::Matrix4d ee_pose_i = fk_functor(q);
+    // A zero skew rotation residual alone would also occur at a pi rotation.
+    const double pose_error = (ee_pose_i - ee_target).squaredNorm();
+    if (!std::isfinite(pose_error) || pose_error <= 1e-20) return;
     Eigen::Matrix4d twist_target_4x4 = ee_target * inverse_transform(ee_pose_i);
     twist_target[0] = 0.5 * (twist_target_4x4(2, 1) - twist_target_4x4(1, 2));
     twist_target[1] = 0.5 * (twist_target_4x4(0, 2) - twist_target_4x4(2, 0));
@@ -623,9 +656,11 @@ void numericalRefinement(
     twist_target[3] = twist_target_4x4(0, 3);
     twist_target[4] = twist_target_4x4(1, 3);
     twist_target[5] = twist_target_4x4(2, 3);
+    if (!twist_target.allFinite()) return;
 
     // Compute jacobian and solve it
     twist_jacobian_functor(q, jacobian);
+    if (!jacobian.allFinite()) return;
     for (auto j = 0; j < robot_nq; j++) {
       if (fixed_joints[j]) jacobian.col(j).setZero();
     }
@@ -634,12 +669,20 @@ void numericalRefinement(
     for (auto j = 0; j < robot_nq; j++) {
       jtj(j, j) += diagonal_damping;
     }
+    if (!jtj.allFinite() || !jte.allFinite()) return;
 
     // Solve Ax = b and update
     delta_q = jtj.colPivHouseholderQr().solve(jte);
+    if (!delta_q.allFinite()) return;
+    const auto previous_q = q;
     for (auto j = 0; j < robot_nq; j++) {
       q[j] += delta_q[j];
+      if (!std::isfinite(q[j])) {
+        q = previous_q;
+        return;
+      }
     }
+    if (q == previous_q) return;
   }
 }
 

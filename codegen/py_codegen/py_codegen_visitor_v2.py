@@ -1,6 +1,6 @@
 import numpy as np
 
-from codegen.skeleton.codegen_base import indent
+from codegen.skeleton.codegen_base import indent, cse_by_condition, candidate_is_complete
 from codegen.skeleton.skeleton_tree import SkeletonTree
 from codegen.skeleton.tree_node import SkeletonTreeNode, NoBranchDispatcherNode, DispatcherNodeBase
 from codegen.skeleton.tree_node import EquationAllZeroDispatcherNode, SolvedVariableDispatcherNode
@@ -240,6 +240,9 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
             self.add_code_line('else:')
             self.add_code_line(indent() + 'add_input_index_to({node_idx}, node_input_i_idx_in_queue)'.
                                format(node_idx=degenerate_child_idx))
+        elif not candidate_is_complete(self._tree, dispatcher):
+            self.add_code_line('else:')
+            self.add_code_line(indent() + 'queue_element_validity[node_input_i_idx_in_queue] = False')
 
         # Finish
         self.exit_scope('for_each_solution')
@@ -292,6 +295,10 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         self.add_code_line(indent() + 'continue')
         self.add_code_line('{sol_name} = solution_queue[node_input_i_idx_in_queue]'.format(sol_name=solution_name))
         self.add_code_line('taken_by_degenerate: bool = False')
+        implemented = [f'degenerate_valid_{i}' for i in range(n_child)
+                       if dispatcher.degenerate_branch_child(i) is not None]
+        if len(implemented) > 1:
+            self.add_code_line('forwarded_to_child = False')
 
         # The case of taken by degenerated child
         for i in range(n_child):
@@ -309,14 +316,24 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
             self.add_code_line('if degenerate_valid_{idx}:'.format(idx=i))
             self.add_code_line(indent() + 'taken_by_degenerate = True')
             if child_i_idx is not None:
-                self.add_code_line(indent() + 'add_input_index_to({node_idx}, node_input_i_idx_in_queue)'.
-                                   format(node_idx=child_i_idx))
+                if len(implemented) > 1:
+                    self.add_code_line(indent() + 'branch_input_index = node_input_i_idx_in_queue')
+                    self.add_code_line(indent() + 'if forwarded_to_child:')
+                    self.add_code_line(indent(2) + 'branch_input_index = append_solution_to_queue(copy.copy(this_solution))')
+                    self.add_code_line(indent() + 'forwarded_to_child = True')
+                    self.add_code_line(indent() + f'add_input_index_to({child_i_idx}, branch_input_index)')
+                else:
+                    self.add_code_line(indent() + 'add_input_index_to({node_idx}, node_input_i_idx_in_queue)'.
+                                       format(node_idx=child_i_idx))
             self.add_code_line('')
 
         # The case of non-degenerate
         self.add_code_line('if not taken_by_degenerate:')
         self.add_code_line(indent() + 'add_input_index_to({node_idx}, node_input_i_idx_in_queue)'.
                            format(node_idx=non_degenerate_child_idx))
+        if len(implemented) < n_child and not candidate_is_complete(self._tree, dispatcher):
+            self.add_code_line('elif not (' + ' or '.join(implemented) + '):' if implemented else 'else:')
+            self.add_code_line(indent() + 'queue_element_validity[node_input_i_idx_in_queue] = False')
 
         self.exit_scope('for_each_solution')
 
@@ -360,44 +377,24 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         solved_var = solution.solved_variable
         solved_var_idx = self._symbol_to_index[solved_var]
 
-        # The cse
-        n_solution = len(solution.explicit_solutions)
-        solution_list: List[sp.Expr] = list()
-        for i in range(n_solution):
-            solution_i = solution.explicit_solutions[i]
-            solution_list.append(solution_i)
+        solution_list = solution.explicit_solutions
 
-        # Do cse for solution/checker
-        replacements, reduced_solutions = sp.cse(solution_list)
-        shared_condition = n_solution > 1 and len(set(solution.argument_validity_checkers)) == 1
-
-        # The code gen
-        for i in range(n_solution):
-            # The reduced code
-            reduced_solution_i = reduced_solutions[i]
-            checker_i = solution.argument_validity_checkers[i]
-            solution_i_code = self.generate_py_code(reduced_solution_i)
-            checker_i_code = self.generate_py_code(checker_i)
-            if not shared_condition or i == 0:
-                self.add_code_line('condition_{sol_idx}: bool = {cond_code}'.
-                                   format(sol_idx=i, cond_code=checker_i_code))
-                self.add_code_line('if condition_{sol_idx}:'.format(sol_idx=i))
-                self.enter_scope('if condition')
-                for symbol_k, expr_k in replacements:
-                    expr_code = self.generate_py_code(expr_k)
-                    self.add_code_line('{var} = {expr_code}'.format(var=str(symbol_k), expr_code=expr_code))
-
-            # Actual solution
-            self.add_code_line('solution_{sol_idx}: IkSolution = make_ik_solution()'.format(sol_idx=i))
-            self.add_code_line('solution_{sol_idx}[{var_idx}] = {sol_code}'.
-                               format(sol_idx=i, var_idx=solved_var_idx, sol_code=solution_i_code))
-            self.add_code_line('appended_idx = append_solution_to_queue(solution_{sol_idx})'.format(sol_idx=i))
-            if output_idx is not None:
-                self.add_code_line('add_input_index_to({node_idx}, appended_idx)'.format(node_idx=output_idx))
-            self.add_code_line('')
-            if not shared_condition:
-                self.exit_scope('if condition')
-        if shared_condition:
+        for indices, checker, replacements, reduced in cse_by_condition(
+                solution_list, solution.argument_validity_checkers):
+            self.add_code_line('condition_{idx}: bool = {code}'.format(
+                idx=indices[0], code=self.generate_py_code(checker)))
+            self.add_code_line('if condition_{idx}:'.format(idx=indices[0]))
+            self.enter_scope('if condition')
+            for symbol, expression in replacements:
+                self.add_code_line('{var} = {code}'.format(var=str(symbol), code=self.generate_py_code(expression)))
+            for i, expression in zip(indices, reduced):
+                self.add_code_line('solution_{idx}: IkSolution = make_ik_solution()'.format(idx=i))
+                self.add_code_line('solution_{idx}[{var_idx}] = {code}'.format(
+                    idx=i, var_idx=solved_var_idx, code=self.generate_py_code(expression)))
+                self.add_code_line('appended_idx = append_solution_to_queue(solution_{idx})'.format(idx=i))
+                if output_idx is not None:
+                    self.add_code_line('add_input_index_to({node_idx}, appended_idx)'.format(node_idx=output_idx))
+                self.add_code_line('')
             self.exit_scope('if condition')
 
     def _visit_explicit_solution_node_non_root(self, solution_node: ExplicitSolutionNode):
@@ -409,18 +406,9 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         solved_var = solution.solved_variable
         solved_var_idx = self._symbol_to_index[solved_var]
 
-        # Gather the solution and checker
-        n_solution = len(solution.explicit_solutions)
-        solution_list: List[sp.Expr] = list()
-        checker_list: List[sp.Expr] = list()
-        for i in range(n_solution):
-            solution_i = solution.explicit_solutions[i]
-            checker_i = solution.argument_validity_checkers[i]
-            solution_list.append(solution_i)
-            checker_list.append(checker_i)
-
-        # Do cse for solution/checker
-        solution_replacements, reduced_solutions = sp.cse(solution_list)
+        solution_list = solution.explicit_solutions
+        checker_list = solution.argument_validity_checkers
+        n_solution = len(solution_list)
 
         # All variables
         solution_name = 'this_solution'
@@ -438,57 +426,32 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         for this_line in var_extract_lines:
             self.add_code_line(this_line)
 
-        # For each solution
-        for i in range(n_solution):
-            # The reduced code
-            reduced_solution_i = reduced_solutions[i]
-            checker_i = checker_list[i]
-            solution_i_code = self.generate_py_code(reduced_solution_i)
-            checker_i_code = self.generate_py_code(checker_i)
-
-            # Extraction done, do solving
-            self.add_code_line('condition_{sol_idx}: bool = {cond_code}'.
-                               format(sol_idx=i, cond_code=checker_i_code))
-            self.add_code_line('if condition_{sol_idx}:'.format(sol_idx=i))
+        for indices, checker, replacements, reduced in cse_by_condition(solution_list, checker_list):
+            self.add_code_line('condition_{idx}: bool = {code}'.format(
+                idx=indices[0], code=self.generate_py_code(checker)))
+            self.add_code_line('if condition_{idx}:'.format(idx=indices[0]))
             self.enter_scope('if condition')
-
-            # The replacement code, we can only place it here as it may contain dangerous code
-            self.add_code_line('# Temp variable for efficiency')
-            for k in range(len(solution_replacements)):
-                symbol_k, expr_k = solution_replacements[k]
-                expr_code = self.generate_py_code(expr_k)
-                self.add_code_line('{var} = {expr_code}'.format(var=str(symbol_k), expr_code=expr_code))
-            self.add_code_line('# End of temp variables')
-
-            # The actual solve code
-            if i != n_solution - 1:
-                self.add_code_line('solution_{sol_idx}: IkSolution = copy.copy({sol_name})'.
-                                   format(sol_idx=i, sol_name=solution_name))
-                self.add_code_line('solution_{sol_idx}[{var_idx}] = {sol_code}'.
-                                   format(sol_idx=i, var_idx=solved_var_idx, sol_code=solution_i_code))
-                self.add_code_line('appended_idx = append_solution_to_queue(solution_{sol_idx})'.format(sol_idx=i))
-                if output_idx is not None:
-                    self.add_code_line('add_input_index_to({node_idx}, appended_idx)'.format(node_idx=output_idx))
-                self.add_code_line('')
-            else:
-                # Directly assign to this_solution
-                self.add_code_line('{sol_name}[{var_idx}] = {sol_code}'.
-                                   format(sol_name=solution_name, var_idx=solved_var_idx, sol_code=solution_i_code))
-                self.add_code_line('solution_queue[node_input_i_idx_in_queue] = {sol_name}'.
-                                   format(sol_name=solution_name))
-                if output_idx is not None:
-                    self.add_code_line('add_input_index_to({node_idx}, node_input_i_idx_in_queue)'.format(node_idx=output_idx))
-
-            # Finish for if
+            for symbol, expression in replacements:
+                self.add_code_line('{var} = {code}'.format(var=str(symbol), code=self.generate_py_code(expression)))
+            for i, expression in zip(indices, reduced):
+                solution_i_code = self.generate_py_code(expression)
+                if i != n_solution - 1:
+                    self.add_code_line('solution_{idx}: IkSolution = copy.copy({name})'.format(idx=i, name=solution_name))
+                    self.add_code_line('solution_{idx}[{var_idx}] = {code}'.format(
+                        idx=i, var_idx=solved_var_idx, code=solution_i_code))
+                    self.add_code_line('appended_idx = append_solution_to_queue(solution_{idx})'.format(idx=i))
+                    if output_idx is not None:
+                        self.add_code_line('add_input_index_to({node_idx}, appended_idx)'.format(node_idx=output_idx))
+                else:
+                    self.add_code_line('{name}[{var_idx}] = {code}'.format(
+                        name=solution_name, var_idx=solved_var_idx, code=solution_i_code))
+                    self.add_code_line('solution_queue[node_input_i_idx_in_queue] = {name}'.format(name=solution_name))
+                    if output_idx is not None:
+                        self.add_code_line('add_input_index_to({node_idx}, node_input_i_idx_in_queue)'.format(node_idx=output_idx))
             self.exit_scope('if condition')
-
-            # Set validity for the last idx
-            if i == n_solution - 1:
+            if indices[-1] == n_solution - 1:
                 self.add_code_line('else:')
-                self.enter_scope('else')
-                self.add_code_line('queue_element_validity[node_input_i_idx_in_queue] = False')
-                self.exit_scope('else')
-                self.add_code_line('')
+                self.add_code_line(indent() + 'queue_element_validity[node_input_i_idx_in_queue] = False')
         self.exit_scope('for_each_solution')
 
     def visit_polynomial_solution_node(self, solution_node: PolynomialSolutionNode):
@@ -540,8 +503,19 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
             denominator_code = self.generate_py_code(denominator)
             self.add_code_line('poly_coefficient_{order}_num = {code}'.format(order=order, code=numerator_code))
             self.add_code_line('poly_coefficient_{order}_denom = {code}'.format(order=order, code=denominator_code))
-            self.add_code_line('poly_coefficient_{order} = poly_'
+            self.add_code_line('if (not isinstance(poly_coefficient_{order}_num, int) and '
+                               'not np.isfinite(poly_coefficient_{order}_num)) or '
+                               '(not isinstance(poly_coefficient_{order}_denom, int) and '
+                               'not np.isfinite(poly_coefficient_{order}_denom)) or '
+                               'poly_coefficient_{order}_denom == 0:'.format(order=order))
+            self.add_code_line(indent() + 'return')
+            self.add_code_line('try:')
+            self.add_code_line(indent() + 'poly_coefficient_{order} = poly_'
                                'coefficient_{order}_num / poly_coefficient_{order}_denom'.format(order=order))
+            self.add_code_line('except OverflowError:')
+            self.add_code_line(indent() + 'return')
+            self.add_code_line('if not np.isfinite(poly_coefficient_{order}):'.format(order=order))
+            self.add_code_line(indent() + 'return')
             if order > poly_order:
                 poly_order = order
 

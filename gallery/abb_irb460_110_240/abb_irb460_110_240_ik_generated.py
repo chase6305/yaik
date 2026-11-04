@@ -450,17 +450,26 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_1th_2_soa = this_solution[2]
             degenerate_valid_0 = (abs(th_1th_2_soa) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(10, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(10, branch_input_index)
             
             th_1th_2_soa = this_solution[2]
             degenerate_valid_1 = (abs(th_1th_2_soa - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(13, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(13, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(7, node_input_i_idx_in_queue)

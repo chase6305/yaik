@@ -119,7 +119,7 @@ class RobotDescription(object):
         data_map['unknowns'] = unknown_dict_list
 
         # For symbolic_parameters
-        parameters = [elem.name for elem in self.symbolic_parameters]
+        parameters = sorted(elem.name for elem in self.symbolic_parameters)
         data_map['symbolic_parameters'] = parameters
 
         # For parameter value

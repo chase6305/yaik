@@ -450,17 +450,26 @@ def kawasaki_CP130L_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             negative_th_2_positive_th_1__soa = this_solution[0]
             degenerate_valid_0 = (abs(negative_th_2_positive_th_1__soa) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-                add_input_index_to(10, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(10, branch_input_index)
             
             negative_th_2_positive_th_1__soa = this_solution[0]
             degenerate_valid_1 = (abs(negative_th_2_positive_th_1__soa - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-                add_input_index_to(13, node_input_i_idx_in_queue)
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(13, branch_input_index)
             
             if not taken_by_degenerate:
                 add_input_index_to(7, node_input_i_idx_in_queue)
