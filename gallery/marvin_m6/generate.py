@@ -90,8 +90,13 @@ def urdf_model(path, side):
     robot.parameters_value = {symbol: round(float(value), 12)
                               for symbol, value in robot.parameters_value.items()}
     offsets = []
-    for offset in robot.auxiliary_data.unknown_offset:
+    for index, offset in enumerate(robot.auxiliary_data.unknown_offset):
         exact = process_special_angle(offset)
+        # BLAS roundoff changes the sign chosen by acos at the pi boundary.
+        # Both rotations are identical; keep the saved Marvin convention for
+        # original-angle offsets and their corresponding raw-DH joint bounds.
+        if exact in (sp.pi, -sp.pi):
+            exact = -sp.pi if index == 1 else sp.pi
         offsets.append(float(exact) if exact is not None else float(offset))
     robot.auxiliary_data.unknown_offset = offsets
     # Bounds are expressed in the raw DH angle, q_original + offset. The
@@ -109,6 +114,29 @@ def model_dict(robot):
     result = robot.to_dict()
     result['symbolic_parameters'].sort()
     return result
+
+
+def model_difference(saved, converted, field='robot'):
+    """Locate an input mismatch without dumping the entire serialized model."""
+    if isinstance(saved, dict) and isinstance(converted, dict):
+        for key in sorted(saved.keys() | converted.keys()):
+            if key not in saved or key not in converted:
+                return f'{field}.{key}: missing in one model'
+            difference = model_difference(saved[key], converted[key], f'{field}.{key}')
+            if difference:
+                return difference
+        return None
+    if isinstance(saved, (list, tuple)) and isinstance(converted, (list, tuple)):
+        if len(saved) != len(converted):
+            return f'{field}: saved length={len(saved)}, URDF length={len(converted)}'
+        for index, (left, right) in enumerate(zip(saved, converted)):
+            difference = model_difference(left, right, f'{field}[{index}]')
+            if difference:
+                return difference
+        return None
+    if saved != converted:
+        return f'{field}: saved={saved!r}, URDF={converted!r}'
+    return None
 
 
 def generate(urdf_dir=HERE / 'urdf', output_dir=HERE, seed=42, codegen_only=False,
@@ -150,8 +178,9 @@ def generate(urdf_dir=HERE / 'urdf', output_dir=HERE, seed=42, codegen_only=Fals
                 tree = read_skeleton_tree(str(path))
             except yaml.YAMLError as error:
                 raise ValueError(f'{path}: invalid IK tree YAML: {error}') from None
-            if tree is None or model_dict(tree.robot) != model_dict(robot):
-                raise ValueError('IK tree model does not match the supplied URDF: ' + robot.name)
+            difference = 'empty solution tree' if tree is None else model_difference(model_dict(tree.robot), model_dict(robot))
+            if difference:
+                raise ValueError(f'IK tree model does not match the supplied URDF: {robot.name}; {difference}')
             trees[side] = tree
         # Code generation does not run the random search. Preserve a recorded
         # seed only when the source provenance actually describes both trees.

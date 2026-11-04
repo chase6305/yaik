@@ -142,6 +142,7 @@ class TestCLI(TestCase):
             result = self.run_cli('marvin', 'generate', '--urdf-dir', urdf, '--output-dir', output)
             self.assertEqual(result.returncode, 2)
             self.assertIn('does not match', result.stderr)
+            self.assertIn('robot.parameters_value.', result.stderr)
             self.assertEqual({path.name: path.read_bytes() for path in output.iterdir()}, before)
 
     def test_export_records_unknown_provenance_without_claiming_a_search_seed(self):

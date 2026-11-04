@@ -5,7 +5,7 @@ import hashlib
 import json
 import math
 import sys
-from unittest import TestCase
+from unittest import mock, TestCase
 
 import numpy as np
 import sympy as sp
@@ -19,6 +19,23 @@ from fk.robots import RobotDescription
 
 
 class TestMarvinM6(TestCase):
+    def test_equivalent_pi_offsets_from_blas_keep_the_saved_dh_convention(self):
+        from gallery.marvin_m6 import generate
+        real_converter = generate.convert_chain_into_robot
+
+        def flipped_pi_offsets(*args, **kwargs):
+            model = real_converter(*args, **kwargs)
+            model.auxiliary_data.unknown_offset = [
+                -value if abs(abs(value)-math.pi) < 1e-6 else value
+                for value in model.auxiliary_data.unknown_offset]
+            return model
+
+        for side in ('left', 'right'):
+            saved = yaml.safe_load((HERE / f'marvin_m6_{side}_arm.yaml').read_text())
+            with mock.patch.object(generate, 'convert_chain_into_robot', side_effect=flipped_pi_offsets):
+                converted = generate.urdf_model(HERE / 'urdf' / f'{side}_arm.urdf', side)
+            self.assertEqual(generate.model_dict(converted), saved)
+
     def test_generated_fk_matches_exact_urdf_base_and_ee(self):
         rng = np.random.default_rng(696)
         for side in ('left', 'right'):

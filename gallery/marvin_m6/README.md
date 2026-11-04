@@ -183,6 +183,8 @@ hashes; otherwise it records `null`. `--seed` controls the new search with
 `--solve`. A fixed seed controls offline sampling, while process deadlines and
 dependency versions can still change the symbolic result. Code generation from
 a saved tree is checked separately for reproducibility.
+Equivalent `+pi`/`-pi` offsets use a fixed DH convention across BLAS backends;
+model mismatches report the first differing field and its saved/URDF values.
 
 The direct `generate.py` script remains available for compatibility:
 `python gallery/marvin_m6/generate.py --codegen-only --output-dir build/marvin_m6`
