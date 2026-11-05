@@ -243,7 +243,8 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   test_cli.py gallery/marvin_m6 solver/test_regressions.py \
   solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
   solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
-  solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q
+  solver/test_argument_guards.py \
+  solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
   --output build/marvin-validation.json
@@ -266,6 +267,17 @@ representations, and proof obligations. Add `--require-complete` to audit or
 codegen to reject uncertified results; the project currently has no end-to-end
 completeness certificate. CLI IK distinguishes a verified witness from empty,
 undetermined output. See the [mathematical scope and certification requirements](gallery/marvin_m6/README.md#what-would-guarantee-completeness).
+
+Safe Python/C++ exports allow 64 double epsilons of roundoff at an `asin`/`acos`
+argument's ±1 boundary, then clamp that argument before evaluation. Other guards
+and the final FK acceptance thresholds retain their existing values. The offline
+numerical visitor also keeps polynomial sine/cosine roots at exactly ±1 and
+normalizes finite coefficients before solving.
+
+The audit reports saved formula degeneration records that lack their own
+dispatcher as `source: undispatched_solution_record`, including records previously
+marked non-degenerate by finite sampling. New branches retain those dispatchers;
+exporting an older saved tree reports the missing coverage without rewriting it.
 
 ```sh
 python yaik.py marvin validate --samples 1000 --stress-samples 2000 \

@@ -7,6 +7,8 @@ import copy
 from functools import lru_cache
 from sympy.core.relational import Relational
 from codegen.skeleton.branch_certificates import certify_unreachable_branch
+from solver.argument_guards import runtime_argument_guards
+from codegen.skeleton.completeness import undispatched_degeneracies
 
 
 class CodeGenerationBase(object):
@@ -23,6 +25,8 @@ class CodeGenerationBase(object):
         complete_branch = False
         missing = required
         for node in tree.node_list:
+            self.unhandled_degenerate_branches.extend(
+                (item['node'], item['condition']) for item in undispatched_degeneracies(node))
             if isinstance(node, EquationAllZeroDispatcherNode) and node.degenerate_child is None:
                 certificate = certify_unreachable_branch(tree, node)
                 if certificate is None:
@@ -180,7 +184,9 @@ def explicit_active_bound(solution):
     if solution.family_critical_equations is not None:
         return solution.num_solutions()
     groups = {}
-    for checker in solution.argument_validity_checkers:
+    # Rounded inverse-trig domains can overlap an adjacent fallback guard.
+    # Allocate against the guards emitted by safe code generation.
+    for checker in runtime_argument_guards(solution.explicit_solutions, solution.argument_validity_checkers):
         groups[checker] = groups.get(checker, 0)+1
     buckets = []
     for checker, multiplicity in groups.items():
@@ -193,8 +199,10 @@ def explicit_active_bound(solution):
     return sum(max(count for _, count in bucket) for bucket in buckets)
 
 
-def cse_by_condition(expressions, conditions):
+def cse_by_condition(expressions, conditions, safe_domains=False):
     """Share temporaries only within adjacent equal guards, preserving candidate order."""
+    if safe_domains:
+        conditions = runtime_argument_guards(expressions, conditions)
     start = 0
     while start < len(expressions):
         end = start + 1

@@ -72,9 +72,13 @@ def generated_python(tree):
     return scope[tree.robot.name + '_ik_solve_raw']
 
 
-def complete_prefix_tree():
+def complete_prefix_tree(argument_guard=False):
     x, y, extra, Pz = sp.symbols('x y extra Pz')
     result = robot('complete_prefix', [x, y])
+    if argument_guard:
+        result.name = 'complete_prefix_argument'
+        return SkeletonTree([explicit(x, [sp.S.Zero]), explicit(y, [Pz]), explicit(extra, [sp.S.Zero],
+            argument_valid_checkers=[sp.Abs(Pz) < 1])], result)
     return SkeletonTree([explicit(x, [sp.S.Zero]), explicit(y, [Pz]), explicit(extra, [sp.S.Zero],
         degenerate_record=SolutionDegenerateRecord.record_all_equations([x]))], result)
 
@@ -216,6 +220,8 @@ class TestCodegenSafety(TestCase):
         # An unresolved auxiliary symbol must not erase already complete joint values.
         output = generated_python(complete_prefix_tree())(target)
         np.testing.assert_allclose([q.ravel() for q in output], [[0, 2]])
+        output = generated_python(complete_prefix_tree(argument_guard=True))(target)
+        np.testing.assert_allclose([q.ravel() for q in output], [[0, 2]])
 
     def test_overlapping_real_branches_do_not_invalidate_each_other(self):
         target = np.eye(4)
@@ -271,7 +277,8 @@ class TestCodegenSafety(TestCase):
         if not shutil.which('g++') or not (eigen / 'Eigen/Core').exists():
             self.skipTest('g++ and Eigen are needed for the C++ integration test')
         trees = [guarded_tree(False), guarded_tree(True), missing_branch_tree(False),
-                 missing_branch_tree(True), missing_branch_tree(True, implemented_overlap=True), complete_prefix_tree()]
+                 missing_branch_tree(True), missing_branch_tree(True, implemented_overlap=True),
+                 complete_prefix_tree(), complete_prefix_tree(argument_guard=True)]
         trees.extend(overlapping_branch_tree(missing_first, root_count)
                      for missing_first in (False, True) for root_count in (1, 16))
         trees.extend([overlapping_branch_tree(False, 16, overlap=False), successful_overlap_tree(), rational_polynomial_tree()])
@@ -310,15 +317,19 @@ int main() {
     missing_variable_ik::RawIKWorksace variable;
     missing_variable_overlap_ik::RawIKWorksace overlap;
     complete_prefix_ik::RawIKWorksace complete;
+    complete_prefix_argument_ik::RawIKWorksace complete_argument;
     missing_equation_ik::computeRawIK(translated, equation);
     missing_variable_ik::computeRawIK(translated, variable);
     missing_variable_overlap_ik::computeRawIK(translated, overlap);
     complete_prefix_ik::computeRawIK(translated, complete);
+    complete_prefix_argument_ik::computeRawIK(translated, complete_argument);
     assert(equation.raw_ik_out.empty() && variable.raw_ik_out.empty());
     assert(overlap.raw_ik_out.size() == 1);
     assert(overlap.raw_ik_out[0][0] == 0 && overlap.raw_ik_out[0][1] == 2);
     assert(complete.raw_ik_out.size() == 1);
     assert(complete.raw_ik_out[0][0] == 0 && complete.raw_ik_out[0][1] == 2);
+    assert(complete_argument.raw_ik_out.size() == 1);
+    assert(complete_argument.raw_ik_out[0][0] == 0 && complete_argument.raw_ik_out[0][1] == 2);
     deep_overlap_last_16_exclusive_ik::RawIKWorksace exclusive;
     deep_overlap_last_16_exclusive_ik::computeRawIK(translated, exclusive);
     assert(exclusive.raw_ik_out.size() == 16 && exclusive.solution_queue.size() == 16);

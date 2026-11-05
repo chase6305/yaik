@@ -174,7 +174,9 @@ class SkeletonTree(object):
                 # Constant assignments need no additional guard. Alternative
                 # formulas must retain their own dispatcher, including at root.
                 solution_node = self.new_solution_node(solution_i)
-                if preserve_first_dispatcher:
+                if preserve_first_dispatcher or solution_i.degenerate_record.type in (
+                        DegenerateType.DegenerateIfAllEquationsZero.name,
+                        DegenerateType.DegenerateOnVariableValue.name):
                     dispatcher = self.new_dispatcher_node(solution_i.degenerate_record)
                     dispatcher.set_parent(parent)
                     parent.set_child_by_index(dispatcher, index_in_parent_children_list)

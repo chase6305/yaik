@@ -152,6 +152,9 @@ python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma
 奇异覆盖率与带限位接口分开统计。
 大角度叠加或减去关节偏移时先保留三角相位，避免浮点精度把偏移吞掉；FK 和 Jacobian
 使用同一规则，固定关节仍返回调用者提供的原值，移动关节保持线性坐标计算。
+安全模式的 Python/C++ 生成接口为 `asin`/`acos` 实际参数在 ±1 边界的舍入误差
+保留 64 个 double epsilon 的余量，再将参数夹到有效范围。其他守卫与最终 FK 阈值保持原值。
+离线数值求解也保留正好位于 ±1 的多项式正弦/余弦根，并先归一化有限系数。
 
 通用生成器现在补全“方程系数同时为零”的退化分支：从完整 FK 方程重新选择
 解析公式；较大的退化系统还会在一个旋转关节范围内枚举 33 个代表值，再由生成接口
@@ -170,7 +173,8 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   test_cli.py gallery/marvin_m6 solver/test_regressions.py \
   solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
   solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
-  solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q
+  solver/test_argument_guards.py \
+  solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
   --output build/marvin-validation.json
@@ -188,6 +192,9 @@ python yaik.py marvin validate --samples 1000 --seed 20261103 \
 审计或代码导出加 `--require-complete` 时，缺少完整证书就返回 1；严格导出不会改写输出文件。
 目前不能声称全工作空间完备。IK JSON 的 `reachability` 为 `witnessed` 时表示已验证一个合法解，
 为 `undetermined` 时表示没有找到代表解，不能据此断言目标不可达。
+旧解树中只有公式退化记录、没有独立分派节点的条件，也会列入未解决分支，
+标记 `source: undispatched_solution_record`；有限抽样的“从未退化”标记不能覆盖这些条件。
+新建分支会保留公式自身的分派节点；导出旧树会报告缺口，不会自动改写保存的树。
 
 要保证固定 J5 后任意可达目标都不漏解，需要穷尽常规与奇异分支、证明被丢弃分支无解、
 把连续解族与全部限位精确求交，并使用经过验证的实根隔离或区间方法处理数值边界。

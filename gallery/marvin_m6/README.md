@@ -354,6 +354,11 @@ root nodes, empty prefixes, and numerical-visitor guards have separate regressio
 Offline polynomial verification retries coefficient evaluation and root-to-angle
 conversion at higher precision when machine roots fail the original scalar
 equations; original denominator guards and residual thresholds are retained.
+Safe generated formulas separately allow 64 double epsilons at the ±1 domain
+boundary of their actual `asin`/`acos` arguments. Clamping is limited to those
+roundoff cases; other predicates and final FK thresholds retain their values.
+The offline numerical visitor retains exact endpoint roots and normalizes finite
+polynomial coefficients before extracting real roots.
 
 The project currently has no end-to-end completeness certificate. Inspect the
 remaining obligations explicitly:
@@ -369,6 +374,10 @@ strict export leaves output files untouched. CLI IK retains its existing status
 and exit codes, and adds `reachability: witnessed` for verified solutions or
 `undetermined` for empty output. Neither an empty result nor a node/time budget
 is treated as a mathematical infeasibility certificate.
+Older saved trees with formula degeneration records lacking their own dispatcher
+are reported with `source: undispatched_solution_record`, even when finite
+sampling previously labeled them non-degenerate. Newly constructed alternative
+formulas retain their dispatchers so the branch recovery pass can visit them.
 
 Use `marvin validate --stress-samples N` for N additional deterministic
 reachable witnesses near joint corners, shoulder alignment, exact/near wrist

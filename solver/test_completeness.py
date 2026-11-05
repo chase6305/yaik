@@ -9,12 +9,13 @@ import yaml
 from codegen.skeleton.branch_certificates import certify_unreachable_branch
 from codegen.skeleton.completeness import audit_completeness
 from codegen.skeleton.skeleton_tree import SkeletonTree
-from codegen.skeleton.tree_node import EquationAllZeroDispatcherNode
+from codegen.skeleton.tree_node import EquationAllZeroDispatcherNode, NoBranchDispatcherNode
 from codegen.skeleton.tree_serialize import TreeSerializer
 from fk.fk_equations import inv_Px, inv_Py, inv_Pz
 from fk.robots import DHEntry, RobotDescription
 from solver.equation_types import Unknown
-from solver.solved_variable import SolutionDegenerateRecord
+from solver.solved_variable import SolutionDegenerateRecord, DegenerateType
+from solver.solution_degeneration_record import NumericalAnalysedResultType
 from solver.test_equation_branches import explicit
 
 
@@ -36,6 +37,106 @@ def annulus_tree():
 
 
 class TestCompleteness(TestCase):
+    def test_alternative_formula_retains_its_own_degenerate_dispatcher(self):
+        from codegen.skeleton.build_equation_branch import build_equation_zero_branches
+        from codegen.py_codegen.codegen_py import CodeGenerationPython
+        from contextlib import redirect_stdout
+        from io import StringIO
+        import numpy as np
+        x, px, py, r11, r21 = sp.symbols('x Px Py r_11 r_21')
+        model = RobotDescription('nested_formula')
+        model.unknowns = [Unknown(x)]
+        model.dh_params = [DHEntry(0, 0, 0, x)]
+        tree = SkeletonTree([explicit(x, [sp.atan2(py, px)],
+                             SolutionDegenerateRecord.record_all_equations([px, py]))], model)
+        tree.append_branched_solution([explicit(x, [sp.atan2(py, px)],
+                                      SolutionDegenerateRecord.record_all_equations([px, py]))], tree.root, 1)
+        self.assertIsInstance(tree.root.degenerate_child, EquationAllZeroDispatcherNode)
+        self.assertTrue(audit_completeness(tree)['unresolved_branches'])
+        # The inner failed formula must also be eligible for recovery from FK.
+        with redirect_stdout(StringIO()):
+            build_equation_zero_branches(tree, representative_count=0)
+        self.assertIsNotNone(tree.root.degenerate_child.degenerate_child)
+        scope = {}
+        exec('\n'.join(CodeGenerationPython(tree).generate_code()), scope)
+        target = scope['nested_formula_fk'](np.array([.7]))
+        output = scope['nested_formula_ik_solve'](target)
+        self.assertTrue(output)
+        for candidate in output:
+            np.testing.assert_allclose(scope['nested_formula_fk'](candidate), target, atol=1e-12)
+
+    def test_partial_variable_branches_resume_without_replacing_existing_solutions(self):
+        from codegen.skeleton.build_variable_branch import build_solved_variable_branches
+        from codegen.py_codegen.codegen_py import CodeGenerationPython
+        from contextlib import redirect_stdout
+        from io import StringIO
+        import os
+        import tempfile
+        import numpy as np
+        x, p, r11, r21 = sp.symbols('x p r_11 r_21')
+        model = RobotDescription('partial_branches')
+        model.unknowns = [Unknown(x)]
+        model.dh_params = [DHEntry(0, p, 0, x)]
+        model.symbolic_parameters = {p}
+        model.parameters_bound = {p: (0., 1.)}
+        tree = SkeletonTree([explicit(x, [sp.S.Zero],
+                SolutionDegenerateRecord.record_variable_value({p: [sp.S.Zero, sp.S.One]}))], model)
+        tree.append_branched_solution([explicit(x, [sp.atan2(r21, r11)])], tree.root, 1)
+        existing = tree.root.degenerate_branch_child(0)
+        before = audit_completeness(tree)
+        self.assertEqual(len(before['unresolved_branches']), 1)
+        # An exhausted budget leaves the missing case visible and existing code intact.
+        build_solved_variable_branches(tree, max_num_nodes=tree.num_nodes)
+        self.assertEqual(before, audit_completeness(tree))
+        previous = Path.cwd()
+        with tempfile.TemporaryDirectory(prefix='yaik-partial-') as temporary, redirect_stdout(StringIO()):
+            try:
+                os.chdir(temporary)
+                build_solved_variable_branches(tree, max_num_nodes=12)
+            finally:
+                os.chdir(previous)
+        self.assertIs(tree.root.degenerate_branch_child(0), existing)
+        self.assertIsNotNone(tree.root.degenerate_branch_child(1))
+        scope = {}
+        exec('\n'.join(CodeGenerationPython(tree).generate_code()), scope)
+        for parameter in (0., 1.):
+            target = scope['partial_branches_fk'](np.array([.7]), parameter)
+            output = scope['partial_branches_ik_solve'](target, parameter)
+            self.assertTrue(output)
+            for candidate in output:
+                np.testing.assert_allclose(scope['partial_branches_fk'](candidate, parameter), target, atol=1e-12)
+
+    def test_legacy_plain_dispatcher_does_not_hide_degenerate_records(self):
+        from codegen.py_codegen.codegen_py import CodeGenerationPython
+        x, coefficient = sp.symbols('x coefficient')
+        model = RobotDescription('legacy_record')
+        model.unknowns = [Unknown(x)]
+        model.dh_params = [DHEntry(0, 0, 0, x)]
+        for record in (SolutionDegenerateRecord.record_all_equations([coefficient]),
+                       SolutionDegenerateRecord.record_variable_value({coefficient: [sp.S.Zero, sp.S.One]})):
+            solution = explicit(x, [sp.S.Zero], record)
+            solution.update_numerical_analysis_result(NumericalAnalysedResultType.NumericalAlwaysNonDegenerate.name)
+            # Simulate the serialized topology from an older generator.
+            tree = SkeletonTree([explicit(x, [sp.S.Zero])], model)
+            tree.node_list[1]._solution = solution
+            self.assertIsInstance(tree.root, NoBranchDispatcherNode)
+            report = audit_completeness(tree)
+            expected = 1 if record.type == DegenerateType.DegenerateIfAllEquationsZero.name else 2
+            self.assertEqual(len(report['unresolved_branches']), expected)
+            self.assertTrue(all(item['source'] == 'undispatched_solution_record'
+                                for item in report['unresolved_branches']))
+            self.assertEqual(len(CodeGenerationPython(tree).unhandled_degenerate_branches), expected)
+            self.assertIsInstance(tree.root, NoBranchDispatcherNode)
+
+    def test_legacy_gallery_reports_the_unimplemented_orientation_singularity(self):
+        root = Path(__file__).resolve().parents[1]
+        for name in ('abb_irb460_110_240', 'kawasaki_CP130L'):
+            path = root/'gallery'/name/(name+'_ik.yaml')
+            tree = TreeSerializer.load_skeleton_tree(yaml.safe_load(path.read_text()))
+            hidden = [item for item in audit_completeness(tree)['unresolved_branches']
+                      if item.get('source') == 'undispatched_solution_record']
+            self.assertTrue(hidden, name)
+
     def test_only_true_path_conjuncts_bound_the_inverse_position(self):
         tree = annulus_tree()
         main, singular = tree.node_list[2], tree.node_list[7]

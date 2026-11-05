@@ -399,7 +399,8 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
             for line in self.extract_solved_variable_codes(requested):
                 self.add_code_line(line)
         self.add_code_line('family_values = []')
-        for indices, checker, replacements, reduced in cse_by_condition(seeds, solution.argument_validity_checkers):
+        for indices, checker, replacements, reduced in cse_by_condition(
+                seeds, solution.argument_validity_checkers, safe_domains=self._use_safe_operation):
             self.add_code_line(f'if {self.generate_py_code(checker)}:')
             self.enter_scope('family_seed')
             for symbol, expression in replacements:
@@ -457,7 +458,7 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         solution_list = solution.explicit_solutions
 
         for indices, checker, replacements, reduced in cse_by_condition(
-                solution_list, solution.argument_validity_checkers):
+                solution_list, solution.argument_validity_checkers, safe_domains=self._use_safe_operation):
             self.add_code_line('condition_{idx}: bool = {code}'.format(
                 idx=indices[0], code=self.generate_py_code(checker)))
             self.add_code_line('if condition_{idx}:'.format(idx=indices[0]))
@@ -503,7 +504,8 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         for this_line in var_extract_lines:
             self.add_code_line(this_line)
 
-        for indices, checker, replacements, reduced in cse_by_condition(solution_list, checker_list):
+        for indices, checker, replacements, reduced in cse_by_condition(
+                solution_list, checker_list, safe_domains=self._use_safe_operation):
             self.add_code_line('condition_{idx}: bool = {code}'.format(
                 idx=indices[0], code=self.generate_py_code(checker)))
             self.add_code_line('if condition_{idx}:'.format(idx=indices[0]))
@@ -526,7 +528,7 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
                     if output_idx is not None:
                         self.add_code_line('add_input_index_to({node_idx}, node_input_i_idx_in_queue)'.format(node_idx=output_idx))
             self.exit_scope('if condition')
-            if indices[-1] == n_solution - 1:
+            if indices[-1] == n_solution - 1 and not candidate_is_complete(self._tree, solution_node):
                 self.add_code_line('else:')
                 self.add_code_line(indent() + 'queue_element_validity[node_input_i_idx_in_queue] = False')
         self.exit_scope('for_each_solution')

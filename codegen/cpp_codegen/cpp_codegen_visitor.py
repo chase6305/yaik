@@ -378,7 +378,7 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
                 self.add_code_line(line)
         self.add_code_line('std::vector<double> family_values;')
         for indices, checker, replacements, reduced in cse_by_condition(
-                solution.explicit_solutions, solution.argument_validity_checkers):
+                solution.explicit_solutions, solution.argument_validity_checkers, safe_domains=self._use_safe_operator):
             self.add_code_line(f'if ({self.generate_cxx_code(checker)})')
             self.enter_scope('family_seed')
             for symbol, expression in replacements:
@@ -433,7 +433,7 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         solution_list = solution.explicit_solutions
 
         for indices, checker, replacements, reduced in cse_by_condition(
-                solution_list, solution.argument_validity_checkers):
+                solution_list, solution.argument_validity_checkers, safe_domains=self._use_safe_operator):
             self.add_code_line('const bool condition_{idx} = {code};'.format(
                 idx=indices[0], code=self.generate_cxx_code(checker)))
             self.add_code_line('if (condition_{idx})'.format(idx=indices[0]))
@@ -479,7 +479,8 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         for this_line in var_extract_lines:
             self.add_code_line(this_line)
 
-        for indices, checker, replacements, reduced in cse_by_condition(solution_list, checker_list):
+        for indices, checker, replacements, reduced in cse_by_condition(
+                solution_list, checker_list, safe_domains=self._use_safe_operator):
             self.add_code_line('const bool condition_{idx} = {code};'.format(
                 idx=indices[0], code=self.generate_cxx_code(checker)))
             self.add_code_line('if (condition_{idx})'.format(idx=indices[0]))
@@ -502,7 +503,7 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
                     if output_idx is not None:
                         self.add_code_line('add_input_index_to({node_idx}, node_input_i_idx_in_queue);'.format(node_idx=output_idx))
             self.exit_scope('if_condition')
-            if indices[-1] == n_solution - 1:
+            if indices[-1] == n_solution - 1 and not candidate_is_complete(self._tree, solution_node):
                 self.add_code_line('else')
                 self.enter_scope('else')
                 self.add_code_line('solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;')

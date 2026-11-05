@@ -13,6 +13,8 @@ import sympy as sp
 import numpy as np
 import multiprocessing
 import copy
+from solver.argument_guards import runtime_argument_guards, evaluate_inverse_trig_boundary
+from python_run_import import compute_polynomial_real_roots
 import attr
 
 # A magic number as hte invalid solution
@@ -62,7 +64,7 @@ def step_from_explicit_solution(
     """
     assert next_solution.is_explicit_solution
     solutions = next_solution.explicit_solutions
-    argument_checkers = next_solution.argument_validity_checkers
+    argument_checkers = runtime_argument_guards(solutions, next_solution.argument_validity_checkers)
     if next_solution.family_critical_equations is not None:
         from python_run_import import trig_family_representatives
         values = {**parameter_values, **value_subst_map}
@@ -71,7 +73,8 @@ def step_from_explicit_solution(
                             for row in next_solution.family_critical_equations]
             solutions = [sp.Float(value) for value in trig_family_representatives(
                 coefficients, *next_solution.family_bounds,
-                [float(value.subs(values)) for value, checker in zip(solutions, argument_checkers)
+                [float(evaluate_inverse_trig_boundary(value, values))
+                 for value, checker in zip(solutions, argument_checkers)
                  if checker.subs(values) == sp.S.true])]
             argument_checkers = [sp.S.true]*len(solutions)
     assert len(solutions) == len(argument_checkers)
@@ -82,14 +85,14 @@ def step_from_explicit_solution(
         checker_i = argument_checkers[i]
         checker_i = checker_i.subs(parameter_values)
         checker_i = checker_i.subs(variable_subst_map)
-        if checker_i == sp.S.BooleanFalse:
+        if checker_i != sp.S.true:
             continue
 
         solution_i = solutions[i]
-        solution_i = solution_i.subs(parameter_values)
-        solution_i = solution_i.subs(variable_subst_map)
+        solution_i = evaluate_inverse_trig_boundary(solution_i, {**parameter_values, **variable_subst_map})
         solution_i = cast_expr_to_float(solution_i)
-        assert solution_i is not None
+        if solution_i is None or not np.isfinite(solution_i):
+            continue
         next_value_i = copy.deepcopy(current_value)
         next_value_i.variable_values[next_solution_index_in_value] = solution_i
         next_value_i.variable_value_in_solution_idx[next_solution_index_in_value] = i
@@ -151,7 +154,7 @@ def step_from_polynomial_solution(
     assert next_solution.is_polynomial
     variable_subst_map = value_subst_map
     poly_dict_input = next_solution.polynomial_to_solve
-    poly_dict: Dict[int, float] = dict()
+    poly_dict: Dict[int, sp.Expr] = dict()
     poly_order = -1
     for order in poly_dict_input:
         # Get the coefficient
@@ -160,11 +163,10 @@ def step_from_polynomial_solution(
         numerator = numerator.subs(variable_subst_map)
         denominator = denominator.subs(parameter_values)
         denominator = denominator.subs(variable_subst_map)
-        denominator = cast_expr_to_float(denominator)
-        assert denominator is not None
-        if abs(denominator) < 1e-6:
+        if (denominator.is_zero is not False or denominator.is_real is not True or denominator.is_finite is not True
+                or numerator.is_real is not True or numerator.is_finite is not True):
             return list()
-        poly_dict[order] = float(numerator / denominator)
+        poly_dict[order] = numerator/denominator
 
         # Update the order
         if order >= poly_order:
@@ -172,10 +174,13 @@ def step_from_polynomial_solution(
 
     # Solve the equations
     assert poly_order >= 1
+    scale = max(abs(value.evalf(50)) for value in poly_dict.values())
+    if scale.is_zero:
+        return []
     p_coefficients = np.zeros(shape=(poly_order + 1,))
     for order in poly_dict:
-        p_coefficients[poly_order - order] = poly_dict[order]
-    poly_roots = np.roots(p_coefficients)
+        p_coefficients[poly_order - order] = float(poly_dict[order]/scale)
+    poly_roots = compute_polynomial_real_roots(p_coefficients)
 
     # Collect the results
     solved_symbol = next_solution.solved_variable
@@ -183,8 +188,6 @@ def step_from_polynomial_solution(
     next_variable_values: List[SkeletonNumericalSolution] = list()
     for root_idx in range(len(poly_roots)):
         this_root = poly_roots[root_idx]
-        if not np.isreal(this_root):
-            continue
         if solution_method == SolutionMethod.PolynomialDirect.name:
             next_value = copy.deepcopy(current_value)
             next_value.variable_values[next_solution_index_in_value] = this_root
@@ -195,10 +198,13 @@ def step_from_polynomial_solution(
         # Now we do with sin/cos intermediate
         first_angle: Optional[float] = None
         second_angle: Optional[float] = None
-        if solution_method == SolutionMethod.PolynomialSin.name and abs(this_root) < 1:
+        if abs(this_root) > 1+1e-6:
+            continue
+        this_root = min(1., max(-1., this_root))
+        if solution_method == SolutionMethod.PolynomialSin.name:
             first_angle = np.arcsin(this_root)
             second_angle = np.pi - first_angle
-        elif solution_method == SolutionMethod.PolynomialCos.name and abs(this_root) < 1:
+        elif solution_method == SolutionMethod.PolynomialCos.name:
             first_angle = np.arccos(this_root)
             second_angle = - first_angle
 
