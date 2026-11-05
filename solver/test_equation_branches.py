@@ -65,6 +65,44 @@ class TestEquationBranches(TestCase):
         self.assertFalse(vanishes_on_branch(sp.S.One, [2*x, sp.S.One]))
         self.assertFalse(vanishes_on_branch(sp.cos(x), [sp.sin(x)]))
 
+    def test_branch_zero_checks_use_affine_prefix_identities_without_fixing_free_angles(self):
+        x, y, auxiliary = sp.symbols('x y auxiliary')
+        for value in (sp.S.Zero, sp.pi, -sp.pi):
+            constraints = [y-auxiliary+x, auxiliary-value]
+            self.assertTrue(vanishes_on_branch(sp.sin(x+y), constraints))
+            self.assertTrue(vanishes_on_branch(sp.sin(x)*sp.cos(y)+sp.sin(y)*sp.cos(x), constraints))
+            self.assertFalse(vanishes_on_branch(sp.sin(x), constraints))
+            self.assertFalse(vanishes_on_branch(sp.cos(x), constraints))
+        self.assertFalse(vanishes_on_branch(sp.sin(x+y), [x-y]))
+        self.assertFalse(vanishes_on_branch(sp.sin(x), [x*y]))
+        self.assertFalse(vanishes_on_branch(x-sp.Rational(1, 3)*y, [x-sp.Float(1/3)*y]))
+        self.assertFalse(vanishes_on_branch(sp.S.One, [2*x, 1]))
+
+    def test_deferred_joint_remains_available_when_it_is_the_only_regular_first_step(self):
+        from solver.build_equations import build_ik_equations
+        from solver.solver_snapshot import SolverSnapshot
+        from solver.solve_equations import SolveEquationOption, solve_from_snapshot
+        x, y = sp.symbols('x y')
+        model = RobotDescription('deferred_planar')
+        model.unknowns = [Unknown(x), Unknown(y)]
+        model.dh_params = [DHEntry(0, 0, 0, x), DHEntry(0, 1, 0, y)]
+        equations = build_ik_equations(model)
+        snapshot = SolverSnapshot(equations.scalar_equations, equations.sos_hint, equations.used_unknowns,
+                                  equations.all_symbol_set)
+        option = SolveEquationOption(initially_deferred_symbols={x}, direct_solutions_only=True)
+        option.on_main_branch = False
+        option.disable_polynomial_solution = True
+        option.stop_on_first_unsolved = True
+        with redirect_stdout(StringIO()):
+            solutions = solve_from_snapshot(snapshot, option)
+        self.assertEqual({solution.solved_variable for solution in solutions}, {x, y})
+        scope = scope_for(SkeletonTree(solutions, model))
+        target = scope['deferred_planar_fk'](np.array([.7, -.3]))
+        output = scope['deferred_planar_ik_solve'](target)
+        self.assertTrue(output)
+        for candidate in output:
+            np.testing.assert_allclose(scope['deferred_planar_fk'](candidate), target, atol=1e-12)
+
     def test_recovers_folded_planar_arm_from_orientation(self):
         x, y, z, Px, Py = sp.symbols('x y z Px Py')
         model = RobotDescription('folded_planar')

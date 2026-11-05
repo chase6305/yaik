@@ -173,7 +173,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   test_cli.py gallery/marvin_m6 solver/test_regressions.py \
   solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
   solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
-  solver/test_argument_guards.py \
+  solver/test_argument_guards.py solver/test_gallery_regeneration.py \
   solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
@@ -195,6 +195,9 @@ python yaik.py marvin validate --samples 1000 --seed 20261103 \
 旧解树中只有公式退化记录、没有独立分派节点的条件，也会列入未解决分支，
 标记 `source: undispatched_solution_record`；有限抽样的“从未退化”标记不能覆盖这些条件。
 新建分支会保留公式自身的分派节点；导出旧树会报告缺口，不会自动改写保存的树。
+恢复分支会使用已选角度值和此前的一次关系检查公式，暂缓求解的关节仍可作为必要的首步。
+ABB IRB460 和 Kawasaki CP130L 的解树及 Python/C++ 文件已用种子 `20261125` 更新；
+两种语言分别用独立的改进 DH 正运动学验证每个模型的 1,000 个目标。
 
 要保证固定 J5 后任意可达目标都不漏解，需要穷尽常规与奇异分支、证明被丢弃分支无解、
 把连续解族与全部限位精确求交，并使用经过验证的实根隔离或区间方法处理数值边界。

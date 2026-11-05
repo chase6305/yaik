@@ -243,7 +243,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   test_cli.py gallery/marvin_m6 solver/test_regressions.py \
   solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
   solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
-  solver/test_argument_guards.py \
+  solver/test_argument_guards.py solver/test_gallery_regeneration.py \
   solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
@@ -278,6 +278,10 @@ The audit reports saved formula degeneration records that lack their own
 dispatcher as `source: undispatched_solution_record`, including records previously
 marked non-degenerate by finite sampling. New branches retain those dispatchers;
 exporting an older saved tree reports the missing coverage without rewriting it.
+Branch recovery carries selected angle values and affine prefix identities into
+formula checks, and treats deferred joints as a preference. The ABB IRB460 and
+Kawasaki CP130L snapshots have been regenerated with seed `20261125`; regressions
+verify 1,000 targets per model using independent modified-DH FK in both languages.
 
 ```sh
 python yaik.py marvin validate --samples 1000 --stress-samples 2000 \

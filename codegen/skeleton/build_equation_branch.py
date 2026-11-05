@@ -12,7 +12,8 @@ import math
 
 import sympy as sp
 
-from codegen.skeleton.tree_node import EquationAllZeroDispatcherNode, NoBranchDispatcherNode
+from codegen.skeleton.tree_node import (
+    EquationAllZeroDispatcherNode, NoBranchDispatcherNode, SolvedVariableDispatcherNode)
 from solver.branch_conditions import formula_degenerates_on_branch
 from solver.solve_equations import SolveEquationOption, solve_from_snapshot
 from solver.solved_variable import SolutionDegenerateRecord, SolutionMethod, VariableSolution
@@ -77,6 +78,16 @@ def _zero_equations_on_path(node):
     while parent is not None:
         if isinstance(parent, EquationAllZeroDispatcherNode) and parent.degenerate_child is child:
             equations.extend(parent.degenerate_record.equations)
+        elif isinstance(parent, SolvedVariableDispatcherNode):
+            for index in range(parent.num_degenerate_branches):
+                if parent.degenerate_branch_child(index) is child:
+                    equations.extend(variable-value for variable, value in
+                                     parent.get_branch_variable_value(index).items())
+        elif parent.is_solution_node:
+            solution = parent.solution
+            if (solution.is_explicit_solution and len(solution.explicit_solutions) == 1
+                    and solution.solution_method == SolutionMethod.OneVariableAlgebra.name):
+                equations.append(solution.solved_variable-solution.explicit_solutions[0])
         child, parent = parent, parent.parent
     return tuple(dict.fromkeys(equations))
 

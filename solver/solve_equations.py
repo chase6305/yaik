@@ -133,10 +133,14 @@ def solve_equations(equation_input: EquationInput,
             simple_solution_only: bool,
             use_numerical_test: bool) -> Optional[VariableSolution]:
         loop_solutions = [solution for solution in loop_solutions
-                          if (loop_solved_variable or solution.solved_variable not in option.initially_deferred_symbols)
-                          and not formula_degenerates_on_branch(solution, option.zero_equations)]
+                          if not formula_degenerates_on_branch(solution, option.zero_equations)]
         if not loop_solutions:
             return None
+        if not loop_solved_variable and option.initially_deferred_symbols:
+            preferred = [solution for solution in loop_solutions
+                         if solution.solved_variable not in option.initially_deferred_symbols]
+            if preferred:
+                loop_solutions = preferred
         # Select which solution to go
         test_cases = list()
         if use_numerical_test:

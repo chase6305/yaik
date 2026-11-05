@@ -128,14 +128,27 @@ class TestCompleteness(TestCase):
             self.assertEqual(len(CodeGenerationPython(tree).unhandled_degenerate_branches), expected)
             self.assertIsInstance(tree.root, NoBranchDispatcherNode)
 
-    def test_legacy_gallery_reports_the_unimplemented_orientation_singularity(self):
-        root = Path(__file__).resolve().parents[1]
-        for name in ('abb_irb460_110_240', 'kawasaki_CP130L'):
-            path = root/'gallery'/name/(name+'_ik.yaml')
-            tree = TreeSerializer.load_skeleton_tree(yaml.safe_load(path.read_text()))
-            hidden = [item for item in audit_completeness(tree)['unresolved_branches']
-                      if item.get('source') == 'undispatched_solution_record']
-            self.assertTrue(hidden, name)
+    def test_legacy_direct_branch_reports_its_own_unimplemented_singularity(self):
+        x, p, r13, r23 = sp.symbols('x p r_13 r_23')
+        model = RobotDescription('legacy_direct_branch')
+        model.unknowns = [Unknown(x)]
+        model.dh_params = [DHEntry(0, 0, 0, x)]
+        tree = SkeletonTree([explicit(x, [sp.S.Zero],
+                SolutionDegenerateRecord.record_variable_value({p: [sp.S.Zero]}))], model)
+        alternative = explicit(x, [sp.atan2(r23, r13)],
+                               SolutionDegenerateRecord.record_all_equations([r13, r23]))
+        alternative.update_numerical_analysis_result(NumericalAnalysedResultType.NumericalAlwaysNonDegenerate.name)
+        # Old serialized branches attached this formula directly to an unrelated dispatcher.
+        child = tree.new_solution_node(alternative)
+        tree.root.set_child_by_index(child, 1)
+        child.set_parent(tree.root)
+        tree.add_node(child)
+        serializer = TreeSerializer(tree.num_nodes, model)
+        tree.preorder_visit(serializer)
+        restored = TreeSerializer.load_skeleton_tree(serializer.serialize_dict())
+        hidden = audit_completeness(restored)['unresolved_branches']
+        self.assertEqual(len(hidden), 1)
+        self.assertEqual(hidden[0]['source'], 'undispatched_solution_record')
 
     def test_only_true_path_conjuncts_bound_the_inverse_position(self):
         tree = annulus_tree()

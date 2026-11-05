@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'gallery/marvin_m6/**'
+      - 'gallery/abb_irb460_110_240/**'
+      - 'gallery/kawasaki_CP130L/**'
       - 'codegen/**'
       - 'fk/**'
       - 'solver/**'
@@ -21,6 +23,8 @@ on:
     branches: [main]
     paths:
       - 'gallery/marvin_m6/**'
+      - 'gallery/abb_irb460_110_240/**'
+      - 'gallery/kawasaki_CP130L/**'
       - 'codegen/**'
       - 'fk/**'
       - 'solver/**'
@@ -61,6 +65,7 @@ jobs:
           python -m pytest test_cli.py gallery/marvin_m6 utility/test_artifacts.py
           solver/test_regressions.py solver/test_codegen_safety.py solver/test_runtime_safety.py
           solver/test_argument_guards.py
+          solver/test_gallery_regeneration.py
           solver/test_equation_branches.py solver/test_family_critical.py
           solver/test_completeness.py solver/test_linear_circles.py
           solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py -q -W error
