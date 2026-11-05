@@ -982,6 +982,9 @@ void numericalRefinement(
     if (!delta_q.allFinite()) return;
     const auto previous_q = q;
     for (auto j = 0; j < robot_nq; j++) {
+      // A zero Jacobian column can still receive a tiny QR roundoff update.
+      // Fixed coordinates retain the caller's exact value, including signed zero.
+      if (fixed_joints[j]) continue;
       q[j] += delta_q[j];
       if (!std::isfinite(q[j])) {
         q = previous_q;

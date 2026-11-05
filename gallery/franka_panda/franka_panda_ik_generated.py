@@ -51,16 +51,16 @@ def franka_panda_ik_target_original_to_raw(T_ee: np.ndarray):
     r_33: float = T_ee[2, 2]
     Pz: float = T_ee[2, 3]
     ee_transformed = np.eye(4)
-    ee_transformed[0, 0] = post_transform_sqrt2_over2*(r_11 + r_12)
-    ee_transformed[0, 1] = post_transform_sqrt2_over2*(-r_11 + r_12)
+    ee_transformed[0, 0] = (1/2)*(r_11 + r_12)/post_transform_sqrt2_over2
+    ee_transformed[0, 1] = (1/2)*(-r_11 + r_12)/post_transform_sqrt2_over2
     ee_transformed[0, 2] = r_13
     ee_transformed[0, 3] = Px - post_transform_d5*r_13
-    ee_transformed[1, 0] = post_transform_sqrt2_over2*(r_21 + r_22)
-    ee_transformed[1, 1] = post_transform_sqrt2_over2*(-r_21 + r_22)
+    ee_transformed[1, 0] = (1/2)*(r_21 + r_22)/post_transform_sqrt2_over2
+    ee_transformed[1, 1] = (1/2)*(-r_21 + r_22)/post_transform_sqrt2_over2
     ee_transformed[1, 2] = r_23
     ee_transformed[1, 3] = Py - post_transform_d5*r_23
-    ee_transformed[2, 0] = post_transform_sqrt2_over2*(r_31 + r_32)
-    ee_transformed[2, 1] = post_transform_sqrt2_over2*(-r_31 + r_32)
+    ee_transformed[2, 0] = (1/2)*(r_31 + r_32)/post_transform_sqrt2_over2
+    ee_transformed[2, 1] = (1/2)*(-r_31 + r_32)/post_transform_sqrt2_over2
     ee_transformed[2, 2] = r_33
     ee_transformed[2, 3] = Pz - post_transform_d5*r_33 - pre_transform_d4
     return ee_transformed
@@ -95,14 +95,43 @@ def franka_panda_ik_target_raw_to_original(T_ee: np.ndarray):
     return ee_transformed
 
 
+def franka_panda_ik_target_original_to_raw_legacy_frame(T_ee: np.ndarray):
+    r_11: float = T_ee[0, 0]
+    r_12: float = T_ee[0, 1]
+    r_13: float = T_ee[0, 2]
+    Px: float = T_ee[0, 3]
+    r_21: float = T_ee[1, 0]
+    r_22: float = T_ee[1, 1]
+    r_23: float = T_ee[1, 2]
+    Py: float = T_ee[1, 3]
+    r_31: float = T_ee[2, 0]
+    r_32: float = T_ee[2, 1]
+    r_33: float = T_ee[2, 2]
+    Pz: float = T_ee[2, 3]
+    ee_transformed = np.eye(4)
+    ee_transformed[0, 0] = post_transform_sqrt2_over2*(r_11 + r_12)
+    ee_transformed[0, 1] = post_transform_sqrt2_over2*(-r_11 + r_12)
+    ee_transformed[0, 2] = r_13
+    ee_transformed[0, 3] = Px - post_transform_d5*r_13
+    ee_transformed[1, 0] = post_transform_sqrt2_over2*(r_21 + r_22)
+    ee_transformed[1, 1] = post_transform_sqrt2_over2*(-r_21 + r_22)
+    ee_transformed[1, 2] = r_23
+    ee_transformed[1, 3] = Py - post_transform_d5*r_23
+    ee_transformed[2, 0] = post_transform_sqrt2_over2*(r_31 + r_32)
+    ee_transformed[2, 1] = post_transform_sqrt2_over2*(-r_31 + r_32)
+    ee_transformed[2, 2] = r_33
+    ee_transformed[2, 3] = Pz - post_transform_d5*r_33 - pre_transform_d4
+    return ee_transformed
+
+
 def franka_panda_fk(theta_input: np.ndarray):
     theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
     th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
     th_6 = theta_input[6] + th_6_offset_original2raw
 
     # Temp variable for efficiency
@@ -174,12 +203,13 @@ def franka_panda_fk(theta_input: np.ndarray):
 
 
 def franka_panda_twist_jacobian(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
     th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
     th_6 = theta_input[6] + th_6_offset_original2raw
 
     # Temp variable for efficiency
@@ -277,12 +307,13 @@ def franka_panda_twist_jacobian(theta_input: np.ndarray):
 
 
 def franka_panda_angular_velocity_jacobian(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
     th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
     th_6 = theta_input[6] + th_6_offset_original2raw
 
     # Temp variable for efficiency
@@ -339,12 +370,13 @@ def franka_panda_angular_velocity_jacobian(theta_input: np.ndarray):
 
 
 def franka_panda_transform_point_jacobian(theta_input: np.ndarray, point_on_ee: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
     th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
     th_6 = theta_input[6] + th_6_offset_original2raw
     p_on_ee_x: float = point_on_ee[0]
     p_on_ee_y: float = point_on_ee[1]
@@ -449,15 +481,12 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
     inv_Px = inv_ee_translation[0]
     inv_Py = inv_ee_translation[1]
     inv_Pz = inv_ee_translation[2]
-    
+
     # A new ik type. Should be a fixed array in C++
     IkSolution = NewType("IkSolution", List[float])
     def make_ik_solution():
-        tmp_sol = IkSolution(list())
-        for tmp_sol_idx in range(6):
-            tmp_sol.append(100000.0)
-        return tmp_sol
-    
+        return IkSolution([100000.0] * 6)
+
     solution_queue: List[IkSolution] = list()
     queue_element_validity: List[bool] = list()
     def append_solution_to_queue(solution_2_add: IkSolution):
@@ -465,7 +494,7 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
         solution_queue.append(solution_2_add)
         queue_element_validity.append(True)
         return index_4_appended
-    
+
     # Init for workspace as empty list. A list of fixed size array for each node
     max_n_solutions: int = 16
     node_input_index: List[List[int]] = list()
@@ -477,28 +506,29 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
         node_input_index[node_idx].append(solution_idx)
         node_input_validity[node_idx] = True
     node_input_validity[0] = True
-    
+
     # Code for equation all-zero dispatcher node 0
     def EquationAllZeroDispatcherNode_node_0_processor():
-        checked_result: bool = (2*abs(a_5*inv_Px) <= 1.0e-6) and (2*abs(a_5*inv_Py) <= 1.0e-6) and (abs(2*a_3**2*math.cos(th_3) + 2*a_3**2 + 2*a_3*d_2*math.sin(th_3) + 2*a_3*d_4*math.sin(th_3) - a_5**2 + d_2**2 - 2*d_2*d_4*math.cos(th_3) + d_4**2 - inv_Px**2 - inv_Py**2 - inv_Pz**2) <= 1.0e-6)
+        if not node_input_validity[0]:
+            return
+        checked_result: bool = (((2*abs(a_5*inv_Px) <= 1.0e-6)) and ((2*abs(a_5*inv_Py) <= 1.0e-6)) and ((abs(2*a_3**2*math.cos(th_3) + 2*a_3**2 + 2*a_3*d_2*math.sin(th_3) + 2*a_3*d_4*math.sin(th_3) - a_5**2 + d_2**2 - 2*d_2*d_4*math.cos(th_3) + d_4**2 - inv_Px**2 - inv_Py**2 - inv_Pz**2) <= 1.0e-6)))
         if not checked_result:  # To non-degenerate node
             node_input_validity[1] = True
-    
+
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_0_processor()
     # Finish code for equation all-zero dispatcher node 0
-    
+
     # Code for explicit solution node 1, solved variable is th_6
     def ExplicitSolutionNode_node_1_solve_th_6_processor():
         this_node_input_index: List[int] = node_input_index[1]
         this_input_valid: bool = node_input_validity[1]
         if not this_input_valid:
             return
-        
+
         # The explicit solution of root node
-        condition_0: bool = (2*abs(a_5*inv_Px) >= zero_tolerance) or (2*abs(a_5*inv_Py) >= zero_tolerance) or (abs(2*a_3**2*math.cos(th_3) + 2*a_3**2 + 2*a_3*d_2*math.sin(th_3) + 2*a_3*d_4*math.sin(th_3) - a_5**2 + d_2**2 - 2*d_2*d_4*math.cos(th_3) + d_4**2 - inv_Px**2 - inv_Py**2 - inv_Pz**2) >= zero_tolerance)
+        condition_0: bool = (((2*abs(a_5*inv_Px) >= zero_tolerance)) or ((2*abs(a_5*inv_Py) >= zero_tolerance)) or ((abs(2*a_3**2*math.cos(th_3) + 2*a_3**2 + 2*a_3*d_2*math.sin(th_3) + 2*a_3*d_4*math.sin(th_3) - a_5**2 + d_2**2 - 2*d_2*d_4*math.cos(th_3) + d_4**2 - inv_Px**2 - inv_Py**2 - inv_Pz**2) >= zero_tolerance)))
         if condition_0:
-            # Temp variable for efficiency
             x0 = 2*a_5
             x1 = math.atan2(inv_Py*x0, -inv_Px*x0)
             x2 = inv_Px**2
@@ -510,43 +540,27 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             x8 = math.cos(th_3)
             x9 = -d_2**2 + 2*d_2*d_4*x8 - 2*d_2*x7 - d_4**2 - 2*d_4*x7 + inv_Pz**2 + x2 + x3 + x5 - x6*x8 - x6
             x10 = safe_sqrt(x2*x4 + x4*x5 - x9**2)
-            # End of temp variables
             solution_0: IkSolution = make_ik_solution()
             solution_0[5] = x1 + math.atan2(x10, x9)
             appended_idx = append_solution_to_queue(solution_0)
             add_input_index_to(2, appended_idx)
-            
-        condition_1: bool = (2*abs(a_5*inv_Px) >= zero_tolerance) or (2*abs(a_5*inv_Py) >= zero_tolerance) or (abs(2*a_3**2*math.cos(th_3) + 2*a_3**2 + 2*a_3*d_2*math.sin(th_3) + 2*a_3*d_4*math.sin(th_3) - a_5**2 + d_2**2 - 2*d_2*d_4*math.cos(th_3) + d_4**2 - inv_Px**2 - inv_Py**2 - inv_Pz**2) >= zero_tolerance)
-        if condition_1:
-            # Temp variable for efficiency
-            x0 = 2*a_5
-            x1 = math.atan2(inv_Py*x0, -inv_Px*x0)
-            x2 = inv_Px**2
-            x3 = a_5**2
-            x4 = 4*x3
-            x5 = inv_Py**2
-            x6 = 2*a_3**2
-            x7 = a_3*math.sin(th_3)
-            x8 = math.cos(th_3)
-            x9 = -d_2**2 + 2*d_2*d_4*x8 - 2*d_2*x7 - d_4**2 - 2*d_4*x7 + inv_Pz**2 + x2 + x3 + x5 - x6*x8 - x6
-            x10 = safe_sqrt(x2*x4 + x4*x5 - x9**2)
-            # End of temp variables
+
             solution_1: IkSolution = make_ik_solution()
             solution_1[5] = x1 + math.atan2(-x10, x9)
             appended_idx = append_solution_to_queue(solution_1)
             add_input_index_to(2, appended_idx)
-            
+
     # Invoke the processor
     ExplicitSolutionNode_node_1_solve_th_6_processor()
     # Finish code for explicit solution node 1
-    
+
     # Code for solved_variable dispatcher node 2
     def SolvedVariableDispatcherNode_node_2_processor():
         this_node_input_index: List[int] = node_input_index[2]
         this_input_valid: bool = node_input_validity[2]
         if not this_input_valid:
             return
-        
+
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
             if not queue_element_validity[node_input_i_idx_in_queue]:
@@ -562,7 +576,7 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(12, branch_input_index)
-            
+
             degenerate_valid_1 = (abs(th_3 - 3.08938932227154 + math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
@@ -571,21 +585,21 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(13, branch_input_index)
-            
+
             if not taken_by_degenerate:
                 add_input_index_to(3, node_input_i_idx_in_queue)
-    
+
     # Invoke the processor
     SolvedVariableDispatcherNode_node_2_processor()
     # Finish code for solved_variable dispatcher node 2
-    
+
     # Code for explicit solution node 13, solved variable is th_4
     def ExplicitSolutionNode_node_13_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[13]
         this_input_valid: bool = node_input_validity[13]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 13
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -593,41 +607,32 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_6 = this_solution[5]
-            condition_0: bool = (abs((inv_Px*math.sin(th_6) + inv_Py*math.cos(th_6))/(1.99863771551522*a_3 - 0.0521796239019005*d_2)) <= 1)
+            condition_0: bool = (((1.99863771551522*a_3 - 0.0521796239019005*d_2 != 0)) and ((abs((inv_Px*math.sin(th_6) + inv_Py*math.cos(th_6))/(1.99863771551522*a_3 - 0.0521796239019005*d_2)) <= 70368744177665/70368744177664)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = safe_asin((inv_Px*math.sin(th_6) + inv_Py*math.cos(th_6))/(1.99863771551522*a_3 - 0.0521796239019005*d_2))
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[3] = x0
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(14, appended_idx)
-                
-            condition_1: bool = (abs((inv_Px*math.sin(th_6) + inv_Py*math.cos(th_6))/(1.99863771551522*a_3 - 0.0521796239019005*d_2)) <= 1)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = safe_asin((inv_Px*math.sin(th_6) + inv_Py*math.cos(th_6))/(1.99863771551522*a_3 - 0.0521796239019005*d_2))
-                # End of temp variables
                 this_solution[3] = math.pi - x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(14, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_13_solve_th_4_processor()
     # Finish code for explicit solution node 13
-    
+
     # Code for non-branch dispatcher node 14
     # Actually, there is no code
-    
+
     # Code for explicit solution node 15, solved variable is th_5
     def ExplicitSolutionNode_node_15_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[14]
         this_input_valid: bool = node_input_validity[14]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 15
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -636,30 +641,27 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_4 = this_solution[3]
             th_6 = this_solution[5]
-            condition_0: bool = (abs(1.99863771551522*a_3*math.cos(th_4) - 0.0521796239019005*d_2*math.cos(th_4)) >= 1.0e-6) or (abs(0.0521796239019005*a_3 + 0.998637715515219*d_2 - 1.0*d_4) >= 1.0e-6)
+            condition_0: bool = (((abs(0.0521796239019005*a_3 + 0.998637715515219*d_2 - 1.0*d_4) >= 1.0e-6)) or ((abs(1.99863771551522*a_3*math.cos(th_4) - 0.0521796239019005*d_2*math.cos(th_4)) >= 1.0e-6)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_4)
                 x1 = -1.99863771551522*a_3*x0 + 0.0521796239019005*d_2*x0
                 x2 = 0.0521796239019005*a_3 + 0.998637715515219*d_2 - 1.0*d_4
                 x3 = 1.0*a_5 + 1.0*inv_Px*math.cos(th_6) - 1.0*inv_Py*math.sin(th_6)
-                # End of temp variables
                 this_solution[4] = math.atan2(inv_Pz*x1 - x2*x3, inv_Pz*x2 + x1*x3)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_15_solve_th_5_processor()
     # Finish code for explicit solution node 14
-    
+
     # Code for explicit solution node 12, solved variable is th_5
     def ExplicitSolutionNode_node_12_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[12]
         this_input_valid: bool = node_input_validity[12]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 12
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -667,27 +669,24 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_6 = this_solution[5]
-            condition_0: bool = (abs(inv_Pz) >= zero_tolerance) or (abs(d_2 + d_4) >= zero_tolerance) or (abs(a_5 + inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6)) >= zero_tolerance)
+            condition_0: bool = (((abs(inv_Pz) >= zero_tolerance)) or ((abs(d_2 + d_4) >= zero_tolerance)) or ((abs(a_5 + inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = d_2 + d_4
-                # End of temp variables
                 this_solution[4] = math.atan2((a_5 + inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6))/x0, -inv_Pz/x0)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_12_solve_th_5_processor()
     # Finish code for explicit solution node 12
-    
+
     # Code for explicit solution node 3, solved variable is th_4
     def ExplicitSolutionNode_node_3_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[3]
         this_input_valid: bool = node_input_validity[3]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 3
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -695,31 +694,22 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_6 = this_solution[5]
-            condition_0: bool = (abs((inv_Px*math.sin(th_6) + inv_Py*math.cos(th_6))/(a_3*math.cos(th_3) + a_3 + d_2*math.sin(th_3))) <= 1)
+            condition_0: bool = (((a_3*math.cos(th_3) + a_3 + d_2*math.sin(th_3) != 0)) and ((abs((inv_Px*math.sin(th_6) + inv_Py*math.cos(th_6))/(a_3*math.cos(th_3) + a_3 + d_2*math.sin(th_3))) <= 70368744177665/70368744177664)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = safe_asin((inv_Px*math.sin(th_6) + inv_Py*math.cos(th_6))/(a_3*math.cos(th_3) + a_3 + d_2*math.sin(th_3)))
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[3] = x0
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(4, appended_idx)
-                
-            condition_1: bool = (abs((inv_Px*math.sin(th_6) + inv_Py*math.cos(th_6))/(a_3*math.cos(th_3) + a_3 + d_2*math.sin(th_3))) <= 1)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = safe_asin((inv_Px*math.sin(th_6) + inv_Py*math.cos(th_6))/(a_3*math.cos(th_3) + a_3 + d_2*math.sin(th_3)))
-                # End of temp variables
                 this_solution[3] = math.pi - x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(4, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_3_solve_th_4_processor()
     # Finish code for explicit solution node 3
-    
+
     # Code for equation all-zero dispatcher node 4
     def EquationAllZeroDispatcherNode_node_4_processor():
         this_node_input_index: List[int] = node_input_index[4]
@@ -732,23 +722,23 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_6 = this_solution[5]
-            checked_result: bool = (abs(inv_Pz) <= 1.0e-6) and (abs(a_5 + inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6)) <= 1.0e-6)
+            checked_result: bool = (((abs(inv_Pz) <= 1.0e-6)) and ((abs(a_5 + inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6)) <= 1.0e-6)))
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-    
+
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_4_processor()
     # Finish code for equation all-zero dispatcher node 4
-    
+
     # Code for explicit solution node 5, solved variable is th_5
     def ExplicitSolutionNode_node_5_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[5]
         this_input_valid: bool = node_input_validity[5]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 5
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -757,45 +747,39 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_4 = this_solution[3]
             th_6 = this_solution[5]
-            condition_0: bool = (abs(inv_Pz) >= 1.0e-6) or (abs(a_5 + inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6)) >= 1.0e-6)
+            condition_0: bool = (((abs(inv_Pz) >= 1.0e-6)) or ((abs(a_5 + inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6)) >= 1.0e-6)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_3)
                 x1 = math.sin(th_3)
                 x2 = a_3*x0 + a_3 + d_2*x1
                 x3 = math.cos(th_4)
                 x4 = a_3*x1 - d_2*x0 + d_4
                 x5 = -a_5 - inv_Px*math.cos(th_6) + inv_Py*math.sin(th_6)
-                # End of temp variables
                 this_solution[4] = math.atan2(-inv_Pz*x2*x3 - x4*x5, -inv_Pz*x4 + x2*x3*x5)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(6, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_5_solve_th_5_processor()
     # Finish code for explicit solution node 5
-    
+
     # Code for non-branch dispatcher node 6
     # Actually, there is no code
-    
+
     # Code for linear solution type2 node 7, solved variable is th_2
     def LinearSinCosType_2_SolverNode_node_7_solve_th_2_processor():
         this_node_input_index: List[int] = node_input_index[6]
         this_input_valid: bool = node_input_validity[6]
         if not this_input_valid:
             return
-        
-        for i in range(len(this_node_input_index)):
-            node_input_i_idx_in_queue = this_node_input_index[i]
-            if not queue_element_validity[node_input_i_idx_in_queue]:
+        for queue_index in this_node_input_index:
+            if not queue_element_validity[queue_index]:
                 continue
-            this_solution = solution_queue[node_input_i_idx_in_queue]
+            this_solution = solution_queue[queue_index]
             th_4 = this_solution[3]
             th_5 = this_solution[4]
             th_6 = this_solution[5]
-            # Temp variable for efficiency
             x0 = math.cos(th_6)
             x1 = math.sin(th_3)
             x2 = math.sin(th_5)
@@ -818,8 +802,7 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             x19 = x2*x5
             x20 = a_3*x6 + a_3 - a_5*x1*x2 + a_5*x17*x9 + d_4*x1
             x21 = a_5*x13
-            # End of temp variables
-            A_matrix = np.zeros(shape=(8, 4))
+            A_matrix = np.zeros((8, 4))
             A_matrix[0, 0] = r_11
             A_matrix[0, 1] = -r_21
             A_matrix[0, 2] = x11
@@ -852,70 +835,22 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             A_matrix[7, 1] = Py
             A_matrix[7, 2] = x20
             A_matrix[7, 3] = -x21
-            solution_tuple_0 = try_solve_linear_type2_specific_rows(A_matrix, 0, 1, 2)
-            if solution_tuple_0 is not None:
-                solution_0: IkSolution = copy.copy(this_solution)
-                solution_0[2] = solution_tuple_0[0]
-                appended_idx = append_solution_to_queue(solution_0)
-                add_input_index_to(8, appended_idx)
-                
-                this_solution[2] = solution_tuple_0[1]
-                solution_queue[node_input_i_idx_in_queue] = this_solution
-                add_input_index_to(8, node_input_i_idx_in_queue)
-                continue
-                
-            solution_tuple_1 = try_solve_linear_type2_specific_rows(A_matrix, 0, 1, 3)
-            if solution_tuple_1 is not None:
-                solution_0: IkSolution = copy.copy(this_solution)
-                solution_0[2] = solution_tuple_1[0]
-                appended_idx = append_solution_to_queue(solution_0)
-                add_input_index_to(8, appended_idx)
-                
-                this_solution[2] = solution_tuple_1[1]
-                solution_queue[node_input_i_idx_in_queue] = this_solution
-                add_input_index_to(8, node_input_i_idx_in_queue)
-                continue
-                
-            solution_tuple_2 = try_solve_linear_type2_specific_rows(A_matrix, 0, 1, 6)
-            if solution_tuple_2 is not None:
-                solution_0: IkSolution = copy.copy(this_solution)
-                solution_0[2] = solution_tuple_2[0]
-                appended_idx = append_solution_to_queue(solution_0)
-                add_input_index_to(8, appended_idx)
-                
-                this_solution[2] = solution_tuple_2[1]
-                solution_queue[node_input_i_idx_in_queue] = this_solution
-                add_input_index_to(8, node_input_i_idx_in_queue)
-                continue
-                
-            solution_tuple_3 = try_solve_linear_type2_specific_rows(A_matrix, 0, 1, 7)
-            if solution_tuple_3 is not None:
-                solution_0: IkSolution = copy.copy(this_solution)
-                solution_0[2] = solution_tuple_3[0]
-                appended_idx = append_solution_to_queue(solution_0)
-                add_input_index_to(8, appended_idx)
-                
-                this_solution[2] = solution_tuple_3[1]
-                solution_queue[node_input_i_idx_in_queue] = this_solution
-                add_input_index_to(8, node_input_i_idx_in_queue)
-                continue
-                
-            solution_tuple_4 = try_solve_linear_type2_specific_rows(A_matrix, 0, 2, 3)
-            if solution_tuple_4 is not None:
-                solution_0: IkSolution = copy.copy(this_solution)
-                solution_0[2] = solution_tuple_4[0]
-                appended_idx = append_solution_to_queue(solution_0)
-                add_input_index_to(8, appended_idx)
-                
-                this_solution[2] = solution_tuple_4[1]
-                solution_queue[node_input_i_idx_in_queue] = this_solution
-                add_input_index_to(8, node_input_i_idx_in_queue)
-                continue
-                
+            linear_values = solve_linear_type2_candidates(A_matrix, [(0, 1, 2), (0, 1, 3), (0, 1, 6), (0, 1, 7), (0, 2, 3)])
+            for linear_index, linear_value in enumerate(linear_values):
+                candidate = copy.copy(this_solution)
+                candidate[2] = linear_value
+                if linear_index+1 == len(linear_values):
+                    solution_queue[queue_index] = candidate
+                    candidate_index = queue_index
+                else:
+                    candidate_index = append_solution_to_queue(candidate)
+                add_input_index_to(8, candidate_index)
+            if not linear_values:
+                queue_element_validity[queue_index] = False
     # Invoke the processor
     LinearSinCosType_2_SolverNode_node_7_solve_th_2_processor()
     # Finish code for explicit solution node 6
-    
+
     # Code for equation all-zero dispatcher node 8
     def EquationAllZeroDispatcherNode_node_8_processor():
         this_node_input_index: List[int] = node_input_index[8]
@@ -930,23 +865,23 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             th_2 = this_solution[2]
             th_4 = this_solution[3]
             th_5 = this_solution[4]
-            checked_result: bool = (abs(r_13) <= 1.0e-6) and (abs(r_23) <= 1.0e-6) and (abs(math.sin(th_2)*math.sin(th_3)*math.cos(th_5) + math.sin(th_2)*math.sin(th_5)*math.cos(th_3)*math.cos(th_4) - math.sin(th_4)*math.sin(th_5)*math.cos(th_2)) <= 1.0e-6)
+            checked_result: bool = (((abs(r_13) <= 1.0e-6)) and ((abs(r_23) <= 1.0e-6)) and ((abs(math.sin(th_2)*math.sin(th_3)*math.cos(th_5) + math.sin(th_2)*math.sin(th_5)*math.cos(th_3)*math.cos(th_4) - math.sin(th_4)*math.sin(th_5)*math.cos(th_2)) <= 1.0e-6)))
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(9, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-    
+
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_8_processor()
     # Finish code for equation all-zero dispatcher node 8
-    
+
     # Code for explicit solution node 9, solved variable is th_0
     def ExplicitSolutionNode_node_9_solve_th_0_processor():
         this_node_input_index: List[int] = node_input_index[9]
         this_input_valid: bool = node_input_validity[9]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 9
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -956,39 +891,26 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             th_2 = this_solution[2]
             th_4 = this_solution[3]
             th_5 = this_solution[4]
-            condition_0: bool = (abs(r_13) >= zero_tolerance) or (abs(r_23) >= zero_tolerance) or (abs(math.sin(th_2)*math.sin(th_3)*math.cos(th_5) + math.sin(th_2)*math.sin(th_5)*math.cos(th_3)*math.cos(th_4) - math.sin(th_4)*math.sin(th_5)*math.cos(th_2)) >= zero_tolerance)
+            condition_0: bool = (((abs(r_13) >= zero_tolerance)) or ((abs(r_23) >= zero_tolerance)) or ((abs(math.sin(th_2)*math.sin(th_3)*math.cos(th_5) + math.sin(th_2)*math.sin(th_5)*math.cos(th_3)*math.cos(th_4) - math.sin(th_4)*math.sin(th_5)*math.cos(th_2)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.atan2(r_13, -r_23)
                 x1 = math.sin(th_2)
                 x2 = math.sin(th_5)
                 x3 = x1*x2*math.cos(th_3)*math.cos(th_4) + x1*math.sin(th_3)*math.cos(th_5) - x2*math.sin(th_4)*math.cos(th_2)
                 x4 = safe_sqrt(r_13**2 + r_23**2 - x3**2)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[0] = x0 + math.atan2(x4, x3)
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(10, appended_idx)
-                
-            condition_1: bool = (abs(r_13) >= zero_tolerance) or (abs(r_23) >= zero_tolerance) or (abs(math.sin(th_2)*math.sin(th_3)*math.cos(th_5) + math.sin(th_2)*math.sin(th_5)*math.cos(th_3)*math.cos(th_4) - math.sin(th_4)*math.sin(th_5)*math.cos(th_2)) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = math.atan2(r_13, -r_23)
-                x1 = math.sin(th_2)
-                x2 = math.sin(th_5)
-                x3 = x1*x2*math.cos(th_3)*math.cos(th_4) + x1*math.sin(th_3)*math.cos(th_5) - x2*math.sin(th_4)*math.cos(th_2)
-                x4 = safe_sqrt(r_13**2 + r_23**2 - x3**2)
-                # End of temp variables
                 this_solution[0] = x0 + math.atan2(-x4, x3)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(10, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_9_solve_th_0_processor()
     # Finish code for explicit solution node 9
-    
+
     # Code for equation all-zero dispatcher node 10
     def EquationAllZeroDispatcherNode_node_10_processor():
         this_node_input_index: List[int] = node_input_index[10]
@@ -1001,23 +923,23 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            checked_result: bool = (abs(Pz) <= 1.0e-6) and (abs(Px*math.cos(th_0) + Py*math.sin(th_0)) <= 1.0e-6)
+            checked_result: bool = (((abs(Pz) <= 1.0e-6)) and ((abs(Px*math.cos(th_0) + Py*math.sin(th_0)) <= 1.0e-6)))
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(11, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-    
+
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_10_processor()
     # Finish code for equation all-zero dispatcher node 10
-    
+
     # Code for explicit solution node 11, solved variable is th_1
     def ExplicitSolutionNode_node_11_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[11]
         this_input_valid: bool = node_input_validity[11]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 11
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -1028,9 +950,8 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             th_2 = this_solution[2]
             th_4 = this_solution[3]
             th_5 = this_solution[4]
-            condition_0: bool = (abs(Pz) >= 1.0e-6) or (abs(Px*math.cos(th_0) + Py*math.sin(th_0)) >= 1.0e-6)
+            condition_0: bool = (((abs(Pz) >= 1.0e-6)) or ((abs(Px*math.cos(th_0) + Py*math.sin(th_0)) >= 1.0e-6)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = -Px*math.cos(th_0) - Py*math.sin(th_0)
                 x1 = math.sin(th_3)
                 x2 = math.cos(th_3)
@@ -1041,16 +962,14 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
                 x7 = math.cos(th_2)
                 x8 = a_3*x7
                 x9 = a_5*x1*x3*x7 - d_4*x1*x7 - x2*x5*x7 - x2*x8 - x4*math.sin(th_2)*math.sin(th_4) - x8
-                # End of temp variables
                 this_solution[1] = math.atan2(Pz*x9 - x0*x6, Pz*x6 + x0*x9)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_11_solve_th_1_processor()
     # Finish code for explicit solution node 11
-    
+
     # Collect the output
     ik_out: List[np.ndarray] = list()
     for i in range(len(solution_queue)):
@@ -1076,28 +995,51 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
     return ik_out
 
 
+def franka_panda_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarray, th_3):
+    if not np.all(np.isfinite(T_ee)):
+        return []
+    if not (math.isfinite(th_3)):
+        return []
+    if not np.all(np.isfinite(T_ee_raw_in)):
+        return []
+    ik_output_raw = franka_panda_ik_solve_raw(T_ee_raw_in, add_revolute_offset(th_3, th_3_offset_original2raw))
+    ik_output = list()
+    for i in range(len(ik_output_raw)):
+        ik_out_i = ik_output_raw[i]
+        ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw
+        ik_out_i[1] = add_revolute_offset(ik_out_i[1], -th_1_offset_original2raw)
+        ik_out_i[2] = add_revolute_offset(ik_out_i[2], -th_2_offset_original2raw)
+        ik_out_i[3] = th_3
+        ik_out_i[4] = ik_out_i[4] - th_4_offset_original2raw
+        ik_out_i[5] = add_revolute_offset(ik_out_i[5], -th_5_offset_original2raw)
+        ik_out_i[6] = ik_out_i[6] - th_6_offset_original2raw
+        ee_pose_i = franka_panda_fk(ik_out_i)
+        ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
+        if ee_pose_diff < pose_tolerance:
+            ik_output.append(ik_out_i)
+        snapped = snap_near_joint_limits(ik_out_i, [-3.141592653589793, -6.283185307179586, -6.283185307179586, -6.283185307179586, -3.141592653589793, -6.283185307179586, -3.141592653589793], [3.141592653589793, 0.0, 0.0, 0.0, 3.141592653589793, 0.0, 3.141592653589793], [True, True, True, True, True, True, True], [False, False, False, True, False, False, False])
+        if snapped is not None:
+            snapped = snapped.reshape(ik_out_i.shape)
+            snapped_pose = franka_panda_fk(snapped)
+            if (np.linalg.norm(snapped_pose[:3, 3]-T_ee[:3, 3]) <= 1e-7 and np.max(np.abs(snapped_pose[:3, :3]-T_ee[:3, :3])) <= 1e-7):
+                ik_output.append(snapped)
+    return ik_output
+
+
 def franka_panda_ik_solve(T_ee: np.ndarray, th_3):
     if not np.all(np.isfinite(T_ee)):
         return []
     if not (math.isfinite(th_3)):
         return []
-    T_ee_raw_in = franka_panda_ik_target_original_to_raw(T_ee)
-    ik_output_raw = franka_panda_ik_solve_raw(T_ee_raw_in, th_3 + th_3_offset_original2raw)
-    ik_output = list()
-    for i in range(len(ik_output_raw)):
-        ik_out_i = ik_output_raw[i]
-        ik_out_i[0] -= th_0_offset_original2raw
-        ik_out_i[1] -= th_1_offset_original2raw
-        ik_out_i[2] -= th_2_offset_original2raw
-        ik_out_i[3] -= th_3_offset_original2raw
-        ik_out_i[4] -= th_4_offset_original2raw
-        ik_out_i[5] -= th_5_offset_original2raw
-        ik_out_i[6] -= th_6_offset_original2raw
-        ee_pose_i = franka_panda_fk(ik_out_i)
-        ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
-        if ee_pose_diff < pose_tolerance:
-            ik_output.append(ik_out_i)
-    return ik_output
+    result, seen = [], set()
+    for transform in (franka_panda_ik_target_original_to_raw_legacy_frame, franka_panda_ik_target_original_to_raw):
+        raw_target = transform(T_ee)
+        for candidate in franka_panda_ik_solve_for_raw_target(T_ee, raw_target, th_3):
+            key = tuple(float(value) for value in candidate.ravel())
+            if key not in seen:
+                seen.add(key)
+                result.append(candidate)
+    return result
 
 
 def test_ik_solve_franka_panda():

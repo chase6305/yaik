@@ -39,6 +39,16 @@ SOURCE_HASHES = {
 }
 
 
+def generator_source_hashes():
+    """Identify current generator contents independently of checkout revision."""
+    sources = [ROOT/'convert_kinematic_chain.py', ROOT/'ik_solve.py', Path(__file__).resolve()]
+    for directory in ('codegen', 'fk', 'solver', 'utility'):
+        sources.extend(path for path in (ROOT/directory).rglob('*.py')
+                       if not path.name.startswith('test_'))
+    return {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in sorted(set(sources))}
+
+
 def urdf_model(path, side):
     """Read a standalone 7-revolute-joint arm, retaining its base and EE frames."""
     document = ET.parse(path).getroot()
@@ -154,6 +164,9 @@ def generate(urdf_dir=HERE / 'urdf', output_dir=HERE, seed=42, codegen_only=Fals
         'source_repository': 'https://github.com/chase6305/HumanoidAssets',
         'source_revision': '0ead034d8b8d0e5dae10fb282db47ac7174edc39',
         'generator_base_revision': '821ba579680e8232b7d71efe87abd373f567f9f8',
+        'generator_sources_sha256': generator_source_hashes(),
+        'runtime_sha256': {name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest()
+                           for name in ('python_run_import.py', 'yaik_cpp_common.h')},
         'dependencies': {package: version(package) for package in
                          ('numpy', 'sympy', 'attrs', 'PyYAML')},
         'seed': seed, 'fixed_joint': 'th_4 (URDF J5 wrist_pitch)',

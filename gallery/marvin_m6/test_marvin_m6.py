@@ -82,6 +82,10 @@ class TestMarvinM6(TestCase):
         self.assertEqual(set(provenance['urdf_sha256']), {'left_arm.urdf', 'right_arm.urdf'})
         for name, digest in provenance['urdf_sha256'].items():
             self.assertEqual(hashlib.sha256((HERE / 'urdf' / name).read_bytes()).hexdigest(), digest)
+        self.assertIn('codegen/skeleton/guard_codegen.py', provenance['generator_sources_sha256'])
+        self.assertIn('gallery/marvin_m6/generate.py', provenance['generator_sources_sha256'])
+        for name, digest in (provenance['generator_sources_sha256'] | provenance['runtime_sha256']).items():
+            self.assertEqual(hashlib.sha256((HERE.parents[1]/name).read_bytes()).hexdigest(), digest, name)
 
     def test_analytical_geometry_limits_and_frames_match_model_snapshot(self):
         module = load_module(HERE / 'solver.py', 'marvin_m6_geometry_invariants')

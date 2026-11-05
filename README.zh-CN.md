@@ -85,7 +85,8 @@ python yaik.py marvin validate --solver-dir build/marvin_m6 \
 
 `--solver-dir` 指定实际加载和编译的标准生成解文件；优先使用该目录中的运行时文件。
 有界参考接口仍来自 gallery，报告分别记录两者的路径及源码哈希。
-`marvin check` 也会核对来源记录中的运行时文件。C++ 使用者仍需安装 Eigen3。
+来源记录包含实际生成源码和运行库的哈希；`marvin check` 会核对这些记录及打包的运行时文件，
+即使产物字节碰巧未变，也能识别过期的源码记录。C++ 使用者仍需安装 Eigen3。
 
 输出目录中已有解树时使用它们，否则使用 gallery 中的解树。
 `--tree-dir PATH` 可指定解树来源，`--urdf-dir PATH` 可指定包含
@@ -155,6 +156,13 @@ python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma
 安全模式的 Python/C++ 生成接口为 `asin`/`acos` 实际参数在 ±1 边界的舍入误差
 保留 64 个 double epsilon 的余量，再将参数夹到有效范围。其他守卫与最终 FK 阈值保持原值。
 离线数值求解也保留正好位于 ±1 的多项式正弦/余弦根，并先归一化有限系数。
+条件守卫先检查分母，再计算依赖它的表达式；简单的系数检查也会先于复杂范围检查。
+基座和工具矩阵使用实际矩阵逆，避免舍入旋转的转置误差。此类近似模型保留旧路径的候选，
+两条路径都按原始目标和原有 FK 阈值检查。C++ 数值细化显式跳过固定关节的更新。
+
+`*_ik_solve_raw` 和 C++ `computeRawIK` 的目标、固定关节参数及返回关节值都采用改进 DH 约定。
+原始机器人坐标和关节偏移由 checked 接口处理。C++ `computeIKUnChecked` 会处理坐标和偏移，
+但不进行 FK 过滤；统计原始候选残差时，需要先恢复原始关节约定再调用原始 FK。
 
 通用生成器现在补全“方程系数同时为零”的退化分支：从完整 FK 方程重新选择
 解析公式；较大的退化系统还会在一个旋转关节范围内枚举 33 个代表值，再由生成接口
@@ -173,7 +181,8 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   test_cli.py gallery/marvin_m6 solver/test_regressions.py \
   solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
   solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
-  solver/test_argument_guards.py solver/test_gallery_regeneration.py \
+  solver/test_argument_guards.py solver/test_guard_domains.py solver/test_rounded_frames.py \
+  solver/test_gallery_regeneration.py \
   solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \

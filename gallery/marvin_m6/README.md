@@ -12,7 +12,9 @@ seven-joint arms in `HumanoidAssets/Marvin_M6_S_CCS_696_V4.0`. Each arm has:
 
 `urdf/left_arm.urdf` and `urdf/right_arm.urdf` are exact source snapshots.
 `provenance.json` records their source revision, SHA-256 hashes, generation
-seed, dependencies, and generated artifact hashes. The snapshots retain mesh
+seed, dependencies, generated artifact hashes, and the actual generator/runtime
+source hashes. `generator_base_revision` records historical lineage; current
+source hashes identify the generator that produced the export. The snapshots retain mesh
 references for provenance; meshes are not included or needed for kinematics.
 
 ## Frames and joint convention

@@ -373,7 +373,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1th_2_soa = this_solution[2]
-            condition_0: bool = (abs((Pz + a_2*math.sin(th_1th_2_soa) + d_3*math.cos(th_1th_2_soa))/a_1) <= 70368744177665/70368744177664)
+            condition_0: bool = (((a_1 != 0)) and ((abs((Pz + a_2*math.sin(th_1th_2_soa) + d_3*math.cos(th_1th_2_soa))/a_1) <= 70368744177665/70368744177664)))
             if condition_0:
                 x0 = safe_asin((Pz + a_2*math.sin(th_1th_2_soa) + d_3*math.cos(th_1th_2_soa))/a_1)
                 solution_0: IkSolution = copy.copy(this_solution)
@@ -470,7 +470,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             if not queue_element_validity[node_input_i_idx_in_queue]:
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
-            checked_result: bool = (abs(r_13) <= 1.0e-6) and (abs(r_23) <= 1.0e-6)
+            checked_result: bool = (((abs(r_13) <= 1.0e-6)) and ((abs(r_23) <= 1.0e-6)))
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(15, node_input_i_idx_in_queue)
             else:
@@ -491,7 +491,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             if not queue_element_validity[node_input_i_idx_in_queue]:
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
-            checked_result: bool = (abs(Px) <= 1.0e-6) and (abs(Py) <= 1.0e-6)
+            checked_result: bool = (((abs(Px) <= 1.0e-6)) and ((abs(Py) <= 1.0e-6)))
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(23, node_input_i_idx_in_queue)
             else:
@@ -560,7 +560,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[3]
-            checked_result: bool = (abs(r_13*math.cos(th_1)) <= 1.0e-6) and (abs(r_23*math.cos(th_1)) <= 1.0e-6) and (abs(r_33*math.sin(th_1) - math.sin(th_2)) <= 1.0e-6)
+            checked_result: bool = (((abs(r_13*math.cos(th_1)) <= 1.0e-6)) and ((abs(r_23*math.cos(th_1)) <= 1.0e-6)) and ((abs(r_33*math.sin(th_1) - math.sin(th_2)) <= 1.0e-6)))
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(47, node_input_i_idx_in_queue)
             else:
@@ -585,7 +585,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[3]
-            condition_0: bool = (abs(r_13*math.cos(th_1)) >= zero_tolerance) or (abs(r_23*math.cos(th_1)) >= zero_tolerance) or (abs(r_33*math.sin(th_1) - math.sin(th_2)) >= zero_tolerance)
+            condition_0: bool = (((abs(r_13*math.cos(th_1)) >= zero_tolerance)) or ((abs(r_23*math.cos(th_1)) >= zero_tolerance)) or ((abs(r_33*math.sin(th_1) - math.sin(th_2)) >= zero_tolerance)))
             if condition_0:
                 x0 = math.cos(th_1)
                 x1 = math.atan2(-r_23*x0, -r_13*x0)
@@ -640,7 +640,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
@@ -667,7 +667,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[3]
-            condition_0: bool = (abs(Py/(a_0 + a_1*math.cos(th_1) - a_2*(math.sin(th_1)*math.sin(th_2) - math.cos(th_1)*math.cos(th_2)) - d_3*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1)))) <= 70368744177665/70368744177664)
+            condition_0: bool = (((a_0 + a_1*math.cos(th_1) - a_2*(math.sin(th_1)*math.sin(th_2) - math.cos(th_1)*math.cos(th_2)) - d_3*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1)) != 0)) and ((abs(Py/(a_0 + a_1*math.cos(th_1) - a_2*(math.sin(th_1)*math.sin(th_2) - math.cos(th_1)*math.cos(th_2)) - d_3*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1)))) <= 70368744177665/70368744177664)))
             if condition_0:
                 x0 = math.cos(th_1)
                 x1 = math.sin(th_1)
@@ -722,7 +722,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
@@ -749,7 +749,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[3]
-            condition_0: bool = (abs(Px) >= zero_tolerance) or (abs(Py) >= zero_tolerance) or (abs(a_0 + a_1*math.cos(th_1) + a_2*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2)) + d_3*(-math.sin(th_1)*math.cos(th_2) - math.sin(th_2)*math.cos(th_1))) >= zero_tolerance)
+            condition_0: bool = (((abs(Px) >= zero_tolerance)) or ((abs(Py) >= zero_tolerance)) or ((abs(a_0 + a_1*math.cos(th_1) + a_2*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2)) + d_3*(-math.sin(th_1)*math.cos(th_2) - math.sin(th_2)*math.cos(th_1))) >= zero_tolerance)))
             if condition_0:
                 x0 = math.cos(th_1)
                 x1 = math.sin(th_1)
@@ -782,7 +782,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
@@ -809,7 +809,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[3]
-            condition_0: bool = (abs(Px) >= 1.0e-6) or (abs(Py) >= 1.0e-6)
+            condition_0: bool = (((abs(Px) >= 1.0e-6)) or ((abs(Py) >= 1.0e-6)))
             if condition_0:
                 x0 = th_1 + th_2
                 x1 = -a_0 - a_1*math.cos(th_1) - a_2*math.cos(x0) + d_3*math.sin(x0)
@@ -839,7 +839,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
@@ -866,7 +866,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[3]
-            condition_0: bool = (abs(r_13) >= 1.0e-6) or (abs(r_23) >= 1.0e-6)
+            condition_0: bool = (((abs(r_13) >= 1.0e-6)) or ((abs(r_23) >= 1.0e-6)))
             if condition_0:
                 x0 = math.sin(th_1 + th_2)
                 this_solution[0] = math.atan2(-r_23*x0, -r_13*x0)
@@ -895,7 +895,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
@@ -918,7 +918,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             if not queue_element_validity[node_input_i_idx_in_queue]:
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
-            checked_result: bool = (abs(r_13) <= 1.0e-6) and (abs(r_23) <= 1.0e-6)
+            checked_result: bool = (((abs(r_13) <= 1.0e-6)) and ((abs(r_23) <= 1.0e-6)))
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(11, node_input_i_idx_in_queue)
             else:
@@ -939,7 +939,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             if not queue_element_validity[node_input_i_idx_in_queue]:
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
-            checked_result: bool = (abs(Px) <= 1.0e-6) and (abs(Py) <= 1.0e-6)
+            checked_result: bool = (((abs(Px) <= 1.0e-6)) and ((abs(Py) <= 1.0e-6)))
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(19, node_input_i_idx_in_queue)
             else:
@@ -1008,7 +1008,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[3]
-            checked_result: bool = (abs(r_13*math.cos(th_1)) <= 1.0e-6) and (abs(r_23*math.cos(th_1)) <= 1.0e-6) and (abs(r_33*math.sin(th_1) - math.sin(th_2)) <= 1.0e-6)
+            checked_result: bool = (((abs(r_13*math.cos(th_1)) <= 1.0e-6)) and ((abs(r_23*math.cos(th_1)) <= 1.0e-6)) and ((abs(r_33*math.sin(th_1) - math.sin(th_2)) <= 1.0e-6)))
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(43, node_input_i_idx_in_queue)
             else:
@@ -1033,7 +1033,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[3]
-            condition_0: bool = (abs(r_13*math.cos(th_1)) >= zero_tolerance) or (abs(r_23*math.cos(th_1)) >= zero_tolerance) or (abs(r_33*math.sin(th_1) - math.sin(th_2)) >= zero_tolerance)
+            condition_0: bool = (((abs(r_13*math.cos(th_1)) >= zero_tolerance)) or ((abs(r_23*math.cos(th_1)) >= zero_tolerance)) or ((abs(r_33*math.sin(th_1) - math.sin(th_2)) >= zero_tolerance)))
             if condition_0:
                 x0 = math.cos(th_1)
                 x1 = math.atan2(-r_23*x0, -r_13*x0)
@@ -1088,7 +1088,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
@@ -1115,7 +1115,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[3]
-            condition_0: bool = (abs(Py/(a_0 + a_1*math.cos(th_1) - a_2*(math.sin(th_1)*math.sin(th_2) - math.cos(th_1)*math.cos(th_2)) - d_3*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1)))) <= 70368744177665/70368744177664)
+            condition_0: bool = (((a_0 + a_1*math.cos(th_1) - a_2*(math.sin(th_1)*math.sin(th_2) - math.cos(th_1)*math.cos(th_2)) - d_3*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1)) != 0)) and ((abs(Py/(a_0 + a_1*math.cos(th_1) - a_2*(math.sin(th_1)*math.sin(th_2) - math.cos(th_1)*math.cos(th_2)) - d_3*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1)))) <= 70368744177665/70368744177664)))
             if condition_0:
                 x0 = math.cos(th_1)
                 x1 = math.sin(th_1)
@@ -1152,7 +1152,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
@@ -1179,7 +1179,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[3]
-            condition_0: bool = (abs(Px) >= zero_tolerance) or (abs(Py) >= zero_tolerance) or (abs(a_0 + a_1*math.cos(th_1) + a_2*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2)) + d_3*(-math.sin(th_1)*math.cos(th_2) - math.sin(th_2)*math.cos(th_1))) >= zero_tolerance)
+            condition_0: bool = (((abs(Px) >= zero_tolerance)) or ((abs(Py) >= zero_tolerance)) or ((abs(a_0 + a_1*math.cos(th_1) + a_2*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2)) + d_3*(-math.sin(th_1)*math.cos(th_2) - math.sin(th_2)*math.cos(th_1))) >= zero_tolerance)))
             if condition_0:
                 x0 = math.cos(th_1)
                 x1 = math.sin(th_1)
@@ -1212,7 +1212,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
@@ -1239,7 +1239,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[3]
-            condition_0: bool = (abs(Px) >= 1.0e-6) or (abs(Py) >= 1.0e-6)
+            condition_0: bool = (((abs(Px) >= 1.0e-6)) or ((abs(Py) >= 1.0e-6)))
             if condition_0:
                 x0 = th_1 + th_2
                 x1 = -a_0 - a_1*math.cos(th_1) - a_2*math.cos(x0) + d_3*math.sin(x0)
@@ -1269,7 +1269,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
@@ -1296,7 +1296,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[3]
-            condition_0: bool = (abs(r_13) >= 1.0e-6) or (abs(r_23) >= 1.0e-6)
+            condition_0: bool = (((abs(r_13) >= 1.0e-6)) or ((abs(r_23) >= 1.0e-6)))
             if condition_0:
                 x0 = math.sin(th_1 + th_2)
                 this_solution[0] = math.atan2(-r_23*x0, -r_13*x0)
@@ -1325,7 +1325,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
@@ -1351,7 +1351,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1th_2_soa = this_solution[2]
-            condition_0: bool = (abs(r_31) >= zero_tolerance) or (abs(r_32) >= zero_tolerance) or (abs(math.sin(th_1th_2_soa)) >= zero_tolerance)
+            condition_0: bool = (((abs(r_31) >= zero_tolerance)) or ((abs(r_32) >= zero_tolerance)) or ((abs(math.sin(th_1th_2_soa)) >= zero_tolerance)))
             if condition_0:
                 x0 = 1/math.sin(th_1th_2_soa)
                 this_solution[4] = math.atan2(r_32*x0, -r_31*x0)
@@ -1380,7 +1380,7 @@ def abb_irb460_110_240_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1th_2_soa = this_solution[2]
-            condition_0: bool = (abs(r_13) >= zero_tolerance) or (abs(r_23) >= zero_tolerance) or (abs(math.sin(th_1th_2_soa)) >= zero_tolerance)
+            condition_0: bool = (((abs(r_13) >= zero_tolerance)) or ((abs(r_23) >= zero_tolerance)) or ((abs(math.sin(th_1th_2_soa)) >= zero_tolerance)))
             if condition_0:
                 x0 = 1/math.sin(th_1th_2_soa)
                 this_solution[0] = math.atan2(-r_23*x0, -r_13*x0)

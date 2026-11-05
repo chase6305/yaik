@@ -14,6 +14,7 @@ from solver.solved_variable import SolutionMethod, VariableSolutionClassKey
 from solver.solved_variable_impl import General6DoFNumericalReduceSolutionImpl
 from typing import List, Optional, Dict, Set
 import sympy as sp
+from codegen.skeleton.guard_codegen import predicate_code
 
 
 class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
@@ -1042,18 +1043,17 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         """
         Generate the cpp code for a given expression. Should be mostly sp.cxxcode, but we might need some operations
         """
-        if not self._use_safe_operator:
-            return sp.cxxcode(expr_to_proc)
-
         # The function should be replaced
         function_replacements = {
             'std::sqrt': 'safe_sqrt',
             'std::asin': 'safe_asin',
             'std::acos': 'safe_acos'
         }
-        original_code = sp.cxxcode(expr_to_proc)
-        processed_code = original_code
-        for func in function_replacements:
-            replaced = function_replacements[func]
-            processed_code = processed_code.replace(func, replaced)
-        return processed_code
+        def print_expression(expression):
+            code = sp.cxxcode(expression)
+            if self._use_safe_operator:
+                for original, replacement in function_replacements.items():
+                    code = code.replace(original, replacement)
+            return code
+        condition = predicate_code(expr_to_proc, print_expression, 'cpp')
+        return condition if condition is not None else print_expression(expr_to_proc)

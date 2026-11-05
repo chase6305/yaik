@@ -53,3 +53,16 @@ transforms, also alphabetically. Declared parameter bounds guide offline samplin
 the standard generated API checks finite runtime values and FK, rather than
 enforcing geometry bounds or all joint limits.
 
+Stored rotations sometimes contain rounded constants such as `0.707107`.
+Target conversion uses the actual matrix inverse for those frames and retains
+the transpose fast path for symbolically orthogonal rotations. Checked IK keeps
+the previous transpose-based candidates as an additional source for approximate
+models; all candidates are checked against the same original target. Constant
+singular frames and non-homogeneous bottom rows are rejected during export.
+Runtime frame parameters must describe nonsingular transforms.
+
+Raw IK takes a raw DH target and raw fixed-joint values, and returns raw DH joint
+values. Add offsets before passing fixed joints to raw IK and subtract offsets
+from its outputs before evaluating original-frame FK. The checked API performs
+these conversions automatically.
+

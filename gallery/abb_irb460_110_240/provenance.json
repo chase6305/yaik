@@ -1,23 +1,28 @@
 {
   "schema_version": 1,
   "seed": 20261125,
+  "generation_mode": "codegen_from_saved_tree",
   "source_model": "gallery/abb_irb460_110_240/abb_irb460_110_240.yaml",
-  "generator_base_revision": "fc93586d973ea7038874e53d86f69169f0f20e40",
+  "source_tree_sha256": "73a09c2169ef8c2a93bcadc230de1e6c44694cab061efd4567427a5767943eb8",
+  "generator_base_revision": "862944c8c51556aa8d16644c8328af0f11e945ef",
   "generator_overrides_sha256": {
-    "solver/branch_conditions.py": "713dd0507519ef9f11ab7de15a290a8611584a1a80d0b96bede7fe18cc202bdd",
-    "solver/solve_equations.py": "7785f369c50e77c8c6e4d39c42404d3f56b22eb0e66f17e3abdb60c5bb36e8ab",
-    "codegen/skeleton/build_equation_branch.py": "8790a2bc0b20249fd0dd1069c39c4f8cea5eea65ead0463efae00410e686a21f"
+    "codegen/skeleton/guard_codegen.py": "66453cdc2fa662dba4a3048cca2a5de5be30b6f0975f0b10ff5987fc290e1d1d",
+    "codegen/py_codegen/py_codegen_visitor_base.py": "7146493b1c853a4f0dbd3429441e0c1aaab6e9ff5fbcfc25fd0febc8a9875501",
+    "codegen/cpp_codegen/cpp_codegen_visitor.py": "41dbb4b062f7f7e150ede84a847385a4ca92a33fc333f4e5a3d3ba866844db4b",
+    "codegen/py_codegen/codegen_py.py": "446d1da6793d2d686502f1d698692a1af1836efb1346f634f37b440e591c581f",
+    "codegen/cpp_codegen/codegen_cpp.py": "d8b8b7b8c23a05829666a2ffe62b6344f493659b92c4625853bf610fa04e86f8",
+    "utility/symbolic_utils.py": "c15cbb9ad2187feb750c56542aaf49b1bcf98bd69db23fe3a98123c044a6e616"
   },
   "runtime_sha256": {
     "python_run_import.py": "300030bdbcf018bbd6d838afc6060d9ea22b3de630a0abc5136ad008cb2e9871",
-    "yaik_cpp_common.h": "e662925d42e992de7728049bd0d6ac1eaaf48397556683fc2c37ce3474221689"
+    "yaik_cpp_common.h": "930b03b24f7bd273d18481160e9c57c20f19182372ea29ccf787bac54ac69693"
   },
   "artifact_sha256": {
     "abb_irb460_110_240.yaml": "511e0f1075c817a2edd0b2eeab73174a00705cfd53dcc454c641f7f98e40d3e2",
     "abb_irb460_110_240_ik.yaml": "73a09c2169ef8c2a93bcadc230de1e6c44694cab061efd4567427a5767943eb8",
-    "abb_irb460_110_240_ik_generated.py": "e15ad143172cda79f0942fe857c766dfca8005958e5c53c7cfa06b2feb340478",
-    "abb_irb460_110_240_ik_generated.cpp": "f77a955215839823e5edcc13008aaf7832d3bca9631530a35a8cc159b6c225d8"
+    "abb_irb460_110_240_ik_generated.py": "a17231ee8e7fb2ab915c03b5471979de3a493b90ddfffc96f7b5d727a06f8d99",
+    "abb_irb460_110_240_ik_generated.cpp": "c0fdec42337184af9ec42b24d193ff9c0b5c8cffb68937de1d421801abb4accc"
   },
   "coverage_status": "not_certified",
-  "command": "python yaik.py generate --model gallery/abb_irb460_110_240/abb_irb460_110_240.yaml --seed 20261125 --with-runtime --output-dir build/abb_irb460_110_240"
+  "command": "python yaik.py codegen gallery/abb_irb460_110_240/abb_irb460_110_240_ik.yaml --output-dir build/abb_irb460_110_240 --with-runtime"
 }

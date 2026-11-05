@@ -6,6 +6,7 @@ from codegen.skeleton.tree_node import SkeletonTreeNode
 from codegen.skeleton.tree_node import SolutionNodeBase
 from typing import List, Dict, Set, Optional
 import sympy as sp
+from codegen.skeleton.guard_codegen import predicate_code
 
 
 class IkSolutionGeneratorPythonBase(SkeletonNodeVisitor, ABC):
@@ -60,9 +61,6 @@ class IkSolutionGeneratorPythonBase(SkeletonNodeVisitor, ABC):
 
     # Common utility
     def generate_py_code(self, expr_to_proc: sp.Expr):
-        if not self._use_safe_operation:
-            return sp.pycode(expr_to_proc)
-
         # The function should be replaced
         function_replacements = {
             'math.sqrt': 'safe_sqrt',
@@ -71,12 +69,14 @@ class IkSolutionGeneratorPythonBase(SkeletonNodeVisitor, ABC):
         }
 
         # Do replacements
-        original_code = sp.pycode(expr_to_proc)
-        processed_code = original_code
-        for func in function_replacements:
-            replaced = function_replacements[func]
-            processed_code = processed_code.replace(func, replaced)
-        return processed_code
+        def print_expression(expression):
+            code = sp.pycode(expression)
+            if self._use_safe_operation:
+                for original, replacement in function_replacements.items():
+                    code = code.replace(original, replacement)
+            return code
+        condition = predicate_code(expr_to_proc, print_expression, 'python')
+        return condition if condition is not None else print_expression(expr_to_proc)
 
     @staticmethod
     def node_processor_name(node: SkeletonTreeNode):

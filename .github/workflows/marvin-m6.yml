@@ -6,6 +6,7 @@ on:
       - 'gallery/marvin_m6/**'
       - 'gallery/abb_irb460_110_240/**'
       - 'gallery/kawasaki_CP130L/**'
+      - 'gallery/franka_panda/**'
       - 'codegen/**'
       - 'fk/**'
       - 'solver/**'
@@ -25,6 +26,7 @@ on:
       - 'gallery/marvin_m6/**'
       - 'gallery/abb_irb460_110_240/**'
       - 'gallery/kawasaki_CP130L/**'
+      - 'gallery/franka_panda/**'
       - 'codegen/**'
       - 'fk/**'
       - 'solver/**'
@@ -65,6 +67,7 @@ jobs:
           python -m pytest test_cli.py gallery/marvin_m6 utility/test_artifacts.py
           solver/test_regressions.py solver/test_codegen_safety.py solver/test_runtime_safety.py
           solver/test_argument_guards.py
+          solver/test_guard_domains.py solver/test_rounded_frames.py
           solver/test_gallery_regeneration.py
           solver/test_equation_branches.py solver/test_family_critical.py
           solver/test_completeness.py solver/test_linear_circles.py

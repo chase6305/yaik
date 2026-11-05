@@ -7,7 +7,7 @@ from codegen.skeleton.skeleton_tree import SkeletonTree
 from codegen.cpp_codegen.scope_manager import ScopeManager
 from codegen.cpp_codegen.cpp_codegen_visitor import NodeIkSolutionGeneratorCpp
 from solver.general_6dof.dh_utils import print_sp_matrix_by_row
-from utility.symbolic_utils import inverse_transform
+from utility.symbolic_utils import inverse_auxiliary_transform, inverse_transform
 from typing import List, Optional
 import sympy as sp
 
@@ -219,6 +219,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.exit_scope(func_name)
 
     def _generate_ik_target_transform(self):
+        self._has_frame_fallback = False
         self.add_empty_line()
         self.add_code_line('// The transformation between raw and original ee target')
         self.add_code_line('// Original value are the ones corresponded to robot (usually urdf/sdf)')
@@ -235,13 +236,19 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # Non-trivial codegen
         pre_transform_sp_inv = None if self.robot.get_pre_transform_sp() is None \
-            else inverse_transform(self.robot.get_pre_transform_sp())
+            else inverse_auxiliary_transform(self.robot.get_pre_transform_sp(), self.robot.parameters_value)
         post_transform_sp_inv = None if self.robot.get_post_transform_sp() is None \
-            else inverse_transform(self.robot.get_post_transform_sp())
+            else inverse_auxiliary_transform(self.robot.get_post_transform_sp(), self.robot.parameters_value)
+        legacy_pre = None if self.robot.get_pre_transform_sp() is None else inverse_transform(self.robot.get_pre_transform_sp())
+        legacy_post = None if self.robot.get_post_transform_sp() is None else inverse_transform(self.robot.get_post_transform_sp())
+        self._has_frame_fallback = pre_transform_sp_inv != legacy_pre or post_transform_sp_inv != legacy_post
         self._generate_ee_transform_sp('endEffectorTargetOriginalToRaw', pre_transform_sp_inv, post_transform_sp_inv)
         self.add_empty_line()
         self._generate_ee_transform_sp(
             'endEffectorTargetRawToOriginal', self.robot.get_pre_transform_sp(), self.robot.get_post_transform_sp())
+        if self._has_frame_fallback:
+            self.add_empty_line()
+            self._generate_ee_transform_sp('endEffectorTargetOriginalToRawLegacyFrame', legacy_pre, legacy_post)
 
     @staticmethod
     def get_unknown_offset_name(unknown_name: str):
@@ -617,7 +624,12 @@ class CodeGenerationCpp(CodeGenerationBase):
         func_arguments += ')'
 
         # The ik define
-        self.add_code_line('static void ' + self.ik_function_name(False) + func_arguments)
+        handler_arguments = func_arguments
+        if self._has_frame_fallback:
+            handler_arguments = func_arguments.replace('(const Eigen::Matrix4d& T_ee',
+                '(const Eigen::Matrix4d& T_ee, const Eigen::Matrix4d& T_ee_raw')
+        method = 'computeIKForRawTarget' if self._has_frame_fallback else self.ik_function_name(False)
+        self.add_code_line('static void ' + method + handler_arguments)
         self.enter_scope('checked_ik')
         self.add_code_line('if (!T_ee.allFinite()) { ik_output.clear(); return; }')
         if free_symbols:
@@ -625,7 +637,9 @@ class CodeGenerationCpp(CodeGenerationBase):
             self.add_code_line('if (' + invalid_parameters + ') { ik_output.clear(); return; }')
 
         # To raw target
-        if (self.robot.get_pre_transform_sp() is not None) or (self.robot.get_post_transform_sp() is not None):
+        if self._has_frame_fallback:
+            self.add_code_line('if (!T_ee_raw.allFinite()) { ik_output.clear(); return; }')
+        elif (self.robot.get_pre_transform_sp() is not None) or (self.robot.get_post_transform_sp() is not None):
             self.add_code_line('const Eigen::Matrix4d& T_ee_raw = ' + self.frame_transform_call(
                 'endEffectorTargetOriginalToRaw', 'T_ee') + ';')
         else:
@@ -778,6 +792,33 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, '
                            + classify_candidates + ');')
         self.exit_scope('checked_ik')
+        if self._has_frame_fallback:
+            self._generate_frame_checked_wrapper(func_arguments)
+
+    def _generate_frame_checked_wrapper(self, arguments):
+        self.add_empty_line()
+        self.add_code_line('static void computeIK'+arguments)
+        self.enter_scope('checked_frame_charts')
+        self.add_code_line('ik_output.clear();')
+        self.add_code_line('if (!T_ee.allFinite()) return;')
+        free = self.free_symbols()
+        if free:
+            self.add_code_line('if ('+' || '.join('!std::isfinite('+str(s)+')' for s in free)+') return;')
+        self.add_code_line('for (bool legacy : {true, false})')
+        self.enter_scope('frame_chart')
+        primary = self.frame_transform_call('endEffectorTargetOriginalToRaw', 'T_ee')
+        previous = self.frame_transform_call('endEffectorTargetOriginalToRawLegacyFrame', 'T_ee')
+        self.add_code_line('const Eigen::Matrix4d raw_target = legacy ? '+previous+' : '+primary+';')
+        self.add_code_line('std::vector<std::array<double, robot_nq>> candidates;')
+        tail = ', '+', '.join(map(str, free)) if free else ''
+        self.add_code_line('computeIKForRawTarget(T_ee, raw_target'+tail+', workspace, candidates);')
+        self.add_code_line('for (const auto& candidate : candidates)')
+        self.enter_scope('frame_candidate')
+        self.add_code_line('if (std::find(ik_output.begin(), ik_output.end(), candidate) == ik_output.end())')
+        self.add_code_line(indent()+'ik_output.push_back(candidate);')
+        self.exit_scope('frame_candidate')
+        self.exit_scope('frame_chart')
+        self.exit_scope('checked_frame_charts')
 
     def _generate_handy_ik(self):
         # The function definition

@@ -4,7 +4,7 @@ from solver.equation_utils import find_unknown_idx
 from codegen.skeleton.codegen_base import CodeGenerationBase, indent
 from codegen.skeleton.skeleton_tree import SkeletonTree
 from codegen.py_codegen.py_codegen_visitor_v2 import NodeIkSolutionGeneratorPython_v2
-from utility.symbolic_utils import inverse_transform
+from utility.symbolic_utils import inverse_auxiliary_transform, inverse_transform
 from typing import List, Optional
 import sympy as sp
 
@@ -143,6 +143,7 @@ class CodeGenerationPython(CodeGenerationBase):
         self._add_code_line('return ee_transformed', indent_level=1)
 
     def _generate_ik_target_transform(self):
+        self._has_frame_fallback = False
         self.append_new_function_two_empty_lines()
         self._add_code_line('# The transformation between raw and original ee target')
         self._add_code_line('# Original value are the ones corresponded to robot (usually urdf/sdf)')
@@ -159,14 +160,20 @@ class CodeGenerationPython(CodeGenerationBase):
 
         # Non-trivial codegen
         pre_transform_sp_inv = None if self.robot.get_pre_transform_sp() is None \
-            else inverse_transform(self.robot.get_pre_transform_sp())
+            else inverse_auxiliary_transform(self.robot.get_pre_transform_sp(), self.robot.parameters_value)
         post_transform_sp_inv = None if self.robot.get_post_transform_sp() is None \
-            else inverse_transform(self.robot.get_post_transform_sp())
+            else inverse_auxiliary_transform(self.robot.get_post_transform_sp(), self.robot.parameters_value)
+        legacy_pre = None if self.robot.get_pre_transform_sp() is None else inverse_transform(self.robot.get_pre_transform_sp())
+        legacy_post = None if self.robot.get_post_transform_sp() is None else inverse_transform(self.robot.get_post_transform_sp())
+        self._has_frame_fallback = pre_transform_sp_inv != legacy_pre or post_transform_sp_inv != legacy_post
         self._generate_ee_transform_sp(self.get_ik_target_original_to_raw_name(),
                                        pre_transform_sp_inv, post_transform_sp_inv)
         self.append_new_function_two_empty_lines()
         self._generate_ee_transform_sp(self.get_ik_target_raw_to_original_name(),
                                        self.robot.get_pre_transform_sp(), self.robot.get_post_transform_sp())
+        if self._has_frame_fallback:
+            self.append_new_function_two_empty_lines()
+            self._generate_ee_transform_sp(self.get_ik_target_original_to_raw_name()+'_legacy_frame', legacy_pre, legacy_post)
 
     def _ik_func_args_string(self) -> str:
         free_symbols = self.free_symbols()
@@ -394,7 +401,11 @@ class CodeGenerationPython(CodeGenerationBase):
         # The function definition
         self.append_new_function_two_empty_lines()
         func_arguments = self._ik_func_args_string()
-        self._add_code_line('def ' + self.ik_function_name(False) + func_arguments)
+        method = self.ik_function_name(False)
+        if self._has_frame_fallback:
+            method += '_for_raw_target'
+            func_arguments = func_arguments.replace('(T_ee: np.ndarray', '(T_ee: np.ndarray, T_ee_raw_in: np.ndarray')
+        self._add_code_line('def ' + method + func_arguments)
         self._add_code_line('if not np.all(np.isfinite(T_ee)):', indent_level=1)
         self._add_code_line('return []', indent_level=2)
         free_symbols = self.free_symbols()
@@ -404,7 +415,10 @@ class CodeGenerationPython(CodeGenerationBase):
             self._add_code_line('return []', indent_level=2)
 
         # The ee target
-        if self.robot.get_pre_transform_sp() is None and self.robot.get_post_transform_sp() is None:
+        if self._has_frame_fallback:
+            self._add_code_line('if not np.all(np.isfinite(T_ee_raw_in)):', indent_level=1)
+            self._add_code_line('return []', indent_level=2)
+        elif self.robot.get_pre_transform_sp() is None and self.robot.get_post_transform_sp() is None:
             self._add_code_line('T_ee_raw_in = T_ee', indent_level=1)
         else:
             self._add_code_line('T_ee_raw_in = ' + self.frame_transform_call(
@@ -465,6 +479,29 @@ class CodeGenerationPython(CodeGenerationBase):
 
         # Finished
         self._add_code_line('return ik_output', indent_level=1)
+        if self._has_frame_fallback:
+            self._generate_frame_checked_wrapper(method)
+
+    def _generate_frame_checked_wrapper(self, handler):
+        self.append_new_function_two_empty_lines()
+        self._add_code_line('def '+self.ik_function_name(False)+self._ik_func_args_string())
+        self._add_code_line('if not np.all(np.isfinite(T_ee)):', indent_level=1)
+        self._add_code_line('return []', indent_level=2)
+        free = self.free_symbols()
+        if free:
+            self._add_code_line('if not ('+' and '.join('math.isfinite('+str(s)+')' for s in free)+'):', indent_level=1)
+            self._add_code_line('return []', indent_level=2)
+        primary = self.get_ik_target_original_to_raw_name()
+        self._add_code_line('result, seen = [], set()', indent_level=1)
+        self._add_code_line('for transform in ('+primary+'_legacy_frame, '+primary+'):', indent_level=1)
+        self._add_code_line('raw_target = '+self.frame_transform_call('transform', 'T_ee'), indent_level=2)
+        arguments = ', '+', '.join(map(str, free)) if free else ''
+        self._add_code_line('for candidate in '+handler+'(T_ee, raw_target'+arguments+'):', indent_level=2)
+        self._add_code_line('key = tuple(float(value) for value in candidate.ravel())', indent_level=3)
+        self._add_code_line('if key not in seen:', indent_level=3)
+        self._add_code_line('seen.add(key)', indent_level=4)
+        self._add_code_line('result.append(candidate)', indent_level=4)
+        self._add_code_line('return result', indent_level=1)
 
     def _generate_test_method(self):
         free_symbols = self.free_symbols()

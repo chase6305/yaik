@@ -385,7 +385,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1th_2_soa = this_solution[2];
-            const bool condition_0 = std::fabs((Pz + a_2*std::sin(th_1th_2_soa) + d_3*std::cos(th_1th_2_soa))/a_1) <= 70368744177665.0/70368744177664.0;
+            const bool condition_0 = ((a_1 != 0) && (std::fabs((Pz + a_2*std::sin(th_1th_2_soa) + d_3*std::cos(th_1th_2_soa))/a_1) <= 70368744177665.0/70368744177664.0));
             if (condition_0)
             {
                 const double x0 = safe_asin((Pz + a_2*std::sin(th_1th_2_soa) + d_3*std::cos(th_1th_2_soa))/a_1);
@@ -506,7 +506,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const bool checked_result = std::fabs(r_13) <= 9.9999999999999995e-7 && std::fabs(r_23) <= 9.9999999999999995e-7;
+            const bool checked_result = ((std::fabs(r_13) <= 9.9999999999999995e-7) && (std::fabs(r_23) <= 9.9999999999999995e-7));
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(15, node_input_i_idx_in_queue);
             else
@@ -531,7 +531,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const bool checked_result = std::fabs(Px) <= 9.9999999999999995e-7 && std::fabs(Py) <= 9.9999999999999995e-7;
+            const bool checked_result = ((std::fabs(Px) <= 9.9999999999999995e-7) && (std::fabs(Py) <= 9.9999999999999995e-7));
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(23, node_input_i_idx_in_queue);
             else
@@ -612,7 +612,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[3];
-            const bool checked_result = std::fabs(r_13*std::cos(th_1)) <= 9.9999999999999995e-7 && std::fabs(r_23*std::cos(th_1)) <= 9.9999999999999995e-7 && std::fabs(r_33*std::sin(th_1) - std::sin(th_2)) <= 9.9999999999999995e-7;
+            const bool checked_result = ((std::fabs(r_13*std::cos(th_1)) <= 9.9999999999999995e-7) && (std::fabs(r_23*std::cos(th_1)) <= 9.9999999999999995e-7) && (std::fabs(r_33*std::sin(th_1) - std::sin(th_2)) <= 9.9999999999999995e-7));
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(47, node_input_i_idx_in_queue);
             else
@@ -641,7 +641,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[3];
-            const bool condition_0 = std::fabs(r_13*std::cos(th_1)) >= zero_tolerance || std::fabs(r_23*std::cos(th_1)) >= zero_tolerance || std::fabs(r_33*std::sin(th_1) - std::sin(th_2)) >= zero_tolerance;
+            const bool condition_0 = ((std::fabs(r_13*std::cos(th_1)) >= zero_tolerance) || (std::fabs(r_23*std::cos(th_1)) >= zero_tolerance) || (std::fabs(r_33*std::sin(th_1) - std::sin(th_2)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::cos(th_1);
@@ -708,7 +708,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[0];
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance || std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::sin(th_0);
@@ -743,7 +743,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[3];
-            const bool condition_0 = std::fabs(Py/(a_0 + a_1*std::cos(th_1) - a_2*(std::sin(th_1)*std::sin(th_2) - std::cos(th_1)*std::cos(th_2)) - d_3*(std::sin(th_1)*std::cos(th_2) + std::sin(th_2)*std::cos(th_1)))) <= 70368744177665.0/70368744177664.0;
+            const bool condition_0 = ((a_0 + a_1*std::cos(th_1) - a_2*(std::sin(th_1)*std::sin(th_2) - std::cos(th_1)*std::cos(th_2)) - d_3*(std::sin(th_1)*std::cos(th_2) + std::sin(th_2)*std::cos(th_1)) != 0) && (std::fabs(Py/(a_0 + a_1*std::cos(th_1) - a_2*(std::sin(th_1)*std::sin(th_2) - std::cos(th_1)*std::cos(th_2)) - d_3*(std::sin(th_1)*std::cos(th_2) + std::sin(th_2)*std::cos(th_1)))) <= 70368744177665.0/70368744177664.0));
             if (condition_0)
             {
                 const double x0 = std::cos(th_1);
@@ -810,7 +810,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[0];
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance || std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::sin(th_0);
@@ -845,7 +845,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[3];
-            const bool condition_0 = std::fabs(Px) >= zero_tolerance || std::fabs(Py) >= zero_tolerance || std::fabs(a_0 + a_1*std::cos(th_1) + a_2*(-std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2)) + d_3*(-std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))) >= zero_tolerance;
+            const bool condition_0 = ((std::fabs(Px) >= zero_tolerance) || (std::fabs(Py) >= zero_tolerance) || (std::fabs(a_0 + a_1*std::cos(th_1) + a_2*(-std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2)) + d_3*(-std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::cos(th_1);
@@ -886,7 +886,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[0];
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance || std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::sin(th_0);
@@ -921,7 +921,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[3];
-            const bool condition_0 = std::fabs(Px) >= 9.9999999999999995e-7 || std::fabs(Py) >= 9.9999999999999995e-7;
+            const bool condition_0 = ((std::fabs(Px) >= 9.9999999999999995e-7) || (std::fabs(Py) >= 9.9999999999999995e-7));
             if (condition_0)
             {
                 const double x0 = th_1 + th_2;
@@ -959,7 +959,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[0];
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance || std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::sin(th_0);
@@ -994,7 +994,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[3];
-            const bool condition_0 = std::fabs(r_13) >= 9.9999999999999995e-7 || std::fabs(r_23) >= 9.9999999999999995e-7;
+            const bool condition_0 = ((std::fabs(r_13) >= 9.9999999999999995e-7) || (std::fabs(r_23) >= 9.9999999999999995e-7));
             if (condition_0)
             {
                 const double x0 = std::sin(th_1 + th_2);
@@ -1031,7 +1031,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[0];
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance || std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::sin(th_0);
@@ -1062,7 +1062,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const bool checked_result = std::fabs(r_13) <= 9.9999999999999995e-7 && std::fabs(r_23) <= 9.9999999999999995e-7;
+            const bool checked_result = ((std::fabs(r_13) <= 9.9999999999999995e-7) && (std::fabs(r_23) <= 9.9999999999999995e-7));
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(11, node_input_i_idx_in_queue);
             else
@@ -1087,7 +1087,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const bool checked_result = std::fabs(Px) <= 9.9999999999999995e-7 && std::fabs(Py) <= 9.9999999999999995e-7;
+            const bool checked_result = ((std::fabs(Px) <= 9.9999999999999995e-7) && (std::fabs(Py) <= 9.9999999999999995e-7));
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(19, node_input_i_idx_in_queue);
             else
@@ -1168,7 +1168,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[3];
-            const bool checked_result = std::fabs(r_13*std::cos(th_1)) <= 9.9999999999999995e-7 && std::fabs(r_23*std::cos(th_1)) <= 9.9999999999999995e-7 && std::fabs(r_33*std::sin(th_1) - std::sin(th_2)) <= 9.9999999999999995e-7;
+            const bool checked_result = ((std::fabs(r_13*std::cos(th_1)) <= 9.9999999999999995e-7) && (std::fabs(r_23*std::cos(th_1)) <= 9.9999999999999995e-7) && (std::fabs(r_33*std::sin(th_1) - std::sin(th_2)) <= 9.9999999999999995e-7));
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(43, node_input_i_idx_in_queue);
             else
@@ -1197,7 +1197,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[3];
-            const bool condition_0 = std::fabs(r_13*std::cos(th_1)) >= zero_tolerance || std::fabs(r_23*std::cos(th_1)) >= zero_tolerance || std::fabs(r_33*std::sin(th_1) - std::sin(th_2)) >= zero_tolerance;
+            const bool condition_0 = ((std::fabs(r_13*std::cos(th_1)) >= zero_tolerance) || (std::fabs(r_23*std::cos(th_1)) >= zero_tolerance) || (std::fabs(r_33*std::sin(th_1) - std::sin(th_2)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::cos(th_1);
@@ -1264,7 +1264,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[0];
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance || std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::sin(th_0);
@@ -1299,7 +1299,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[3];
-            const bool condition_0 = std::fabs(Py/(a_0 + a_1*std::cos(th_1) - a_2*(std::sin(th_1)*std::sin(th_2) - std::cos(th_1)*std::cos(th_2)) - d_3*(std::sin(th_1)*std::cos(th_2) + std::sin(th_2)*std::cos(th_1)))) <= 70368744177665.0/70368744177664.0;
+            const bool condition_0 = ((a_0 + a_1*std::cos(th_1) - a_2*(std::sin(th_1)*std::sin(th_2) - std::cos(th_1)*std::cos(th_2)) - d_3*(std::sin(th_1)*std::cos(th_2) + std::sin(th_2)*std::cos(th_1)) != 0) && (std::fabs(Py/(a_0 + a_1*std::cos(th_1) - a_2*(std::sin(th_1)*std::sin(th_2) - std::cos(th_1)*std::cos(th_2)) - d_3*(std::sin(th_1)*std::cos(th_2) + std::sin(th_2)*std::cos(th_1)))) <= 70368744177665.0/70368744177664.0));
             if (condition_0)
             {
                 const double x0 = std::cos(th_1);
@@ -1344,7 +1344,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[0];
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance || std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::sin(th_0);
@@ -1379,7 +1379,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[3];
-            const bool condition_0 = std::fabs(Px) >= zero_tolerance || std::fabs(Py) >= zero_tolerance || std::fabs(a_0 + a_1*std::cos(th_1) + a_2*(-std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2)) + d_3*(-std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))) >= zero_tolerance;
+            const bool condition_0 = ((std::fabs(Px) >= zero_tolerance) || (std::fabs(Py) >= zero_tolerance) || (std::fabs(a_0 + a_1*std::cos(th_1) + a_2*(-std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2)) + d_3*(-std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::cos(th_1);
@@ -1420,7 +1420,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[0];
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance || std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::sin(th_0);
@@ -1455,7 +1455,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[3];
-            const bool condition_0 = std::fabs(Px) >= 9.9999999999999995e-7 || std::fabs(Py) >= 9.9999999999999995e-7;
+            const bool condition_0 = ((std::fabs(Px) >= 9.9999999999999995e-7) || (std::fabs(Py) >= 9.9999999999999995e-7));
             if (condition_0)
             {
                 const double x0 = th_1 + th_2;
@@ -1493,7 +1493,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[0];
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance || std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::sin(th_0);
@@ -1528,7 +1528,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[3];
-            const bool condition_0 = std::fabs(r_13) >= 9.9999999999999995e-7 || std::fabs(r_23) >= 9.9999999999999995e-7;
+            const bool condition_0 = ((std::fabs(r_13) >= 9.9999999999999995e-7) || (std::fabs(r_23) >= 9.9999999999999995e-7));
             if (condition_0)
             {
                 const double x0 = std::sin(th_1 + th_2);
@@ -1565,7 +1565,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[0];
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance || std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = std::sin(th_0);
@@ -1599,7 +1599,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1th_2_soa = this_solution[2];
-            const bool condition_0 = std::fabs(r_31) >= zero_tolerance || std::fabs(r_32) >= zero_tolerance || std::fabs(std::sin(th_1th_2_soa)) >= zero_tolerance;
+            const bool condition_0 = ((std::fabs(r_31) >= zero_tolerance) || (std::fabs(r_32) >= zero_tolerance) || (std::fabs(std::sin(th_1th_2_soa)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = 1.0/std::sin(th_1th_2_soa);
@@ -1636,7 +1636,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1th_2_soa = this_solution[2];
-            const bool condition_0 = std::fabs(r_13) >= zero_tolerance || std::fabs(r_23) >= zero_tolerance || std::fabs(std::sin(th_1th_2_soa)) >= zero_tolerance;
+            const bool condition_0 = ((std::fabs(r_13) >= zero_tolerance) || (std::fabs(r_23) >= zero_tolerance) || (std::fabs(std::sin(th_1th_2_soa)) >= zero_tolerance));
             if (condition_0)
             {
                 const double x0 = 1.0/std::sin(th_1th_2_soa);
