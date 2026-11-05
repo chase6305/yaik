@@ -628,6 +628,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         if self._has_frame_fallback:
             handler_arguments = func_arguments.replace('(const Eigen::Matrix4d& T_ee',
                 '(const Eigen::Matrix4d& T_ee, const Eigen::Matrix4d& T_ee_raw')
+            handler_arguments = handler_arguments[:-1]+', Eigen::Matrix4d& frame_disturbance, bool& frame_disturbance_ready, bool allow_disturbance)'
         method = 'computeIKForRawTarget' if self._has_frame_fallback else self.ik_function_name(False)
         self.add_code_line('static void ' + method + handler_arguments)
         self.enter_scope('checked_ik')
@@ -725,7 +726,18 @@ class CodeGenerationCpp(CodeGenerationBase):
         # Numerical handling of degenerate case
         self.add_empty_line()
         self.add_code_line('// Disturbing method for degenerate handling')
-        self.add_code_line('Eigen::Matrix4d T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);')
+        if self._has_frame_fallback:
+            self.add_code_line('if (!allow_disturbance) return;')
+            self.add_code_line('Eigen::Matrix4d T_ee_raw_disturbed;')
+            self.add_code_line('if (frame_disturbance_ready)')
+            self.add_code_line(indent()+'T_ee_raw_disturbed = frame_disturbance * T_ee_raw;')
+            self.add_code_line('else')
+            self.enter_scope('shared_frame_disturbance')
+            self.add_code_line('T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw, 1e-2, 1e-2, &frame_disturbance);')
+            self.add_code_line('frame_disturbance_ready = true;')
+            self.exit_scope('shared_frame_disturbance')
+        else:
+            self.add_code_line('Eigen::Matrix4d T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);')
         self.add_code_line('Eigen::Matrix4d T_ee_disturbed = ' + self.frame_transform_call(
             'endEffectorTargetRawToOriginal', 'T_ee_raw_disturbed') + ';')
         func_arguments_call = make_func_call_args('T_ee_raw_disturbed')
@@ -804,6 +816,8 @@ class CodeGenerationCpp(CodeGenerationBase):
         free = self.free_symbols()
         if free:
             self.add_code_line('if ('+' || '.join('!std::isfinite('+str(s)+')' for s in free)+') return;')
+        self.add_code_line('Eigen::Matrix4d frame_disturbance;')
+        self.add_code_line('bool frame_disturbance_ready = false;')
         self.add_code_line('for (bool legacy : {true, false})')
         self.enter_scope('frame_chart')
         primary = self.frame_transform_call('endEffectorTargetOriginalToRaw', 'T_ee')
@@ -811,7 +825,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('const Eigen::Matrix4d raw_target = legacy ? '+previous+' : '+primary+';')
         self.add_code_line('std::vector<std::array<double, robot_nq>> candidates;')
         tail = ', '+', '.join(map(str, free)) if free else ''
-        self.add_code_line('computeIKForRawTarget(T_ee, raw_target'+tail+', workspace, candidates);')
+        self.add_code_line('computeIKForRawTarget(T_ee, raw_target'+tail+', workspace, candidates, frame_disturbance, frame_disturbance_ready, legacy || ik_output.empty());')
         self.add_code_line('for (const auto& candidate : candidates)')
         self.enter_scope('frame_candidate')
         self.add_code_line('if (std::find(ik_output.begin(), ik_output.end(), candidate) == ik_output.end())')

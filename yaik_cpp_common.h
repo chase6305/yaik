@@ -909,7 +909,8 @@ Eigen::Matrix<T, 4, 4> inverse_transform(
 template <typename T>
 Eigen::Matrix<T, 4, 4> disturbTransform(const Eigen::Matrix<T, 4, 4>& transform,
                                         T disturb_angle = T(1e-2),
-                                        T disturb_translation = T(1e-2)) {
+                                        T disturb_translation = T(1e-2),
+                                        Eigen::Matrix<T, 4, 4>* disturbance_out = nullptr) {
   // Make angle axis
   Eigen::Matrix<T, 3, 1> axis;
   axis.setRandom();
@@ -926,6 +927,7 @@ Eigen::Matrix<T, 4, 4> disturbTransform(const Eigen::Matrix<T, 4, 4>& transform,
   disturb_matrix(0, 3) -= disturb_translation;
   disturb_matrix(1, 3) -= disturb_translation;
   disturb_matrix(2, 3) -= disturb_translation;
+  if (disturbance_out) *disturbance_out = disturb_matrix;
   return disturb_matrix * transform;
 }
 

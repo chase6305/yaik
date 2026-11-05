@@ -137,6 +137,7 @@ class TestRoundedFrames(TestCase):
             }'''.replace('JOINTS', array).replace('EXPECT_WITNESS',
                 'assert(witnessed);' if case['cpp_expected_witness'] else '// IK coverage remains unresolved.'))
         main = '''#include <cassert>
+#include <cstdlib>
 int main() {
     const auto target=rounded_frames_ik::computeFK({{.4}});
     Eigen::Matrix4d expected=Eigen::Matrix4d::Identity();expected(2,3)=.4;
@@ -147,6 +148,18 @@ int main() {
     WITNESSES
 }
 '''.replace('WITNESSES', '\n'.join(checks))
+        # An unresolved legacy target consumes one three-component random axis.
+        # Adding the second frame chart must preserve the global random stream.
+        case = json.loads((ROOT/'solver/fixtures/rounded_frame_witnesses.json').read_text())[0]
+        joints = 'std::array<double,7>{{'+','.join(format(float(q), '.17g') for q in case['q'])+'}}'
+        stream_check = '''{
+            const auto q=JOINTS;
+            const auto target=franka_panda_ik::computeFK(q);
+            std::srand(731);for(int i=0;i<3;++i)std::rand();const int expected=std::rand();
+            std::srand(731);franka_panda_ik::computeIK(target,q[3]);
+            assert(std::rand()==expected);
+        }'''.replace('JOINTS', joints)
+        main = main.replace('    const auto target=rounded_frames', stream_check+'\n    const auto target=rounded_frames')
         with tempfile.TemporaryDirectory(prefix='yaik-rounded-frames-') as temporary:
             temporary = Path(temporary)
             (temporary/'test.cpp').write_text('\n'.join(sections)+main)

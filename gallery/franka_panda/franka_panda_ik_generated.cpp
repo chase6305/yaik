@@ -1142,7 +1142,7 @@ static void wrapAngleToPi(std::vector<std::array<double, robot_nq>>& ik_output)
         wrapAngleToPi(solution_i);
 }
 
-static void computeIKForRawTarget(const Eigen::Matrix4d& T_ee, const Eigen::Matrix4d& T_ee_raw, double th_3, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output)
+static void computeIKForRawTarget(const Eigen::Matrix4d& T_ee, const Eigen::Matrix4d& T_ee_raw, double th_3, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output, Eigen::Matrix4d& frame_disturbance, bool& frame_disturbance_ready, bool allow_disturbance)
 {
     if (!T_ee.allFinite()) { ik_output.clear(); return; }
     if (!std::isfinite(th_3)) { ik_output.clear(); return; }
@@ -1181,7 +1181,15 @@ static void computeIKForRawTarget(const Eigen::Matrix4d& T_ee, const Eigen::Matr
     }
 
     // Disturbing method for degenerate handling
-    Eigen::Matrix4d T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);
+    if (!allow_disturbance) return;
+    Eigen::Matrix4d T_ee_raw_disturbed;
+    if (frame_disturbance_ready)
+        T_ee_raw_disturbed = frame_disturbance * T_ee_raw;
+    else
+    {
+        T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw, 1e-2, 1e-2, &frame_disturbance);
+        frame_disturbance_ready = true;
+    }
     Eigen::Matrix4d T_ee_disturbed = endEffectorTargetRawToOriginal(T_ee_raw_disturbed);
     computeRawIK(T_ee_raw_disturbed, addRevoluteOffset(th_3, th_3_offset_original2raw), workspace);
     const auto& raw_ik_out_disturb = workspace.raw_ik_out;
@@ -1218,11 +1226,13 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_3, RawIKWorksace& w
     ik_output.clear();
     if (!T_ee.allFinite()) return;
     if (!std::isfinite(th_3)) return;
+    Eigen::Matrix4d frame_disturbance;
+    bool frame_disturbance_ready = false;
     for (bool legacy : {true, false})
     {
         const Eigen::Matrix4d raw_target = legacy ? endEffectorTargetOriginalToRawLegacyFrame(T_ee) : endEffectorTargetOriginalToRaw(T_ee);
         std::vector<std::array<double, robot_nq>> candidates;
-        computeIKForRawTarget(T_ee, raw_target, th_3, workspace, candidates);
+        computeIKForRawTarget(T_ee, raw_target, th_3, workspace, candidates, frame_disturbance, frame_disturbance_ready, legacy || ik_output.empty());
         for (const auto& candidate : candidates)
         {
             if (std::find(ik_output.begin(), ik_output.end(), candidate) == ik_output.end())

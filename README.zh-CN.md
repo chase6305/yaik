@@ -159,6 +159,7 @@ python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma
 条件守卫先检查分母，再计算依赖它的表达式；简单的系数检查也会先于复杂范围检查。
 基座和工具矩阵使用实际矩阵逆，避免舍入旋转的转置误差。此类近似模型保留旧路径的候选，
 两条路径都按原始目标和原有 FK 阈值检查。C++ 数值细化显式跳过固定关节的更新。
+两条近似坐标路径共用一次 C++ 扰动，保留旧路径的随机序列；已有旧候选时跳过额外数值回退。
 
 `*_ik_solve_raw` 和 C++ `computeRawIK` 的目标、固定关节参数及返回关节值都采用改进 DH 约定。
 原始机器人坐标和关节偏移由 checked 接口处理。C++ `computeIKUnChecked` 会处理坐标和偏移，

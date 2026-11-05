@@ -283,6 +283,8 @@ matrices use their actual inverse, so rounded rotations still round-trip. For
 these approximate frames, checked IK also retains the legacy transpose-derived
 candidates and verifies both sets against the original target with the existing
 FK thresholds. Fixed C++ joints remain unchanged during numerical refinement.
+Approximate-frame paths share one C++ disturbance, preserving the legacy random
+stream; extra numerical refinement is skipped when legacy candidates exist.
 
 The raw `*_ik_solve_raw` and C++ `computeRawIK` APIs accept modified-DH targets
 and fixed-joint values, and return modified-DH joint values. Use the checked APIs
