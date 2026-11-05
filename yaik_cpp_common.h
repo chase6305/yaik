@@ -910,10 +910,13 @@ template <typename T>
 Eigen::Matrix<T, 4, 4> disturbTransform(const Eigen::Matrix<T, 4, 4>& transform,
                                         T disturb_angle = T(1e-2),
                                         T disturb_translation = T(1e-2),
-                                        Eigen::Matrix<T, 4, 4>* disturbance_out = nullptr) {
+                                        Eigen::Matrix<T, 4, 4>* disturbance_out = nullptr,
+                                        int axis_variant = -1) {
   // Make angle axis
   Eigen::Matrix<T, 3, 1> axis;
-  axis.setRandom();
+  if (axis_variant < 0) axis.setRandom();
+  else if (axis_variant == 0) axis << T(1), T(2), T(3);
+  else axis << T(2), T(-3), T(1);
   if (axis.squaredNorm() < 1e-4) {
     axis[0] += 0.1;
   }

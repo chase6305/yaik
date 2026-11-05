@@ -38,6 +38,7 @@ current directory. No source-code edits are needed to choose a robot or output.
 | List built-in robot names | `python yaik.py models` |
 | Generate a new analytical solution | `python yaik.py generate --builtin puma --output-dir build/puma` |
 | Export an existing IK tree | `python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma` |
+| Continue recovery from a saved tree | `python yaik.py generate --resume-tree path/to/robot_ik.yaml --max-nodes 80 --output-dir build/recovered` |
 | Use the Marvin arms | `python yaik.py marvin --help` |
 
 `generate` performs offline symbolic search and can take minutes or longer.
@@ -163,6 +164,19 @@ can reuse saved numerical samples. `--language` accepts `python`, `cpp`, or
 `both` (default). To export existing trees, use `codegen`; it loads a tree once
 for both languages. C++ code uses safe mathematical operators.
 
+Continue recovery from a saved tree while keeping its existing branches:
+
+```sh
+python yaik.py generate --resume-tree path/to/robot_ik.yaml --seed 42 \
+  --max-nodes 80 --with-runtime --output-dir build/recovered
+```
+
+This writes the resumed tree, model, generated code, and `ROBOT_resume.json`
+with the input tree hash, continuation seed, node counts, and artifact/source
+hashes. `--max-nodes` limits branch expansion; existing nodes are retained.
+`--test-cases` applies to a new search. The continuation seed describes this
+recovery operation. Completeness remains uncertified.
+
 Generated Python needs the repository's `python_run_import.py` on `PYTHONPATH`.
 Generated C++ needs the repository's `yaik_cpp_common.h` and Eigen3 on its include
 path. Runtime calls do not run symbolic search or require SymPy.
@@ -246,6 +260,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
   solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
   solver/test_argument_guards.py solver/test_guard_domains.py solver/test_rounded_frames.py \
+  solver/test_candidate_assignment.py solver/test_partial_branches.py \
   solver/test_gallery_regeneration.py \
   solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 
@@ -285,11 +300,20 @@ candidates and verifies both sets against the original target with the existing
 FK thresholds. Fixed C++ joints remain unchanged during numerical refinement.
 Approximate-frame paths share one C++ disturbance, preserving the legacy random
 stream; extra numerical refinement is skipped when legacy candidates exist.
+When numerical recovery is needed, C++ also checks two fixed disturbance axes
+without consuming extra random values. Every candidate uses the existing FK
+acceptance thresholds.
 
 The raw `*_ik_solve_raw` and C++ `computeRawIK` APIs accept modified-DH targets
 and fixed-joint values, and return modified-DH joint values. Use the checked APIs
 for original robot frames and joint offsets. C++ `computeIKUnChecked` applies the
 original-frame conversion and offsets but omits FK filtering.
+Raw outputs contain finite values for every physical joint. Incomplete paths
+produce no raw candidate; valid large joint values remain supported.
+Supported incomplete shoulders can be completed from the full rotation.
+An exact coaxial-axis check on the selected symbolic path permits one gauge
+value before reconstructing the shoulder. This does not enumerate every
+bounded representative of the continuous family.
 
 The audit reports saved formula degeneration records that lack their own
 dispatcher as `source: undispatched_solution_record`, including records previously

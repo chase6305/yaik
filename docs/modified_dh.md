@@ -65,4 +65,8 @@ Raw IK takes a raw DH target and raw fixed-joint values, and returns raw DH join
 values. Add offsets before passing fixed joints to raw IK and subtract offsets
 from its outputs before evaluating original-frame FK. The checked API performs
 these conversions automatically.
+Raw outputs require an assigned finite value for every physical joint. A
+partial symbolic leaf remains unresolved and produces no raw candidate.
+`generate --resume-tree PATH` can extend supported saved branches and records
+its input hash and continuation seed separately from the historical search.
 

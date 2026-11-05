@@ -72,7 +72,8 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         # Functor to make intermediate solution
         self.add_empty_line()
         self.add_code_line('using RawSolution = IntermediateSolution<intermediate_solution_size>;')
-        self.add_code_line('auto make_raw_solution = []() -> RawSolution { return {}; };')
+        self.add_code_line('auto make_raw_solution = []() -> RawSolution { RawSolution result; '
+                           'result.fill(std::numeric_limits<double>::quiet_NaN()); return result; };')
 
         # Functor to add solution to queue
         self.add_empty_line()
@@ -122,7 +123,9 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
                 self.add_code_line('const double value_at_{idx} = {symbol};  // {symbol}'.
                                    format(idx=i, symbol=unknown_i.symbol.name))
             self.add_code_line('new_ik_i[{idx}] = value_at_{idx};'.format(idx=i))
-        self.add_code_line('ik_output.push_back(new_ik_i);')
+        self.add_code_line('if (std::all_of(new_ik_i.begin(), new_ik_i.end(), '
+                           '[](double value) { return std::isfinite(value); }))')
+        self.add_code_line(indent()+'ik_output.push_back(new_ik_i);')
         self.exit_scope('for_all_queue')
 
     def visit_no_branch_dispatcher(self, dispatcher: DispatcherNodeBase):

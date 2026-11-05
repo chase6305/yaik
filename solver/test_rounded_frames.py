@@ -25,9 +25,9 @@ from utility.symbolic_utils import inverse_auxiliary_transform, inverse_transfor
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def rounded_tree():
+def rounded_tree(name='rounded_frames', solution_value=None):
     x = sp.Symbol('x')
-    model = RobotDescription('rounded_frames')
+    model = RobotDescription(name)
     model.unknowns = [Unknown(x, UnknownType.Translational.name)]
     model.dh_params = [DHEntry(0, 0, x, 0)]
     value = sp.Float('0.707107')
@@ -39,7 +39,8 @@ def rounded_tree():
     model.auxiliary_data = RobotAuxiliaryData()
     model.auxiliary_data.pre_transform_sp = pre
     model.auxiliary_data.post_transform_sp = post
-    solution = VariableSolution.make_explicit_solution(x, [Pz], SolutionMethod.OneVariableAlgebra.name)
+    solution = VariableSolution.make_explicit_solution(x, [Pz if solution_value is None else solution_value],
+                                                      SolutionMethod.OneVariableAlgebra.name)
     return SkeletonTree([solution], model)
 
 
@@ -114,7 +115,8 @@ class TestRoundedFrames(TestCase):
     @skipUnless(shutil.which('g++') and Path('/usr/include/eigen3/Eigen/Core').is_file(),
                 'Requires g++ and Eigen3')
     def test_cpp_roundtrip_and_legacy_franka_reachable_witnesses(self):
-        trees = [rounded_tree(), read_skeleton_tree(str(ROOT/'gallery/franka_panda/franka_panda_ik.yaml'))]
+        trees = [rounded_tree(), read_skeleton_tree(str(ROOT/'gallery/franka_panda/franka_panda_ik.yaml')),
+                 rounded_tree('rounded_empty_frames', sp.S(3))]
         with redirect_stdout(StringIO()):
             sections = ['\n'.join(CodeGenerationCpp(tree, use_safe_operator=True).generate_code())
                         .split('// Code below for debug')[0] for tree in trees]
@@ -150,15 +152,19 @@ int main() {
 '''.replace('WITNESSES', '\n'.join(checks))
         # An unresolved legacy target consumes one three-component random axis.
         # Adding the second frame chart must preserve the global random stream.
-        case = json.loads((ROOT/'solver/fixtures/rounded_frame_witnesses.json').read_text())[0]
-        joints = 'std::array<double,7>{{'+','.join(format(float(q), '.17g') for q in case['q'])+'}}'
         stream_check = '''{
-            const auto q=JOINTS;
-            const auto target=franka_panda_ik::computeFK(q);
+            const auto target=rounded_empty_frames_ik::computeFK({{.4}});
             std::srand(731);for(int i=0;i<3;++i)std::rand();const int expected=std::rand();
-            std::srand(731);franka_panda_ik::computeIK(target,q[3]);
+            std::srand(731);rounded_empty_frames_ik::computeIK(target);
             assert(std::rand()==expected);
-        }'''.replace('JOINTS', joints)
+            std::srand(109);const int next=std::rand();std::srand(109);
+            const auto first=yaik_cpp::disturbTransform<double>(target,1e-2,1e-2,nullptr,0);
+            const auto second=yaik_cpp::disturbTransform<double>(target,1e-2,1e-2,nullptr,1);
+            assert(std::rand()==next);
+            assert((first-second).cwiseAbs().maxCoeff()>1e-4);
+            const auto repeated=yaik_cpp::disturbTransform<double>(target,1e-2,1e-2,nullptr,0);
+            assert((first-repeated).cwiseAbs().maxCoeff()==0.);
+        }'''
         main = main.replace('    const auto target=rounded_frames', stream_check+'\n    const auto target=rounded_frames')
         with tempfile.TemporaryDirectory(prefix='yaik-rounded-frames-') as temporary:
             temporary = Path(temporary)

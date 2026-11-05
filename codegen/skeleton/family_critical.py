@@ -31,7 +31,7 @@ def add_spherical_family_cuts(tree, dispatcher, family, suffix, prefix, suppleme
         return False
     if family.solved_variable != robot.unknowns[-1].symbol:
         return False
-    if any(sp.simplify(dh.alpha-alpha) != 0 for dh, alpha in
+    if any(sp.simplify(dh.alpha-alpha).is_zero is not True for dh, alpha in
            zip(robot.dh_params[:3], (0, -sp.pi/2, -sp.pi/2))):
         return False
     if any(dh.theta != unknown.symbol for dh, unknown in zip(robot.dh_params, robot.unknowns)):
@@ -136,22 +136,74 @@ def enrich_spherical_families(tree):
     return count
 
 
-def enrich_spherical_shoulders(tree):
-    """Use all rotation columns and intersect aligned Euler families with limits."""
-    robot = tree.robot
+def spherical_shoulder_supported(robot):
+    """Recognize a concurrent ZYZ shoulder, including floating zero entries."""
     if (len(robot.unknowns) < 3 or not all(unknown.is_revolute for unknown in robot.unknowns[:3]) or
             any(dh.theta != unknown.symbol for dh, unknown in zip(robot.dh_params[:3], robot.unknowns[:3])) or
-            any(sp.simplify(dh.alpha-alpha) != 0
+            any(sp.simplify(dh.alpha-alpha).is_zero is not True
             for dh, alpha in zip(robot.dh_params[:3], (0, -sp.pi/2, -sp.pi/2)))):
-        return 0
+        return False
     # Matching rotation twists alone does not make the axes concurrent. An
     # offset between these axes lets translation constrain the aligned angle;
     # retain the original position-aware decomposition in that geometry.
-    if any(sp.simplify(value) != 0 for value in
+    if any(sp.simplify(value).is_zero is not True for value in
            (robot.dh_params[1].a, robot.dh_params[1].d, robot.dh_params[2].a)):
-        return 0
+        return False
     if any(not (-2*math.pi <= float(unknown.lower_bound) <= float(unknown.upper_bound) <= 2*math.pi)
            for unknown in (robot.unknowns[0], robot.unknowns[2])):
+        return False
+    return True
+
+
+def spherical_shoulder_solutions(robot, first_solution=None):
+    """Build a correlated orientation tail without replacing existing branches."""
+    if not spherical_shoulder_supported(robot):
+        return []
+    distal = sp.eye(3)
+    for dh in robot.dh_params[3:]:
+        distal = distal*modified_dh_transform(dh)[:3, :3]
+    x = ik_target_rotation()*distal.T*sp.diag(1, -1, -1)
+    sine_squared = x[2, 0]**2+x[2, 1]**2
+    expressions = [-sp.atan2(x[2, 1], -x[2, 0]), -sp.atan2(-x[2, 1], x[2, 0])]
+    checkers = [sine_squared > sp.Float(1e-24)]*2
+    xlo, xhi = map(float, (robot.unknowns[0].lower_bound, robot.unknowns[0].upper_bound))
+    ylo, yhi = map(float, (robot.unknowns[2].lower_bound, robot.unknowns[2].upper_bound))
+    for inverted in (True, False):
+        delta = sp.atan2(-x[0, 1], x[1, 1]) if inverted else sp.atan2(x[1, 0], x[0, 0])
+        alignment = (sine_squared <= sp.Float(1e-14)) & ((x[2, 2] < 0) if inverted else (x[2, 2] >= 0))
+        previous = sp.S.false
+        for turns in range(-3, 4):
+            total = delta+turns*2*sp.pi
+            low = sp.Max(sp.Float(ylo), total-sp.Float(xhi) if inverted else sp.Float(xlo)-total)
+            high = sp.Min(sp.Float(yhi), total-sp.Float(xlo) if inverted else sp.Float(xhi)-total)
+            valid = low <= high
+            expressions.append((low+high)/2)
+            checkers.append(alignment & valid & ~previous)
+            previous |= valid
+    solution = first_solution or VariableSolution.make_explicit_solution(
+        robot.unknowns[2].symbol, expressions, SolutionMethod.SphericalShoulder.name,
+        argument_valid_checkers=checkers,
+        degenerate_record=SolutionDegenerateRecord.record_always_non_degenerate())
+    shoulder = ik_target_rotation()*distal.T
+    t0, t1, t2 = [unknown.symbol for unknown in robot.unknowns[:3]]
+    middle = sp.atan2(-x[2, 0]*sp.cos(t2)-x[2, 1]*sp.sin(t2), x[2, 2])
+    zero = sp.eye(3)
+    for dh in robot.dh_params[:3]:
+        zero = zero*modified_dh_transform(dh)[:3, :3].subs(t0, 0)
+    delta = shoulder*zero.T
+    first = sp.atan2(delta[1, 0]-delta[0, 1], delta[0, 0]+delta[1, 1])
+    final = [solution]
+    for variable, expression in ((t1, middle), (t0, first)):
+        final.append(VariableSolution.make_explicit_solution(
+            variable, [expression], SolutionMethod.SphericalShoulder.name,
+            degenerate_record=SolutionDegenerateRecord.record_always_non_degenerate()))
+    return final
+
+
+def enrich_spherical_shoulders(tree):
+    """Use all rotation columns and intersect aligned Euler families with limits."""
+    robot = tree.robot
+    if not spherical_shoulder_supported(robot):
         return 0
     count = 0
     for node in list(tree.node_list):
@@ -166,31 +218,7 @@ def enrich_spherical_shoulders(tree):
             # Rebuilding the main shoulder tail must not discard already
             # implemented alternatives in its prefix. Keep this decomposition.
             continue
-        distal = sp.eye(3)
-        for dh in robot.dh_params[3:]:
-            distal = distal*modified_dh_transform(dh)[:3, :3]
-        x = ik_target_rotation()*distal.T*sp.diag(1, -1, -1)
-        sine_squared = x[2, 0]**2+x[2, 1]**2
-        expressions = [-sp.atan2(x[2, 1], -x[2, 0]), -sp.atan2(-x[2, 1], x[2, 0])]
-        checkers = [sine_squared > sp.Float(1e-24)]*2
-        xlo, xhi = map(float, (robot.unknowns[0].lower_bound, robot.unknowns[0].upper_bound))
-        ylo, yhi = map(float, (robot.unknowns[2].lower_bound, robot.unknowns[2].upper_bound))
-        for inverted in (True, False):
-            delta = sp.atan2(-x[0, 1], x[1, 1]) if inverted else sp.atan2(x[1, 0], x[0, 0])
-            alignment = (sine_squared <= sp.Float(1e-14)) & ((x[2, 2] < 0) if inverted else (x[2, 2] >= 0))
-            previous = sp.S.false
-            for turns in range(-3, 4):
-                total = delta+turns*2*sp.pi
-                low = sp.Max(sp.Float(ylo), total-sp.Float(xhi) if inverted else sp.Float(xlo)-total)
-                high = sp.Min(sp.Float(yhi), total-sp.Float(xlo) if inverted else sp.Float(xhi)-total)
-                valid = low <= high
-                expressions.append((low+high)/2)
-                checkers.append(alignment & valid & ~previous)
-                previous |= valid
-        solution = VariableSolution.make_explicit_solution(
-            node.solved_variable, expressions, SolutionMethod.SphericalShoulder.name,
-            argument_valid_checkers=checkers,
-            degenerate_record=SolutionDegenerateRecord.record_always_non_degenerate())
+        solution = spherical_shoulder_solutions(robot)[0]
         replacement = tree.new_solution_node(solution)
         replacement.set_flatten_idx(node.flatten_idx)
         replacement.set_parent(node.parent)
@@ -222,23 +250,9 @@ def correlate_spherical_tail(tree):
     remaining = {unknown.symbol for unknown in tree.solved_unknowns}-{solution.solved_variable for solution in prefix}
     if remaining != {unknown.symbol for unknown in robot.unknowns[:3]}:
         return False
-    distal = sp.eye(3)
-    for dh in robot.dh_params[3:]:
-        distal = distal*modified_dh_transform(dh)[:3, :3]
-    shoulder = ik_target_rotation()*distal.T
-    x = shoulder*sp.diag(1, -1, -1)
-    t0, t1, t2 = [unknown.symbol for unknown in robot.unknowns[:3]]
-    middle = sp.atan2(-x[2, 0]*sp.cos(t2)-x[2, 1]*sp.sin(t2), x[2, 2])
-    zero = sp.eye(3)
-    for dh in robot.dh_params[:3]:
-        zero = zero*modified_dh_transform(dh)[:3, :3].subs(t0, 0)
-    delta = shoulder*zero.T
-    first = sp.atan2(delta[1, 0]-delta[0, 1], delta[0, 0]+delta[1, 1])
-    final = [node.solution]
-    for variable, expression in ((t1, middle), (t0, first)):
-        final.append(VariableSolution.make_explicit_solution(
-            variable, [expression], SolutionMethod.SphericalShoulder.name,
-            degenerate_record=SolutionDegenerateRecord.record_always_non_degenerate()))
+    final = spherical_shoulder_solutions(robot, node.solution)
+    if not final:
+        return False
     from codegen.skeleton.skeleton_tree import SkeletonTree
     replacement = SkeletonTree(prefix+final, robot, tree._solved_equations)
     tree._node_list = replacement.node_list

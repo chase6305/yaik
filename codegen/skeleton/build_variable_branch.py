@@ -41,6 +41,8 @@ def build_solved_variable_branches(
     Although this is a visiting to different nodes, we do not implement it as a visitor
     because it alters the tree structure
     """
+    from codegen.skeleton.complete_partial_branches import complete_partial_shoulder_branches
+    complete_partial_shoulder_branches(tree, max_num_nodes)
     # The shared solve option
     solve_option = SolveEquationOption()
     solve_option.on_main_branch = False

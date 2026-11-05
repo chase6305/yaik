@@ -6,7 +6,7 @@ from python_run_import import *
 
 # Constants for solver
 robot_nq: int = 7
-n_tree_nodes: int = 16
+n_tree_nodes: int = 50
 pose_tolerance: float = 1e-4
 zero_tolerance: float = 1e-6
 
@@ -485,7 +485,7 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
     # A new ik type. Should be a fixed array in C++
     IkSolution = NewType("IkSolution", List[float])
     def make_ik_solution():
-        return IkSolution([100000.0] * 6)
+        return IkSolution([math.nan] * 6)
 
     solution_queue: List[IkSolution] = list()
     queue_element_validity: List[bool] = list()
@@ -499,7 +499,7 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
     max_n_solutions: int = 16
     node_input_index: List[List[int]] = list()
     node_input_validity: List[bool] = list()
-    for i in range(16):
+    for i in range(50):
         node_input_index.append(list())
         node_input_validity.append(False)
     def add_input_index_to(node_idx: int, solution_idx: int):
@@ -514,10 +514,511 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
         checked_result: bool = (((2*abs(a_5*inv_Px) <= 1.0e-6)) and ((2*abs(a_5*inv_Py) <= 1.0e-6)) and ((abs(2*a_3**2*math.cos(th_3) + 2*a_3**2 + 2*a_3*d_2*math.sin(th_3) + 2*a_3*d_4*math.sin(th_3) - a_5**2 + d_2**2 - 2*d_2*d_4*math.cos(th_3) + d_4**2 - inv_Px**2 - inv_Py**2 - inv_Pz**2) <= 1.0e-6)))
         if not checked_result:  # To non-degenerate node
             node_input_validity[1] = True
+        else:
+            node_input_validity[30] = True
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_0_processor()
     # Finish code for equation all-zero dispatcher node 0
+
+    # Code for explicit solution node 30, solved variable is th_6
+    def ExplicitSolutionNode_node_30_solve_th_6_processor():
+        this_node_input_index: List[int] = node_input_index[30]
+        this_input_valid: bool = node_input_validity[30]
+        if not this_input_valid:
+            return
+
+        # The explicit solution of root node
+        condition_0: bool = True
+        if condition_0:
+            solution_0: IkSolution = make_ik_solution()
+            solution_0[5] = -3.14159265358979
+            appended_idx = append_solution_to_queue(solution_0)
+            add_input_index_to(31, appended_idx)
+
+            solution_1: IkSolution = make_ik_solution()
+            solution_1[5] = -2.94524311274043
+            appended_idx = append_solution_to_queue(solution_1)
+            add_input_index_to(31, appended_idx)
+
+            solution_2: IkSolution = make_ik_solution()
+            solution_2[5] = -2.74889357189107
+            appended_idx = append_solution_to_queue(solution_2)
+            add_input_index_to(31, appended_idx)
+
+            solution_3: IkSolution = make_ik_solution()
+            solution_3[5] = -2.55254403104171
+            appended_idx = append_solution_to_queue(solution_3)
+            add_input_index_to(31, appended_idx)
+
+            solution_4: IkSolution = make_ik_solution()
+            solution_4[5] = -2.35619449019234
+            appended_idx = append_solution_to_queue(solution_4)
+            add_input_index_to(31, appended_idx)
+
+            solution_5: IkSolution = make_ik_solution()
+            solution_5[5] = -2.15984494934298
+            appended_idx = append_solution_to_queue(solution_5)
+            add_input_index_to(31, appended_idx)
+
+            solution_6: IkSolution = make_ik_solution()
+            solution_6[5] = -1.96349540849362
+            appended_idx = append_solution_to_queue(solution_6)
+            add_input_index_to(31, appended_idx)
+
+            solution_7: IkSolution = make_ik_solution()
+            solution_7[5] = -1.76714586764426
+            appended_idx = append_solution_to_queue(solution_7)
+            add_input_index_to(31, appended_idx)
+
+            solution_8: IkSolution = make_ik_solution()
+            solution_8[5] = -1.57079632679490
+            appended_idx = append_solution_to_queue(solution_8)
+            add_input_index_to(31, appended_idx)
+
+            solution_9: IkSolution = make_ik_solution()
+            solution_9[5] = -1.37444678594553
+            appended_idx = append_solution_to_queue(solution_9)
+            add_input_index_to(31, appended_idx)
+
+            solution_10: IkSolution = make_ik_solution()
+            solution_10[5] = -1.17809724509617
+            appended_idx = append_solution_to_queue(solution_10)
+            add_input_index_to(31, appended_idx)
+
+            solution_11: IkSolution = make_ik_solution()
+            solution_11[5] = -0.981747704246811
+            appended_idx = append_solution_to_queue(solution_11)
+            add_input_index_to(31, appended_idx)
+
+            solution_12: IkSolution = make_ik_solution()
+            solution_12[5] = -0.785398163397448
+            appended_idx = append_solution_to_queue(solution_12)
+            add_input_index_to(31, appended_idx)
+
+            solution_13: IkSolution = make_ik_solution()
+            solution_13[5] = -0.589048622548086
+            appended_idx = append_solution_to_queue(solution_13)
+            add_input_index_to(31, appended_idx)
+
+            solution_14: IkSolution = make_ik_solution()
+            solution_14[5] = -0.392699081698724
+            appended_idx = append_solution_to_queue(solution_14)
+            add_input_index_to(31, appended_idx)
+
+            solution_15: IkSolution = make_ik_solution()
+            solution_15[5] = -0.196349540849362
+            appended_idx = append_solution_to_queue(solution_15)
+            add_input_index_to(31, appended_idx)
+
+            solution_16: IkSolution = make_ik_solution()
+            solution_16[5] = 0.0
+            appended_idx = append_solution_to_queue(solution_16)
+            add_input_index_to(31, appended_idx)
+
+            solution_17: IkSolution = make_ik_solution()
+            solution_17[5] = 0.196349540849362
+            appended_idx = append_solution_to_queue(solution_17)
+            add_input_index_to(31, appended_idx)
+
+            solution_18: IkSolution = make_ik_solution()
+            solution_18[5] = 0.392699081698724
+            appended_idx = append_solution_to_queue(solution_18)
+            add_input_index_to(31, appended_idx)
+
+            solution_19: IkSolution = make_ik_solution()
+            solution_19[5] = 0.589048622548086
+            appended_idx = append_solution_to_queue(solution_19)
+            add_input_index_to(31, appended_idx)
+
+            solution_20: IkSolution = make_ik_solution()
+            solution_20[5] = 0.785398163397448
+            appended_idx = append_solution_to_queue(solution_20)
+            add_input_index_to(31, appended_idx)
+
+            solution_21: IkSolution = make_ik_solution()
+            solution_21[5] = 0.981747704246811
+            appended_idx = append_solution_to_queue(solution_21)
+            add_input_index_to(31, appended_idx)
+
+            solution_22: IkSolution = make_ik_solution()
+            solution_22[5] = 1.17809724509617
+            appended_idx = append_solution_to_queue(solution_22)
+            add_input_index_to(31, appended_idx)
+
+            solution_23: IkSolution = make_ik_solution()
+            solution_23[5] = 1.37444678594553
+            appended_idx = append_solution_to_queue(solution_23)
+            add_input_index_to(31, appended_idx)
+
+            solution_24: IkSolution = make_ik_solution()
+            solution_24[5] = 1.57079632679490
+            appended_idx = append_solution_to_queue(solution_24)
+            add_input_index_to(31, appended_idx)
+
+            solution_25: IkSolution = make_ik_solution()
+            solution_25[5] = 1.76714586764426
+            appended_idx = append_solution_to_queue(solution_25)
+            add_input_index_to(31, appended_idx)
+
+            solution_26: IkSolution = make_ik_solution()
+            solution_26[5] = 1.96349540849362
+            appended_idx = append_solution_to_queue(solution_26)
+            add_input_index_to(31, appended_idx)
+
+            solution_27: IkSolution = make_ik_solution()
+            solution_27[5] = 2.15984494934298
+            appended_idx = append_solution_to_queue(solution_27)
+            add_input_index_to(31, appended_idx)
+
+            solution_28: IkSolution = make_ik_solution()
+            solution_28[5] = 2.35619449019234
+            appended_idx = append_solution_to_queue(solution_28)
+            add_input_index_to(31, appended_idx)
+
+            solution_29: IkSolution = make_ik_solution()
+            solution_29[5] = 2.55254403104171
+            appended_idx = append_solution_to_queue(solution_29)
+            add_input_index_to(31, appended_idx)
+
+            solution_30: IkSolution = make_ik_solution()
+            solution_30[5] = 2.74889357189107
+            appended_idx = append_solution_to_queue(solution_30)
+            add_input_index_to(31, appended_idx)
+
+            solution_31: IkSolution = make_ik_solution()
+            solution_31[5] = 2.94524311274043
+            appended_idx = append_solution_to_queue(solution_31)
+            add_input_index_to(31, appended_idx)
+
+            solution_32: IkSolution = make_ik_solution()
+            solution_32[5] = 3.14159265358979
+            appended_idx = append_solution_to_queue(solution_32)
+            add_input_index_to(31, appended_idx)
+
+    # Invoke the processor
+    ExplicitSolutionNode_node_30_solve_th_6_processor()
+    # Finish code for explicit solution node 30
+
+    # Code for solved_variable dispatcher node 31
+    def SolvedVariableDispatcherNode_node_31_processor():
+        this_node_input_index: List[int] = node_input_index[31]
+        this_input_valid: bool = node_input_validity[31]
+        if not this_input_valid:
+            return
+
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            taken_by_degenerate: bool = False
+            degenerate_valid_0 = (abs(th_3 - math.pi) <= 1.0e-6)
+            if degenerate_valid_0:
+                taken_by_degenerate = True
+
+            degenerate_valid_1 = (abs(th_3 - 3.08938932227154 + math.pi) <= 1.0e-6)
+            if degenerate_valid_1:
+                taken_by_degenerate = True
+
+            if not taken_by_degenerate:
+                add_input_index_to(32, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    SolvedVariableDispatcherNode_node_31_processor()
+    # Finish code for solved_variable dispatcher node 31
+
+    # Code for explicit solution node 32, solved variable is th_4
+    def ExplicitSolutionNode_node_32_solve_th_4_processor():
+        this_node_input_index: List[int] = node_input_index[32]
+        this_input_valid: bool = node_input_validity[32]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 32
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_6 = this_solution[5]
+            condition_0: bool = (((a_3*math.cos(th_3) + a_3 + d_2*math.sin(th_3) != 0)) and ((abs((inv_Px*math.sin(th_6) + inv_Py*math.cos(th_6))/(a_3*math.cos(th_3) + a_3 + d_2*math.sin(th_3))) <= 70368744177665/70368744177664)))
+            if condition_0:
+                x0 = safe_asin((inv_Px*math.sin(th_6) + inv_Py*math.cos(th_6))/(a_3*math.cos(th_3) + a_3 + d_2*math.sin(th_3)))
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[3] = x0
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(33, appended_idx)
+                this_solution[3] = math.pi - x0
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(33, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_32_solve_th_4_processor()
+    # Finish code for explicit solution node 32
+
+    # Code for equation all-zero dispatcher node 33
+    def EquationAllZeroDispatcherNode_node_33_processor():
+        this_node_input_index: List[int] = node_input_index[33]
+        this_input_valid: bool = node_input_validity[33]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_6 = this_solution[5]
+            checked_result: bool = (((abs(inv_Pz) <= 1.0e-6)) and ((abs(a_5 + inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6)) <= 1.0e-6)))
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(34, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_33_processor()
+    # Finish code for equation all-zero dispatcher node 33
+
+    # Code for explicit solution node 34, solved variable is th_5
+    def ExplicitSolutionNode_node_34_solve_th_5_processor():
+        this_node_input_index: List[int] = node_input_index[34]
+        this_input_valid: bool = node_input_validity[34]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 34
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_4 = this_solution[3]
+            th_6 = this_solution[5]
+            condition_0: bool = (((abs(inv_Pz) >= 1.0e-6)) or ((abs(a_5 + inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6)) >= 1.0e-6)))
+            if condition_0:
+                x0 = math.cos(th_3)
+                x1 = math.sin(th_3)
+                x2 = a_3*x0 + a_3 + d_2*x1
+                x3 = math.cos(th_4)
+                x4 = a_3*x1 - d_2*x0 + d_4
+                x5 = -a_5 - inv_Px*math.cos(th_6) + inv_Py*math.sin(th_6)
+                this_solution[4] = math.atan2(-inv_Pz*x2*x3 - x4*x5, -inv_Pz*x4 + x2*x3*x5)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(35, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_34_solve_th_5_processor()
+    # Finish code for explicit solution node 34
+
+    # Code for non-branch dispatcher node 35
+    # Actually, there is no code
+
+    # Code for linear solution type2 node 36, solved variable is th_2
+    def LinearSinCosType_2_SolverNode_node_36_solve_th_2_processor():
+        this_node_input_index: List[int] = node_input_index[35]
+        this_input_valid: bool = node_input_validity[35]
+        if not this_input_valid:
+            return
+        for queue_index in this_node_input_index:
+            if not queue_element_validity[queue_index]:
+                continue
+            this_solution = solution_queue[queue_index]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            x0 = math.cos(th_6)
+            x1 = math.sin(th_3)
+            x2 = math.sin(th_5)
+            x3 = x1*x2
+            x4 = math.sin(th_6)
+            x5 = math.sin(th_4)
+            x6 = math.cos(th_3)
+            x7 = x5*x6
+            x8 = math.cos(th_4)
+            x9 = math.cos(th_5)
+            x10 = x6*x9
+            x11 = -x0*x10*x8 + x0*x3 + x4*x7
+            x12 = x4*x8
+            x13 = x5*x9
+            x14 = x0*x13 + x12
+            x15 = x0*x7 + x10*x12 - x3*x4
+            x16 = -x0*x8 + x13*x4
+            x17 = x6*x8
+            x18 = x1*x9 + x17*x2
+            x19 = x2*x5
+            x20 = a_3*x6 + a_3 - a_5*x1*x2 + a_5*x17*x9 + d_4*x1
+            x21 = a_5*x13
+            A_matrix = np.zeros((8, 4))
+            A_matrix[0, 0] = r_11
+            A_matrix[0, 1] = -r_21
+            A_matrix[0, 2] = x11
+            A_matrix[0, 3] = x14
+            A_matrix[1, 0] = r_12
+            A_matrix[1, 1] = -r_22
+            A_matrix[1, 2] = x15
+            A_matrix[1, 3] = -x16
+            A_matrix[2, 0] = r_13
+            A_matrix[2, 1] = -r_23
+            A_matrix[2, 2] = -x18
+            A_matrix[2, 3] = x19
+            A_matrix[3, 0] = Px
+            A_matrix[3, 1] = -Py
+            A_matrix[3, 2] = -x20
+            A_matrix[3, 3] = x21
+            A_matrix[4, 0] = -r_11
+            A_matrix[4, 1] = r_21
+            A_matrix[4, 2] = -x11
+            A_matrix[4, 3] = -x14
+            A_matrix[5, 0] = -r_12
+            A_matrix[5, 1] = r_22
+            A_matrix[5, 2] = -x15
+            A_matrix[5, 3] = x16
+            A_matrix[6, 0] = -r_13
+            A_matrix[6, 1] = r_23
+            A_matrix[6, 2] = x18
+            A_matrix[6, 3] = -x19
+            A_matrix[7, 0] = -Px
+            A_matrix[7, 1] = Py
+            A_matrix[7, 2] = x20
+            A_matrix[7, 3] = -x21
+            linear_values = solve_linear_type2_candidates(A_matrix, [(0, 1, 2), (0, 1, 3), (0, 1, 6), (0, 1, 7), (0, 2, 3)])
+            for linear_index, linear_value in enumerate(linear_values):
+                candidate = copy.copy(this_solution)
+                candidate[2] = linear_value
+                if linear_index+1 == len(linear_values):
+                    solution_queue[queue_index] = candidate
+                    candidate_index = queue_index
+                else:
+                    candidate_index = append_solution_to_queue(candidate)
+                add_input_index_to(37, candidate_index)
+            if not linear_values:
+                queue_element_validity[queue_index] = False
+    # Invoke the processor
+    LinearSinCosType_2_SolverNode_node_36_solve_th_2_processor()
+    # Finish code for explicit solution node 35
+
+    # Code for equation all-zero dispatcher node 37
+    def EquationAllZeroDispatcherNode_node_37_processor():
+        this_node_input_index: List[int] = node_input_index[37]
+        this_input_valid: bool = node_input_validity[37]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            checked_result: bool = (((abs(r_13) <= 1.0e-6)) and ((abs(r_23) <= 1.0e-6)) and ((abs(math.sin(th_2)*math.sin(th_3)*math.cos(th_5) + math.sin(th_2)*math.sin(th_5)*math.cos(th_3)*math.cos(th_4) - math.sin(th_4)*math.sin(th_5)*math.cos(th_2)) <= 1.0e-6)))
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(38, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_37_processor()
+    # Finish code for equation all-zero dispatcher node 37
+
+    # Code for explicit solution node 38, solved variable is th_0
+    def ExplicitSolutionNode_node_38_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[38]
+        this_input_valid: bool = node_input_validity[38]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 38
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            condition_0: bool = (((abs(r_13) >= zero_tolerance)) or ((abs(r_23) >= zero_tolerance)) or ((abs(math.sin(th_2)*math.sin(th_3)*math.cos(th_5) + math.sin(th_2)*math.sin(th_5)*math.cos(th_3)*math.cos(th_4) - math.sin(th_4)*math.sin(th_5)*math.cos(th_2)) >= zero_tolerance)))
+            if condition_0:
+                x0 = math.atan2(r_13, -r_23)
+                x1 = math.sin(th_2)
+                x2 = math.sin(th_5)
+                x3 = x1*x2*math.cos(th_3)*math.cos(th_4) + x1*math.sin(th_3)*math.cos(th_5) - x2*math.sin(th_4)*math.cos(th_2)
+                x4 = safe_sqrt(r_13**2 + r_23**2 - x3**2)
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[0] = x0 + math.atan2(x4, x3)
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(39, appended_idx)
+                this_solution[0] = x0 + math.atan2(-x4, x3)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(39, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_38_solve_th_0_processor()
+    # Finish code for explicit solution node 38
+
+    # Code for equation all-zero dispatcher node 39
+    def EquationAllZeroDispatcherNode_node_39_processor():
+        this_node_input_index: List[int] = node_input_index[39]
+        this_input_valid: bool = node_input_validity[39]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            checked_result: bool = (((abs(Pz) <= 1.0e-6)) and ((abs(Px*math.cos(th_0) + Py*math.sin(th_0)) <= 1.0e-6)))
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(40, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_39_processor()
+    # Finish code for equation all-zero dispatcher node 39
+
+    # Code for explicit solution node 40, solved variable is th_1
+    def ExplicitSolutionNode_node_40_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[40]
+        this_input_valid: bool = node_input_validity[40]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 40
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            condition_0: bool = (((abs(Pz) >= 1.0e-6)) or ((abs(Px*math.cos(th_0) + Py*math.sin(th_0)) >= 1.0e-6)))
+            if condition_0:
+                x0 = -Px*math.cos(th_0) - Py*math.sin(th_0)
+                x1 = math.sin(th_3)
+                x2 = math.cos(th_3)
+                x3 = math.sin(th_5)
+                x4 = a_5*math.cos(th_5)
+                x5 = x4*math.cos(th_4)
+                x6 = -a_3*x1 - a_5*x2*x3 - d_2 + d_4*x2 - x1*x5
+                x7 = math.cos(th_2)
+                x8 = a_3*x7
+                x9 = a_5*x1*x3*x7 - d_4*x1*x7 - x2*x5*x7 - x2*x8 - x4*math.sin(th_2)*math.sin(th_4) - x8
+                this_solution[1] = math.atan2(Pz*x9 - x0*x6, Pz*x6 + x0*x9)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_40_solve_th_1_processor()
+    # Finish code for explicit solution node 40
 
     # Code for explicit solution node 1, solved variable is th_6
     def ExplicitSolutionNode_node_1_solve_th_6_processor():
@@ -649,11 +1150,412 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
                 x3 = 1.0*a_5 + 1.0*inv_Px*math.cos(th_6) - 1.0*inv_Py*math.sin(th_6)
                 this_solution[4] = math.atan2(inv_Pz*x1 - x2*x3, inv_Pz*x2 + x1*x3)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(24, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
     # Invoke the processor
     ExplicitSolutionNode_node_15_solve_th_5_processor()
     # Finish code for explicit solution node 14
+
+    # Code for non-branch dispatcher node 24
+    # Actually, there is no code
+
+    # Code for explicit solution node 25, solved variable is th_2
+    def ExplicitSolutionNode_node_25_solve_th_2_processor():
+        this_node_input_index: List[int] = node_input_index[24]
+        this_input_valid: bool = node_input_validity[24]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 25
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = ((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 > 1.0e-24)
+            if condition_0:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = math.cos(th_5)
+                x6 = x0*x5
+                x7 = r_31*(-x2*x4 - x3*x6) + r_32*(-x2*x3 + x4*x6) - r_33*x0*x1
+                x8 = math.sin(th_3)
+                x9 = math.cos(th_3)
+                x10 = x0*x9
+                x11 = x1*x8 - x2*x5*x9
+                x12 = r_31*(-x10*x4 - x11*x3) + r_32*(-x10*x3 + x11*x4) + r_33*(x1*x2*x9 + x5*x8)
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[2] = -math.atan2(-x7, -x12)
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(26, appended_idx)
+                solution_1: IkSolution = copy.copy(this_solution)
+                solution_1[2] = -math.atan2(x7, x12)
+                appended_idx = append_solution_to_queue(solution_1)
+                add_input_index_to(26, appended_idx)
+            condition_2: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))))
+            if condition_2:
+                x0 = 6*math.pi
+                x1 = math.sin(th_4)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_4)
+                x4 = math.cos(th_6)
+                x5 = math.sin(th_6)
+                x6 = x1*math.cos(th_5)
+                x7 = -x3*x4 + x5*x6
+                x8 = -x3*x5 - x4*x6
+                x9 = math.atan2(r_11*x8 + r_12*x7 - r_13*x1*x2, -r_21*x8 - r_22*x7 + r_23*x1*x2)
+                solution_2: IkSolution = copy.copy(this_solution)
+                solution_2[2] = (1/2)*max(-3.14159265358979, -x0 + x9 - 3.14159265358979) + (1/2)*min(3.14159265358979, -x0 + x9 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_2)
+                add_input_index_to(26, appended_idx)
+            condition_3: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi - 3.14159265358979) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))))
+            if condition_3:
+                x0 = 4*math.pi
+                x1 = math.sin(th_4)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_4)
+                x4 = math.cos(th_6)
+                x5 = math.sin(th_6)
+                x6 = x1*math.cos(th_5)
+                x7 = -x3*x4 + x5*x6
+                x8 = -x3*x5 - x4*x6
+                x9 = math.atan2(r_11*x8 + r_12*x7 - r_13*x1*x2, -r_21*x8 - r_22*x7 + r_23*x1*x2)
+                solution_3: IkSolution = copy.copy(this_solution)
+                solution_3[2] = (1/2)*max(-3.14159265358979, -x0 + x9 - 3.14159265358979) + (1/2)*min(3.14159265358979, -x0 + x9 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_3)
+                add_input_index_to(26, appended_idx)
+            condition_4: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi - 3.14159265358979) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi + 3.14159265358979))) and ((((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi + 3.14159265358979))))))
+            if condition_4:
+                x0 = 2*math.pi
+                x1 = math.sin(th_4)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_4)
+                x4 = math.cos(th_6)
+                x5 = math.sin(th_6)
+                x6 = x1*math.cos(th_5)
+                x7 = -x3*x4 + x5*x6
+                x8 = -x3*x5 - x4*x6
+                x9 = math.atan2(r_11*x8 + r_12*x7 - r_13*x1*x2, -r_21*x8 - r_22*x7 + r_23*x1*x2)
+                solution_4: IkSolution = copy.copy(this_solution)
+                solution_4[2] = (1/2)*max(-3.14159265358979, -x0 + x9 - 3.14159265358979) + (1/2)*min(3.14159265358979, -x0 + x9 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_4)
+                add_input_index_to(26, appended_idx)
+            condition_5: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979))) and ((((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi + 3.14159265358979))))))
+            if condition_5:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = x0*math.cos(th_5)
+                x6 = -x2*x3 + x4*x5
+                x7 = -x2*x4 - x3*x5
+                x8 = math.atan2(r_11*x7 + r_12*x6 - r_13*x0*x1, -r_21*x7 - r_22*x6 + r_23*x0*x1)
+                solution_5: IkSolution = copy.copy(this_solution)
+                solution_5[2] = (1/2)*max(-3.14159265358979, x8 - 3.14159265358979) + (1/2)*min(3.14159265358979, x8 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_5)
+                add_input_index_to(26, appended_idx)
+            condition_6: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979 + 2*math.pi) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979 + 2*math.pi))) and ((((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi + 3.14159265358979))))))
+            if condition_6:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = x0*math.cos(th_5)
+                x6 = -x2*x3 + x4*x5
+                x7 = -x2*x4 - x3*x5
+                x8 = math.atan2(r_11*x7 + r_12*x6 - r_13*x0*x1, -r_21*x7 - r_22*x6 + r_23*x0*x1) + 2*math.pi
+                solution_6: IkSolution = copy.copy(this_solution)
+                solution_6[2] = (1/2)*max(-3.14159265358979, x8 - 3.14159265358979) + (1/2)*min(3.14159265358979, x8 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_6)
+                add_input_index_to(26, appended_idx)
+            condition_7: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979 + 4*math.pi) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979 + 4*math.pi))) and ((((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979 + 2*math.pi) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979 + 2*math.pi))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi + 3.14159265358979))))))
+            if condition_7:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = x0*math.cos(th_5)
+                x6 = -x2*x3 + x4*x5
+                x7 = -x2*x4 - x3*x5
+                x8 = math.atan2(r_11*x7 + r_12*x6 - r_13*x0*x1, -r_21*x7 - r_22*x6 + r_23*x0*x1) + 4*math.pi
+                solution_7: IkSolution = copy.copy(this_solution)
+                solution_7[2] = (1/2)*max(-3.14159265358979, x8 - 3.14159265358979) + (1/2)*min(3.14159265358979, x8 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_7)
+                add_input_index_to(26, appended_idx)
+            condition_8: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979 + 6*math.pi) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979 + 6*math.pi))) and ((((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979 + 2*math.pi) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979 + 2*math.pi))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979 + 4*math.pi) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi + 3.14159265358979))))))
+            if condition_8:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = x0*math.cos(th_5)
+                x6 = -x2*x3 + x4*x5
+                x7 = -x2*x4 - x3*x5
+                x8 = math.atan2(r_11*x7 + r_12*x6 - r_13*x0*x1, -r_21*x7 - r_22*x6 + r_23*x0*x1) + 6*math.pi
+                solution_8: IkSolution = copy.copy(this_solution)
+                solution_8[2] = (1/2)*max(-3.14159265358979, x8 - 3.14159265358979) + (1/2)*min(3.14159265358979, x8 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_8)
+                add_input_index_to(26, appended_idx)
+            condition_9: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) <= min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))))
+            if condition_9:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5)
+                solution_9: IkSolution = copy.copy(this_solution)
+                solution_9[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979 + 6*math.pi) + (1/2)*min(3.14159265358979, -x12 + 3.14159265358979 + 6*math.pi)
+                appended_idx = append_solution_to_queue(solution_9)
+                add_input_index_to(26, appended_idx)
+            condition_10: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 4*math.pi) <= min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))))
+            if condition_10:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5)
+                solution_10: IkSolution = copy.copy(this_solution)
+                solution_10[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979 + 4*math.pi) + (1/2)*min(3.14159265358979, -x12 + 3.14159265358979 + 4*math.pi)
+                appended_idx = append_solution_to_queue(solution_10)
+                add_input_index_to(26, appended_idx)
+            condition_11: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 2*math.pi) <= min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 2*math.pi))) and ((((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 4*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))))))
+            if condition_11:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5)
+                solution_11: IkSolution = copy.copy(this_solution)
+                solution_11[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979 + 2*math.pi) + (1/2)*min(3.14159265358979, -x12 + 3.14159265358979 + 2*math.pi)
+                appended_idx = append_solution_to_queue(solution_11)
+                add_input_index_to(26, appended_idx)
+            condition_12: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979) <= min(3.14159265358979, 3.14159265358979 - math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))))) and ((((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 2*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 2*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 4*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))))))
+            if condition_12:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5)
+                solution_12: IkSolution = copy.copy(this_solution)
+                solution_12[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979) + (1/2)*min(3.14159265358979, 3.14159265358979 - x12)
+                appended_idx = append_solution_to_queue(solution_12)
+                add_input_index_to(26, appended_idx)
+            condition_13: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 2*math.pi - 3.14159265358979) <= min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 2*math.pi + 3.14159265358979))) and ((((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979) > min(3.14159265358979, 3.14159265358979 - math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 2*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 2*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 4*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))))))
+            if condition_13:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 2*math.pi
+                solution_13: IkSolution = copy.copy(this_solution)
+                solution_13[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979) + (1/2)*min(3.14159265358979, 3.14159265358979 - x12)
+                appended_idx = append_solution_to_queue(solution_13)
+                add_input_index_to(26, appended_idx)
+            condition_14: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 4*math.pi - 3.14159265358979) <= min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 4*math.pi + 3.14159265358979))) and ((((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979) > min(3.14159265358979, 3.14159265358979 - math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 2*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 2*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 4*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 2*math.pi - 3.14159265358979) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 2*math.pi + 3.14159265358979))))))
+            if condition_14:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 4*math.pi
+                solution_14: IkSolution = copy.copy(this_solution)
+                solution_14[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979) + (1/2)*min(3.14159265358979, 3.14159265358979 - x12)
+                appended_idx = append_solution_to_queue(solution_14)
+                add_input_index_to(26, appended_idx)
+            condition_15: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 6*math.pi - 3.14159265358979) <= min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 6*math.pi + 3.14159265358979))) and ((((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979) > min(3.14159265358979, 3.14159265358979 - math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 2*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 2*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 4*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 4*math.pi - 3.14159265358979) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 4*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 2*math.pi - 3.14159265358979) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 2*math.pi + 3.14159265358979))))))
+            if condition_15:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 6*math.pi
+                this_solution[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979) + (1/2)*min(3.14159265358979, 3.14159265358979 - x12)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(26, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_25_solve_th_2_processor()
+    # Finish code for explicit solution node 24
+
+    # Code for non-branch dispatcher node 26
+    # Actually, there is no code
+
+    # Code for explicit solution node 27, solved variable is th_1
+    def ExplicitSolutionNode_node_27_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[26]
+        this_input_valid: bool = node_input_validity[26]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 27
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = math.cos(th_5)
+                x6 = x0*x5
+                x7 = math.sin(th_3)
+                x8 = x5*x7
+                x9 = math.cos(th_3)
+                x10 = x1*x9
+                x11 = x0*x9
+                x12 = x1*x7
+                x13 = x12 - x2*x5*x9
+                x14 = x0*x7
+                x15 = x10 + x2*x8
+                this_solution[1] = math.atan2((-r_31*(-x11*x4 - x13*x3) - r_32*(-x11*x3 + x13*x4) - r_33*(x10*x2 + x8))*math.cos(th_2) - (-r_31*(-x2*x4 - x3*x6) - r_32*(-x2*x3 + x4*x6) + r_33*x0*x1)*math.sin(th_2), -r_31*(-x14*x4 + x15*x3) - r_32*(-x14*x3 - x15*x4) - r_33*(x12*x2 - x5*x9))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(28, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_27_solve_th_1_processor()
+    # Finish code for explicit solution node 26
+
+    # Code for non-branch dispatcher node 28
+    # Actually, there is no code
+
+    # Code for explicit solution node 29, solved variable is th_0
+    def ExplicitSolutionNode_node_29_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[28]
+        this_input_valid: bool = node_input_validity[28]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 29
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_1 = this_solution[1]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.cos(th_2)
+                x1 = math.sin(th_5)
+                x2 = math.sin(th_4)
+                x3 = x1*x2
+                x4 = math.cos(th_4)
+                x5 = math.cos(th_6)
+                x6 = math.sin(th_6)
+                x7 = math.cos(th_5)
+                x8 = x2*x7
+                x9 = -x4*x5 + x6*x8
+                x10 = -x4*x6 - x5*x8
+                x11 = r_11*x10 + r_12*x9 - r_13*x3
+                x12 = r_21*x10 + r_22*x9 - r_23*x3
+                x13 = math.sin(th_2)
+                x14 = math.cos(th_1)
+                x15 = x13*x14
+                x16 = math.sin(th_3)
+                x17 = x16*x7
+                x18 = math.cos(th_3)
+                x19 = x1*x18
+                x20 = x17 + x19*x4
+                x21 = x18*x2
+                x22 = x1*x16
+                x23 = -x18*x4*x7 + x22
+                x24 = -x21*x6 - x23*x5
+                x25 = -x21*x5 + x23*x6
+                x26 = r_11*x24 + r_12*x25 + r_13*x20
+                x27 = math.sin(th_1)
+                x28 = -x18*x7 + x22*x4
+                x29 = x16*x2
+                x30 = x17*x4 + x19
+                x31 = -x29*x6 + x30*x5
+                x32 = -x29*x5 - x30*x6
+                x33 = r_21*x24 + r_22*x25 + r_23*x20
+                this_solution[0] = math.atan2(x0*x11 + x0*x14*x33 - x12*x15 + x13*x26 - x27*(r_21*x31 + r_22*x32 + r_23*x28), -x0*x12 + x0*x14*x26 - x11*x15 - x13*x33 - x27*(r_11*x31 + r_12*x32 + r_13*x28))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_29_solve_th_0_processor()
+    # Finish code for explicit solution node 28
 
     # Code for explicit solution node 12, solved variable is th_5
     def ExplicitSolutionNode_node_12_solve_th_5_processor():
@@ -674,11 +1576,439 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
                 x0 = d_2 + d_4
                 this_solution[4] = math.atan2((a_5 + inv_Px*math.cos(th_6) - inv_Py*math.sin(th_6))/x0, -inv_Pz/x0)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(16, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
     # Invoke the processor
     ExplicitSolutionNode_node_12_solve_th_5_processor()
     # Finish code for explicit solution node 12
+
+    # Code for non-branch dispatcher node 16
+    # Actually, there is no code
+
+    # Code for explicit solution node 17, solved variable is th_4
+    def ExplicitSolutionNode_node_17_solve_th_4_processor():
+        this_node_input_index: List[int] = node_input_index[16]
+        this_input_valid: bool = node_input_validity[16]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 17
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            condition_0: bool = True
+            if condition_0:
+                this_solution[3] = 0.0
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(18, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_17_solve_th_4_processor()
+    # Finish code for explicit solution node 16
+
+    # Code for non-branch dispatcher node 18
+    # Actually, there is no code
+
+    # Code for explicit solution node 19, solved variable is th_2
+    def ExplicitSolutionNode_node_19_solve_th_2_processor():
+        this_node_input_index: List[int] = node_input_index[18]
+        this_input_valid: bool = node_input_validity[18]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 19
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = ((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 > 1.0e-24)
+            if condition_0:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = math.cos(th_5)
+                x6 = x0*x5
+                x7 = r_31*(-x2*x4 - x3*x6) + r_32*(-x2*x3 + x4*x6) - r_33*x0*x1
+                x8 = math.sin(th_3)
+                x9 = math.cos(th_3)
+                x10 = x0*x9
+                x11 = x1*x8 - x2*x5*x9
+                x12 = r_31*(-x10*x4 - x11*x3) + r_32*(-x10*x3 + x11*x4) + r_33*(x1*x2*x9 + x5*x8)
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[2] = -math.atan2(-x7, -x12)
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(20, appended_idx)
+                solution_1: IkSolution = copy.copy(this_solution)
+                solution_1[2] = -math.atan2(x7, x12)
+                appended_idx = append_solution_to_queue(solution_1)
+                add_input_index_to(20, appended_idx)
+            condition_2: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))))
+            if condition_2:
+                x0 = 6*math.pi
+                x1 = math.sin(th_4)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_4)
+                x4 = math.cos(th_6)
+                x5 = math.sin(th_6)
+                x6 = x1*math.cos(th_5)
+                x7 = -x3*x4 + x5*x6
+                x8 = -x3*x5 - x4*x6
+                x9 = math.atan2(r_11*x8 + r_12*x7 - r_13*x1*x2, -r_21*x8 - r_22*x7 + r_23*x1*x2)
+                solution_2: IkSolution = copy.copy(this_solution)
+                solution_2[2] = (1/2)*max(-3.14159265358979, -x0 + x9 - 3.14159265358979) + (1/2)*min(3.14159265358979, -x0 + x9 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_2)
+                add_input_index_to(20, appended_idx)
+            condition_3: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi - 3.14159265358979) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))))
+            if condition_3:
+                x0 = 4*math.pi
+                x1 = math.sin(th_4)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_4)
+                x4 = math.cos(th_6)
+                x5 = math.sin(th_6)
+                x6 = x1*math.cos(th_5)
+                x7 = -x3*x4 + x5*x6
+                x8 = -x3*x5 - x4*x6
+                x9 = math.atan2(r_11*x8 + r_12*x7 - r_13*x1*x2, -r_21*x8 - r_22*x7 + r_23*x1*x2)
+                solution_3: IkSolution = copy.copy(this_solution)
+                solution_3[2] = (1/2)*max(-3.14159265358979, -x0 + x9 - 3.14159265358979) + (1/2)*min(3.14159265358979, -x0 + x9 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_3)
+                add_input_index_to(20, appended_idx)
+            condition_4: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi - 3.14159265358979) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi + 3.14159265358979))) and ((((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi + 3.14159265358979))))))
+            if condition_4:
+                x0 = 2*math.pi
+                x1 = math.sin(th_4)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_4)
+                x4 = math.cos(th_6)
+                x5 = math.sin(th_6)
+                x6 = x1*math.cos(th_5)
+                x7 = -x3*x4 + x5*x6
+                x8 = -x3*x5 - x4*x6
+                x9 = math.atan2(r_11*x8 + r_12*x7 - r_13*x1*x2, -r_21*x8 - r_22*x7 + r_23*x1*x2)
+                solution_4: IkSolution = copy.copy(this_solution)
+                solution_4[2] = (1/2)*max(-3.14159265358979, -x0 + x9 - 3.14159265358979) + (1/2)*min(3.14159265358979, -x0 + x9 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_4)
+                add_input_index_to(20, appended_idx)
+            condition_5: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979))) and ((((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi + 3.14159265358979))))))
+            if condition_5:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = x0*math.cos(th_5)
+                x6 = -x2*x3 + x4*x5
+                x7 = -x2*x4 - x3*x5
+                x8 = math.atan2(r_11*x7 + r_12*x6 - r_13*x0*x1, -r_21*x7 - r_22*x6 + r_23*x0*x1)
+                solution_5: IkSolution = copy.copy(this_solution)
+                solution_5[2] = (1/2)*max(-3.14159265358979, x8 - 3.14159265358979) + (1/2)*min(3.14159265358979, x8 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_5)
+                add_input_index_to(20, appended_idx)
+            condition_6: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979 + 2*math.pi) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979 + 2*math.pi))) and ((((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi + 3.14159265358979))))))
+            if condition_6:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = x0*math.cos(th_5)
+                x6 = -x2*x3 + x4*x5
+                x7 = -x2*x4 - x3*x5
+                x8 = math.atan2(r_11*x7 + r_12*x6 - r_13*x0*x1, -r_21*x7 - r_22*x6 + r_23*x0*x1) + 2*math.pi
+                solution_6: IkSolution = copy.copy(this_solution)
+                solution_6[2] = (1/2)*max(-3.14159265358979, x8 - 3.14159265358979) + (1/2)*min(3.14159265358979, x8 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_6)
+                add_input_index_to(20, appended_idx)
+            condition_7: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979 + 4*math.pi) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979 + 4*math.pi))) and ((((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979 + 2*math.pi) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979 + 2*math.pi))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi + 3.14159265358979))))))
+            if condition_7:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = x0*math.cos(th_5)
+                x6 = -x2*x3 + x4*x5
+                x7 = -x2*x4 - x3*x5
+                x8 = math.atan2(r_11*x7 + r_12*x6 - r_13*x0*x1, -r_21*x7 - r_22*x6 + r_23*x0*x1) + 4*math.pi
+                solution_7: IkSolution = copy.copy(this_solution)
+                solution_7[2] = (1/2)*max(-3.14159265358979, x8 - 3.14159265358979) + (1/2)*min(3.14159265358979, x8 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_7)
+                add_input_index_to(20, appended_idx)
+            condition_8: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) < 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979 + 6*math.pi) <= min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979 + 6*math.pi))) and ((((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979 + 2*math.pi) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979 + 2*math.pi))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 3.14159265358979 + 4*math.pi) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 6*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 4*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi - 3.14159265358979) > min(3.14159265358979, math.atan2(r_11*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) + r_12*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) - r_13*math.sin(th_4)*math.sin(th_5), -r_21*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_22*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_23*math.sin(th_4)*math.sin(th_5)) - 2*math.pi + 3.14159265358979))))))
+            if condition_8:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = x0*math.cos(th_5)
+                x6 = -x2*x3 + x4*x5
+                x7 = -x2*x4 - x3*x5
+                x8 = math.atan2(r_11*x7 + r_12*x6 - r_13*x0*x1, -r_21*x7 - r_22*x6 + r_23*x0*x1) + 6*math.pi
+                solution_8: IkSolution = copy.copy(this_solution)
+                solution_8[2] = (1/2)*max(-3.14159265358979, x8 - 3.14159265358979) + (1/2)*min(3.14159265358979, x8 + 3.14159265358979)
+                appended_idx = append_solution_to_queue(solution_8)
+                add_input_index_to(20, appended_idx)
+            condition_9: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) <= min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))))
+            if condition_9:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5)
+                solution_9: IkSolution = copy.copy(this_solution)
+                solution_9[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979 + 6*math.pi) + (1/2)*min(3.14159265358979, -x12 + 3.14159265358979 + 6*math.pi)
+                appended_idx = append_solution_to_queue(solution_9)
+                add_input_index_to(20, appended_idx)
+            condition_10: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 4*math.pi) <= min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))))
+            if condition_10:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5)
+                solution_10: IkSolution = copy.copy(this_solution)
+                solution_10[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979 + 4*math.pi) + (1/2)*min(3.14159265358979, -x12 + 3.14159265358979 + 4*math.pi)
+                appended_idx = append_solution_to_queue(solution_10)
+                add_input_index_to(20, appended_idx)
+            condition_11: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 2*math.pi) <= min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 2*math.pi))) and ((((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 4*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))))))
+            if condition_11:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5)
+                solution_11: IkSolution = copy.copy(this_solution)
+                solution_11[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979 + 2*math.pi) + (1/2)*min(3.14159265358979, -x12 + 3.14159265358979 + 2*math.pi)
+                appended_idx = append_solution_to_queue(solution_11)
+                add_input_index_to(20, appended_idx)
+            condition_12: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979) <= min(3.14159265358979, 3.14159265358979 - math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))))) and ((((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 2*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 2*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 4*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))))))
+            if condition_12:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5)
+                solution_12: IkSolution = copy.copy(this_solution)
+                solution_12[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979) + (1/2)*min(3.14159265358979, 3.14159265358979 - x12)
+                appended_idx = append_solution_to_queue(solution_12)
+                add_input_index_to(20, appended_idx)
+            condition_13: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 2*math.pi - 3.14159265358979) <= min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 2*math.pi + 3.14159265358979))) and ((((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979) > min(3.14159265358979, 3.14159265358979 - math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 2*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 2*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 4*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))))))
+            if condition_13:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 2*math.pi
+                solution_13: IkSolution = copy.copy(this_solution)
+                solution_13[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979) + (1/2)*min(3.14159265358979, 3.14159265358979 - x12)
+                appended_idx = append_solution_to_queue(solution_13)
+                add_input_index_to(20, appended_idx)
+            condition_14: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 4*math.pi - 3.14159265358979) <= min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 4*math.pi + 3.14159265358979))) and ((((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979) > min(3.14159265358979, 3.14159265358979 - math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 2*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 2*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 4*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 2*math.pi - 3.14159265358979) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 2*math.pi + 3.14159265358979))))))
+            if condition_14:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 4*math.pi
+                solution_14: IkSolution = copy.copy(this_solution)
+                solution_14[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979) + (1/2)*min(3.14159265358979, 3.14159265358979 - x12)
+                appended_idx = append_solution_to_queue(solution_14)
+                add_input_index_to(20, appended_idx)
+            condition_15: bool = (((-r_31*((math.sin(th_3)*math.cos(th_4)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3))*math.cos(th_6) - math.sin(th_3)*math.sin(th_4)*math.sin(th_6)) - r_32*((-math.sin(th_3)*math.cos(th_4)*math.cos(th_5) - math.sin(th_5)*math.cos(th_3))*math.sin(th_6) - math.sin(th_3)*math.sin(th_4)*math.cos(th_6)) - r_33*(math.sin(th_3)*math.sin(th_5)*math.cos(th_4) - math.cos(th_3)*math.cos(th_5)) >= 0)) and (((r_31*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_32*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_33*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))**2 + (-r_31*(-math.sin(th_4)*math.cos(th_5)*math.cos(th_6) - math.sin(th_6)*math.cos(th_4)) - r_32*(math.sin(th_4)*math.sin(th_6)*math.cos(th_5) - math.cos(th_4)*math.cos(th_6)) + r_33*math.sin(th_4)*math.sin(th_5))**2 <= 1.0e-14)) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 6*math.pi - 3.14159265358979) <= min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 6*math.pi + 3.14159265358979))) and ((((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979) > min(3.14159265358979, 3.14159265358979 - math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)))))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 2*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 2*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 4*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 4*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 3.14159265358979 + 6*math.pi) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) + 3.14159265358979 + 6*math.pi))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 4*math.pi - 3.14159265358979) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 4*math.pi + 3.14159265358979))) and ((max(-3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 2*math.pi - 3.14159265358979) > min(3.14159265358979, -math.atan2(r_21*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_22*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_23*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4)), r_11*((-math.sin(th_3)*math.sin(th_5) + math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.cos(th_6) - math.sin(th_4)*math.sin(th_6)*math.cos(th_3)) + r_12*((math.sin(th_3)*math.sin(th_5) - math.cos(th_3)*math.cos(th_4)*math.cos(th_5))*math.sin(th_6) - math.sin(th_4)*math.cos(th_3)*math.cos(th_6)) + r_13*(math.sin(th_3)*math.cos(th_5) + math.sin(th_5)*math.cos(th_3)*math.cos(th_4))) - 2*math.pi + 3.14159265358979))))))
+            if condition_15:
+                x0 = math.sin(th_3)
+                x1 = math.cos(th_5)
+                x2 = math.sin(th_5)
+                x3 = math.cos(th_3)
+                x4 = math.cos(th_4)
+                x5 = x0*x1 + x2*x3*x4
+                x6 = math.sin(th_6)
+                x7 = x3*math.sin(th_4)
+                x8 = math.cos(th_6)
+                x9 = x0*x2 - x1*x3*x4
+                x10 = -x6*x7 - x8*x9
+                x11 = x6*x9 - x7*x8
+                x12 = math.atan2(r_21*x10 + r_22*x11 + r_23*x5, r_11*x10 + r_12*x11 + r_13*x5) + 6*math.pi
+                this_solution[2] = (1/2)*max(-3.14159265358979, -x12 - 3.14159265358979) + (1/2)*min(3.14159265358979, 3.14159265358979 - x12)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(20, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_19_solve_th_2_processor()
+    # Finish code for explicit solution node 18
+
+    # Code for non-branch dispatcher node 20
+    # Actually, there is no code
+
+    # Code for explicit solution node 21, solved variable is th_1
+    def ExplicitSolutionNode_node_21_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[20]
+        this_input_valid: bool = node_input_validity[20]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 21
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = math.cos(th_5)
+                x6 = x0*x5
+                x7 = math.sin(th_3)
+                x8 = x5*x7
+                x9 = math.cos(th_3)
+                x10 = x1*x9
+                x11 = x0*x9
+                x12 = x1*x7
+                x13 = x12 - x2*x5*x9
+                x14 = x0*x7
+                x15 = x10 + x2*x8
+                this_solution[1] = math.atan2((-r_31*(-x11*x4 - x13*x3) - r_32*(-x11*x3 + x13*x4) - r_33*(x10*x2 + x8))*math.cos(th_2) - (-r_31*(-x2*x4 - x3*x6) - r_32*(-x2*x3 + x4*x6) + r_33*x0*x1)*math.sin(th_2), -r_31*(-x14*x4 + x15*x3) - r_32*(-x14*x3 - x15*x4) - r_33*(x12*x2 - x5*x9))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(22, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_21_solve_th_1_processor()
+    # Finish code for explicit solution node 20
+
+    # Code for non-branch dispatcher node 22
+    # Actually, there is no code
+
+    # Code for explicit solution node 23, solved variable is th_0
+    def ExplicitSolutionNode_node_23_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[22]
+        this_input_valid: bool = node_input_validity[22]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 23
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_1 = this_solution[1]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.cos(th_2)
+                x1 = math.sin(th_5)
+                x2 = math.sin(th_4)
+                x3 = x1*x2
+                x4 = math.cos(th_4)
+                x5 = math.cos(th_6)
+                x6 = math.sin(th_6)
+                x7 = math.cos(th_5)
+                x8 = x2*x7
+                x9 = -x4*x5 + x6*x8
+                x10 = -x4*x6 - x5*x8
+                x11 = r_11*x10 + r_12*x9 - r_13*x3
+                x12 = r_21*x10 + r_22*x9 - r_23*x3
+                x13 = math.sin(th_2)
+                x14 = math.cos(th_1)
+                x15 = x13*x14
+                x16 = math.sin(th_3)
+                x17 = x16*x7
+                x18 = math.cos(th_3)
+                x19 = x1*x18
+                x20 = x17 + x19*x4
+                x21 = x18*x2
+                x22 = x1*x16
+                x23 = -x18*x4*x7 + x22
+                x24 = -x21*x6 - x23*x5
+                x25 = -x21*x5 + x23*x6
+                x26 = r_11*x24 + r_12*x25 + r_13*x20
+                x27 = math.sin(th_1)
+                x28 = -x18*x7 + x22*x4
+                x29 = x16*x2
+                x30 = x17*x4 + x19
+                x31 = -x29*x6 + x30*x5
+                x32 = -x29*x5 - x30*x6
+                x33 = r_21*x24 + r_22*x25 + r_23*x20
+                this_solution[0] = math.atan2(x0*x11 + x0*x14*x33 - x12*x15 + x13*x26 - x27*(r_21*x31 + r_22*x32 + r_23*x28), -x0*x12 + x0*x14*x26 - x11*x15 - x13*x33 - x27*(r_11*x31 + r_12*x32 + r_13*x28))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_23_solve_th_0_processor()
+    # Finish code for explicit solution node 22
 
     # Code for explicit solution node 3, solved variable is th_4
     def ExplicitSolutionNode_node_3_solve_th_4_processor():
@@ -726,11 +2056,369 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue)
             else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
+                add_input_index_to(41, node_input_i_idx_in_queue)
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_4_processor()
     # Finish code for equation all-zero dispatcher node 4
+
+    # Code for explicit solution node 41, solved variable is th_5
+    def ExplicitSolutionNode_node_41_solve_th_5_processor():
+        this_node_input_index: List[int] = node_input_index[41]
+        this_input_valid: bool = node_input_validity[41]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 41
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            condition_0: bool = True
+            if condition_0:
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[4] = -3.14159265358979
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(42, appended_idx)
+                solution_1: IkSolution = copy.copy(this_solution)
+                solution_1[4] = -2.94524311274043
+                appended_idx = append_solution_to_queue(solution_1)
+                add_input_index_to(42, appended_idx)
+                solution_2: IkSolution = copy.copy(this_solution)
+                solution_2[4] = -2.74889357189107
+                appended_idx = append_solution_to_queue(solution_2)
+                add_input_index_to(42, appended_idx)
+                solution_3: IkSolution = copy.copy(this_solution)
+                solution_3[4] = -2.55254403104171
+                appended_idx = append_solution_to_queue(solution_3)
+                add_input_index_to(42, appended_idx)
+                solution_4: IkSolution = copy.copy(this_solution)
+                solution_4[4] = -2.35619449019234
+                appended_idx = append_solution_to_queue(solution_4)
+                add_input_index_to(42, appended_idx)
+                solution_5: IkSolution = copy.copy(this_solution)
+                solution_5[4] = -2.15984494934298
+                appended_idx = append_solution_to_queue(solution_5)
+                add_input_index_to(42, appended_idx)
+                solution_6: IkSolution = copy.copy(this_solution)
+                solution_6[4] = -1.96349540849362
+                appended_idx = append_solution_to_queue(solution_6)
+                add_input_index_to(42, appended_idx)
+                solution_7: IkSolution = copy.copy(this_solution)
+                solution_7[4] = -1.76714586764426
+                appended_idx = append_solution_to_queue(solution_7)
+                add_input_index_to(42, appended_idx)
+                solution_8: IkSolution = copy.copy(this_solution)
+                solution_8[4] = -1.57079632679490
+                appended_idx = append_solution_to_queue(solution_8)
+                add_input_index_to(42, appended_idx)
+                solution_9: IkSolution = copy.copy(this_solution)
+                solution_9[4] = -1.37444678594553
+                appended_idx = append_solution_to_queue(solution_9)
+                add_input_index_to(42, appended_idx)
+                solution_10: IkSolution = copy.copy(this_solution)
+                solution_10[4] = -1.17809724509617
+                appended_idx = append_solution_to_queue(solution_10)
+                add_input_index_to(42, appended_idx)
+                solution_11: IkSolution = copy.copy(this_solution)
+                solution_11[4] = -0.981747704246811
+                appended_idx = append_solution_to_queue(solution_11)
+                add_input_index_to(42, appended_idx)
+                solution_12: IkSolution = copy.copy(this_solution)
+                solution_12[4] = -0.785398163397448
+                appended_idx = append_solution_to_queue(solution_12)
+                add_input_index_to(42, appended_idx)
+                solution_13: IkSolution = copy.copy(this_solution)
+                solution_13[4] = -0.589048622548086
+                appended_idx = append_solution_to_queue(solution_13)
+                add_input_index_to(42, appended_idx)
+                solution_14: IkSolution = copy.copy(this_solution)
+                solution_14[4] = -0.392699081698724
+                appended_idx = append_solution_to_queue(solution_14)
+                add_input_index_to(42, appended_idx)
+                solution_15: IkSolution = copy.copy(this_solution)
+                solution_15[4] = -0.196349540849362
+                appended_idx = append_solution_to_queue(solution_15)
+                add_input_index_to(42, appended_idx)
+                solution_16: IkSolution = copy.copy(this_solution)
+                solution_16[4] = 0.0
+                appended_idx = append_solution_to_queue(solution_16)
+                add_input_index_to(42, appended_idx)
+                solution_17: IkSolution = copy.copy(this_solution)
+                solution_17[4] = 0.196349540849362
+                appended_idx = append_solution_to_queue(solution_17)
+                add_input_index_to(42, appended_idx)
+                solution_18: IkSolution = copy.copy(this_solution)
+                solution_18[4] = 0.392699081698724
+                appended_idx = append_solution_to_queue(solution_18)
+                add_input_index_to(42, appended_idx)
+                solution_19: IkSolution = copy.copy(this_solution)
+                solution_19[4] = 0.589048622548086
+                appended_idx = append_solution_to_queue(solution_19)
+                add_input_index_to(42, appended_idx)
+                solution_20: IkSolution = copy.copy(this_solution)
+                solution_20[4] = 0.785398163397448
+                appended_idx = append_solution_to_queue(solution_20)
+                add_input_index_to(42, appended_idx)
+                solution_21: IkSolution = copy.copy(this_solution)
+                solution_21[4] = 0.981747704246811
+                appended_idx = append_solution_to_queue(solution_21)
+                add_input_index_to(42, appended_idx)
+                solution_22: IkSolution = copy.copy(this_solution)
+                solution_22[4] = 1.17809724509617
+                appended_idx = append_solution_to_queue(solution_22)
+                add_input_index_to(42, appended_idx)
+                solution_23: IkSolution = copy.copy(this_solution)
+                solution_23[4] = 1.37444678594553
+                appended_idx = append_solution_to_queue(solution_23)
+                add_input_index_to(42, appended_idx)
+                solution_24: IkSolution = copy.copy(this_solution)
+                solution_24[4] = 1.57079632679490
+                appended_idx = append_solution_to_queue(solution_24)
+                add_input_index_to(42, appended_idx)
+                solution_25: IkSolution = copy.copy(this_solution)
+                solution_25[4] = 1.76714586764426
+                appended_idx = append_solution_to_queue(solution_25)
+                add_input_index_to(42, appended_idx)
+                solution_26: IkSolution = copy.copy(this_solution)
+                solution_26[4] = 1.96349540849362
+                appended_idx = append_solution_to_queue(solution_26)
+                add_input_index_to(42, appended_idx)
+                solution_27: IkSolution = copy.copy(this_solution)
+                solution_27[4] = 2.15984494934298
+                appended_idx = append_solution_to_queue(solution_27)
+                add_input_index_to(42, appended_idx)
+                solution_28: IkSolution = copy.copy(this_solution)
+                solution_28[4] = 2.35619449019234
+                appended_idx = append_solution_to_queue(solution_28)
+                add_input_index_to(42, appended_idx)
+                solution_29: IkSolution = copy.copy(this_solution)
+                solution_29[4] = 2.55254403104171
+                appended_idx = append_solution_to_queue(solution_29)
+                add_input_index_to(42, appended_idx)
+                solution_30: IkSolution = copy.copy(this_solution)
+                solution_30[4] = 2.74889357189107
+                appended_idx = append_solution_to_queue(solution_30)
+                add_input_index_to(42, appended_idx)
+                solution_31: IkSolution = copy.copy(this_solution)
+                solution_31[4] = 2.94524311274043
+                appended_idx = append_solution_to_queue(solution_31)
+                add_input_index_to(42, appended_idx)
+                this_solution[4] = 3.14159265358979
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(42, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_41_solve_th_5_processor()
+    # Finish code for explicit solution node 41
+
+    # Code for non-branch dispatcher node 42
+    # Actually, there is no code
+
+    # Code for linear solution type2 node 43, solved variable is th_2
+    def LinearSinCosType_2_SolverNode_node_43_solve_th_2_processor():
+        this_node_input_index: List[int] = node_input_index[42]
+        this_input_valid: bool = node_input_validity[42]
+        if not this_input_valid:
+            return
+        for queue_index in this_node_input_index:
+            if not queue_element_validity[queue_index]:
+                continue
+            this_solution = solution_queue[queue_index]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            x0 = math.cos(th_6)
+            x1 = math.sin(th_3)
+            x2 = math.sin(th_5)
+            x3 = x1*x2
+            x4 = math.sin(th_6)
+            x5 = math.sin(th_4)
+            x6 = math.cos(th_3)
+            x7 = x5*x6
+            x8 = math.cos(th_4)
+            x9 = math.cos(th_5)
+            x10 = x6*x9
+            x11 = -x0*x10*x8 + x0*x3 + x4*x7
+            x12 = x4*x8
+            x13 = x5*x9
+            x14 = x0*x13 + x12
+            x15 = x0*x7 + x10*x12 - x3*x4
+            x16 = -x0*x8 + x13*x4
+            x17 = x6*x8
+            x18 = x1*x9 + x17*x2
+            x19 = x2*x5
+            x20 = a_3*x6 + a_3 - a_5*x1*x2 + a_5*x17*x9 + d_4*x1
+            x21 = a_5*x13
+            A_matrix = np.zeros((8, 4))
+            A_matrix[0, 0] = r_11
+            A_matrix[0, 1] = -r_21
+            A_matrix[0, 2] = x11
+            A_matrix[0, 3] = x14
+            A_matrix[1, 0] = r_12
+            A_matrix[1, 1] = -r_22
+            A_matrix[1, 2] = x15
+            A_matrix[1, 3] = -x16
+            A_matrix[2, 0] = r_13
+            A_matrix[2, 1] = -r_23
+            A_matrix[2, 2] = -x18
+            A_matrix[2, 3] = x19
+            A_matrix[3, 0] = Px
+            A_matrix[3, 1] = -Py
+            A_matrix[3, 2] = -x20
+            A_matrix[3, 3] = x21
+            A_matrix[4, 0] = -r_11
+            A_matrix[4, 1] = r_21
+            A_matrix[4, 2] = -x11
+            A_matrix[4, 3] = -x14
+            A_matrix[5, 0] = -r_12
+            A_matrix[5, 1] = r_22
+            A_matrix[5, 2] = -x15
+            A_matrix[5, 3] = x16
+            A_matrix[6, 0] = -r_13
+            A_matrix[6, 1] = r_23
+            A_matrix[6, 2] = x18
+            A_matrix[6, 3] = -x19
+            A_matrix[7, 0] = -Px
+            A_matrix[7, 1] = Py
+            A_matrix[7, 2] = x20
+            A_matrix[7, 3] = -x21
+            linear_values = solve_linear_type2_candidates(A_matrix, [(0, 1, 2), (0, 1, 3), (0, 1, 6), (0, 1, 7), (0, 2, 3)])
+            for linear_index, linear_value in enumerate(linear_values):
+                candidate = copy.copy(this_solution)
+                candidate[2] = linear_value
+                if linear_index+1 == len(linear_values):
+                    solution_queue[queue_index] = candidate
+                    candidate_index = queue_index
+                else:
+                    candidate_index = append_solution_to_queue(candidate)
+                add_input_index_to(44, candidate_index)
+            if not linear_values:
+                queue_element_validity[queue_index] = False
+    # Invoke the processor
+    LinearSinCosType_2_SolverNode_node_43_solve_th_2_processor()
+    # Finish code for explicit solution node 42
+
+    # Code for equation all-zero dispatcher node 44
+    def EquationAllZeroDispatcherNode_node_44_processor():
+        this_node_input_index: List[int] = node_input_index[44]
+        this_input_valid: bool = node_input_validity[44]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            checked_result: bool = (((abs(r_13) <= 1.0e-6)) and ((abs(r_23) <= 1.0e-6)) and ((abs(math.sin(th_2)*math.sin(th_3)*math.cos(th_5) + math.sin(th_2)*math.sin(th_5)*math.cos(th_3)*math.cos(th_4) - math.sin(th_4)*math.sin(th_5)*math.cos(th_2)) <= 1.0e-6)))
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(45, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_44_processor()
+    # Finish code for equation all-zero dispatcher node 44
+
+    # Code for explicit solution node 45, solved variable is th_0
+    def ExplicitSolutionNode_node_45_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[45]
+        this_input_valid: bool = node_input_validity[45]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 45
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            condition_0: bool = (((abs(r_13) >= zero_tolerance)) or ((abs(r_23) >= zero_tolerance)) or ((abs(math.sin(th_2)*math.sin(th_3)*math.cos(th_5) + math.sin(th_2)*math.sin(th_5)*math.cos(th_3)*math.cos(th_4) - math.sin(th_4)*math.sin(th_5)*math.cos(th_2)) >= zero_tolerance)))
+            if condition_0:
+                x0 = math.atan2(r_13, -r_23)
+                x1 = math.sin(th_2)
+                x2 = math.sin(th_5)
+                x3 = x1*x2*math.cos(th_3)*math.cos(th_4) + x1*math.sin(th_3)*math.cos(th_5) - x2*math.sin(th_4)*math.cos(th_2)
+                x4 = safe_sqrt(r_13**2 + r_23**2 - x3**2)
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[0] = x0 + math.atan2(x4, x3)
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(46, appended_idx)
+                this_solution[0] = x0 + math.atan2(-x4, x3)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(46, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_45_solve_th_0_processor()
+    # Finish code for explicit solution node 45
+
+    # Code for equation all-zero dispatcher node 46
+    def EquationAllZeroDispatcherNode_node_46_processor():
+        this_node_input_index: List[int] = node_input_index[46]
+        this_input_valid: bool = node_input_validity[46]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            checked_result: bool = (((abs(Pz) <= 1.0e-6)) and ((abs(Px*math.cos(th_0) + Py*math.sin(th_0)) <= 1.0e-6)))
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(47, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_46_processor()
+    # Finish code for equation all-zero dispatcher node 46
+
+    # Code for explicit solution node 47, solved variable is th_1
+    def ExplicitSolutionNode_node_47_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[47]
+        this_input_valid: bool = node_input_validity[47]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 47
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            condition_0: bool = (((abs(Pz) >= 1.0e-6)) or ((abs(Px*math.cos(th_0) + Py*math.sin(th_0)) >= 1.0e-6)))
+            if condition_0:
+                x0 = -Px*math.cos(th_0) - Py*math.sin(th_0)
+                x1 = math.sin(th_3)
+                x2 = math.cos(th_3)
+                x3 = math.sin(th_5)
+                x4 = a_5*math.cos(th_5)
+                x5 = x4*math.cos(th_4)
+                x6 = -a_3*x1 - a_5*x2*x3 - d_2 + d_4*x2 - x1*x5
+                x7 = math.cos(th_2)
+                x8 = a_3*x7
+                x9 = a_5*x1*x3*x7 - d_4*x1*x7 - x2*x5*x7 - x2*x8 - x4*math.sin(th_2)*math.sin(th_4) - x8
+                this_solution[1] = math.atan2(Pz*x9 - x0*x6, Pz*x6 + x0*x9)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_47_solve_th_1_processor()
+    # Finish code for explicit solution node 47
 
     # Code for explicit solution node 5, solved variable is th_5
     def ExplicitSolutionNode_node_5_solve_th_5_processor():
@@ -927,11 +2615,110 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(11, node_input_i_idx_in_queue)
             else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
+                add_input_index_to(48, node_input_i_idx_in_queue)
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_10_processor()
     # Finish code for equation all-zero dispatcher node 10
+
+    # Code for equation all-zero dispatcher node 48
+    def EquationAllZeroDispatcherNode_node_48_processor():
+        this_node_input_index: List[int] = node_input_index[48]
+        this_input_valid: bool = node_input_validity[48]
+        if not this_input_valid:
+            return
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            checked_result: bool = (((abs(r_31) <= 1.0e-6)) and ((abs(r_32) <= 1.0e-6)) and ((abs(r_33) <= 1.0e-6)) and ((abs(r_11*math.cos(th_0) + r_21*math.sin(th_0)) <= 1.0e-6)) and ((abs(r_12*math.cos(th_0) + r_22*math.sin(th_0)) <= 1.0e-6)) and ((abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) <= 1.0e-6)))
+            if not checked_result:  # To non-degenerate node
+                add_input_index_to(49, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+
+    # Invoke the processor
+    EquationAllZeroDispatcherNode_node_48_processor()
+    # Finish code for equation all-zero dispatcher node 48
+
+    # Code for explicit solution node 49, solved variable is th_1
+    def ExplicitSolutionNode_node_49_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[49]
+        this_input_valid: bool = node_input_validity[49]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 49
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = (((((abs(r_33) >= 1.0e-6)) or ((abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) >= 1.0e-6)))) and ((((((abs(r_31) < 1.0e-6)) and ((abs(r_11*math.cos(th_0) + r_21*math.sin(th_0)) < 1.0e-6)))) or ((max(abs(r_33), abs(r_13*math.cos(th_0) + r_23*math.sin(th_0))) >= max(abs(r_31), abs(r_11*math.cos(th_0) + r_21*math.sin(th_0))))))) and ((((((abs(r_32) < 1.0e-6)) and ((abs(r_12*math.cos(th_0) + r_22*math.sin(th_0)) < 1.0e-6)))) or ((max(abs(r_33), abs(r_13*math.cos(th_0) + r_23*math.sin(th_0))) >= max(abs(r_32), abs(r_12*math.cos(th_0) + r_22*math.sin(th_0))))))))
+            if condition_0:
+                x0 = -r_13*math.cos(th_0) - r_23*math.sin(th_0)
+                x1 = math.cos(th_3)
+                x2 = math.cos(th_5)
+                x3 = math.sin(th_3)
+                x4 = math.sin(th_5)
+                x5 = x4*math.cos(th_4)
+                x6 = x1*x2 - x3*x5
+                x7 = math.cos(th_2)
+                x8 = -x1*x5*x7 - x2*x3*x7 - x4*math.sin(th_2)*math.sin(th_4)
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[1] = math.atan2(r_33*x8 - x0*x6, r_33*x6 + x0*x8)
+                appended_idx = append_solution_to_queue(solution_0)
+            condition_1: bool = (((((abs(r_31) >= 1.0e-6)) or ((abs(r_11*math.cos(th_0) + r_21*math.sin(th_0)) >= 1.0e-6)))) and ((((((abs(r_32) < 1.0e-6)) and ((abs(r_12*math.cos(th_0) + r_22*math.sin(th_0)) < 1.0e-6)))) or ((max(abs(r_31), abs(r_11*math.cos(th_0) + r_21*math.sin(th_0))) >= max(abs(r_32), abs(r_12*math.cos(th_0) + r_22*math.sin(th_0))))))) and ((((((abs(r_33) < 1.0e-6)) and ((abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) < 1.0e-6)))) or ((max(abs(r_31), abs(r_11*math.cos(th_0) + r_21*math.sin(th_0))) > max(abs(r_33), abs(r_13*math.cos(th_0) + r_23*math.sin(th_0))))))))
+            if condition_1:
+                x0 = -r_11*math.cos(th_0) - r_21*math.sin(th_0)
+                x1 = math.cos(th_3)
+                x2 = math.cos(th_6)
+                x3 = math.sin(th_5)
+                x4 = math.sin(th_3)
+                x5 = math.sin(th_4)
+                x6 = math.sin(th_6)
+                x7 = math.cos(th_4)
+                x8 = x2*math.cos(th_5)
+                x9 = x7*x8
+                x10 = -x1*x2*x3 + x4*x5*x6 - x4*x9
+                x11 = math.sin(th_2)
+                x12 = math.cos(th_2)
+                x13 = x1*x12*x5*x6 - x1*x12*x9 - x11*x5*x8 - x11*x6*x7 + x12*x2*x3*x4
+                solution_1: IkSolution = copy.copy(this_solution)
+                solution_1[1] = math.atan2(r_31*x13 - x0*x10, r_31*x10 + x0*x13)
+                appended_idx = append_solution_to_queue(solution_1)
+            condition_2: bool = (((((abs(r_32) >= 1.0e-6)) or ((abs(r_12*math.cos(th_0) + r_22*math.sin(th_0)) >= 1.0e-6)))) and ((((((abs(r_31) < 1.0e-6)) and ((abs(r_11*math.cos(th_0) + r_21*math.sin(th_0)) < 1.0e-6)))) or ((max(abs(r_32), abs(r_12*math.cos(th_0) + r_22*math.sin(th_0))) > max(abs(r_31), abs(r_11*math.cos(th_0) + r_21*math.sin(th_0))))))) and ((((((abs(r_33) < 1.0e-6)) and ((abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) < 1.0e-6)))) or ((max(abs(r_32), abs(r_12*math.cos(th_0) + r_22*math.sin(th_0))) > max(abs(r_33), abs(r_13*math.cos(th_0) + r_23*math.sin(th_0))))))))
+            if condition_2:
+                x0 = -r_12*math.cos(th_0) - r_22*math.sin(th_0)
+                x1 = math.sin(th_3)
+                x2 = math.cos(th_6)
+                x3 = math.sin(th_4)
+                x4 = x2*x3
+                x5 = math.cos(th_3)
+                x6 = math.sin(th_6)
+                x7 = x6*math.sin(th_5)
+                x8 = math.cos(th_4)
+                x9 = x6*math.cos(th_5)
+                x10 = x8*x9
+                x11 = x1*x10 + x1*x4 + x5*x7
+                x12 = math.sin(th_2)
+                x13 = math.cos(th_2)
+                x14 = x13*x5
+                x15 = -x1*x13*x7 + x10*x14 - x12*x2*x8 + x12*x3*x9 + x14*x4
+                this_solution[1] = math.atan2(r_32*x15 - x0*x11, r_32*x11 + x0*x15)
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_49_solve_th_1_processor()
+    # Finish code for explicit solution node 49
 
     # Code for explicit solution node 11, solved variable is th_1
     def ExplicitSolutionNode_node_11_solve_th_1_processor():
@@ -991,7 +2778,8 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
         new_ik_i[5] = value_at_5
         value_at_6 = ik_out_i[5]  # th_6
         new_ik_i[6] = value_at_6
-        ik_out.append(new_ik_i)
+        if np.all(np.isfinite(new_ik_i)):
+            ik_out.append(new_ik_i)
     return ik_out
 
 

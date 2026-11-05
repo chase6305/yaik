@@ -1,9 +1,22 @@
 """Publish staged artifacts while preserving the previous set on write errors."""
 
 from pathlib import Path
+import hashlib
 import shutil
 import stat
 import tempfile
+
+
+def generator_source_hashes():
+    """Identify generator contents independently of a checkout revision."""
+    root = Path(__file__).resolve().parents[1]
+    sources = [root/name for name in ('convert_kinematic_chain.py', 'ik_solve.py', 'yaik.py',
+                                      'gallery/marvin_m6/generate.py')]
+    for directory in ('codegen', 'fk', 'solver', 'utility'):
+        sources.extend(path for path in (root/directory).rglob('*.py')
+                       if not path.name.startswith('test_'))
+    return {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in sorted(set(sources))}
 
 
 def copy_runtime(staging, language='both'):

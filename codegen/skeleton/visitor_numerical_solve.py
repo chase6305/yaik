@@ -22,13 +22,8 @@ INVALID_SOLUTION_VALUE = 1e6
 
 
 def is_valid_solution_number(solution_number: float) -> bool:
-    """
-    A better solution is to construct another binary list to determine whether
-    a number is valid or not, initialized to all false.
-    But this somehow work as a hacky solution
-    """
-    abs_diff = abs(solution_number - INVALID_SOLUTION_VALUE)
-    return abs_diff > 1e-10
+    """Check numeric validity; assignment state is carried by solution indices."""
+    return bool(np.isfinite(solution_number))
 
 
 @attr.s
@@ -329,7 +324,7 @@ class VisitorNumericalSolution(SkeletonNodeVisitor):
         for index_i in self._index_to_symbol:
             symbol_i = self._index_to_symbol[index_i]
             value_i = value.variable_values[index_i]
-            if is_valid_solution_number(value_i):
+            if value.variable_value_in_solution_idx[index_i] >= 0 and is_valid_solution_number(value_i):
                 subst_dict[symbol_i] = value_i
         return subst_dict
 

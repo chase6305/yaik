@@ -58,11 +58,14 @@ def audit_completeness(tree):
         if not node.is_solution_node:
             continue
         solution = node.solution
-        if solution.solution_method in (SolutionMethod.FamilyRepresentative.name, SolutionMethod.SphericalShoulder.name) or solution.family_critical_equations is not None:
+        if solution.solution_method in (SolutionMethod.FamilyRepresentative.name, SolutionMethod.SphericalShoulder.name,
+                                        SolutionMethod.CoaxialGauge.name) or solution.family_critical_equations is not None:
             critical = solution.family_critical_equations
             strategy = ('analytic_limit_cells_with_seed_backup' if critical is not None else
                         'rotation_decomposition_with_aligned_family_limits'
-                        if solution.solution_method == SolutionMethod.SphericalShoulder.name else 'uniform_samples')
+                        if solution.solution_method == SolutionMethod.SphericalShoulder.name else
+                        'coaxial_gauge_representative' if solution.solution_method == SolutionMethod.CoaxialGauge.name
+                        else 'uniform_samples')
             families.append({'node': node.flatten_idx, 'variable': str(solution.solved_variable),
                              'strategy': strategy,
                              'seed_count': len(solution.explicit_solutions),

@@ -728,7 +728,14 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('// Disturbing method for degenerate handling')
         if self._has_frame_fallback:
             self.add_code_line('if (!allow_disturbance) return;')
-            self.add_code_line('Eigen::Matrix4d T_ee_raw_disturbed;')
+        self.add_code_line('for (int perturbation = 0; perturbation < 3; ++perturbation)')
+        self.enter_scope('disturbance_attempt')
+        self.add_code_line('Eigen::Matrix4d T_ee_raw_disturbed;')
+        self.add_code_line('if (perturbation != 0)')
+        self.add_code_line(indent()+'T_ee_raw_disturbed = yaik_cpp::disturbTransform<double>(T_ee_raw, 1e-2, 1e-2, nullptr, perturbation-1);')
+        self.add_code_line('else')
+        self.enter_scope('legacy_disturbance')
+        if self._has_frame_fallback:
             self.add_code_line('if (frame_disturbance_ready)')
             self.add_code_line(indent()+'T_ee_raw_disturbed = frame_disturbance * T_ee_raw;')
             self.add_code_line('else')
@@ -737,7 +744,8 @@ class CodeGenerationCpp(CodeGenerationBase):
             self.add_code_line('frame_disturbance_ready = true;')
             self.exit_scope('shared_frame_disturbance')
         else:
-            self.add_code_line('Eigen::Matrix4d T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);')
+            self.add_code_line('T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);')
+        self.exit_scope('legacy_disturbance')
         self.add_code_line('Eigen::Matrix4d T_ee_disturbed = ' + self.frame_transform_call(
             'endEffectorTargetRawToOriginal', 'T_ee_raw_disturbed') + ';')
         func_arguments_call = make_func_call_args('T_ee_raw_disturbed')
@@ -798,6 +806,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('if (ee_pose_diff < pose_tolerance_degenerate)')
         self.add_code_line(indent() + 'ik_output.push_back(ik_out_i);')
         self.exit_scope('for')
+        self.exit_scope('disturbance_attempt')
 
         # De-duplicate and end the function
         self.add_empty_line()

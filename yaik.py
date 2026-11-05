@@ -2,6 +2,7 @@
 
 import argparse
 from contextlib import contextmanager, redirect_stdout
+import hashlib
 import json
 import keyword
 import os
@@ -26,6 +27,13 @@ def seed_value(value):
     value = int(value)
     if not 0 <= value < 2**32:
         raise argparse.ArgumentTypeError('seed must be between 0 and 4294967295')
+    return value
+
+
+def positive_integer(value):
+    value = int(value)
+    if value <= 0:
+        raise argparse.ArgumentTypeError('value must be a positive integer')
     return value
 
 
@@ -162,12 +170,28 @@ def audit(args):
 def generate(args):
     import yaml
     from fk.robots import RobotDescription
-    from ik_solve import check_robot, run_ik, RunIKOption
-    from codegen.skeleton.tree_serialize import read_skeleton_tree
+    from ik_solve import check_robot, run_ik, resume_ik_tree, RunIKOption
+    from codegen.skeleton.tree_serialize import read_skeleton_tree, save_ik_tree, TreeSerializer
 
     test_cases = str(args.test_cases.resolve()) if args.test_cases else None
+    resume = getattr(args, 'resume_tree', None)
+    max_nodes = getattr(args, 'max_nodes', 50)
+    resume_record = None
     with redirect_stdout(sys.stderr):
-        if args.builtin:
+        if resume:
+            if test_cases:
+                raise ValueError('--test-cases is for a new search; omit it with --resume-tree')
+            source = resume.resolve()
+            data = read_yaml(source)
+            if 'robot' not in data or 'tree_nodes' not in data:
+                raise ValueError('--resume-tree requires an *_ik.yaml solution tree')
+            tree = TreeSerializer.load_skeleton_tree(data)
+            robot = tree.robot
+            resume_record = {'schema_version': 1, 'generation_mode': 'resume_saved_tree',
+                             'input_tree_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
+                             'resume_seed': args.seed, 'branch_node_budget': max_nodes,
+                             'nodes_before': tree.num_nodes, 'coverage_status': 'not_certified'}
+        elif args.builtin:
             from fk import robot_models
             robot = getattr(robot_models, BUILTINS[args.builtin])()
         else:
@@ -185,12 +209,30 @@ def generate(args):
         with tempfile.TemporaryDirectory(prefix='.yaik-', dir=output) as staging:
             staging = Path(staging)
             with working_directory(staging):
-                run_ik(robot, test_cases, RunIKOption(random_seed=args.seed))
-                tree = read_skeleton_tree(str(staging / f'{robot.name}_ik.yaml'))
+                if resume:
+                    # Branch diagnostics stay in scratch; publish the resumed tree and its exports.
+                    with tempfile.TemporaryDirectory(prefix='yaik-resume-') as scratch:
+                        with working_directory(scratch):
+                            resume_ik_tree(tree, args.seed, max_nodes)
+                    save_ik_tree(tree, str(staging/f'{robot.name}_ik.yaml'))
+                    tree = read_skeleton_tree(str(staging/f'{robot.name}_ik.yaml'))
+                else:
+                    run_ik(robot, test_cases, RunIKOption(random_seed=args.seed, max_num_nodes=max_nodes))
+                    tree = read_skeleton_tree(str(staging / f'{robot.name}_ik.yaml'))
                 export_code(tree, staging, args.language, args.with_runtime)
                 (staging / f'{robot.name}.yaml').write_text(yaml.safe_dump(robot.to_dict(), sort_keys=True))
+                if resume_record is not None:
+                    from utility.artifacts import generator_source_hashes
+                    resume_record.update(nodes_after=tree.num_nodes, generator_sources_sha256=generator_source_hashes(),
+                        artifact_sha256={path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                                         for path in sorted(staging.iterdir()) if path.is_file()})
+                    (staging/f'{robot.name}_resume.json').write_text(json.dumps(resume_record, indent=2)+'\n')
             paths = publish(staging, output)
-    emit({'status': 'ok', 'robot': robot.name, 'seed': args.seed, 'artifacts': paths})
+    result = {'status': 'ok', 'robot': robot.name, 'seed': args.seed, 'artifacts': paths}
+    if resume_record is not None:
+        result.update({key: resume_record[key] for key in
+                       ('generation_mode', 'input_tree_sha256', 'nodes_before', 'nodes_after', 'branch_node_budget')})
+    emit(result)
     return 0
 
 
@@ -277,8 +319,11 @@ def generation_arguments(command):
     source = command.add_mutually_exclusive_group(required=True)
     source.add_argument('--model', type=Path, help='Modified-DH robot model YAML (not an IK tree)')
     source.add_argument('--builtin', choices=sorted(BUILTINS), help='Built-in robot from models')
+    source.add_argument('--resume-tree', type=Path, help='Continue branch recovery from a saved *_ik.yaml; keep its main branch')
     command.add_argument('--test-cases', type=Path, help='Optional saved numerical samples')
     command.add_argument('--seed', type=seed_value, default=42, help='Offline sampling seed (default: 42)')
+    command.add_argument('--max-nodes', type=positive_integer, default=50,
+                         help='Branch expansion node budget; existing nodes are retained (default: 50)')
     command.add_argument('--output-dir', type=Path, default=Path('build'), help='Output directory (default: build)')
     command.add_argument('--language', choices=('both', 'python', 'cpp'), default='both')
     command.add_argument('--with-runtime', action='store_true',

@@ -31,22 +31,13 @@ from fk.chain_transform import ChainTransform, ChainTransformElement
 from ik_solve import RunIKOption, run_ik
 from solver.equation_types import Unknown
 from utility.rotation_utils import rotation_x, rotation_y, rotation_z
+from utility.artifacts import generator_source_hashes
 
 HERE = Path(__file__).resolve().parent
 SOURCE_HASHES = {
     'left_arm.urdf': '4633ac755a42066161b4f756d21a1a2573c40e4c861737a84c8a8c9abeeafcee',
     'right_arm.urdf': '7769f5144e025c52242b92e7d144a09b3f5885c0bf673445b5331a204a54393a',
 }
-
-
-def generator_source_hashes():
-    """Identify current generator contents independently of checkout revision."""
-    sources = [ROOT/'convert_kinematic_chain.py', ROOT/'ik_solve.py', Path(__file__).resolve()]
-    for directory in ('codegen', 'fk', 'solver', 'utility'):
-        sources.extend(path for path in (ROOT/directory).rglob('*.py')
-                       if not path.name.startswith('test_'))
-    return {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
-            for path in sorted(set(sources))}
 
 
 def urdf_model(path, side):

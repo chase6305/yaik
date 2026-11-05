@@ -461,7 +461,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
     node_index_workspace.reset(n_tree_nodes);
 
     using RawSolution = IntermediateSolution<intermediate_solution_size>;
-    auto make_raw_solution = []() -> RawSolution { return {}; };
+    auto make_raw_solution = []() -> RawSolution { RawSolution result; result.fill(std::numeric_limits<double>::quiet_NaN()); return result; };
 
     auto append_solution_to_queue = [&solution_queue](RawSolution solution_2_add) -> int {
         return solution_queue.push_solution(solution_2_add);
@@ -2513,7 +2513,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
         new_ik_i[5] = value_at_5;
         const double value_at_6 = raw_ik_out_i[5];  // th_6
         new_ik_i[6] = value_at_6;
-        ik_output.push_back(new_ik_i);
+        if (std::all_of(new_ik_i.begin(), new_ik_i.end(), [](double value) { return std::isfinite(value); }))
+            ik_output.push_back(new_ik_i);
     }
 }
 
@@ -2606,33 +2607,42 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_4, RawIKWorksace& w
     }
 
     // Disturbing method for degenerate handling
-    Eigen::Matrix4d T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);
-    Eigen::Matrix4d T_ee_disturbed = endEffectorTargetRawToOriginal(T_ee_raw_disturbed);
-    computeRawIK(T_ee_raw_disturbed, th_4 + th_4_offset_original2raw, workspace);
-    const auto& raw_ik_out_disturb = workspace.raw_ik_out;
-    for(int i = 0; i < raw_ik_out_disturb.size(); i++)
+    for (int perturbation = 0; perturbation < 3; ++perturbation)
     {
-        auto ik_out_i = raw_ik_out_disturb[i];
-        ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw;
-        ik_out_i[1] = addRevoluteOffset(ik_out_i[1], -th_1_offset_original2raw);
-        ik_out_i[2] = ik_out_i[2] - th_2_offset_original2raw;
-        ik_out_i[3] = addRevoluteOffset(ik_out_i[3], -th_3_offset_original2raw);
-        ik_out_i[4] = th_4;
-        ik_out_i[5] = addRevoluteOffset(ik_out_i[5], -th_5_offset_original2raw);
-        ik_out_i[6] = addRevoluteOffset(ik_out_i[6], -th_6_offset_original2raw);
-        wrapAngleToPi(ik_out_i);
-        Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
-        double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();
-        if (!std::isfinite(ee_pose_diff) || ee_pose_diff > pose_tolerance_degenerate)
-            continue;
+        Eigen::Matrix4d T_ee_raw_disturbed;
+        if (perturbation != 0)
+            T_ee_raw_disturbed = yaik_cpp::disturbTransform<double>(T_ee_raw, 1e-2, 1e-2, nullptr, perturbation-1);
+        else
+        {
+            T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);
+        }
+        Eigen::Matrix4d T_ee_disturbed = endEffectorTargetRawToOriginal(T_ee_raw_disturbed);
+        computeRawIK(T_ee_raw_disturbed, th_4 + th_4_offset_original2raw, workspace);
+        const auto& raw_ik_out_disturb = workspace.raw_ik_out;
+        for(int i = 0; i < raw_ik_out_disturb.size(); i++)
+        {
+            auto ik_out_i = raw_ik_out_disturb[i];
+            ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw;
+            ik_out_i[1] = addRevoluteOffset(ik_out_i[1], -th_1_offset_original2raw);
+            ik_out_i[2] = ik_out_i[2] - th_2_offset_original2raw;
+            ik_out_i[3] = addRevoluteOffset(ik_out_i[3], -th_3_offset_original2raw);
+            ik_out_i[4] = th_4;
+            ik_out_i[5] = addRevoluteOffset(ik_out_i[5], -th_5_offset_original2raw);
+            ik_out_i[6] = addRevoluteOffset(ik_out_i[6], -th_6_offset_original2raw);
+            wrapAngleToPi(ik_out_i);
+            Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
+            double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();
+            if (!std::isfinite(ee_pose_diff) || ee_pose_diff > pose_tolerance_degenerate)
+                continue;
 
-        // Try numerical refinement
-        yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i, 1e-4, std::array<bool, robot_nq>{{false, false, false, false, true, false, false}});
-        wrapAngleToPi(ik_out_i);
-        ee_pose_i = computeFK(ik_out_i);
-        ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
-        if (ee_pose_diff < pose_tolerance_degenerate)
-            ik_output.push_back(ik_out_i);
+            // Try numerical refinement
+            yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i, 1e-4, std::array<bool, robot_nq>{{false, false, false, false, true, false, false}});
+            wrapAngleToPi(ik_out_i);
+            ee_pose_i = computeFK(ik_out_i);
+            ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
+            if (ee_pose_diff < pose_tolerance_degenerate)
+                ik_output.push_back(ik_out_i);
+        }
     }
 
     removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, ikCandidateClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints(), [&](const std::array<double, robot_nq>& candidate) { return computeFK(candidate); }, T_ee));

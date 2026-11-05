@@ -306,7 +306,7 @@ def kawasaki_CP130L_ik_solve_raw(T_ee: np.ndarray):
     # A new ik type. Should be a fixed array in C++
     IkSolution = NewType("IkSolution", List[float])
     def make_ik_solution():
-        return IkSolution([100000.0] * 5)
+        return IkSolution([math.nan] * 5)
 
     solution_queue: List[IkSolution] = list()
     queue_element_validity: List[bool] = list()
@@ -1406,7 +1406,8 @@ def kawasaki_CP130L_ik_solve_raw(T_ee: np.ndarray):
         new_ik_i[2] = value_at_2
         value_at_3 = ik_out_i[4]  # th_3
         new_ik_i[3] = value_at_3
-        ik_out.append(new_ik_i)
+        if np.all(np.isfinite(new_ik_i)):
+            ik_out.append(new_ik_i)
     return ik_out
 
 

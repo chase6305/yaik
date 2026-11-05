@@ -6,25 +6,26 @@
   "generator_sources_sha256": {
     "codegen/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "codegen/cpp_codegen/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "codegen/cpp_codegen/codegen_cpp.py": "f3af3ced6f075df44a649fbdd15a86554e9d0ed34a13b53660e484ab9a11cbbe",
-    "codegen/cpp_codegen/cpp_codegen_visitor.py": "41dbb4b062f7f7e150ede84a847385a4ca92a33fc333f4e5a3d3ba866844db4b",
+    "codegen/cpp_codegen/codegen_cpp.py": "ecacb8bcdacff489de25ae7a6466f4f4590b13f40906afd514148ae399d05677",
+    "codegen/cpp_codegen/cpp_codegen_visitor.py": "13bbf18040c266668155be6b74cdfb2cb95f3f7c9551ad49f47f099bc3d8be68",
     "codegen/cpp_codegen/scope_manager.py": "423e64593b16b3bb8324bb309a07acf170ca66e8b9ab913b91d41336b795abc9",
     "codegen/py_codegen/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "codegen/py_codegen/codegen_py.py": "446d1da6793d2d686502f1d698692a1af1836efb1346f634f37b440e591c581f",
     "codegen/py_codegen/py_codegen_visitor_base.py": "7146493b1c853a4f0dbd3429441e0c1aaab6e9ff5fbcfc25fd0febc8a9875501",
-    "codegen/py_codegen/py_codegen_visitor_v2.py": "1a2f0f6263df91c26e57d23462f2bd2d64ea2a74c1223ff4fda2541a011d31cf",
+    "codegen/py_codegen/py_codegen_visitor_v2.py": "93a01aeacf7070a587cbb40c297cb42f6c3f70eb6a37c4d6e2d1d8417de98bcc",
     "codegen/skeleton/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "codegen/skeleton/branch_certificates.py": "da94e0c2f193e39f55bd03bbda53da0e1ba3cbedc69dc6c5fd6e1b7c14f9117a",
     "codegen/skeleton/build_equation_branch.py": "8790a2bc0b20249fd0dd1069c39c4f8cea5eea65ead0463efae00410e686a21f",
-    "codegen/skeleton/build_variable_branch.py": "170ba7ef77a7fa193cfe4e700d32484742159586a8d61d96b73a1e3c5e73bdf8",
+    "codegen/skeleton/build_variable_branch.py": "57671aaef1d2a686abe82dff4fa6cfb18559b9caffbee51c86829dc9449368ae",
     "codegen/skeleton/codegen_base.py": "1889ce0b15e97b875a711aa210903da45524d7a72dc2bcb1c04053aef847d501",
-    "codegen/skeleton/completeness.py": "241ac02d594f074a661bcecfa2014f2ece7d3d9cd2a4496d871acbbc10d5b75b",
-    "codegen/skeleton/family_critical.py": "df28bb3da7491b0045ac4d0a2d0020c1f3d338cf165de50962f52757a8172ab1",
+    "codegen/skeleton/complete_partial_branches.py": "69f76109d20274e2974ca76538100e4d6669ac012215b85122e11bd800b48f17",
+    "codegen/skeleton/completeness.py": "ad191623749278254be2e3a787baaf4ff8752a413517960de0f6626d0cce6400",
+    "codegen/skeleton/family_critical.py": "3a1cd353557ccac72ece32de2ed7b64d4e55715a0f60d463c45357913a79b29b",
     "codegen/skeleton/guard_codegen.py": "66453cdc2fa662dba4a3048cca2a5de5be30b6f0975f0b10ff5987fc290e1d1d",
     "codegen/skeleton/skeleton_tree.py": "8aff99153da797118db0a101a56110f7e493c5a89fa711ad3e3d05283906a7f5",
     "codegen/skeleton/tree_node.py": "624192f5e35d02ff62d7af2345af8b98d260ef7c3169024d3ccf42e046cd6eb2",
     "codegen/skeleton/tree_serialize.py": "52fb24e24a6caeee0ddd3fdeeee80c2078d049983b34c13aeb9f275085650548",
-    "codegen/skeleton/visitor_numerical_solve.py": "555b5c8ecc58d612c59427fbddfd29f5f75175b0492c96b242bc6cfaa0949347",
+    "codegen/skeleton/visitor_numerical_solve.py": "defbc95811d89b99f48190b58c262077c87b082b63a5db4009395ccab8fa2890",
     "convert_kinematic_chain.py": "a935580fe5bdccfa15a609ddefc46d80b3ec28da9ddf1ee24868fe792c76209b",
     "fk/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "fk/chain_models.py": "c53e56068f80ca60c447e5310f0e38b7b56585c6bcd62c0d830afb9431b77b7e",
@@ -35,8 +36,8 @@
     "fk/kinematics_dh.py": "c3860acd898eeec3da0b7b75e9e2fa3e5265e2dde5735135f1d501a11bf8ea6b",
     "fk/robot_models.py": "e53a3882993154e73f74c81ffe494441b70ef76bdf26db6357c12337c137604a",
     "fk/robots.py": "ea22db861ae0973fbfa2d3b23517bec71836f3e7f652d943d912fb09090aed94",
-    "gallery/marvin_m6/generate.py": "507c4b1049de0b0a4d3addc46455173b64853678f91db80b8bcb7226fcff91bb",
-    "ik_solve.py": "e7e77536f1656131ba6648a18f833dea6149e5cea00201322f2aa20c8d49ff01",
+    "gallery/marvin_m6/generate.py": "eb0493967bad727db5296e5101ad285cdf00dbf98c3d3f9f47081d5bb64b7caa",
+    "ik_solve.py": "872973cf91cdd9324bf965ad74db518faac3bbefcae72615b6f7fb2072f0e463",
     "solver/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "solver/argument_guards.py": "0ef04ec81c019c3d4c700ad34a154a8d5452e7c2fdd1b92de8d10fa212942abb",
     "solver/branch_conditions.py": "713dd0507519ef9f11ab7de15a290a8611584a1a80d0b96bede7fe18cc202bdd",
@@ -79,7 +80,7 @@
     "solver/solve_equations.py": "7785f369c50e77c8c6e4d39c42404d3f56b22eb0e66f17e3abdb60c5bb36e8ab",
     "solver/solve_non_degenerate.py": "9649454501a7bec051a5c21ca00a7abfd3d8f7bbbca9a8b311a0ce4a9a91d595",
     "solver/solved_variable.py": "498840bf673b717addacf0b931601b026604eb75824b91b3058de94657ce5337",
-    "solver/solved_variable_impl.py": "26c814c955e9cd81edd629c9f903e725ff74f4c161e71bbe065a5e11d49ea622",
+    "solver/solved_variable_impl.py": "b84beb57b45fbb639619e844f020eb016218fd54ae67e8cd248293390be11a5a",
     "solver/solver_snapshot.py": "49993fc2bcc415b432283625665600cb7a8cf24f5a87604c5a2b0f884c9e48d4",
     "solver/sos_transform.py": "e60182919519ef42a73b17b80bcf2509af705a07b82d2c8fbc6a4049c8b6a087",
     "solver/substitute_transform.py": "1ee7ca5bb3796d6f53b368d40b96858eae71b592ee605aa336a53275511cee1c",
@@ -92,14 +93,15 @@
     "solver/unary_solvers/unary_solver_step.py": "a18b28bf8516dd9ebce784bb9bf00001459dc1a7b303ce013e52dfaca92b1bf8",
     "solver/unary_solvers/unary_variable_solver.py": "51d33025dfaa2b234870e270adc1ac0e14f70fe02683329dd5f8b7a43156afe4",
     "utility/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "utility/artifacts.py": "b119b28de34730e74670576a290249fdeb473d4e3cbeca7baca27555a133c256",
+    "utility/artifacts.py": "239a0bd34bfced0d278f6ccf16a9922dd62d1820c975ec8d57b1076b1d83ac8b",
     "utility/rotation_utils.py": "266baf0421529070107254f54d3822d32cb08d24d62168e984c3047a59855942",
     "utility/symbolic_utils.py": "c15cbb9ad2187feb750c56542aaf49b1bcf98bd69db23fe3a98123c044a6e616",
-    "utility/transformations.py": "37945d0c6be26182f5fdad89422bf99c353256f2a87b2f111f2fce47c3cb408e"
+    "utility/transformations.py": "37945d0c6be26182f5fdad89422bf99c353256f2a87b2f111f2fce47c3cb408e",
+    "yaik.py": "97b5ef760ed3705f8498e1cce7bcc5bd309eb4db277aba7300bc5d49c5434ca5"
   },
   "runtime_sha256": {
     "python_run_import.py": "300030bdbcf018bbd6d838afc6060d9ea22b3de630a0abc5136ad008cb2e9871",
-    "yaik_cpp_common.h": "f66141cfab5a2e031a7f26cf352387b31e8fad0f36c5a2560ba9854259e48161"
+    "yaik_cpp_common.h": "3be04b40dbd744b5ecee98a7210cd47dcbe5367f189fee697f18522b8c5902eb"
   },
   "dependencies": {
     "numpy": "2.2.6",
@@ -116,11 +118,11 @@
   "artifact_sha256": {
     "marvin_m6_left_arm.yaml": "b9bd723675379af83351cc8128604a415a9fc79c3e4697c7e68f51929076b631",
     "marvin_m6_left_arm_ik.yaml": "6ded65e3745c1b00f31a55b76afb3b0899f46fd0b196de8564760f9cbfad6bf3",
-    "marvin_m6_left_arm_ik_generated.cpp": "e0b131d375fad88b2b9b485a02c39b5dde9da88bde909b848f956bb269299c30",
-    "marvin_m6_left_arm_ik_generated.py": "ec39de8b3a2f4892a1c9dada8a98faa8765b7dbee1717d4b44958e62b3363760",
+    "marvin_m6_left_arm_ik_generated.cpp": "d4707664c178ee5ef14c532d273779544153ca922b8a3521ee7c03b916f037fc",
+    "marvin_m6_left_arm_ik_generated.py": "dbfda742d0ec0796e6084d2feeb6bc0af336e024ebf0098189c6448bd644da35",
     "marvin_m6_right_arm.yaml": "2eade0da01804ba3f770059c04bfe1cbf13f66684ea9c543305699fa7c89de6b",
     "marvin_m6_right_arm_ik.yaml": "bd6a0073874d273f48623f0931e84a795fb43d8d1bce7551b7b478bc2bdd9224",
-    "marvin_m6_right_arm_ik_generated.cpp": "d24e4d13a70937ec38c5a99c5eeefac9ed9c4cc2714afdc751277d36e0043f11",
-    "marvin_m6_right_arm_ik_generated.py": "a20a613f1e52ebe0b980078535d9f87a0a9311618f618dce2031f63c3ad32af4"
+    "marvin_m6_right_arm_ik_generated.cpp": "3023c8892ab0c4329aae31fe7a20c571ae9cfecf889c48de987f99f87c185d4e",
+    "marvin_m6_right_arm_ik_generated.py": "af93d8100e7f5354a408f6186f9fc31e063d648763b82328d927008cbe2fba04"
   }
 }

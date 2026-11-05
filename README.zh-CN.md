@@ -125,6 +125,17 @@ python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma
 `--test-cases PATH` 可复用样本。种子范围为 `0` 到 `2**32 - 1`；相同依赖和种子有助于复现，
 符号计算的进程超时仍可能影响最终选中的候选。
 
+已有解树可继续补分支，并保留原有分支：
+
+```sh
+python yaik.py generate --resume-tree path/to/robot_ik.yaml --seed 42 \
+  --max-nodes 80 --with-runtime --output-dir build/recovered
+```
+
+续算输出模型、更新后的解树、代码和 `ROBOT_resume.json`，记录输入树哈希、续算种子、
+前后节点数及产物和源码哈希。`--max-nodes` 限制分支扩展，已有节点保留；
+`--test-cases` 用于新搜索。此处种子只描述本次续算，完备性仍未获证。
+
 生成的 Python 代码需要仓库的 `python_run_import.py` 位于 `PYTHONPATH`；
 生成的 C++ 代码需要仓库的 `yaik_cpp_common.h` 和 Eigen3 位于 include 路径。
 通用 `generate` 和 `codegen` 同样支持 `--with-runtime`，仅复制所选语言需要的运行时文件；
@@ -160,10 +171,14 @@ python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma
 基座和工具矩阵使用实际矩阵逆，避免舍入旋转的转置误差。此类近似模型保留旧路径的候选，
 两条路径都按原始目标和原有 FK 阈值检查。C++ 数值细化显式跳过固定关节的更新。
 两条近似坐标路径共用一次 C++ 扰动，保留旧路径的随机序列；已有旧候选时跳过额外数值回退。
+需要数值恢复时，C++ 再检查两个固定方向，不额外消耗随机数，仍按原有 FK 阈值接受候选。
 
 `*_ik_solve_raw` 和 C++ `computeRawIK` 的目标、固定关节参数及返回关节值都采用改进 DH 约定。
 原始机器人坐标和关节偏移由 checked 接口处理。C++ `computeIKUnChecked` 会处理坐标和偏移，
 但不进行 FK 过滤；统计原始候选残差时，需要先恢复原始关节约定再调用原始 FK。
+raw 输出中每个物理关节都须已赋有限值；不完整路径不输出候选，合法的大关节值仍受支持。
+对于受支持的球形肩部分支，会从完整旋转补齐肩部角度；仅在所选符号路径通过精确共轴检查时，
+才选取一个自由关节代表值。这不表示已枚举连续解族中全部满足限位的代表。
 
 通用生成器现在补全“方程系数同时为零”的退化分支：从完整 FK 方程重新选择
 解析公式；较大的退化系统还会在一个旋转关节范围内枚举 33 个代表值，再由生成接口
@@ -183,6 +198,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
   solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
   solver/test_argument_guards.py solver/test_guard_domains.py solver/test_rounded_frames.py \
+  solver/test_candidate_assignment.py solver/test_partial_branches.py \
   solver/test_gallery_regeneration.py \
   solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 

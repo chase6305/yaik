@@ -1,6 +1,7 @@
 """Exercise the user CLI as a subprocess, including its files and exit codes."""
 
 import json
+import hashlib
 from pathlib import Path
 import subprocess
 import sys
@@ -39,6 +40,48 @@ class TestCLI(TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertIn(f'usage: {script} ', result.stdout)
                 self.assertNotIn(f'{script} codegen', result.stdout)
+
+    def test_resume_saved_tree_exports_recovered_tree_and_truthful_provenance(self):
+        source = ROOT/'solver/fixtures/franka_partial_tree.yaml'
+        original = source.read_bytes()
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)/'resume'
+            result = self.run_cli('generate', '--resume-tree', source, '--max-nodes', 30,
+                                  '--seed', 20261211, '--language', 'python', '--with-runtime',
+                                  '--output-dir', output, cwd=temporary)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            message = json.loads(result.stdout)
+            self.assertEqual(message['generation_mode'], 'resume_saved_tree')
+            self.assertEqual((message['nodes_before'], message['nodes_after']), (16, 30))
+            self.assertEqual(len(message['artifacts']), 5)
+            report = json.loads((output/'franka_panda_resume.json').read_text())
+            self.assertEqual(report['input_tree_sha256'], hashlib.sha256(original).hexdigest())
+            self.assertEqual(report['resume_seed'], 20261211)
+            self.assertEqual(report['coverage_status'], 'not_certified')
+            for name, expected in report['artifact_sha256'].items():
+                self.assertEqual(hashlib.sha256((output/name).read_bytes()).hexdigest(), expected)
+            self.assertEqual(source.read_bytes(), original)
+            self.assertFalse(any(path.name.startswith('branch_') for path in output.iterdir()))
+            regenerated = Path(temporary)/'codegen'
+            exported = self.run_cli('codegen', output/'franka_panda_ik.yaml', '--language', 'python',
+                                    '--output-dir', regenerated)
+            self.assertEqual(exported.returncode, 0, exported.stderr)
+            self.assertEqual((output/'franka_panda_ik_generated.py').read_bytes(),
+                             (regenerated/'franka_panda_ik_generated.py').read_bytes())
+
+    def test_resume_option_errors_do_not_publish_files(self):
+        source = ROOT/'solver/fixtures/franka_partial_tree.yaml'
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)/'resume'
+            for arguments, diagnostic in (
+                    (('--resume-tree', MARVIN/'marvin_m6_left_arm.yaml'), 'solution tree'),
+                    (('--resume-tree', source, '--test-cases', 'missing.yaml'), '--test-cases'),
+                    (('--resume-tree', source, '--max-nodes', 0), 'positive integer'),
+                    (('--resume-tree', source, '--builtin', 'puma'), 'not allowed')):
+                result = self.run_cli('generate', *arguments, '--output-dir', output)
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn(diagnostic, result.stderr)
+                self.assertFalse(output.exists())
 
     def test_fk_json_pipes_into_bounded_ik_for_either_side(self):
         for side in ('left', 'right'):

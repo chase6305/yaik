@@ -68,7 +68,7 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
         self.add_code_line('IkSolution = NewType("IkSolution", List[float])')
         self.add_code_line('def make_ik_solution():')
         self.enter_scope('make_ik_solution')
-        self.add_code_line('return IkSolution([100000.0] * {n_vars})'.format(n_vars=len(tree.all_solved_symbol())))
+        self.add_code_line('return IkSolution([math.nan] * {n_vars})'.format(n_vars=len(tree.all_solved_symbol())))
         self.exit_scope('make_ik_solution')
 
         # Code for the shared queue
@@ -145,7 +145,8 @@ class NodeIkSolutionGeneratorPython_v2(IkSolutionGeneratorPythonBase):
                 self.add_code_line('value_at_{idx} = {symbol}  # {symbol}'.
                                    format(idx=i, symbol=unknown_i.symbol.name))
             self.add_code_line('new_ik_i[{idx}] = value_at_{idx}'.format(idx=i))
-        self.add_code_line('ik_out.append(new_ik_i)')
+        self.add_code_line('if np.all(np.isfinite(new_ik_i)):')
+        self.add_code_line(indent() + 'ik_out.append(new_ik_i)')
         self.exit_scope('for_all_queue')
         self.add_code_line('return ik_out')
 

@@ -440,7 +440,7 @@ def marvin_m6_right_arm_ik_solve_raw(T_ee: np.ndarray, th_4):
     # A new ik type. Should be a fixed array in C++
     IkSolution = NewType("IkSolution", List[float])
     def make_ik_solution():
-        return IkSolution([100000.0] * 6)
+        return IkSolution([math.nan] * 6)
 
     solution_queue: List[IkSolution] = list()
     queue_element_validity: List[bool] = list()
@@ -2285,7 +2285,8 @@ def marvin_m6_right_arm_ik_solve_raw(T_ee: np.ndarray, th_4):
         new_ik_i[5] = value_at_5
         value_at_6 = ik_out_i[5]  # th_6
         new_ik_i[6] = value_at_6
-        ik_out.append(new_ik_i)
+        if np.all(np.isfinite(new_ik_i)):
+            ik_out.append(new_ik_i)
     return ik_out
 
 

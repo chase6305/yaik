@@ -31,6 +31,7 @@ class SolutionMethod(Enum):
     # A finite set of representatives, checked against FK by the public API.
     FamilyRepresentative = 14
     SphericalShoulder = 15
+    CoaxialGauge = 16
 
 
 class VariableSolutionClassKey(Enum):
