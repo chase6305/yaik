@@ -12,9 +12,16 @@ def joint_is_periodic(robot, symbol):
         expression = sp.sympify(expression)
         if symbol not in expression.free_symbols:
             return True
-        difference = sp.trigsimp(expression.subs(symbol, symbol+2*sp.pi)-expression)
-        return (sp.simplify(difference/(2*sp.pi)).is_integer is True if angular
-                else difference.is_zero is True)
+        # Runtime parameters are finite reals; symbolic integer/positive
+        # assumptions are not enforced by the generated argument guards.
+        replacements = {item: sp.Dummy(real=True) for item in expression.free_symbols}
+        phase = replacements[symbol]
+        expression = expression.xreplace(replacements)
+        difference = sp.trigsimp(expression.subs(phase, phase+2*sp.pi)-expression)
+        if angular:
+            turns = sp.simplify(difference/(2*sp.pi))
+            return not turns.free_symbols and turns.is_integer is True
+        return difference.is_zero is True
 
     for dh in robot.dh_params:
         if not (unchanged(dh.alpha, True) and unchanged(dh.theta, True)

@@ -63,7 +63,19 @@ class TestFixedJointPhases(TestCase):
         self.assertFalse(joint_is_periodic(tree.robot, symbol))
         self.assertEqual(fixed_joint_branch_centers(tree), [])
         tree.robot.dh_params[0].d = 0
+        ratio = sp.Symbol('ratio', integer=True)
+        tree.robot.dh_params[0].theta = ratio*symbol
+        self.assertFalse(joint_is_periodic(tree.robot, symbol))
+        self.assertGreater(abs(math.cos(.3*1.2)-math.cos((.3+2*math.pi)*1.2)), .9)
+        tree.robot.dh_params[0].theta = 2*symbol
+        self.assertTrue(joint_is_periodic(tree.robot, symbol))
+        tree.robot.dh_params[0].theta = symbol
         tree.robot.auxiliary_data = RobotAuxiliaryData()
+        angle = ratio*symbol
+        tree.robot.auxiliary_data.pre_transform_sp = sp.Matrix([
+            [sp.cos(angle),-sp.sin(angle),0,0],[sp.sin(angle),sp.cos(angle),0,0],
+            [0,0,1,0],[0,0,0,1]])
+        self.assertFalse(joint_is_periodic(tree.robot, symbol))
         tree.robot.auxiliary_data.pre_transform_sp = sp.eye(4)
         tree.robot.auxiliary_data.pre_transform_sp[0,3] = symbol
         self.assertFalse(joint_is_periodic(tree.robot, symbol))
