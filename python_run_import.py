@@ -3,6 +3,19 @@ import math
 from typing import Tuple, Optional, List
 
 
+def add_revolute_offset(value, offset):
+    """Add an angular offset without losing it to a large angle's float ulp."""
+    if isinstance(value, np.ndarray):
+        value = value.item()
+    if isinstance(offset, np.ndarray):
+        offset = offset.item()
+    if offset == 0 or (abs(value) <= 1048576. and abs(offset) <= 1048576.):
+        return value+offset
+    phase = math.atan2(math.sin(value), math.cos(value))
+    shift = math.atan2(math.sin(offset), math.cos(offset)) if abs(offset) > math.pi else offset
+    return phase+shift
+
+
 def _trig_root_offset(a, b, c):
     """atan2(sqrt(a*a+b*b-c*c), -c) for scaled finite coefficients.
 
@@ -164,61 +177,130 @@ def compute_solution_from_tanhalf_LME(
         return_coupled_3_solution: bool = False):
     """
     The solver in Equation 15 of Efficient Inverse Kinematics for General 6R Manipulators.
+
+    Each 6x9 coefficient matrix multiplies
+    [y*y*z*z, y*y*z, y*y, y*z*z, y*z, y, z*z, z, 1].
+    Return angles for x=tan(theta/2), or (theta, 2*atan(y), 2*atan(z))
+    when coupled output is requested. At most two 24-value eigensystems are
+    evaluated; candidates still require the remaining equations and FK checks.
+    Empty output does not establish infeasibility.
     """
-    # To 12x12 matrix
-    A_12x12 = np.zeros(shape=(12, 12))
-    A_12x12[0:6, 0:9] = A_x2
-    A_12x12[6:12, 3:12] = A_x2
-    A_inv = None
-    try:
-        A_inv = np.linalg.inv(A_12x12)
-    except:
-        # print('Cannot inverse the matrix A', print(np.linalg.det(A_12x12)))
-        return None
-    assert A_inv is not None
-    B_12x12 = np.zeros(shape=(12, 12))
-    B_12x12[0:6, 0:9] = B_x
-    B_12x12[6:12, 3:12] = B_x
-    C_12x12 = np.zeros(shape=(12, 12))
-    C_12x12[0:6, 0:9] = C
-    C_12x12[6:12, 3:12] = C
+    inputs = (A_x2, B_x, C)
+    if any(np.iscomplexobj(value) for value in inputs):
+        return []
+    arrays = [np.asarray(value, dtype=float) for value in inputs]
+    if any(value.shape != (6, 9) or not np.isfinite(value).all() for value in arrays):
+        return []
+    scale = max(float(np.max(np.abs(value))) for value in arrays)
+    if scale == 0:
+        return []
+    a, b, c = (value/scale for value in arrays)
 
-    M = np.zeros(shape=(24, 24))
-    M[0:12, 12:24] = np.eye(12)
-    M[12:24, 0:12] = - A_inv.dot(C_12x12)
-    M[12:24, 12:24] = - A_inv.dot(B_12x12)
+    def expand(value):
+        matrix = np.zeros((12, 12))
+        matrix[:6, :9], matrix[6:, 3:] = value, value
+        return matrix
 
-    # The case only need one solution
-    if not return_coupled_3_solution:
-        eigen_values = np.linalg.eigvals(M)
-        imag_part = np.imag(eigen_values)
-        real_part = np.real(eigen_values)
-        solution: List[float] = list()
-        for i in range(eigen_values.size):
-            if abs(imag_part[i]) < 1e-6:
-                atan_value = np.arctan(real_part[i])
-                solution.append(2 * atan_value)
-        return solution
+    def companion(leading, linear, constant, legacy=False):
+        matrix = np.zeros((24, 24))
+        matrix[:12, 12:] = np.eye(12)
+        try:
+            with np.errstate(over='ignore', invalid='ignore', divide='ignore'):
+                if legacy:
+                    inverse = np.linalg.inv(leading)
+                    matrix[12:, :12] = -inverse.dot(constant)
+                    matrix[12:, 12:] = -inverse.dot(linear)
+                else:
+                    matrix[12:, :] = -np.linalg.solve(leading, np.concatenate((constant, linear), axis=1))
+        except np.linalg.LinAlgError:
+            return None
+        return matrix if np.isfinite(matrix).all() else None
 
-    # We need all three coupled solution
-    solution: List[Tuple[float]] = list()
-    eigen_values, eigen_vectors = np.linalg.eig(M)
-    for i in range(eigen_values.size):
-        if abs(np.imag(eigen_values[i])) > 1e-6:
+    # Keep the established candidates: switching charts can improve one nearly
+    # singular root while perturbing another. Their final FK checks decide which
+    # representatives are acceptable, rather than a condition estimate alone.
+    systems = []
+    legacy = companion(*(expand(value) for value in arrays), legacy=True)
+    if legacy is not None:
+        systems.append((legacy, 0.))
+
+    # x=(y+t)/(1-t*y) is an exact change of angular chart. A singular leading
+    # coefficient can hide finite angles (including x=infinity at theta=pi).
+    # Add at most one stable chart, retaining a 48-candidate bound across both
+    # eigensystems. Structurally singular polynomials still need other methods.
+    best = None
+    for t in (0., 1., -1., .5, -.5, 2., -2.):
+        leading = expand(a-t*b+t*t*c)
+        try:
+            condition = np.linalg.cond(leading)
+        except np.linalg.LinAlgError:
             continue
-        tanhalf_x3 = np.real(eigen_values[i])
-        theta3_value = 2.0 * np.arctan(tanhalf_x3)
+        if math.isfinite(condition) and (best is None or condition < best[0]):
+            best = (condition, t, leading)
+        if t == 0. and condition < 1e8 and np.max(np.abs(a)) > 1e-8:
+            break
+    ordinary_stable = (best is not None and best[1] == 0. and best[0] < 1e8
+                       and np.max(np.abs(a)) > 1e-8)
+    if (not ordinary_stable or not systems) and best is not None and best[0] <= 1e14:
+        _, t, leading = best
+        shifted = companion(leading, expand(2*t*a+(1-t*t)*b-2*t*c),
+                            expand(t*t*a+t*b+c))
+        if shifted is not None:
+            systems.append((shifted, t))
 
-        # The remaining part
-        full_ev_i = eigen_vectors[:, i]
-        ev_i = full_ev_i[0:12]
-        tanhalf_x4 = ev_i[3] / ev_i[0]
-        tanhalf_x5 = ev_i[1] / ev_i[0]
-        if np.imag(tanhalf_x4) > 1e-6 or np.imag(tanhalf_x5) > 1e-6:
+    solution = []
+
+    def coupled_angle(vector, pairs):
+        # The lifted vector is [y^3*z^2,y^3*z,y^3,...,z^2,z,1]. Ratios
+        # numerator/denominator give y or z, not their reciprocals. Use a
+        # projective pair with the largest magnitude so zeros and infinite
+        # tangent values do not require division by a vanishing component.
+        numerator, denominator = max(((vector[i], vector[j]) for i, j in pairs),
+                                     key=lambda pair: max(abs(pair[0]), abs(pair[1])))
+        scale = max(abs(numerator), abs(denominator))
+        if scale == 0:
+            return None
+        anchor = numerator if abs(numerator) >= abs(denominator) else denominator
+        phase = anchor.conjugate()/abs(anchor)
+        numerator, denominator = (numerator/scale)*phase, (denominator/scale)*phase
+        if abs(numerator.imag) > 1e-6 or abs(denominator.imag) > 1e-6:
+            return None
+        angle = 2*math.atan2(numerator.real, denominator.real)
+        return math.atan2(math.sin(angle), math.cos(angle))
+
+    for matrix, t in systems:
+        try:
+            if return_coupled_3_solution:
+                eigen_values, eigen_vectors = np.linalg.eig(matrix)
+            else:
+                eigen_values = np.linalg.eigvals(matrix)
+        except np.linalg.LinAlgError:
             continue
-        theta4_value = 2.0 * np.arctan(np.real(tanhalf_x4))
-        theta5_value = 2.0 * np.arctan(np.real(tanhalf_x5))
-        solution.append((float(theta3_value), float(theta4_value), float(theta5_value)))
+        for i, value in enumerate(eigen_values):
+            if not np.isfinite(value) or abs(value.imag) > 1e-6:
+                continue
+            angle = 2*np.arctan(value.real)+2*math.atan(t)
+            theta3 = math.atan2(math.sin(angle), math.cos(angle)) if t else float(angle)
+            if not return_coupled_3_solution:
+                solution.append(theta3)
+                continue
+            vector = eigen_vectors[:12, i]
+            if not np.isfinite(vector).all():
+                continue
+            theta4 = coupled_angle(vector, [(j, j+3) for j in range(9)])
+            theta5 = coupled_angle(vector, [(j, j+1) for j in range(12) if j % 3 != 2])
+            if theta4 is None or theta5 is None:
+                continue
+            sy, cy = math.sin(theta4/2), math.cos(theta4/2)
+            sz, cz = math.sin(theta5/2), math.cos(theta5/2)
+            monomials = np.kron([sy*sy, sy*cy, cy*cy], [sz*sz, sz*cz, cz*cz])
+            sx, cx = math.sin(theta3/2), math.cos(theta3/2)
+            polynomial = a*sx*sx+b*sx*cx+c*cx*cx
+            residual = polynomial@monomials
+            bound = np.abs(polynomial)@np.abs(monomials)
+            if np.max(np.abs(residual)/(1+bound)) > 1e-6:
+                continue
+            solution.append((theta3, theta4, theta5))
     return solution
 
 

@@ -294,8 +294,9 @@ class General6DoFNumericalReduceSolutionImpl(VariableSolutionImplBase):
         return VariableSolutionClassKey.General6DoFNumericalReduce.name
 
     def num_solutions(self):
-        # No more solution than this, but there would be invalid ones
-        return 24
+        # Up to 24 legacy eigenvalues plus one stable angular chart. Every
+        # candidate still needs the remaining equations and the final FK gate.
+        return 48
 
     @property
     def reduce_out(self):

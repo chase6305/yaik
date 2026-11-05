@@ -99,12 +99,31 @@ python yaik.py marvin generate --output-dir build/marvin_m6
 python yaik.py marvin check --output-dir build/marvin_m6
 ```
 
+For an export usable outside the checkout, add `--with-runtime`. It bundles the
+matching `python_run_import.py` and `yaik_cpp_common.h` and records their hashes:
+
+```sh
+python yaik.py marvin generate --with-runtime --output-dir build/marvin_m6
+python yaik.py marvin validate --solver-dir build/marvin_m6 \
+  --samples 1000 --stress-samples 2000 --output build/marvin_m6/validation.json
+```
+
+`--solver-dir` selects the generated kernels actually loaded and compiled by the
+validator. Bundled helpers take precedence over repository helpers. The bounded
+reference still comes from the gallery; both source locations and hashes appear
+in the report. `marvin check` also checks bundled helper bytes when provenance
+records them. A C++ consumer still needs Eigen3.
+
 It uses saved trees in the output directory when present, otherwise the gallery
 trees. `--tree-dir PATH` selects saved trees explicitly. Both tree models must
 match the input URDFs before output files are changed. Generation is staged
 before publication, and unrelated output files are preserved. Export records
 the verified source trees' seed, or `null` if no matching provenance is available;
 `--seed` controls a new search, not code export.
+Conflicting destination directories are rejected before replacement. If a write
+fails or Ctrl+C interrupts publication, previous artifacts are restored. This is
+not a multi-file transaction across a process kill or power loss; concurrent
+exports to one directory need external coordination.
 
 To repeat the symbolic search explicitly:
 
@@ -145,6 +164,12 @@ for both languages. C++ code uses safe mathematical operators.
 Generated Python needs the repository's `python_run_import.py` on `PYTHONPATH`.
 Generated C++ needs the repository's `yaik_cpp_common.h` and Eigen3 on its include
 path. Runtime calls do not run symbolic search or require SymPy.
+Both `generate` and `codegen` accept `--with-runtime`; only helpers for the chosen
+`--language` are copied. Put the exported directory on `PYTHONPATH` or the C++
+include path. A model can use bounded runtime parameters in its base and tool
+transforms as well as in its DH chain; those parameters are passed through FK,
+Jacobian, target conversion, and checked IK. See the
+[frame parameter example](./docs/modified_dh.md#base-and-tool-transforms).
 
 The library APIs remain available:
 
@@ -189,6 +214,10 @@ matrix-entry error against `1e-4`; C++ checks squared matrix error against `1e-6
 (`1e-4` after refinement). They reject nonfinite input and verify FK, but do not
 enforce URDF limits. Fixed redundant joints retain their supplied angle
 representation; C++ normalizes other revolute joints before FK verification.
+Large revolute values are reduced by their sine/cosine phase before adding or
+removing a nonzero joint offset. FK and Jacobians therefore retain the offset
+even when ordinary floating-point addition would erase it. Fixed joints still
+return the exact supplied value; prismatic coordinates keep linear arithmetic.
 `yaik_cpp::removeDuplicate<N>` accepts an optional per-joint revolute mask for
 periodic comparison after normalization and limit filtering. Its default keeps
 distinct `-pi`/`+pi` representations, which can differ in limit feasibility.
@@ -200,6 +229,12 @@ joint. These candidates pass the generated wrapper's FK checks. This is finite
 coverage of continuous families, with no guarantee of full-workspace completeness.
 The stored Marvin trees and both generated languages include this recovery.
 
+The generic 6R matrix kernel retains its original eigenvalue candidates and adds
+one stable tangent-half-angle chart when the leading matrix is ill-conditioned.
+Regenerated C++ kernels reserve up to 48 candidates instead of truncating the
+24-eigenvalue problem into a 16-element buffer. Singular systems that remain
+unresolved return an empty candidate list; this does not prove infeasibility.
+
 ## Validation
 
 ```sh
@@ -207,7 +242,8 @@ python -m pip install pytest
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   test_cli.py gallery/marvin_m6 solver/test_regressions.py \
   solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
-  solver/test_completeness.py solver/test_linear_circles.py -q
+  solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
+  solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
   --output build/marvin-validation.json

@@ -74,11 +74,26 @@ python yaik.py marvin generate --output-dir build/marvin_m6
 python yaik.py marvin check --output-dir build/marvin_m6
 ```
 
+需要在仓库外使用生成文件时，加 `--with-runtime`，会同时复制匹配的
+`python_run_import.py` 和 `yaik_cpp_common.h`，并记录哈希。可以直接验证该目录：
+
+```sh
+python yaik.py marvin generate --with-runtime --output-dir build/marvin_m6
+python yaik.py marvin validate --solver-dir build/marvin_m6 \
+  --samples 1000 --stress-samples 2000 --output build/marvin_m6/validation.json
+```
+
+`--solver-dir` 指定实际加载和编译的标准生成解文件；优先使用该目录中的运行时文件。
+有界参考接口仍来自 gallery，报告分别记录两者的路径及源码哈希。
+`marvin check` 也会核对来源记录中的运行时文件。C++ 使用者仍需安装 Eigen3。
+
 输出目录中已有解树时使用它们，否则使用 gallery 中的解树。
 `--tree-dir PATH` 可指定解树来源，`--urdf-dir PATH` 可指定包含
 `left_arm.urdf` 和 `right_arm.urdf` 的目录。两侧模型均匹配后才发布生成结果，
 输入不匹配或代码生成失败时保留已有解文件，也保留输出目录中的其他文件。
 导出保留可验证的原始搜索种子；无匹配来源记录时为 `null`。
+输出文件名若与目录冲突，会在替换任何文件前报错；写入失败或 Ctrl+C 中断发布时恢复旧文件。
+进程被强制终止、断电或多个进程同时导出到同一目录不在这项回滚保证内。
 
 需要重新进行耗时的符号求解时，明确添加 `--solve`：
 
@@ -111,6 +126,10 @@ python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma
 
 生成的 Python 代码需要仓库的 `python_run_import.py` 位于 `PYTHONPATH`；
 生成的 C++ 代码需要仓库的 `yaik_cpp_common.h` 和 Eigen3 位于 include 路径。
+通用 `generate` 和 `codegen` 同样支持 `--with-runtime`，仅复制所选语言需要的运行时文件；
+之后把导出目录放入 `PYTHONPATH` 或 C++ include 路径即可。
+基座和工具变换支持已声明的有界运行时参数，FK、Jacobian、坐标转换和 IK 都会传递这些参数，
+示例见 [Modified-DH 文档](./docs/modified_dh.md#base-and-tool-transforms)。
 原有 Python 库 API 保留；`ik_solve.py`、`py_codegen.py` 和 `cpp_codegen.py`
 也支持显式传入模型或解树，具体例子见 [英文说明](./README.md)。
 
@@ -131,11 +150,17 @@ python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma
 空结果也不证明目标不可达。碰撞、轨迹与动力学约束仍需应用层处理。
 标准 `*_ik_generated` 接口保留原先的较宽矩阵误差阈值和无关节限位过滤行为，
 奇异覆盖率与带限位接口分开统计。
+大角度叠加或减去关节偏移时先保留三角相位，避免浮点精度把偏移吞掉；FK 和 Jacobian
+使用同一规则，固定关节仍返回调用者提供的原值，移动关节保持线性坐标计算。
 
 通用生成器现在补全“方程系数同时为零”的退化分支：从完整 FK 方程重新选择
 解析公式；较大的退化系统还会在一个旋转关节范围内枚举 33 个代表值，再由生成接口
 进行 FK 校验。左右臂保存的解树和生成的 Python/C++ 文件均包含这些分支。
 连续解族仍采用有限代表值，不能据此保证全工作空间完备性。
+
+通用 6R 矩阵内核遇到病态首项矩阵时，会保留原有候选并补充一种稳定的半角正切参数化。
+重新生成的 C++ 内核预留最多 48 个候选，避免原先 16 个槽位截断 24 阶特征值结果。
+仍未解决的奇异系统返回空候选列表；空列表不代表已证明不可达。
 
 ## 验证
 
@@ -144,7 +169,8 @@ python -m pip install pytest
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   test_cli.py gallery/marvin_m6 solver/test_regressions.py \
   solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
-  solver/test_completeness.py solver/test_linear_circles.py -q
+  solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
+  solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q
 
 python yaik.py marvin validate --samples 1000 --seed 20261103 \
   --output build/marvin-validation.json

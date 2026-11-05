@@ -93,6 +93,18 @@ class TestCLI(TestCase):
         self.assertEqual(json.loads(result.stdout)['reachability'], 'undetermined')
         self.assertFalse(json.loads(result.stdout)['certified_complete'])
 
+    def test_malformed_exported_module_has_a_clear_input_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            for side in ('left', 'right'):
+                (directory/f'marvin_m6_{side}_arm_ik_generated.py').write_text('def broken(:\n')
+            result = self.run_cli('marvin', 'validate', '--solver-dir', directory,
+                                  '--samples', '0', '--python-only', '--output', directory/'report.json')
+            self.assertEqual(result.returncode, 2, result.stderr)
+            self.assertEqual(result.stdout, '')
+            self.assertIn('invalid syntax', result.stderr)
+            self.assertNotIn('Traceback', result.stderr)
+
     def test_completeness_audit_does_not_promote_regression_coverage_to_a_proof(self):
         tree = MARVIN / 'marvin_m6_left_arm_ik.yaml'
         result = self.run_cli('audit', tree)
@@ -135,6 +147,53 @@ class TestCLI(TestCase):
                 name = 'marvin_m6_left_arm_ik_generated.' + extension
                 self.assertEqual((output / name).read_bytes(), (MARVIN / name).read_bytes())
             self.assertEqual(sentinel.read_text(), 'keep')
+
+    def test_codegen_can_bundle_runtime_for_an_external_python_process(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            output = root/'export'
+            result = self.run_cli('codegen', MARVIN/'marvin_m6_left_arm_ik.yaml',
+                                  '--with-runtime', '--output-dir', output, cwd=temporary)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(len(json.loads(result.stdout)['artifacts']), 4)
+            self.assertEqual((output/'python_run_import.py').read_bytes(),
+                             (ROOT/'python_run_import.py').read_bytes())
+            self.assertEqual((output/'yaik_cpp_common.h').read_bytes(),
+                             (ROOT/'yaik_cpp_common.h').read_bytes())
+            script = '''import sys
+sys.path.insert(0, sys.argv[1])
+import marvin_m6_left_arm_ik_generated as arm
+q=[.3,-.5,.7,-1.,.4,-.2,.1]
+assert arm.marvin_m6_left_arm_ik_solve(arm.marvin_m6_left_arm_fk(q), q[4])
+'''
+            external = subprocess.run([sys.executable, '-B', '-I', '-c', script, str(output)],
+                                      cwd=temporary, text=True, capture_output=True, timeout=30)
+            self.assertEqual(external.returncode, 0, external.stderr)
+
+    def test_marvin_bundle_is_checked_and_file_conflicts_preserve_existing_results(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)/'export'
+            result = self.run_cli('marvin', 'generate', '--with-runtime', '--output-dir', output)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            metadata = json.loads((output/'provenance.json').read_text())
+            self.assertEqual(len(metadata['artifact_sha256']), 10)
+            for name in ('python_run_import.py', 'yaik_cpp_common.h'):
+                self.assertIn(name, metadata['artifact_sha256'])
+            result = self.run_cli('marvin', 'check', '--output-dir', output)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            (output/'python_run_import.py').write_text('# stale helper\n')
+            result = self.run_cli('marvin', 'check', '--output-dir', output)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('Stale artifact', result.stderr)
+            sentinel = output/'marvin_m6_left_arm.yaml'
+            sentinel.write_text('old result')
+            conflict = output/'marvin_m6_right_arm_ik_generated.cpp'
+            conflict.unlink(); conflict.mkdir()
+            before = {path.name: path.read_bytes() for path in output.iterdir() if path.is_file()}
+            result = self.run_cli('marvin', 'generate', '--with-runtime', '--output-dir', output)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn('destination is not a file', result.stderr)
+            self.assertEqual(before, {path.name: path.read_bytes() for path in output.iterdir() if path.is_file()})
 
     def test_fast_marvin_export_preserves_seed_and_rejects_mismatched_inputs_atomically(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -217,6 +276,7 @@ class TestCLI(TestCase):
                     ('codegen', MARVIN / 'marvin_m6_left_arm.yaml'),
                     ('generate', '--model', MARVIN / 'marvin_m6_left_arm_ik.yaml'),
                     ('marvin', 'generate', '--solve', '--models-only'),
+                    ('marvin', 'generate', '--models-only', '--with-runtime'),
                     ('generate', '--builtin', 'puma', '--seed', '-1')):
                 with self.subTest(arguments=arguments):
                     result = self.run_cli(*arguments, cwd=temporary)

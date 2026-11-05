@@ -242,21 +242,53 @@ def cases_for(arm, count, seed, stress_samples=0):
 def load_module(path, name):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
+    missing = object()
+    previous = sys.modules.get(name, missing)
     sys.modules[name] = module
-    spec.loader.exec_module(module)
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        if previous is missing:
+            sys.modules.pop(name, None)
+        else:
+            sys.modules[name] = previous
+        raise
     return module
 
 
+def runtime_path(solver_dir, name):
+    bundled = Path(solver_dir)/name
+    return bundled if bundled.is_file() else ROOT/name
+
+
+def load_python_solver(path, name, runtime):
+    """Bind this kernel to its bundled runtime, then restore the caller's import."""
+    missing = object()
+    previous = sys.modules.get('python_run_import', missing)
+    try:
+        load_module(runtime, 'python_run_import')
+        return load_module(path, name)
+    finally:
+        if previous is missing:
+            sys.modules.pop('python_run_import', None)
+        else:
+            sys.modules['python_run_import'] = previous
+
+
 class PythonSolver:
-    def __init__(self, side, bounded=False):
+    def __init__(self, side, bounded=False, solver_dir=None):
+        if side not in ('left', 'right'):
+            raise ValueError('side must be left or right')
         self.bounded = bounded
+        solver_dir = Path(solver_dir) if solver_dir is not None else HERE
+        runtime = runtime_path(solver_dir, 'python_run_import.py')
         if bounded:
-            module = load_module(HERE / 'solver.py', 'marvin_m6_analytical_integration')
+            module = load_python_solver(solver_dir/'solver.py', 'marvin_m6_analytical_integration', runtime)
             self.instance = module.Solver(side)
             self._fk, self._ik = self.instance.fk, self.instance.ik
         else:
             name = 'marvin_m6_' + side + '_arm'
-            module = load_module(HERE / (name+'_ik_generated.py'), name+'_generated_validation')
+            module = load_python_solver(solver_dir/(name+'_ik_generated.py'), name+'_generated_validation', runtime)
             self._fk = getattr(module, name+'_fk')
             self._ik = getattr(module, name+'_ik_solve')
 
@@ -268,11 +300,12 @@ class PythonSolver:
 
 
 class CppSolver:
-    def __init__(self, side, build_dir, bounded=False, eigen_dir='/usr/include/eigen3'):
+    def __init__(self, side, build_dir, bounded=False, eigen_dir='/usr/include/eigen3', solver_dir=None):
         if side not in ('left', 'right'):
             raise ValueError('side must be left or right')
         self.bounded = bounded
         self.side_index = 0 if side == 'left' else 1
+        solver_dir = Path(solver_dir) if solver_dir is not None else HERE
         name = 'marvin_m6_' + side + '_arm'
         tag = 'bounded' if bounded else side + '_generated'
         includes = '#include "solver.hpp"' if bounded else ('#define main marvin_generated_demo_main\n#include "'+name+'_ik_generated.cpp"\n#undef main')
@@ -301,9 +334,9 @@ extern "C" int ik({side_parameter}const double* target, double q5, double* outpu
 '''
         # Both bounded arms use one header with a runtime side argument. Reuse
         # that compilation; key it by the source so stale builds are not reused.
-        dependency = HERE / ('solver.hpp' if bounded else name + '_ik_generated.cpp')
+        dependency = solver_dir/('solver.hpp' if bounded else name + '_ik_generated.cpp')
         dependency_bytes = dependency.read_bytes()
-        common_bytes = b'' if bounded else (ROOT / 'yaik_cpp_common.h').read_bytes()
+        common_bytes = b'' if bounded else runtime_path(solver_dir, 'yaik_cpp_common.h').read_bytes()
         digest = hashlib.sha256(wrapper.encode() + dependency_bytes + common_bytes +
                                 str(Path(eigen_dir).resolve()).encode()).hexdigest()[:16]
         source = Path(build_dir) / f'{tag}_{digest}.cpp'
@@ -321,7 +354,7 @@ extern "C" int ik({side_parameter}const double* target, double q5, double* outpu
                     (staging / 'yaik_cpp_common.h').write_bytes(common_bytes)
                 staged_library = staging / 'solver.so'
                 subprocess.run(['g++', '-O2', '-std=c++17', '-shared', '-fPIC', '-I', str(staging),
-                                '-I', str(ROOT), '-I', str(HERE), '-I', str(eigen_dir),
+                                '-I', str(ROOT), '-I', str(solver_dir), '-I', str(eigen_dir),
                                 str(staged_source), '-o', str(staged_library)], check=True)
                 staged_library.replace(library)
         self.lib = ctypes.CDLL(str(library))
@@ -461,9 +494,12 @@ def main(argv=None):
     parser.add_argument('--seed', type=int, default=20261103)
     parser.add_argument('--output', type=Path, default=HERE / 'validation_report.json')
     parser.add_argument('--python-only', action='store_true')
+    parser.add_argument('--solver-dir', type=Path, default=HERE,
+                        help='Generated kernels to validate; bounded reference remains in the gallery')
     parser.add_argument('--urdf-dir', type=Path, default=HERE / 'urdf')
     parser.add_argument('--eigen-dir', type=Path, default=Path('/usr/include/eigen3'))
     args = parser.parse_args(argv)
+    args.solver_dir = args.solver_dir.resolve()
     if args.samples < 0 or args.stress_samples < 0:
         parser.error('--samples and --stress-samples must be nonnegative')
     if not args.python_only and shutil.which('g++') is None:
@@ -476,11 +512,21 @@ def main(argv=None):
     sources += sorted(Path(args.urdf_dir).glob('*_arm.urdf'))
     sources += [ROOT / name for name in ('python_run_import.py', 'yaik_cpp_common.h',
                                        'yaik.py', 'requirements.txt')]
+    for side in ('left', 'right'):
+        sources.append(args.solver_dir/f'marvin_m6_{side}_arm_ik_generated.py')
+        if not args.python_only:
+            sources.append(args.solver_dir/f'marvin_m6_{side}_arm_ik_generated.cpp')
+    sources.append(runtime_path(args.solver_dir, 'python_run_import.py'))
+    if not args.python_only:
+        sources.append(runtime_path(args.solver_dir, 'yaik_cpp_common.h'))
     report = {'seed': args.seed, 'random_samples_per_arm': args.samples,
               'stress_samples_per_arm': args.stress_samples,
               'position_tolerance_m': 1e-7, 'rotation_tolerance_rad': 1e-6,
               'fk_matrix_tolerance': 1e-11, 'free_joint_tolerance_rad': 1e-8,
               'python_version': platform.python_version(), 'numpy_version': np.__version__,
+              'generated_solver_dir': str(args.solver_dir), 'bounded_solver_dir': str(HERE.resolve()),
+              'generated_runtime': {'python': str(runtime_path(args.solver_dir, 'python_run_import.py')),
+                                    'cpp': None if args.python_only else str(runtime_path(args.solver_dir, 'yaik_cpp_common.h'))},
               'sources': {str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},
               'method': 'Independent XML FK generates reachable targets and verifies every candidate; fixed q5 uses known generating q[4]. Raw generator and bounded analytical integration are reported separately.',
               'results': {}}
@@ -492,7 +538,9 @@ def main(argv=None):
                 for bounded in (False, True):
                     key = f'{language}/{side}/' + ('bounded_analytical' if bounded else 'generated')
                     print('Checking ' + key, flush=True)
-                    solver = PythonSolver(side, bounded) if language == 'python' else CppSolver(side, temporary, bounded, args.eigen_dir)
+                    solver_dir = None if bounded else args.solver_dir
+                    solver = (PythonSolver(side, bounded, solver_dir) if language == 'python' else
+                              CppSolver(side, temporary, bounded, args.eigen_dir, solver_dir))
                     result = run_solver(solver, arm, cases)
                     result['negative_checks'] = negative_checks(solver, arm)
                     result['passed'] &= result['negative_checks']['passed']

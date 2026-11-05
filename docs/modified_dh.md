@@ -21,3 +21,35 @@ entry_i = DHEntry()
 T_{i}_to_{i-1} = rotx(entry_i.alpha) * trans_x(entry_i.a) * rotz(entry_i.theta) * trans_z(entry_i.d)
 ```
 
+## Base and tool transforms
+
+`RobotAuxiliaryData` maps the raw DH pose into the application's frames:
+`T_original = pre_transform_sp * T_raw * post_transform_sp`.
+Joint offsets use `q_raw = q_original + unknown_offset`.
+Base/tool transforms must be rigid 4×4 matrices and independent of joint variables.
+Their geometric parameters can be fixed or supplied at runtime:
+
+```python
+import sympy as sp
+from fk.robots import RobotAuxiliaryData
+
+mount_angle, tool_length = sp.symbols('mount_angle tool_length')
+robot.symbolic_parameters.update({mount_angle, tool_length})
+robot.parameters_bound.update({mount_angle: (-1., 1.), tool_length: (0., .2)})
+robot.auxiliary_data = RobotAuxiliaryData()
+robot.auxiliary_data.pre_transform_sp = sp.Matrix([
+    [sp.cos(mount_angle), 0, sp.sin(mount_angle), 0],
+    [0, 1, 0, 0],
+    [-sp.sin(mount_angle), 0, sp.cos(mount_angle), 0],
+    [0, 0, 0, 1]])
+robot.auxiliary_data.post_transform_sp = sp.eye(4)
+robot.auxiliary_data.post_transform_sp[2, 3] = tool_length
+```
+
+Generated FK, Jacobians, and checked IK accept runtime geometry in alphabetical
+parameter-name order. IK then accepts fixed redundant joints in model joint order.
+Target conversion helpers accept only runtime parameters used by the base/tool
+transforms, also alphabetically. Declared parameter bounds guide offline sampling;
+the standard generated API checks finite runtime values and FK, rather than
+enforcing geometry bounds or all joint limits.
+

@@ -100,6 +100,27 @@ class CodeGenerationBase(object):
         """
         return self._tree.get_free_symbols(include_unknown_as_parameter)
 
+    def frame_parameters(self) -> List[sp.Symbol]:
+        """Runtime geometry needed by the base/tool coordinate conversions."""
+        symbols = set()
+        for transform in (self.robot.get_pre_transform_sp(), self.robot.get_post_transform_sp()):
+            if transform is not None:
+                symbols.update(transform.free_symbols)
+        return [symbol for symbol in self.free_symbols(False) if symbol in symbols]
+
+    def frame_transform_call(self, function_name: str, target: str) -> str:
+        arguments = [target] + list(map(str, self.frame_parameters()))
+        return function_name + '(' + ', '.join(arguments) + ')'
+
+    def joint_offset_expression(self, symbol, value, cpp=False, subtract=False):
+        index = next(i for i, unknown in enumerate(self.robot.unknowns) if unknown.symbol == symbol)
+        offset = self.get_unknown_offset_name(symbol.name)
+        unknown = self.robot.unknowns[index]
+        if unknown.is_revolute and self.robot.get_unknown_offset()[index] != 0:
+            helper = 'addRevoluteOffset' if cpp else 'add_revolute_offset'
+            return helper + '(' + value + ', ' + ('-' if subtract else '') + offset + ')'
+        return value + (' - ' if subtract else ' + ') + offset
+
     # The string utility
     @staticmethod
     def new_line():

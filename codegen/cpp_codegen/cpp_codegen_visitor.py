@@ -833,7 +833,7 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         solved_var_idx = self._symbol_to_index[solved_var]
         self.add_empty_line()
         self.add_code_line('// Invoke the solver')
-        self.add_code_line('std::array<double, 16> solution_buffer;')
+        self.add_code_line('std::array<double, 48> solution_buffer;')
         self.add_code_line('int n_solutions = '
                            'yaik_cpp::general_6dof_internal::computeSolutionFromTanhalfLME'
                            '(A, B, C, &solution_buffer);')
@@ -913,7 +913,7 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
         # Invoke the method
         self.add_empty_line()
         self.add_code_line('// Invoke the solver')
-        self.add_code_line('std::array<double, 16> solution_buffer;')
+        self.add_code_line('std::array<double, 48> solution_buffer;')
         self.add_code_line('int n_solutions = '
                            'yaik_cpp::general6DofNumericalReduceSolve<{n_equation}, {n_lhs_unknowns}, {n_rhs_unknowns}>'
                            '(A_sin, A_cos, C_const, N_rhs, lines_to_reduce, remaining_lines, &solution_buffer);'.

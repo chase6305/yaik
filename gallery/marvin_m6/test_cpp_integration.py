@@ -27,6 +27,11 @@ class TestCppIntegration(TestCase):
             q = np.array([0.3, -0.5, 0.7, -1.0, 0.4, -0.2, 0.1])
             for side, solver in solvers.items():
                 arm = UrdfArm(side)
+                for joint in range(7):
+                    for value in (2.**30, 1e20, -1e20, 1e300, -1e300):
+                        angles = np.zeros(7); angles[joint] = value
+                        with self.subTest(side=side, large_fk_joint=joint, value=value):
+                            np.testing.assert_allclose(solver.fk(angles), arm.fk(angles), atol=1e-13, rtol=0)
                 samples = [('regular', q)]+[(label, joints) for label, joints in cases_for(arm, 0, 20261103)
                                            if label.startswith('elbow_repeated_limit/')]
                 for label, joints in samples:

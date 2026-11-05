@@ -90,7 +90,7 @@ def check_name(name):
         raise ValueError('robot name must be an ASCII identifier, such as my_robot')
 
 
-def export_code(tree, output_dir, language):
+def export_code(tree, output_dir, language, with_runtime=False):
     check_name(tree.robot.name)
     paths = []
     for extension in (('py', 'cpp') if language == 'both' else
@@ -104,14 +104,15 @@ def export_code(tree, output_dir, language):
             generate_code_cpp(tree, str(path), use_safe_operator=True)
         path.write_text('\n'.join(line.rstrip() for line in path.read_text().splitlines()) + '\n')
         paths.append(path)
+    if with_runtime:
+        from utility.artifacts import copy_runtime
+        paths.extend(copy_runtime(output_dir, language))
     return paths
 
 
 def publish(staging, output):
-    paths = sorted(Path(staging).iterdir())
-    for path in paths:
-        path.replace(output / path.name)
-    return [str(output / path.name) for path in paths]
+    from utility.artifacts import publish_artifacts
+    return publish_artifacts(staging, output)
 
 
 def codegen(args):
@@ -136,7 +137,7 @@ def codegen(args):
         if incomplete_report is None:
             output.mkdir(parents=True, exist_ok=True)
             with tempfile.TemporaryDirectory(prefix='.yaik-', dir=output) as staging:
-                export_code(tree, staging, args.language)
+                export_code(tree, staging, args.language, args.with_runtime)
                 paths = publish(staging, output)
     if incomplete_report is not None:
         emit(incomplete_report)
@@ -186,7 +187,7 @@ def generate(args):
             with working_directory(staging):
                 run_ik(robot, test_cases, RunIKOption(random_seed=args.seed))
                 tree = read_skeleton_tree(str(staging / f'{robot.name}_ik.yaml'))
-                export_code(tree, staging, args.language)
+                export_code(tree, staging, args.language, args.with_runtime)
                 (staging / f'{robot.name}.yaml').write_text(yaml.safe_dump(robot.to_dict(), sort_keys=True))
             paths = publish(staging, output)
     emit({'status': 'ok', 'robot': robot.name, 'seed': args.seed, 'artifacts': paths})
@@ -240,11 +241,12 @@ def marvin_ik(args):
 def marvin_generate(args):
     from gallery.marvin_m6.generate import generate as generate_marvin
     with redirect_stdout(sys.stderr):
-        generate_marvin(args.urdf_dir, args.output_dir, args.seed,
+        paths = generate_marvin(args.urdf_dir, args.output_dir, args.seed,
                         codegen_only=not args.solve and not args.models_only, models_only=args.models_only,
-                        tree_dir=args.tree_dir)
+                        tree_dir=args.tree_dir, with_runtime=args.with_runtime)
     emit({'status': 'ok', 'output_dir': str(args.output_dir.resolve()),
-          'mode': 'models' if args.models_only else 'solve' if args.solve else 'codegen'})
+          'mode': 'models' if args.models_only else 'solve' if args.solve else 'codegen',
+          'artifacts': paths})
     return 0
 
 
@@ -261,7 +263,8 @@ def marvin_validate(args):
     argv = ['--samples', str(args.samples), '--seed', str(args.seed),
             '--stress-samples', str(args.stress_samples),
             '--output', str(args.output.resolve()), '--urdf-dir', str(args.urdf_dir.resolve()),
-            '--eigen-dir', str(args.eigen_dir.resolve())]
+            '--eigen-dir', str(args.eigen_dir.resolve()),
+            '--solver-dir', str(args.solver_dir.resolve())]
     if args.python_only:
         argv.append('--python-only')
     with redirect_stdout(sys.stderr):
@@ -278,6 +281,8 @@ def generation_arguments(command):
     command.add_argument('--seed', type=seed_value, default=42, help='Offline sampling seed (default: 42)')
     command.add_argument('--output-dir', type=Path, default=Path('build'), help='Output directory (default: build)')
     command.add_argument('--language', choices=('both', 'python', 'cpp'), default='both')
+    command.add_argument('--with-runtime', action='store_true',
+                         help='Copy matching runtime helper files into the output directory')
     command.set_defaults(handler=generate)
 
 
@@ -285,6 +290,8 @@ def codegen_arguments(command):
     command.add_argument('tree', type=Path, help='Saved *_ik.yaml tree')
     command.add_argument('--output-dir', type=Path, default=Path('build'), help='Output directory (default: build)')
     command.add_argument('--language', choices=('both', 'python', 'cpp'), default='both')
+    command.add_argument('--with-runtime', action='store_true',
+                         help='Copy matching runtime helper files into the output directory')
     command.add_argument('--require-complete', action='store_true',
                          help='Reject export unless a verified completeness certificate is available')
     command.set_defaults(handler=codegen)
@@ -336,6 +343,8 @@ def parser(command=None, language=None):
     command.add_argument('--urdf-dir', type=Path, default=MARVIN / 'urdf')
     command.add_argument('--tree-dir', type=Path, help='Saved tree directory (default: existing output trees or gallery)')
     command.add_argument('--output-dir', type=Path, default=Path('build/marvin_m6'))
+    command.add_argument('--with-runtime', action='store_true',
+                         help='Bundle Python/C++ runtime helpers for use outside this repository')
     mode = command.add_mutually_exclusive_group()
     mode.add_argument('--solve', action='store_true', help='Run the offline symbolic search (can take minutes)')
     mode.add_argument('--models-only', action='store_true', help='Export modified-DH models without code generation')
@@ -352,6 +361,8 @@ def parser(command=None, language=None):
     command.add_argument('--seed', type=seed_value, default=20261103)
     command.add_argument('--output', type=Path, default=Path('build/marvin_m6/validation.json'))
     command.add_argument('--python-only', action='store_true', help='Skip native C++ compilation')
+    command.add_argument('--solver-dir', type=Path, default=MARVIN,
+                         help='Generated kernels to validate (default: gallery/marvin_m6)')
     command.add_argument('--urdf-dir', type=Path, default=MARVIN / 'urdf')
     command.add_argument('--eigen-dir', type=Path, default=Path('/usr/include/eigen3'))
     command.set_defaults(handler=marvin_validate)
@@ -372,7 +383,7 @@ def main(argv=None, command=None, language=None):
         print(f'yaik: missing dependency {error.name!r}; install numpy for Marvin FK/IK, '
               'or python -m pip install -r requirements.txt for generation', file=sys.stderr)
         return 2
-    except (OSError, ValueError, KeyError, TypeError, IndexError, OverflowError,
+    except (OSError, ValueError, KeyError, TypeError, IndexError, OverflowError, SyntaxError,
             AssertionError, subprocess.CalledProcessError) as error:
         if args.debug:
             raise

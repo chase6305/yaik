@@ -140,11 +140,13 @@ def model_difference(saved, converted, field='robot'):
 
 
 def generate(urdf_dir=HERE / 'urdf', output_dir=HERE, seed=42, codegen_only=False,
-             models_only=False, tree_dir=None):
+             models_only=False, tree_dir=None, with_runtime=False):
     if codegen_only and models_only:
         raise ValueError('Choose either code generation or models only')
     if tree_dir is not None and not codegen_only:
         raise ValueError('tree_dir is only used for code generation from saved trees')
+    if models_only and with_runtime:
+        raise ValueError('with_runtime requires code export; omit --models-only')
     output_dir = Path(output_dir).resolve()
     models = {}
     provenance = {
@@ -239,13 +241,17 @@ def generate(urdf_dir=HERE / 'urdf', output_dir=HERE, seed=42, codegen_only=Fals
                 generated.write_text('\n'.join(line.rstrip() for line in
                                                generated.read_text().splitlines()) + '\n')
         if not models_only:
+            if with_runtime:
+                from utility.artifacts import copy_runtime
+                copy_runtime(staging)
             provenance['artifact_sha256'] = {
                 path.name: hashlib.sha256(path.read_bytes()).hexdigest()
                 for path in sorted(staging.iterdir())
             }
             (staging / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
-        for path in sorted(staging.iterdir()):
-            path.replace(output_dir / path.name)
+        from utility.artifacts import publish_artifacts
+        paths = publish_artifacts(staging, output_dir)
+    return paths
 
 
 def check(urdf_dir=HERE / 'urdf', output_dir=HERE, seed=None):
@@ -257,7 +263,11 @@ def check(urdf_dir=HERE / 'urdf', output_dir=HERE, seed=None):
             raise ValueError(f'Recorded search seed is {recorded.get("seed")}, not {seed}')
     with tempfile.TemporaryDirectory(prefix='marvin-m6-check-') as temporary:
         temporary = Path(temporary)
-        generate(urdf_dir, temporary, codegen_only=True, tree_dir=output_dir)
+        recorded = json.loads((output_dir/'provenance.json').read_text())
+        with_runtime = any(name in recorded.get('artifact_sha256', {})
+                           for name in ('python_run_import.py', 'yaik_cpp_common.h'))
+        generate(urdf_dir, temporary, codegen_only=True, tree_dir=output_dir,
+                 with_runtime=with_runtime)
         for generated in sorted(temporary.iterdir()):
             committed = output_dir / generated.name
             if not committed.is_file():
@@ -282,6 +292,8 @@ def main(argv=None):
     parser.add_argument('--urdf-dir', type=Path, default=HERE / 'urdf')
     parser.add_argument('--output-dir', type=Path, default=HERE)
     parser.add_argument('--tree-dir', type=Path, help='Source trees for --codegen-only')
+    parser.add_argument('--with-runtime', action='store_true',
+                        help='Bundle matching Python/C++ runtime helpers with exported kernels')
     parser.add_argument('--seed', type=int, help='Offline seed (default: 42); --check verifies a recorded seed')
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--codegen-only', action='store_true',
@@ -291,6 +303,8 @@ def main(argv=None):
                         help='Fail if models, generated code, or provenance are stale; write nothing')
     args = parser.parse_args(argv)
     if args.check:
+        if args.with_runtime:
+            parser.error('--check detects bundled runtime files from provenance')
         if args.tree_dir:
             parser.error('--tree-dir is only used with --codegen-only')
         check(args.urdf_dir, args.output_dir, args.seed)
@@ -298,7 +312,7 @@ def main(argv=None):
         if args.tree_dir and not args.codegen_only:
             parser.error('--tree-dir is only used with --codegen-only')
         generate(args.urdf_dir, args.output_dir, 42 if args.seed is None else args.seed,
-                 args.codegen_only, args.models_only, args.tree_dir)
+                 args.codegen_only, args.models_only, args.tree_dir, args.with_runtime)
 
 
 if __name__ == '__main__':

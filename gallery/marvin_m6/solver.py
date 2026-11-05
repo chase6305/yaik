@@ -8,7 +8,7 @@ families have finite representatives, with no workspace completeness guarantee.
 
 import math
 import numpy as np
-from python_run_import import trig_family_representatives
+from python_run_import import add_revolute_offset, trig_family_representatives
 
 PI = math.pi
 LOWER = np.array([-3.1066860685499065, -2.0943951023931953,
@@ -129,7 +129,11 @@ class Solver:
         q = np.asarray(q, dtype=float)
         if q.shape != (7,) or not np.isfinite(q).all():
             raise ValueError('q must contain seven finite joint angles')
-        r, p = _raw_fk(q + OFFSETS)
+        raw = q+OFFSETS
+        if np.max(np.abs(q)) > 1048576.:
+            raw = np.array([add_revolute_offset(float(value), float(offset))
+                            for value, offset in zip(q, OFFSETS)])
+        r, p = _raw_fk(raw)
         target = np.eye(4)
         target[:3, :3] = self.pre_r @ r @ POST_R
         target[:3, 3] = self.pre_r @ (p + r @ POST_P) + self.pre_p

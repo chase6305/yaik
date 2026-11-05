@@ -95,7 +95,9 @@ remove duplicate solutions, and verify the final pose. They preserve the
 supplied J5 exactly and use no numerical refinement or target perturbation.
 Accepted candidates must have position error at most `1e-7 m` and rotation
 angle error at most `1e-6 rad`. Near singularities, accepted endpoint
-representatives can approach the position tolerance.
+representatives can approach the position tolerance. FK also accepts finite
+angles outside IK limits; large values retain their URDF offset phase rather
+than losing a small offset during floating-point addition.
 
 The geometric derivation uses the three intersecting shoulder axes. In raw
 DH angles, the wrist position is `S @ p`, with shoulder rotation `S` and
@@ -195,6 +197,11 @@ python yaik.py marvin generate --output-dir build/marvin_m6
 # Check the exported files, or omit --output-dir to check the gallery.
 python yaik.py marvin check --output-dir build/marvin_m6
 
+# Bundle matching runtime helpers and validate these exported kernels.
+python yaik.py marvin generate --with-runtime --output-dir build/marvin_m6
+python yaik.py marvin validate --solver-dir build/marvin_m6 \
+    --samples 1000 --stress-samples 2000 --output build/marvin_m6/validation.json
+
 # Repeat the offline symbolic search explicitly (can take substantially longer).
 python yaik.py marvin generate --solve --seed 42 --output-dir build/marvin-regenerated
 ```
@@ -206,6 +213,11 @@ trees; `--tree-dir` selects a source explicitly. Both models are checked against
 the supplied URDFs before output files change, and all requested artifacts are
 staged before publication. Unrelated files are preserved. `--models-only` exports
 just the modified-DH models. `--solve` and `--models-only` are mutually exclusive.
+`--with-runtime` bundles the matching Python/C++ helper files, and `check` verifies
+their bytes against provenance. It requires code export, so it cannot be combined
+with `--models-only`. File/directory conflicts are checked before publication;
+ordinary write failures and Ctrl+C restore previous outputs. A process kill or
+power loss can interrupt multi-file publication.
 
 `--urdf-dir` selects another directory containing the two arm URDFs. A modified
 snapshot records a null source revision instead of claiming the original commit.
@@ -231,20 +243,26 @@ checks generated FK and returned IK candidates against that FK. It covers
 random poses, joint limits, and singular configurations, with J5 fixed to
 the value used to create each target. C++ validation compiles the actual
 generated source and requires a C++17 compiler and Eigen3 headers.
+Use `--solver-dir PATH` to select exported generated kernels. Validation uses
+their bundled runtime helpers when present, while the bounded reference remains
+the gallery implementation. The JSON report identifies both source directories
+and the actual helper paths and hashes.
 The report separates standard generated-kernel coverage from the bounded
 analytical API. The validation exit status requires both APIs to solve all
 sampled reachable targets and reject their respective negative-input cases.
 
-A local run with seed `20261103` checked 3,533 targets per arm: 1,000 random,
-233 existing singular/limit cases, 300 saved regression witnesses, and 2,000
+A local run with seed `20261117` checked 7,533 targets per arm: 1,000 random,
+233 existing singular/limit cases, 300 saved regression witnesses, and 6,000
 additional limit/shoulder/wrist stress cases:
 
 | API | Left arm | Right arm |
 | --- | ---: | ---: |
-| Standard generated Python | 3,533 / 3,533 | 3,533 / 3,533 |
-| Standard generated C++ | 3,533 / 3,533 | 3,533 / 3,533 |
-| Bounded analytical Python | 3,533 / 3,533 | 3,533 / 3,533 |
-| Bounded analytical C++ | 3,533 / 3,533 | 3,533 / 3,533 |
+| Standard generated Python | 7,533 / 7,533 | 7,533 / 7,533 |
+| Standard generated C++ | 7,533 / 7,533 | 7,533 / 7,533 |
+| Bounded analytical Python | 7,533 / 7,533 | 7,533 / 7,533 |
+| Bounded analytical C++ | 7,533 / 7,533 | 7,533 / 7,533 |
+
+CI uses 3,533 targets per combination with 2,000 stress samples.
 
 Each count requires at least one solution passing independent URDF FK, joint
 limits, and fixed-J5 checks. The completed generated kernels recover the zero
@@ -253,17 +271,18 @@ They retain the repository's looser matrix-error contract; their report also
 records candidates outside limits or above the stricter integration pose
 thresholds. The bounded APIs returned no invalid or duplicate candidates, and
 rejected all 22 negative-input cases per arm/backend. Their maximum measured
-position error was below `1e-7 m`, and rotation error below `9.87e-7 rad`.
+position error was below `1e-7 m`, and rotation error below `9.98e-7 rad`.
 Generated APIs rejected all 14 negative-input cases. Both include the empty
 inner-reach-radius target in addition to the existing invalid/unreachable inputs.
 
 ```sh
-python yaik.py marvin validate --samples 1000 --stress-samples 2000 --seed 20261103 \
+python yaik.py marvin validate --samples 1000 --stress-samples 6000 --seed 20261117 \
     --output /tmp/marvin-m6-validation.json
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
     test_cli.py gallery/marvin_m6 solver/test_regressions.py \
     solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
-    solver/test_completeness.py solver/test_linear_circles.py -q
+    solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
+    solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q
 ```
 
 Use `--python-only` without a C++ toolchain, or `--eigen-dir PATH` to select

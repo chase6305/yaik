@@ -27,6 +27,13 @@ inline constexpr JointVector upper{{3.1066860685499065, 2.0943951023931953,
 inline constexpr JointVector offsets{{0, -pi, 0, pi, 0, pi / 2, -pi / 2}};
 
 namespace detail {
+inline double addRevoluteOffset(double value, double offset) {
+    if (offset == 0 || (std::abs(value) <= 1048576. && std::abs(offset) <= 1048576.))
+        return value+offset;
+    const double phase=std::atan2(std::sin(value), std::cos(value));
+    const double shift=std::abs(offset) > pi ? std::atan2(std::sin(offset), std::cos(offset)) : offset;
+    return phase+shift;
+}
 inline Eigen::Matrix3d rxPlus() {
     Eigen::Matrix3d r; r << 1, 0, 0, 0, 0, -1, 0, 1, 0; return r;
 }
@@ -211,7 +218,7 @@ inline Eigen::Matrix4d computeFK(const JointVector& q, Side side = Side::Left) {
     JointVector t;
     for (int i = 0; i < 7; ++i) {
         if (!std::isfinite(q[i])) throw std::invalid_argument("q must be finite");
-        t[i] = q[i] + offsets[i];
+        t[i] = detail::addRevoluteOffset(q[i], offsets[i]);
     }
     const Eigen::Matrix3d minus = detail::rxPlus().transpose();
     const Eigen::Matrix3d shoulder = detail::rz(t[0]) * minus *

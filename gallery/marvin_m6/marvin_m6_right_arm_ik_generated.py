@@ -99,12 +99,12 @@ def marvin_m6_right_arm_ik_target_raw_to_original(T_ee: np.ndarray):
 def marvin_m6_right_arm_fk(theta_input: np.ndarray):
     theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
     th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
     th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
-    th_6 = theta_input[6] + th_6_offset_original2raw
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
+    th_6 = add_revolute_offset(theta_input[6], th_6_offset_original2raw)
 
     # Temp variable for efficiency
     x0 = math.cos(th_5)
@@ -171,12 +171,12 @@ def marvin_m6_right_arm_fk(theta_input: np.ndarray):
 def marvin_m6_right_arm_twist_jacobian(theta_input: np.ndarray):
     theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
     th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
     th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
-    th_6 = theta_input[6] + th_6_offset_original2raw
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
+    th_6 = add_revolute_offset(theta_input[6], th_6_offset_original2raw)
 
     # Temp variable for efficiency
     x0 = math.cos(th_1)
@@ -270,12 +270,12 @@ def marvin_m6_right_arm_twist_jacobian(theta_input: np.ndarray):
 def marvin_m6_right_arm_angular_velocity_jacobian(theta_input: np.ndarray):
     theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
     th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
     th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
-    th_6 = theta_input[6] + th_6_offset_original2raw
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
+    th_6 = add_revolute_offset(theta_input[6], th_6_offset_original2raw)
 
     # Temp variable for efficiency
     x0 = math.cos(th_1)
@@ -333,12 +333,12 @@ def marvin_m6_right_arm_angular_velocity_jacobian(theta_input: np.ndarray):
 def marvin_m6_right_arm_transform_point_jacobian(theta_input: np.ndarray, point_on_ee: np.ndarray):
     theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
     th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
     th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
-    th_6 = theta_input[6] + th_6_offset_original2raw
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
+    th_6 = add_revolute_offset(theta_input[6], th_6_offset_original2raw)
     p_on_ee_x: float = point_on_ee[0]
     p_on_ee_y: float = point_on_ee[1]
     p_on_ee_z: float = point_on_ee[2]
@@ -2299,13 +2299,13 @@ def marvin_m6_right_arm_ik_solve(T_ee: np.ndarray, th_4):
     ik_output = list()
     for i in range(len(ik_output_raw)):
         ik_out_i = ik_output_raw[i]
-        ik_out_i[0] -= th_0_offset_original2raw
-        ik_out_i[1] -= th_1_offset_original2raw
-        ik_out_i[2] -= th_2_offset_original2raw
-        ik_out_i[3] -= th_3_offset_original2raw
-        ik_out_i[4] -= th_4_offset_original2raw
-        ik_out_i[5] -= th_5_offset_original2raw
-        ik_out_i[6] -= th_6_offset_original2raw
+        ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw
+        ik_out_i[1] = add_revolute_offset(ik_out_i[1], -th_1_offset_original2raw)
+        ik_out_i[2] = ik_out_i[2] - th_2_offset_original2raw
+        ik_out_i[3] = add_revolute_offset(ik_out_i[3], -th_3_offset_original2raw)
+        ik_out_i[4] = th_4
+        ik_out_i[5] = add_revolute_offset(ik_out_i[5], -th_5_offset_original2raw)
+        ik_out_i[6] = add_revolute_offset(ik_out_i[6], -th_6_offset_original2raw)
         ee_pose_i = marvin_m6_right_arm_fk(ik_out_i)
         ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
         if ee_pose_diff < pose_tolerance:

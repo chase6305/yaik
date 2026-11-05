@@ -112,12 +112,12 @@ static Eigen::Matrix4d computeFK(const std::array<double, robot_nq>& theta_input
 {
     // Extract the variables
     const double th_0 = theta_input_original[0] + th_0_offset_original2raw;
-    const double th_1 = theta_input_original[1] + th_1_offset_original2raw;
+    const double th_1 = addRevoluteOffset(theta_input_original[1], th_1_offset_original2raw);
     const double th_2 = theta_input_original[2] + th_2_offset_original2raw;
-    const double th_3 = theta_input_original[3] + th_3_offset_original2raw;
+    const double th_3 = addRevoluteOffset(theta_input_original[3], th_3_offset_original2raw);
     const double th_4 = theta_input_original[4] + th_4_offset_original2raw;
-    const double th_5 = theta_input_original[5] + th_5_offset_original2raw;
-    const double th_6 = theta_input_original[6] + th_6_offset_original2raw;
+    const double th_5 = addRevoluteOffset(theta_input_original[5], th_5_offset_original2raw);
+    const double th_6 = addRevoluteOffset(theta_input_original[6], th_6_offset_original2raw);
 
     // Temp variable for efficiency
     const double x0 = std::sin(th_6);
@@ -183,12 +183,12 @@ static void computeTwistJacobian(const std::array<double, robot_nq>& theta_input
 {
     // Extract the variables
     const double th_0 = theta_input_original[0] + th_0_offset_original2raw;
-    const double th_1 = theta_input_original[1] + th_1_offset_original2raw;
+    const double th_1 = addRevoluteOffset(theta_input_original[1], th_1_offset_original2raw);
     const double th_2 = theta_input_original[2] + th_2_offset_original2raw;
-    const double th_3 = theta_input_original[3] + th_3_offset_original2raw;
+    const double th_3 = addRevoluteOffset(theta_input_original[3], th_3_offset_original2raw);
     const double th_4 = theta_input_original[4] + th_4_offset_original2raw;
-    const double th_5 = theta_input_original[5] + th_5_offset_original2raw;
-    const double th_6 = theta_input_original[6] + th_6_offset_original2raw;
+    const double th_5 = addRevoluteOffset(theta_input_original[5], th_5_offset_original2raw);
+    const double th_6 = addRevoluteOffset(theta_input_original[6], th_6_offset_original2raw);
 
     // Temp variable for efficiency
     const double x0 = std::cos(th_1);
@@ -284,12 +284,12 @@ static void computeAngularVelocityJacobian(const std::array<double, robot_nq>& t
 {
     // Extract the variables
     const double th_0 = theta_input_original[0] + th_0_offset_original2raw;
-    const double th_1 = theta_input_original[1] + th_1_offset_original2raw;
+    const double th_1 = addRevoluteOffset(theta_input_original[1], th_1_offset_original2raw);
     const double th_2 = theta_input_original[2] + th_2_offset_original2raw;
-    const double th_3 = theta_input_original[3] + th_3_offset_original2raw;
+    const double th_3 = addRevoluteOffset(theta_input_original[3], th_3_offset_original2raw);
     const double th_4 = theta_input_original[4] + th_4_offset_original2raw;
-    const double th_5 = theta_input_original[5] + th_5_offset_original2raw;
-    const double th_6 = theta_input_original[6] + th_6_offset_original2raw;
+    const double th_5 = addRevoluteOffset(theta_input_original[5], th_5_offset_original2raw);
+    const double th_6 = addRevoluteOffset(theta_input_original[6], th_6_offset_original2raw);
 
     // Temp variable for efficiency
     const double x0 = std::cos(th_1);
@@ -349,12 +349,12 @@ static void computeTransformPointJacobian(const std::array<double, robot_nq>& th
 {
     // Extract the variables
     const double th_0 = theta_input_original[0] + th_0_offset_original2raw;
-    const double th_1 = theta_input_original[1] + th_1_offset_original2raw;
+    const double th_1 = addRevoluteOffset(theta_input_original[1], th_1_offset_original2raw);
     const double th_2 = theta_input_original[2] + th_2_offset_original2raw;
-    const double th_3 = theta_input_original[3] + th_3_offset_original2raw;
+    const double th_3 = addRevoluteOffset(theta_input_original[3], th_3_offset_original2raw);
     const double th_4 = theta_input_original[4] + th_4_offset_original2raw;
-    const double th_5 = theta_input_original[5] + th_5_offset_original2raw;
-    const double th_6 = theta_input_original[6] + th_6_offset_original2raw;
+    const double th_5 = addRevoluteOffset(theta_input_original[5], th_5_offset_original2raw);
+    const double th_6 = addRevoluteOffset(theta_input_original[6], th_6_offset_original2raw);
     const double p_on_ee_x = point_on_ee[0];
     const double p_on_ee_y = point_on_ee[1];
     const double p_on_ee_z = point_on_ee[2];
@@ -2533,13 +2533,13 @@ static void computeIKUnChecked(const Eigen::Matrix4d& T_ee, double th_4, RawIKWo
     for(int i = 0; i < raw_ik_out.size(); i++)
     {
         auto ik_out_i = raw_ik_out[i];
-        ik_out_i[0] -= th_0_offset_original2raw;
-        ik_out_i[1] -= th_1_offset_original2raw;
-        ik_out_i[2] -= th_2_offset_original2raw;
-        ik_out_i[3] -= th_3_offset_original2raw;
-        ik_out_i[4] -= th_4_offset_original2raw;
-        ik_out_i[5] -= th_5_offset_original2raw;
-        ik_out_i[6] -= th_6_offset_original2raw;
+        ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw;
+        ik_out_i[1] = addRevoluteOffset(ik_out_i[1], -th_1_offset_original2raw);
+        ik_out_i[2] = ik_out_i[2] - th_2_offset_original2raw;
+        ik_out_i[3] = addRevoluteOffset(ik_out_i[3], -th_3_offset_original2raw);
+        ik_out_i[4] = th_4;
+        ik_out_i[5] = addRevoluteOffset(ik_out_i[5], -th_5_offset_original2raw);
+        ik_out_i[6] = addRevoluteOffset(ik_out_i[6], -th_6_offset_original2raw);
         ik_output.push_back(ik_out_i);
     }
 }
@@ -2578,13 +2578,13 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_4, RawIKWorksace& w
     for(int i = 0; i < raw_ik_out.size(); i++)
     {
         auto ik_out_i = raw_ik_out[i];
-        ik_out_i[0] -= th_0_offset_original2raw;
-        ik_out_i[1] -= th_1_offset_original2raw;
-        ik_out_i[2] -= th_2_offset_original2raw;
-        ik_out_i[3] -= th_3_offset_original2raw;
-        ik_out_i[4] -= th_4_offset_original2raw;
-        ik_out_i[5] -= th_5_offset_original2raw;
-        ik_out_i[6] -= th_6_offset_original2raw;
+        ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw;
+        ik_out_i[1] = addRevoluteOffset(ik_out_i[1], -th_1_offset_original2raw);
+        ik_out_i[2] = ik_out_i[2] - th_2_offset_original2raw;
+        ik_out_i[3] = addRevoluteOffset(ik_out_i[3], -th_3_offset_original2raw);
+        ik_out_i[4] = th_4;
+        ik_out_i[5] = addRevoluteOffset(ik_out_i[5], -th_5_offset_original2raw);
+        ik_out_i[6] = addRevoluteOffset(ik_out_i[6], -th_6_offset_original2raw);
         wrapAngleToPi(ik_out_i);
         const Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
         double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
@@ -2613,13 +2613,13 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_4, RawIKWorksace& w
     for(int i = 0; i < raw_ik_out_disturb.size(); i++)
     {
         auto ik_out_i = raw_ik_out_disturb[i];
-        ik_out_i[0] -= th_0_offset_original2raw;
-        ik_out_i[1] -= th_1_offset_original2raw;
-        ik_out_i[2] -= th_2_offset_original2raw;
-        ik_out_i[3] -= th_3_offset_original2raw;
-        ik_out_i[4] -= th_4_offset_original2raw;
-        ik_out_i[5] -= th_5_offset_original2raw;
-        ik_out_i[6] -= th_6_offset_original2raw;
+        ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw;
+        ik_out_i[1] = addRevoluteOffset(ik_out_i[1], -th_1_offset_original2raw);
+        ik_out_i[2] = ik_out_i[2] - th_2_offset_original2raw;
+        ik_out_i[3] = addRevoluteOffset(ik_out_i[3], -th_3_offset_original2raw);
+        ik_out_i[4] = th_4;
+        ik_out_i[5] = addRevoluteOffset(ik_out_i[5], -th_5_offset_original2raw);
+        ik_out_i[6] = addRevoluteOffset(ik_out_i[6], -th_6_offset_original2raw);
         wrapAngleToPi(ik_out_i);
         Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
         double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();

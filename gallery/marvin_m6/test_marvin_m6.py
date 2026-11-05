@@ -63,6 +63,20 @@ class TestMarvinM6(TestCase):
             # This target is for *_ee, including the 95 mm fixed tool origin.
             self.assertAlmostEqual(np.linalg.norm(arm.chain[-1][0][:3, 3]), 0.095)
 
+    def test_large_finite_angles_keep_their_urdf_offset_phase(self):
+        # FK accepts finite angles outside IK's joint limits. Adding pi to a
+        # huge float first would erase the offset, changing the actual pose.
+        for side in ('left', 'right'):
+            arm = UrdfArm(side)
+            solvers = (PythonSolver(side), PythonSolver(side, bounded=True))
+            for joint in range(7):
+                for value in (2.**30, 1e20, -1e20, 1e300, -1e300):
+                    q = np.zeros(7); q[joint] = value
+                    expected = arm.fk(q)
+                    for solver in solvers:
+                        with self.subTest(side=side, joint=joint, value=value, bounded=solver.bounded):
+                            np.testing.assert_allclose(solver.fk(q), expected, atol=1e-13, rtol=0)
+
     def test_source_snapshots_match_generation_provenance(self):
         provenance = json.loads((HERE / 'provenance.json').read_text())
         self.assertEqual(set(provenance['urdf_sha256']), {'left_arm.urdf', 'right_arm.urdf'})

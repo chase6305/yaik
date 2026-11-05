@@ -146,7 +146,8 @@ class CodeGenerationCpp(CodeGenerationBase):
             parameter_value = parameter_values[parameter]
             variable_name = parameter.name
             define_line = "static constexpr double {var_name} = {var_value};". \
-                format(var_name=variable_name, var_value=parameter_value)
+                format(var_name=variable_name, var_value=(sp.cxxcode(parameter_value)
+                       if isinstance(parameter_value, sp.Basic) else parameter_value))
             self.add_code_line(define_line)
 
         # The unknown offset
@@ -164,7 +165,8 @@ class CodeGenerationCpp(CodeGenerationBase):
                 unknown_offset_i = unknown_offset[i]
                 offset_name_i = self.get_unknown_offset_name(unknown_i.symbol.name)
                 define_line = "static constexpr double {var_name} = {var_value};". \
-                    format(var_name=offset_name_i, var_value=unknown_offset_i)
+                    format(var_name=offset_name_i, var_value=(sp.cxxcode(unknown_offset_i)
+                           if isinstance(unknown_offset_i, sp.Basic) else unknown_offset_i))
                 self.add_code_line(define_line)
 
     def _generate_direct_forward_ee_transform(self, func_name: str):
@@ -189,8 +191,10 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # Generate the code
         assert self._scope_manager.indent_level == 0
+        parameters = ''.join(', double ' + str(symbol) for symbol in self.frame_parameters())
         self.add_code_line(
-            'static Eigen::Matrix4d {func_name}(const Eigen::Matrix4d& T_ee)'.format(func_name=func_name))
+            'static Eigen::Matrix4d {func_name}(const Eigen::Matrix4d& T_ee{parameters})'.format(
+                func_name=func_name, parameters=parameters))
         self.enter_scope(func_name)
 
         # Extract the original symbol
@@ -272,9 +276,8 @@ class CodeGenerationCpp(CodeGenerationBase):
             if unknown_offset is None:
                 self.add_code_line('const double {var} = theta_input_original[{idx}];'.format(var=symbol_i.name, idx=i))
             else:
-                self.add_code_line('const double {var} = theta_input_original[{idx}] + {offset_value};'.
-                                   format(var=symbol_i.name, idx=i,
-                                          offset_value=self.get_unknown_offset_name(symbol_i.name)))
+                expression = self.joint_offset_expression(symbol_i, f'theta_input_original[{i}]', cpp=True)
+                self.add_code_line(f'const double {symbol_i.name} = {expression};')
 
         # Collect the fk code and perform cse
         fk_expressions: List[sp.Expr] = list()
@@ -302,7 +305,8 @@ class CodeGenerationCpp(CodeGenerationBase):
                 ij_code = sp.cxxcode(out_ij_expr)
                 self.add_code_line('ee_pose_raw({i}, {j}) = {ij_code};'.format(i=i, j=j, ij_code=ij_code))
         # Finish
-        self.add_code_line('return endEffectorTargetRawToOriginal(ee_pose_raw);')
+        self.add_code_line('return ' + self.frame_transform_call(
+            'endEffectorTargetRawToOriginal', 'ee_pose_raw') + ';')
 
         # End the codegen
         self.exit_scope(fk_function_name)
@@ -344,9 +348,8 @@ class CodeGenerationCpp(CodeGenerationBase):
             if unknown_offset is None:
                 self.add_code_line('const double {var} = theta_input_original[{idx}];'.format(var=symbol_i.name, idx=i))
             else:
-                self.add_code_line('const double {var} = theta_input_original[{idx}] + {offset_value};'.
-                                   format(var=symbol_i.name, idx=i,
-                                          offset_value=self.get_unknown_offset_name(symbol_i.name)))
+                expression = self.joint_offset_expression(symbol_i, f'theta_input_original[{i}]', cpp=True)
+                self.add_code_line(f'const double {symbol_i.name} = {expression};')
 
         # If this is point jacobian
         if point_jacobian_point_on_ee is not None:
@@ -530,7 +533,8 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # To raw target
         if (self.robot.get_pre_transform_sp() is not None) or (self.robot.get_post_transform_sp() is not None):
-            self.add_code_line('const Eigen::Matrix4d& T_ee_raw = endEffectorTargetOriginalToRaw(T_ee);')
+            self.add_code_line('const Eigen::Matrix4d& T_ee_raw = ' + self.frame_transform_call(
+                'endEffectorTargetOriginalToRaw', 'T_ee') + ';')
         else:
             self.add_code_line('const Eigen::Matrix4d& T_ee_raw = T_ee;')
 
@@ -544,8 +548,8 @@ class CodeGenerationCpp(CodeGenerationBase):
             for symbol_j in free_symbols:
                 # We need to add offset here, since the parameter from unknown used in rawIK is with offset.
                 if symbol_j in unknown_symbols and self.robot.get_unknown_offset() is not None:
-                    offset_var_i = self.get_unknown_offset_name(symbol_j.name)
-                    func_call_arguments += ', ' + str(symbol_j) + ' + ' + offset_var_i
+                    func_call_arguments += ', ' + self.joint_offset_expression(
+                        symbol_j, str(symbol_j), cpp=True)
                 else:
                     func_call_arguments += ', ' + str(symbol_j)
             func_call_arguments += ', workspace'
@@ -568,8 +572,12 @@ class CodeGenerationCpp(CodeGenerationBase):
             unknowns = self.robot.unknowns
             for j in range(len(unknown_offset)):
                 unknown_j = unknowns[j]
-                self.add_code_line('ik_out_i[{j}] -= {offset_j};'.
-                                   format(j=j, offset_j=self.get_unknown_offset_name(unknown_j.symbol.name)))
+                if unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
+                    self.add_code_line(f'ik_out_i[{j}] = {unknown_j.symbol};')
+                else:
+                    expression = self.joint_offset_expression(
+                        unknown_j.symbol, f'ik_out_i[{j}]', cpp=True, subtract=True)
+                    self.add_code_line(f'ik_out_i[{j}] = {expression};')
 
         self.add_code_line('ik_output.push_back(ik_out_i);')
         self.exit_scope('for')
@@ -618,7 +626,8 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # To raw target
         if (self.robot.get_pre_transform_sp() is not None) or (self.robot.get_post_transform_sp() is not None):
-            self.add_code_line('const Eigen::Matrix4d& T_ee_raw = endEffectorTargetOriginalToRaw(T_ee);')
+            self.add_code_line('const Eigen::Matrix4d& T_ee_raw = ' + self.frame_transform_call(
+                'endEffectorTargetOriginalToRaw', 'T_ee') + ';')
         else:
             self.add_code_line('const Eigen::Matrix4d& T_ee_raw = T_ee;')
 
@@ -632,8 +641,8 @@ class CodeGenerationCpp(CodeGenerationBase):
             for symbol_j in free_symbols:
                 # We need to add offset here, since the parameter from unknown used in rawIK is with offset.
                 if symbol_j in unknown_symbols and self.robot.get_unknown_offset() is not None:
-                    offset_var_j = self.get_unknown_offset_name(symbol_j.name)
-                    func_call_arguments += ', ' + str(symbol_j) + ' + ' + offset_var_j
+                    func_call_arguments += ', ' + self.joint_offset_expression(
+                        symbol_j, str(symbol_j), cpp=True)
                 else:
                     func_call_arguments += ', ' + str(symbol_j)
             func_call_arguments += ', workspace'
@@ -656,8 +665,12 @@ class CodeGenerationCpp(CodeGenerationBase):
             unknowns = self.robot.unknowns
             for j in range(len(unknown_offset)):
                 unknown_j = unknowns[j]
-                self.add_code_line('ik_out_i[{j}] -= {offset_j};'.
-                                   format(j=j, offset_j=self.get_unknown_offset_name(unknown_j.symbol.name)))
+                if unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
+                    self.add_code_line(f'ik_out_i[{j}] = {unknown_j.symbol};')
+                else:
+                    expression = self.joint_offset_expression(
+                        unknown_j.symbol, f'ik_out_i[{j}]', cpp=True, subtract=True)
+                    self.add_code_line(f'ik_out_i[{j}] = {expression};')
 
         # Make the fk call
         unknown_symbols = [elem.symbol for elem in self.skeleton_tree.robot.unknowns]
@@ -699,7 +712,8 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_empty_line()
         self.add_code_line('// Disturbing method for degenerate handling')
         self.add_code_line('Eigen::Matrix4d T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);')
-        self.add_code_line('Eigen::Matrix4d T_ee_disturbed = endEffectorTargetRawToOriginal(T_ee_raw_disturbed);')
+        self.add_code_line('Eigen::Matrix4d T_ee_disturbed = ' + self.frame_transform_call(
+            'endEffectorTargetRawToOriginal', 'T_ee_raw_disturbed') + ';')
         func_arguments_call = make_func_call_args('T_ee_raw_disturbed')
         self.add_code_line(ik_raw_func + func_arguments_call)
 
@@ -714,8 +728,12 @@ class CodeGenerationCpp(CodeGenerationBase):
             unknowns = self.robot.unknowns
             for j in range(len(unknown_offset)):
                 unknown_j = unknowns[j]
-                self.add_code_line('ik_out_i[{j}] -= {offset_j};'.
-                                   format(j=j, offset_j=self.get_unknown_offset_name(unknown_j.symbol.name)))
+                if unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
+                    self.add_code_line(f'ik_out_i[{j}] = {unknown_j.symbol};')
+                else:
+                    expression = self.joint_offset_expression(
+                        unknown_j.symbol, f'ik_out_i[{j}]', cpp=True, subtract=True)
+                    self.add_code_line(f'ik_out_i[{j}] = {expression};')
 
         # Compute the pose again, note that we can use same fk_func_args
         self.add_code_line('wrapAngleToPi(ik_out_i);')

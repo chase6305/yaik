@@ -20,6 +20,14 @@ namespace yaik_cpp {
 // Indicate the value is invalid
 constexpr double invalid_value = std::numeric_limits<double>::max();
 
+inline double addRevoluteOffset(double value, double offset) {
+  if (offset == 0 || (std::abs(value) <= 1048576. && std::abs(offset) <= 1048576.))
+    return value+offset;
+  const double phase=std::atan2(std::sin(value), std::cos(value));
+  const double shift=std::abs(offset) > M_PI ? std::atan2(std::sin(offset), std::cos(offset)) : offset;
+  return phase+shift;
+}
+
 template <int N>
 bool snapNearJointLimits(const std::array<double, N>& source, std::array<double, N>& result,
                         const std::array<double, N>& lower, const std::array<double, N>& upper,
@@ -737,55 +745,83 @@ void sincosCoefficientToTanhalfCoefficient(
       A_sincos.col(3) + A_sincos.col(5) + A_sincos.col(7) + A_sincos.col(8);
 }
 
-template <typename T>
+template <typename T, std::size_t Capacity>
 int computeSolutionFromTanhalfLME(const Eigen::Matrix<T, 6, 9>& A_x2,
                                   const Eigen::Matrix<T, 6, 9>& B_x,
                                   const Eigen::Matrix<T, 6, 9>& C,
-                                  std::array<T, 16>* solution_buffer) {
-  Eigen::Matrix<T, 12, 12> A_12;
-  A_12.setZero();
-  A_12.template block<6, 9>(0, 0) = A_x2;
-  A_12.template block<6, 9>(6, 3) = A_x2;
-  Eigen::Matrix<T, 12, 12> A_inv = A_12.inverse();
-  for (auto r = 0; r < A_inv.rows(); r++) {
-    for (auto c = 0; c < A_inv.cols(); c++) {
-      if (std::isnan(A_inv(r, c)) || (!std::isfinite(A_inv(r, c)))) {
-        return 0;
-      }
+                                  std::array<T, Capacity>* solution_buffer) {
+  if (!A_x2.allFinite() || !B_x.allFinite() || !C.allFinite()) return 0;
+  const T scale = std::max({A_x2.cwiseAbs().maxCoeff(), B_x.cwiseAbs().maxCoeff(),
+                            C.cwiseAbs().maxCoeff()});
+  if (!(scale > T(0))) return 0;
+  using Matrix6 = Eigen::Matrix<T, 6, 9>;
+  using Matrix12 = Eigen::Matrix<T, 12, 12>;
+  const Matrix6 a=A_x2/scale, b=B_x/scale, c=C/scale;
+  auto expand = [](const Matrix6& value) -> Matrix12 {
+    Matrix12 matrix=Matrix12::Zero();
+    matrix.template block<6, 9>(0, 0)=value;
+    matrix.template block<6, 9>(6, 3)=value;
+    return matrix;
+  };
+  using Matrix24 = Eigen::Matrix<T, 24, 24>;
+  int solution_counter=0;
+  auto append_eigenvalues = [&](const Matrix24& matrix, T chart) {
+    if (!matrix.allFinite()) return;
+    Eigen::EigenSolver<Matrix24> solver;
+    solver.compute(matrix, false);
+    if (solver.info() != Eigen::Success) return;
+    const auto& eigenvalues=solver.eigenvalues();
+    for (Eigen::Index i=0; i<eigenvalues.size(); ++i) {
+      const auto& value=eigenvalues[i];
+      if (!std::isfinite(value.real()) || !std::isfinite(value.imag()) ||
+          std::abs(value.imag()) >= 1e-6 || solution_counter >= static_cast<int>(Capacity)) continue;
+      const T angle=T(2)*std::atan(value.real())+T(2)*std::atan(chart);
+      solution_buffer->at(solution_counter++) = chart == T(0) ? angle :
+          std::atan2(std::sin(angle), std::cos(angle));
+    }
+  };
+  // Preserve established candidates before adding a better conditioned chart.
+  // An estimate of conditioning alone must not discard an existing FK witness.
+  const Matrix12 original_leading=expand(A_x2);
+  const Matrix12 inverse=original_leading.inverse();
+  bool legacy_usable=false;
+  if (inverse.allFinite()) {
+    Matrix24 legacy=Matrix24::Zero();
+    legacy.template block<12, 12>(0, 12).setIdentity();
+    legacy.template block<12, 12>(12, 0)=-(inverse*expand(C));
+    legacy.template block<12, 12>(12, 12)=-(inverse*expand(B_x));
+    legacy_usable=legacy.allFinite();
+    append_eigenvalues(legacy, T(0));
+  }
+  // Change the tangent-half-angle chart: x=(y+t)/(1-t*y). At most one
+  // alternative chart is added, keeping the combined candidate bound at 48.
+  T best_reciprocal=T(0), chart=T(0);
+  bool ordinary_stable=false;
+  Matrix12 leading;
+  for (const T t : {T(0), T(1), T(-1), T(.5), T(-.5), T(2), T(-2)}) {
+    const Matrix12 candidate=expand(a-t*b+t*t*c);
+    const Eigen::FullPivLU<Matrix12> lu(candidate);
+    // rcond() estimates an inverse through solve(); on a rank-deficient
+    // FullPivLU it can report a deceptively large reciprocal condition.
+    const T reciprocal=lu.isInvertible() ? lu.rcond() : T(0);
+    if (std::isfinite(reciprocal) && reciprocal > best_reciprocal) {
+      best_reciprocal=reciprocal; chart=t; leading=candidate;
+    }
+    if (t == T(0) && reciprocal > T(1e-8) && a.cwiseAbs().maxCoeff() > T(1e-8)) {
+      ordinary_stable=true; break;
     }
   }
+  if ((ordinary_stable && legacy_usable) || best_reciprocal < T(1e-14)) return solution_counter;
+  const Matrix12 linear=expand(T(2)*chart*a+(T(1)-chart*chart)*b-T(2)*chart*c);
+  const Matrix12 constant=expand(chart*chart*a+chart*b+c);
+  const Eigen::PartialPivLU<Matrix12> factor(leading);
 
-  // Compute B and C
-  Eigen::Matrix<T, 12, 12> B_12, C_12;
-  B_12.setZero();
-  C_12.setZero();
-  B_12.template block<6, 9>(0, 0) = B_x;
-  B_12.template block<6, 9>(6, 3) = B_x;
-  C_12.template block<6, 9>(0, 0) = C;
-  C_12.template block<6, 9>(6, 3) = C;
-
-  Eigen::Matrix<T, 24, 24> M;
+  Matrix24 M;
   M.setZero();
   M.template block<12, 12>(0, 12).setIdentity();
-  M.template block<12, 12>(12, 0) = -(A_inv * C_12);
-  M.template block<12, 12>(12, 12) = -(A_inv * B_12);
-
-  // Compute the eigen-values of M
-  Eigen::EigenSolver<Eigen::Matrix<T, 24, 24>> solver;
-  solver.compute(M);
-  const auto& eigenvalues = solver.eigenvalues();
-  int solution_counter = 0;
-  for (auto i = 0; i < eigenvalues.size(); i++) {
-    const std::complex<T>& eigenvalue_i = eigenvalues[i];
-    const double real_part = eigenvalue_i.real();
-    const double imag_part = eigenvalue_i.imag();
-    if (std::abs(imag_part) < 1e-6 &&
-        solution_counter < solution_buffer->size()) {
-      const double atan_value = std::atan(real_part);
-      solution_buffer->at(solution_counter) = 2.0 * atan_value;
-      solution_counter += 1;
-    }
-  }
+  M.template block<12, 12>(12, 0) = -factor.solve(constant);
+  M.template block<12, 12>(12, 12) = -factor.solve(linear);
+  append_eigenvalues(M, chart);
 
   return solution_counter;
 }
@@ -806,7 +842,8 @@ void sincosLME2TanhalfLME(
 
 };  // namespace general_6dof_internal
 
-template <int n_equations = 14, int n_lhs_unknowns = 9, int n_rhs_unknowns = 8>
+template <int n_equations = 14, int n_lhs_unknowns = 9, int n_rhs_unknowns = 8,
+          std::size_t Capacity = 16>
 int general6DofNumericalReduceSolve(
     const Eigen::Matrix<double, n_equations, n_lhs_unknowns>& A_sin,
     const Eigen::Matrix<double, n_equations, n_lhs_unknowns>& A_cos,
@@ -814,7 +851,7 @@ int general6DofNumericalReduceSolve(
     const Eigen::Matrix<double, n_equations, n_rhs_unknowns>& rhs_matrix,
     const std::array<int, n_rhs_unknowns>& lines_to_reduce,
     const std::array<int, n_equations - n_rhs_unknowns>& remaining_lines,
-    std::array<double, 16>* solution_buffer) {
+    std::array<double, Capacity>* solution_buffer) {
   // First step, try reduce
   Eigen::Matrix<double, n_equations - n_rhs_unknowns, n_lhs_unknowns> tau_sin;
   Eigen::Matrix<double, n_equations - n_rhs_unknowns, n_lhs_unknowns> tau_cos;

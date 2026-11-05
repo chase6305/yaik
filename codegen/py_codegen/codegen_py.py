@@ -67,7 +67,8 @@ class CodeGenerationPython(CodeGenerationBase):
             parameter_value = parameter_values[parameter]
             variable_name = parameter.name
             define_line = "{var_name}: float = {var_value}". \
-                format(var_name=variable_name, var_value=parameter_value)
+                format(var_name=variable_name, var_value=(sp.pycode(parameter_value)
+                       if isinstance(parameter_value, sp.Basic) else parameter_value))
             self._add_code_line(define_line)
 
         # The unknown offset
@@ -85,7 +86,8 @@ class CodeGenerationPython(CodeGenerationBase):
                 unknown_offset_i = unknown_offset[i]
                 offset_name_i = self.get_unknown_offset_name(unknown_i.symbol.name)
                 define_line = "{var_name}: float = {var_value}". \
-                    format(var_name=offset_name_i, var_value=unknown_offset_i)
+                    format(var_name=offset_name_i, var_value=(sp.pycode(unknown_offset_i)
+                           if isinstance(unknown_offset_i, sp.Basic) else unknown_offset_i))
                 self._add_code_line(define_line)
 
     @staticmethod
@@ -116,8 +118,9 @@ class CodeGenerationPython(CodeGenerationBase):
         transformed_4x4 = left_4x4 * (ik_target_4x4 * right_4x4)
 
         # Generate the code
-        self._add_code_line(
-            'def {func_name}(T_ee: np.ndarray):'.format(func_name=func_name))
+        parameters = ''.join(', ' + str(symbol) for symbol in self.frame_parameters())
+        self._add_code_line('def {func_name}(T_ee: np.ndarray{parameters}):'.format(
+            func_name=func_name, parameters=parameters))
 
         # Extract the original symbol
         for r in range(3):
@@ -134,7 +137,7 @@ class CodeGenerationPython(CodeGenerationBase):
             for c in range(4):
                 expr_rc = transformed_4x4[r, c]
                 expr_rc = sp.simplify(expr_rc)
-                expr_code = sp.cxxcode(expr_rc)
+                expr_code = sp.pycode(expr_rc)
                 self._add_code_line('ee_transformed[{r}, {c}] = {expr_code}'.
                                     format(r=r, c=c, expr_code=expr_code), indent_level=1)
         self._add_code_line('return ee_transformed', indent_level=1)
@@ -256,9 +259,8 @@ class CodeGenerationPython(CodeGenerationBase):
             if unknown_offset is None:
                 self._add_code_line('{var} = theta_input[{idx}]'.format(var=symbol_i.name, idx=i), indent_level=1)
             else:
-                self._add_code_line('{var} = theta_input[{idx}] + {offset_i}'.
-                                    format(var=symbol_i.name, idx=i,
-                                           offset_i=self.get_unknown_offset_name(symbol_i.name)), indent_level=1)
+                expression = self.joint_offset_expression(symbol_i, f'theta_input[{i}]')
+                self._add_code_line(f'{symbol_i.name} = {expression}', indent_level=1)
 
         # Collect the fk code and perform cse
         fk_expressions: List[sp.Expr] = list()
@@ -320,10 +322,8 @@ class CodeGenerationPython(CodeGenerationBase):
             if unknown_offset is None:
                 self._add_code_line('{var} = theta_input[{idx}]'.format(var=symbol_i.name, idx=i), indent_level=1)
             else:
-                self._add_code_line('{var} = theta_input[{idx}] + {offset_i}'.
-                                    format(var=symbol_i.name, idx=i,
-                                           offset_i=self.get_unknown_offset_name(symbol_i.name)),
-                                    indent_level=1)
+                expression = self.joint_offset_expression(symbol_i, f'theta_input[{i}]')
+                self._add_code_line(f'{symbol_i.name} = {expression}', indent_level=1)
 
         # If this is point jacobian
         if point_jacobian_point_on_ee is not None:
@@ -407,7 +407,8 @@ class CodeGenerationPython(CodeGenerationBase):
         if self.robot.get_pre_transform_sp() is None and self.robot.get_post_transform_sp() is None:
             self._add_code_line('T_ee_raw_in = T_ee', indent_level=1)
         else:
-            self._add_code_line('T_ee_raw_in = ' + self.get_ik_target_original_to_raw_name() + '(T_ee)', indent_level=1)
+            self._add_code_line('T_ee_raw_in = ' + self.frame_transform_call(
+                self.get_ik_target_original_to_raw_name(), 'T_ee'), indent_level=1)
 
         # Call the old method
         ik_raw_func = self.ik_function_name(True)
@@ -416,8 +417,7 @@ class CodeGenerationPython(CodeGenerationBase):
         func_arguments_call = '(T_ee_raw_in'
         for symbol_i in free_symbols:
             if symbol_i in unknown_symbols and self.robot.get_unknown_offset() is not None:
-                offset_var_i = self.get_unknown_offset_name(symbol_i.name)
-                func_arguments_call += ', ' + str(symbol_i) + ' + ' + offset_var_i
+                func_arguments_call += ', ' + self.joint_offset_expression(symbol_i, str(symbol_i))
             else:
                 func_arguments_call += ', ' + str(symbol_i)
         func_arguments_call += ')'
@@ -431,9 +431,11 @@ class CodeGenerationPython(CodeGenerationBase):
         if unknown_offset is not None:
             for j in range(len(unknown_offset)):
                 unknown_j = self.robot.unknowns[j].symbol
-                self._add_code_line('ik_out_i[{j}] -= {offset_j}'.
-                                    format(j=j, offset_j=self.get_unknown_offset_name(unknown_j.name)),
-                                    indent_level=2)
+                if unknown_j in self.robot.unknown_as_parameter_more_dof:
+                    self._add_code_line(f'ik_out_i[{j}] = {unknown_j}', indent_level=2)
+                else:
+                    expression = self.joint_offset_expression(unknown_j, f'ik_out_i[{j}]', subtract=True)
+                    self._add_code_line(f'ik_out_i[{j}] = {expression}', indent_level=2)
 
         # Make the fk args
         unknown_symbols = [elem.symbol for elem in self.skeleton_tree.robot.unknowns]
