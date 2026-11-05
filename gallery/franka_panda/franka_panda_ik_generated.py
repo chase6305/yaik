@@ -6,7 +6,7 @@ from python_run_import import *
 
 # Constants for solver
 robot_nq: int = 7
-n_tree_nodes: int = 50
+n_tree_nodes: int = 62
 pose_tolerance: float = 1e-4
 zero_tolerance: float = 1e-6
 
@@ -499,7 +499,7 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
     max_n_solutions: int = 16
     node_input_index: List[List[int]] = list()
     node_input_validity: List[bool] = list()
-    for i in range(50):
+    for i in range(62):
         node_input_index.append(list())
         node_input_validity.append(False)
     def add_input_index_to(node_idx: int, solution_idx: int):
@@ -919,11 +919,120 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(38, node_input_i_idx_in_queue)
             else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
+                add_input_index_to(53, node_input_i_idx_in_queue)
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_37_processor()
     # Finish code for equation all-zero dispatcher node 37
+
+    # Code for explicit solution node 53, solved variable is th_1
+    def ExplicitSolutionNode_node_53_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[53]
+        this_input_valid: bool = node_input_validity[53]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 53
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = math.cos(th_5)
+                x6 = x0*x5
+                x7 = math.sin(th_3)
+                x8 = x5*x7
+                x9 = math.cos(th_3)
+                x10 = x1*x9
+                x11 = x0*x9
+                x12 = x1*x7
+                x13 = x12 - x2*x5*x9
+                x14 = x0*x7
+                x15 = x10 + x2*x8
+                this_solution[1] = math.atan2((-r_31*(-x11*x4 - x13*x3) - r_32*(-x11*x3 + x13*x4) - r_33*(x10*x2 + x8))*math.cos(th_2) - (-r_31*(-x2*x4 - x3*x6) - r_32*(-x2*x3 + x4*x6) + r_33*x0*x1)*math.sin(th_2), -r_31*(-x14*x4 + x15*x3) - r_32*(-x14*x3 - x15*x4) - r_33*(x12*x2 - x5*x9))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(54, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_53_solve_th_1_processor()
+    # Finish code for explicit solution node 53
+
+    # Code for non-branch dispatcher node 54
+    # Actually, there is no code
+
+    # Code for explicit solution node 55, solved variable is th_0
+    def ExplicitSolutionNode_node_55_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[54]
+        this_input_valid: bool = node_input_validity[54]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 55
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_1 = this_solution[1]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.cos(th_2)
+                x1 = math.sin(th_5)
+                x2 = math.sin(th_4)
+                x3 = x1*x2
+                x4 = math.cos(th_4)
+                x5 = math.cos(th_6)
+                x6 = math.sin(th_6)
+                x7 = math.cos(th_5)
+                x8 = x2*x7
+                x9 = -x4*x5 + x6*x8
+                x10 = -x4*x6 - x5*x8
+                x11 = r_11*x10 + r_12*x9 - r_13*x3
+                x12 = r_21*x10 + r_22*x9 - r_23*x3
+                x13 = math.sin(th_2)
+                x14 = math.cos(th_1)
+                x15 = x13*x14
+                x16 = math.sin(th_3)
+                x17 = x16*x7
+                x18 = math.cos(th_3)
+                x19 = x1*x18
+                x20 = x17 + x19*x4
+                x21 = x18*x2
+                x22 = x1*x16
+                x23 = -x18*x4*x7 + x22
+                x24 = -x21*x6 - x23*x5
+                x25 = -x21*x5 + x23*x6
+                x26 = r_11*x24 + r_12*x25 + r_13*x20
+                x27 = math.sin(th_1)
+                x28 = -x18*x7 + x22*x4
+                x29 = x16*x2
+                x30 = x17*x4 + x19
+                x31 = -x29*x6 + x30*x5
+                x32 = -x29*x5 - x30*x6
+                x33 = r_21*x24 + r_22*x25 + r_23*x20
+                this_solution[0] = math.atan2(x0*x11 + x0*x14*x33 - x12*x15 + x13*x26 - x27*(r_21*x31 + r_22*x32 + r_23*x28), -x0*x12 + x0*x14*x26 - x11*x15 - x13*x33 - x27*(r_11*x31 + r_12*x32 + r_13*x28))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_55_solve_th_0_processor()
+    # Finish code for explicit solution node 54
 
     # Code for explicit solution node 38, solved variable is th_0
     def ExplicitSolutionNode_node_38_solve_th_0_processor():
@@ -977,11 +1086,54 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(40, node_input_i_idx_in_queue)
             else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
+                add_input_index_to(56, node_input_i_idx_in_queue)
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_39_processor()
     # Finish code for equation all-zero dispatcher node 39
+
+    # Code for explicit solution node 56, solved variable is th_1
+    def ExplicitSolutionNode_node_56_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[56]
+        this_input_valid: bool = node_input_validity[56]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 56
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = math.cos(th_5)
+                x6 = x0*x5
+                x7 = math.sin(th_3)
+                x8 = x5*x7
+                x9 = math.cos(th_3)
+                x10 = x1*x9
+                x11 = x0*x9
+                x12 = x1*x7
+                x13 = x12 - x2*x5*x9
+                x14 = x0*x7
+                x15 = x10 + x2*x8
+                this_solution[1] = math.atan2((-r_31*(-x11*x4 - x13*x3) - r_32*(-x11*x3 + x13*x4) - r_33*(x10*x2 + x8))*math.cos(th_2) - (-r_31*(-x2*x4 - x3*x6) - r_32*(-x2*x3 + x4*x6) + r_33*x0*x1)*math.sin(th_2), -r_31*(-x14*x4 + x15*x3) - r_32*(-x14*x3 - x15*x4) - r_33*(x12*x2 - x5*x9))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_56_solve_th_1_processor()
+    # Finish code for explicit solution node 56
 
     # Code for explicit solution node 40, solved variable is th_1
     def ExplicitSolutionNode_node_40_solve_th_1_processor():
@@ -2319,11 +2471,120 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(45, node_input_i_idx_in_queue)
             else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
+                add_input_index_to(57, node_input_i_idx_in_queue)
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_44_processor()
     # Finish code for equation all-zero dispatcher node 44
+
+    # Code for explicit solution node 57, solved variable is th_1
+    def ExplicitSolutionNode_node_57_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[57]
+        this_input_valid: bool = node_input_validity[57]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 57
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = math.cos(th_5)
+                x6 = x0*x5
+                x7 = math.sin(th_3)
+                x8 = x5*x7
+                x9 = math.cos(th_3)
+                x10 = x1*x9
+                x11 = x0*x9
+                x12 = x1*x7
+                x13 = x12 - x2*x5*x9
+                x14 = x0*x7
+                x15 = x10 + x2*x8
+                this_solution[1] = math.atan2((-r_31*(-x11*x4 - x13*x3) - r_32*(-x11*x3 + x13*x4) - r_33*(x10*x2 + x8))*math.cos(th_2) - (-r_31*(-x2*x4 - x3*x6) - r_32*(-x2*x3 + x4*x6) + r_33*x0*x1)*math.sin(th_2), -r_31*(-x14*x4 + x15*x3) - r_32*(-x14*x3 - x15*x4) - r_33*(x12*x2 - x5*x9))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(58, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_57_solve_th_1_processor()
+    # Finish code for explicit solution node 57
+
+    # Code for non-branch dispatcher node 58
+    # Actually, there is no code
+
+    # Code for explicit solution node 59, solved variable is th_0
+    def ExplicitSolutionNode_node_59_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[58]
+        this_input_valid: bool = node_input_validity[58]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 59
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_1 = this_solution[1]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.cos(th_2)
+                x1 = math.sin(th_5)
+                x2 = math.sin(th_4)
+                x3 = x1*x2
+                x4 = math.cos(th_4)
+                x5 = math.cos(th_6)
+                x6 = math.sin(th_6)
+                x7 = math.cos(th_5)
+                x8 = x2*x7
+                x9 = -x4*x5 + x6*x8
+                x10 = -x4*x6 - x5*x8
+                x11 = r_11*x10 + r_12*x9 - r_13*x3
+                x12 = r_21*x10 + r_22*x9 - r_23*x3
+                x13 = math.sin(th_2)
+                x14 = math.cos(th_1)
+                x15 = x13*x14
+                x16 = math.sin(th_3)
+                x17 = x16*x7
+                x18 = math.cos(th_3)
+                x19 = x1*x18
+                x20 = x17 + x19*x4
+                x21 = x18*x2
+                x22 = x1*x16
+                x23 = -x18*x4*x7 + x22
+                x24 = -x21*x6 - x23*x5
+                x25 = -x21*x5 + x23*x6
+                x26 = r_11*x24 + r_12*x25 + r_13*x20
+                x27 = math.sin(th_1)
+                x28 = -x18*x7 + x22*x4
+                x29 = x16*x2
+                x30 = x17*x4 + x19
+                x31 = -x29*x6 + x30*x5
+                x32 = -x29*x5 - x30*x6
+                x33 = r_21*x24 + r_22*x25 + r_23*x20
+                this_solution[0] = math.atan2(x0*x11 + x0*x14*x33 - x12*x15 + x13*x26 - x27*(r_21*x31 + r_22*x32 + r_23*x28), -x0*x12 + x0*x14*x26 - x11*x15 - x13*x33 - x27*(r_11*x31 + r_12*x32 + r_13*x28))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_59_solve_th_0_processor()
+    # Finish code for explicit solution node 58
 
     # Code for explicit solution node 45, solved variable is th_0
     def ExplicitSolutionNode_node_45_solve_th_0_processor():
@@ -2377,11 +2638,54 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(47, node_input_i_idx_in_queue)
             else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
+                add_input_index_to(60, node_input_i_idx_in_queue)
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_46_processor()
     # Finish code for equation all-zero dispatcher node 46
+
+    # Code for explicit solution node 60, solved variable is th_1
+    def ExplicitSolutionNode_node_60_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[60]
+        this_input_valid: bool = node_input_validity[60]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 60
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = math.cos(th_5)
+                x6 = x0*x5
+                x7 = math.sin(th_3)
+                x8 = x5*x7
+                x9 = math.cos(th_3)
+                x10 = x1*x9
+                x11 = x0*x9
+                x12 = x1*x7
+                x13 = x12 - x2*x5*x9
+                x14 = x0*x7
+                x15 = x10 + x2*x8
+                this_solution[1] = math.atan2((-r_31*(-x11*x4 - x13*x3) - r_32*(-x11*x3 + x13*x4) - r_33*(x10*x2 + x8))*math.cos(th_2) - (-r_31*(-x2*x4 - x3*x6) - r_32*(-x2*x3 + x4*x6) + r_33*x0*x1)*math.sin(th_2), -r_31*(-x14*x4 + x15*x3) - r_32*(-x14*x3 - x15*x4) - r_33*(x12*x2 - x5*x9))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_60_solve_th_1_processor()
+    # Finish code for explicit solution node 60
 
     # Code for explicit solution node 47, solved variable is th_1
     def ExplicitSolutionNode_node_47_solve_th_1_processor():
@@ -2557,11 +2861,120 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(9, node_input_i_idx_in_queue)
             else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
+                add_input_index_to(50, node_input_i_idx_in_queue)
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_8_processor()
     # Finish code for equation all-zero dispatcher node 8
+
+    # Code for explicit solution node 50, solved variable is th_1
+    def ExplicitSolutionNode_node_50_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[50]
+        this_input_valid: bool = node_input_validity[50]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 50
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = math.cos(th_5)
+                x6 = x0*x5
+                x7 = math.sin(th_3)
+                x8 = x5*x7
+                x9 = math.cos(th_3)
+                x10 = x1*x9
+                x11 = x0*x9
+                x12 = x1*x7
+                x13 = x12 - x2*x5*x9
+                x14 = x0*x7
+                x15 = x10 + x2*x8
+                this_solution[1] = math.atan2((-r_31*(-x11*x4 - x13*x3) - r_32*(-x11*x3 + x13*x4) - r_33*(x10*x2 + x8))*math.cos(th_2) - (-r_31*(-x2*x4 - x3*x6) - r_32*(-x2*x3 + x4*x6) + r_33*x0*x1)*math.sin(th_2), -r_31*(-x14*x4 + x15*x3) - r_32*(-x14*x3 - x15*x4) - r_33*(x12*x2 - x5*x9))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(51, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_50_solve_th_1_processor()
+    # Finish code for explicit solution node 50
+
+    # Code for non-branch dispatcher node 51
+    # Actually, there is no code
+
+    # Code for explicit solution node 52, solved variable is th_0
+    def ExplicitSolutionNode_node_52_solve_th_0_processor():
+        this_node_input_index: List[int] = node_input_index[51]
+        this_input_valid: bool = node_input_validity[51]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 52
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_1 = this_solution[1]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.cos(th_2)
+                x1 = math.sin(th_5)
+                x2 = math.sin(th_4)
+                x3 = x1*x2
+                x4 = math.cos(th_4)
+                x5 = math.cos(th_6)
+                x6 = math.sin(th_6)
+                x7 = math.cos(th_5)
+                x8 = x2*x7
+                x9 = -x4*x5 + x6*x8
+                x10 = -x4*x6 - x5*x8
+                x11 = r_11*x10 + r_12*x9 - r_13*x3
+                x12 = r_21*x10 + r_22*x9 - r_23*x3
+                x13 = math.sin(th_2)
+                x14 = math.cos(th_1)
+                x15 = x13*x14
+                x16 = math.sin(th_3)
+                x17 = x16*x7
+                x18 = math.cos(th_3)
+                x19 = x1*x18
+                x20 = x17 + x19*x4
+                x21 = x18*x2
+                x22 = x1*x16
+                x23 = -x18*x4*x7 + x22
+                x24 = -x21*x6 - x23*x5
+                x25 = -x21*x5 + x23*x6
+                x26 = r_11*x24 + r_12*x25 + r_13*x20
+                x27 = math.sin(th_1)
+                x28 = -x18*x7 + x22*x4
+                x29 = x16*x2
+                x30 = x17*x4 + x19
+                x31 = -x29*x6 + x30*x5
+                x32 = -x29*x5 - x30*x6
+                x33 = r_21*x24 + r_22*x25 + r_23*x20
+                this_solution[0] = math.atan2(x0*x11 + x0*x14*x33 - x12*x15 + x13*x26 - x27*(r_21*x31 + r_22*x32 + r_23*x28), -x0*x12 + x0*x14*x26 - x11*x15 - x13*x33 - x27*(r_11*x31 + r_12*x32 + r_13*x28))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_52_solve_th_0_processor()
+    # Finish code for explicit solution node 51
 
     # Code for explicit solution node 9, solved variable is th_0
     def ExplicitSolutionNode_node_9_solve_th_0_processor():
@@ -2637,11 +3050,54 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(49, node_input_i_idx_in_queue)
             else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
+                add_input_index_to(61, node_input_i_idx_in_queue)
 
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_48_processor()
     # Finish code for equation all-zero dispatcher node 48
+
+    # Code for explicit solution node 61, solved variable is th_1
+    def ExplicitSolutionNode_node_61_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[61]
+        this_input_valid: bool = node_input_validity[61]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 61
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_2 = this_solution[2]
+            th_4 = this_solution[3]
+            th_5 = this_solution[4]
+            th_6 = this_solution[5]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.sin(th_4)
+                x1 = math.sin(th_5)
+                x2 = math.cos(th_4)
+                x3 = math.cos(th_6)
+                x4 = math.sin(th_6)
+                x5 = math.cos(th_5)
+                x6 = x0*x5
+                x7 = math.sin(th_3)
+                x8 = x5*x7
+                x9 = math.cos(th_3)
+                x10 = x1*x9
+                x11 = x0*x9
+                x12 = x1*x7
+                x13 = x12 - x2*x5*x9
+                x14 = x0*x7
+                x15 = x10 + x2*x8
+                this_solution[1] = math.atan2((-r_31*(-x11*x4 - x13*x3) - r_32*(-x11*x3 + x13*x4) - r_33*(x10*x2 + x8))*math.cos(th_2) - (-r_31*(-x2*x4 - x3*x6) - r_32*(-x2*x3 + x4*x6) + r_33*x0*x1)*math.sin(th_2), -r_31*(-x14*x4 + x15*x3) - r_32*(-x14*x3 - x15*x4) - r_33*(x12*x2 - x5*x9))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_61_solve_th_1_processor()
+    # Finish code for explicit solution node 61
 
     # Code for explicit solution node 49, solved variable is th_1
     def ExplicitSolutionNode_node_49_solve_th_1_processor():
@@ -2783,14 +3239,14 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
     return ik_out
 
 
-def franka_panda_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarray, th_3):
+def franka_panda_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarray, th_3, _yaik_phase_parameters=None):
     if not np.all(np.isfinite(T_ee)):
         return []
     if not (math.isfinite(th_3)):
         return []
     if not np.all(np.isfinite(T_ee_raw_in)):
         return []
-    ik_output_raw = franka_panda_ik_solve_raw(T_ee_raw_in, add_revolute_offset(th_3, th_3_offset_original2raw))
+    ik_output_raw = franka_panda_ik_solve_raw(T_ee_raw_in, (_yaik_phase_parameters[0] if _yaik_phase_parameters is not None else (add_revolute_offset(th_3, th_3_offset_original2raw))))
     ik_output = list()
     for i in range(len(ik_output_raw)):
         ik_out_i = ik_output_raw[i]
@@ -2827,6 +3283,16 @@ def franka_panda_ik_solve(T_ee: np.ndarray, th_3):
             if key not in seen:
                 seen.add(key)
                 result.append(candidate)
+    if not result:
+        phase_parameters = (add_revolute_offset(th_3, th_3_offset_original2raw),)
+        for alias in fixed_joint_phase_aliases(phase_parameters, [(0, -0.0522033313182534), (0, 3.141592653589793)], zero_tolerance):
+            for transform in (franka_panda_ik_target_original_to_raw_legacy_frame, franka_panda_ik_target_original_to_raw):
+                raw_target = transform(T_ee)
+                for candidate in franka_panda_ik_solve_for_raw_target(T_ee, raw_target, th_3, _yaik_phase_parameters=alias):
+                    key = tuple(float(value) for value in candidate.ravel())
+                    if key not in seen:
+                        seen.add(key)
+                        result.append(candidate)
     return result
 
 

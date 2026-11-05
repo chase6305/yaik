@@ -15,7 +15,8 @@ import sympy as sp
 from codegen.cpp_codegen.codegen_cpp import CodeGenerationCpp
 from codegen.py_codegen.codegen_py import CodeGenerationPython
 from codegen.skeleton.complete_partial_branches import (
-    branch_fixed_values, complete_partial_shoulder_branches, joints_are_coaxial)
+    branch_fixed_values, complete_partial_shoulder_branches, joints_are_coaxial,
+    complete_spherical_orientation_branches)
 from codegen.skeleton.completeness import audit_completeness
 from codegen.skeleton.family_critical import spherical_shoulder_supported
 from codegen.skeleton.tree_serialize import read_skeleton_tree, save_ik_tree
@@ -51,6 +52,29 @@ def inputs():
 
 
 class TestPartialBranches(TestCase):
+    def test_full_rotation_branch_keeps_prefixes_and_obeys_budget(self):
+        tree = legacy_tree(); original = list(tree.node_list)
+        self.assertEqual(complete_spherical_orientation_branches(tree, tree.num_nodes), 0)
+        self.assertEqual(tree.node_list, original)
+        complete_partial_shoulder_branches(tree, 50)
+        self.assertGreater(complete_spherical_orientation_branches(tree, 50), 0)
+        self.assertEqual(tree.node_list[:len(original)], original)
+        self.assertEqual(complete_spherical_orientation_branches(tree, 50), 0)
+        for index in (8, 10):
+            self.assertIsNotNone(tree.node_list[index].degenerate_child)
+        scope = {'__name__': 'full_rotation_regression'}
+        with redirect_stdout(StringIO()):
+            exec('\n'.join(CodeGenerationPython(tree).generate_code()), scope)
+        rng = np.random.default_rng(20261231)
+        for delta in (0., -1e-8, 1e-8):
+            q = rng.uniform(-math.pi, math.pi, 7)
+            q[1], q[3], q[4] = -math.pi, delta, 0.
+            target = independent_fk(tree.robot, q)
+            output = scope['franka_panda_ik_solve'](target, float(q[3]))
+            self.assertTrue(output, q)
+            self.assertTrue(any(np.max(np.abs(independent_fk(tree.robot, v.ravel())-target))<1e-7
+                                and v[3,0] == q[3] for v in output))
+
     def test_exact_axis_check_rejects_small_offsets_and_unfixed_middle_angles(self):
         tree = legacy_tree(); values = branch_fixed_values(tree.node_list[12])
         self.assertEqual(values, {tree.robot.unknowns[3].symbol: sp.pi})

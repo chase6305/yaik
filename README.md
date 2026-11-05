@@ -187,6 +187,22 @@ transforms as well as in its DH chain; those parameters are passed through FK,
 Jacobian, target conversion, and checked IK. See the
 [frame parameter example](./docs/modified_dh.md#base-and-tool-transforms).
 
+New C++ exports keep large candidate buffers on the heap and share an index
+arena sized for each node. Index storage can grow up to the existing candidate
+limit; raw output storage grows with the results. Bundle the matching header
+with `--with-runtime`. For repeated calls, reuse a workspace and output vector:
+
+```cpp
+using Arm = marvin_m6_left_arm_ik;
+Arm::RawIKWorksace workspace;
+std::vector<std::array<double, Arm::robot_nq>> solutions;
+Arm::computeIK(target, fixed_q5, workspace, solutions);
+```
+
+The checked overload accepts the original target and fixed joint value. Give
+each thread its own workspace and output vector. Previously generated kernels
+continue to compile with the updated common header.
+
 The library APIs remain available:
 
 ```python
@@ -261,6 +277,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
   solver/test_argument_guards.py solver/test_guard_domains.py solver/test_rounded_frames.py \
   solver/test_candidate_assignment.py solver/test_partial_branches.py \
+  solver/test_compact_workspace.py solver/test_fixed_joint_phases.py \
   solver/test_gallery_regeneration.py \
   solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 
@@ -314,6 +331,14 @@ Supported incomplete shoulders can be completed from the full rotation.
 An exact coaxial-axis check on the selected symbolic path permits one gauge
 value before reconstructing the shoulder. This does not enumerate every
 bounded representative of the continuous family.
+
+Supported shoulder branches can also recover the remaining first angles from
+the full rotation while keeping an assigned third shoulder angle. If ordinary
+checked IK finds no candidate, fixed revolute inputs may be retried at equivalent
+phases near implemented branch centers. This requires symbolic invariance under
+a `2*pi` shift, including base/tool frames. The returned fixed value stays
+exactly as supplied, every candidate uses the original FK gates, and phase
+retries consume no additional random values. Raw APIs use the supplied raw phase.
 
 The audit reports saved formula degeneration records that lack their own
 dispatcher as `source: undispatched_solution_record`, including records previously

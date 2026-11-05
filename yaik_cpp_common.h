@@ -6,10 +6,12 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <iostream>
 #include <limits>
 #include <random>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include <Eigen/Eigen>
@@ -26,6 +28,30 @@ inline double addRevoluteOffset(double value, double offset) {
   const double phase=std::atan2(std::sin(value), std::cos(value));
   const double shift=std::abs(offset) > M_PI ? std::atan2(std::sin(offset), std::cos(offset)) : offset;
   return phase+shift;
+}
+
+template <std::size_t N, std::size_t K>
+std::vector<std::array<double,N>> fixedJointPhaseAliases(
+    const std::array<double,N>& arguments,
+    const std::array<std::pair<std::size_t,double>,K>& centers, double tolerance=1e-6) {
+  std::vector<std::array<double,N>> aliases;
+  auto combined=arguments;
+  std::array<bool,N> changed{};
+  std::size_t count=0;
+  for (const auto& entry : centers) {
+    const auto index=entry.first;
+    const double center=entry.second, value=arguments.at(index);
+    if (!std::isfinite(value) || !std::isfinite(center) || std::abs(value-center)<=tolerance) continue;
+    const double sv=std::sin(value), cv=std::cos(value), sc=std::sin(center), cc=std::cos(center);
+    const double phase=std::atan2(sv*cc-cv*sc,cv*cc+sv*sc);
+    if (std::abs(phase)>tolerance) continue;
+    auto alias=arguments;
+    alias[index]=center+phase;
+    if (std::find(aliases.begin(),aliases.end(),alias)==aliases.end()) aliases.push_back(alias);
+    if (!changed[index]) { changed[index]=true; combined[index]=alias[index]; ++count; }
+  }
+  if (count>1 && std::find(aliases.begin(),aliases.end(),combined)==aliases.end()) aliases.push_back(combined);
+  return aliases;
 }
 
 template <int N>
@@ -417,11 +443,157 @@ struct NodeIndexWorkspace {
   // clang-format on
 };
 
-/// A struct to hold all the buffers
-template <int intermediate_solution_size, int max_n_solutions, int robot_nq>
+// Heap storage keeps large generated queues out of the caller's stack. Reserve
+// the full candidate bound before references are taken, including after copies.
+template <int Nq, int Capacity>
+struct CompactSolutionQueue {
+  static_assert(Capacity >= 1, "Zero capacity not allowed");
+  std::vector<IntermediateSolution<Nq>> solutions;
+  std::vector<bool> solutions_validity;
+
+  CompactSolutionQueue() = default;
+  CompactSolutionQueue(const CompactSolutionQueue& other)
+      : solutions(other.solutions), solutions_validity(other.solutions_validity) {
+    reserve();
+  }
+  CompactSolutionQueue(CompactSolutionQueue&&) noexcept = default;
+  CompactSolutionQueue& operator=(const CompactSolutionQueue& other) {
+    if (this != &other) {
+      CompactSolutionQueue copy(other);
+      solutions.swap(copy.solutions);
+      solutions_validity.swap(copy.solutions_validity);
+    }
+    return *this;
+  }
+  CompactSolutionQueue& operator=(CompactSolutionQueue&&) noexcept = default;
+
+  void reserve() {
+    solutions.reserve(Capacity);
+    solutions_validity.reserve(Capacity);
+  }
+  void reset() {
+    solutions.clear();
+    solutions_validity.clear();
+    reserve();
+  }
+  int push_solution(IntermediateSolution<Nq> solution) {
+    if (solutions.size() >= Capacity) return -1;
+    reserve();
+    const int index = static_cast<int>(solutions.size());
+    solutions.push_back(std::move(solution));
+    solutions_validity.push_back(true);
+    return index;
+  }
+  const IntermediateSolution<Nq>& get_solution(int index) const { return solutions[index]; }
+  IntermediateSolution<Nq>& get_solution(int index) { return solutions[index]; }
+  bool is_solution_valid(int index) const { return solutions_validity[index]; }
+  int size() const { return static_cast<int>(solutions.size()); }
+};
+
+// Nodes share one index arena. Views resolve offsets on access, so growing one
+// node cannot invalidate another node's active input view. Copies own their data.
+class CompactNodeIndexWorkspace {
+  struct NodeRange {
+    std::size_t offset, capacity, size, initial_capacity;
+  };
+  std::vector<NodeRange> ranges_;
+  std::vector<int> indices_;
+  std::size_t node_capacity_limit_ = 0;
+
+ public:
+  class IndexQueue {
+    const CompactNodeIndexWorkspace* owner_;
+    std::size_t node_;
+   public:
+    IndexQueue(const CompactNodeIndexWorkspace* owner, std::size_t node)
+        : owner_(owner), node_(node) {}
+    int size() const { return static_cast<int>(owner_->ranges_[node_].size); }
+    int operator[](int index) const {
+      return owner_->indices_[owner_->ranges_[node_].offset+index];
+    }
+  };
+  std::vector<bool> node_input_validity_vector;
+
+  CompactNodeIndexWorkspace() = default;
+  CompactNodeIndexWorkspace(const CompactNodeIndexWorkspace&) = default;
+  CompactNodeIndexWorkspace(CompactNodeIndexWorkspace&&) noexcept = default;
+  CompactNodeIndexWorkspace& operator=(const CompactNodeIndexWorkspace& other) {
+    if (this != &other) {
+      CompactNodeIndexWorkspace copy(other);
+      ranges_.swap(copy.ranges_);
+      indices_.swap(copy.indices_);
+      node_input_validity_vector.swap(copy.node_input_validity_vector);
+      std::swap(node_capacity_limit_, copy.node_capacity_limit_);
+    }
+    return *this;
+  }
+  CompactNodeIndexWorkspace& operator=(CompactNodeIndexWorkspace&&) noexcept = default;
+
+  template <std::size_t N>
+  void reset(const std::array<std::size_t, N>& capacities, std::size_t limit) {
+    if (limit > static_cast<std::size_t>(std::numeric_limits<int>::max()))
+      throw std::length_error("Node queue limit exceeds the index range");
+    std::size_t total = 0;
+    bool reuse = ranges_.size() == N && node_capacity_limit_ == limit;
+    for (std::size_t i = 0; i < N; ++i) {
+      if (capacities[i] > limit) throw std::invalid_argument("Node capacity exceeds queue limit");
+      if (capacities[i] > indices_.max_size()-total)
+        throw std::length_error("Node index storage is too large");
+      total += capacities[i];
+      reuse = reuse && ranges_[i].initial_capacity == capacities[i];
+    }
+    if (!reuse) {
+      indices_.reserve(total);
+      ranges_.reserve(N);
+      node_input_validity_vector.reserve(N);
+      indices_.resize(total);
+      ranges_.resize(N);
+      std::size_t offset = 0;
+      for (std::size_t i = 0; i < N; ++i) {
+        ranges_[i] = {offset, capacities[i], 0, capacities[i]};
+        offset += capacities[i];
+      }
+      node_capacity_limit_ = limit;
+    } else {
+      for (auto& range : ranges_) range.size = 0;
+    }
+    node_input_validity_vector.assign(N, false);
+    if (N != 0) node_input_validity_vector[0] = true;
+  }
+
+  bool append_index_to_node(int node, int index) {
+    if (index < 0) return false;
+    auto& range = ranges_.at(node);
+    if (range.size == range.capacity) {
+      if (range.capacity == node_capacity_limit_) return false;
+      const auto growth = std::min(std::max(std::size_t(1), range.capacity),
+                                   node_capacity_limit_-range.capacity);
+      indices_.insert(indices_.begin()+range.offset+range.capacity, growth, 0);
+      range.capacity += growth;
+      for (std::size_t i = static_cast<std::size_t>(node)+1; i < ranges_.size(); ++i)
+        ranges_[i].offset += growth;
+    }
+    indices_[range.offset+range.size++] = index;
+    node_input_validity_vector[node] = true;
+    return true;
+  }
+  IndexQueue get_input_indices_for_node(int node) const {
+    ranges_.at(node);
+    return IndexQueue(this, static_cast<std::size_t>(node));
+  }
+  bool is_input_indices_valid_for_node(int node) const { return node_input_validity_vector.at(node); }
+  int num_nodes() const { return static_cast<int>(ranges_.size()); }
+  std::size_t index_storage_capacity() const { return indices_.capacity(); }
+  std::size_t metadata_storage_bytes() const { return ranges_.capacity()*sizeof(NodeRange); }
+};
+
+/// Default storage retains compatibility with previously generated kernels.
+template <int intermediate_solution_size, int max_n_solutions, int robot_nq,
+          typename Queue = SolutionQueue<intermediate_solution_size, max_n_solutions>,
+          typename NodeWorkspace = NodeIndexWorkspace<max_n_solutions>>
 struct RawIkWorkspaceTemplate {
-  SolutionQueue<intermediate_solution_size, max_n_solutions> solution_queue;
-  NodeIndexWorkspace<max_n_solutions> node_index_workspace;
+  Queue solution_queue;
+  NodeWorkspace node_index_workspace;
   std::vector<std::array<double, robot_nq>> raw_ik_out;
 };
 

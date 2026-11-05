@@ -134,8 +134,12 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('static constexpr double pose_tolerance_degenerate = 1e-4;')
         self.add_code_line('static constexpr double {zero_tolerance} = 1e-6;'.
                            format(zero_tolerance=fk_equations.zero_tolerance))
+        self.add_code_line('using SolutionQueueType = ::yaik_cpp::CompactSolutionQueue'
+                           '<intermediate_solution_size, max_n_solutions>;')
+        self.add_code_line('using NodeIndexWorkspaceType = ::yaik_cpp::CompactNodeIndexWorkspace;')
         self.add_code_line('using RawIKWorksace = ::yaik_cpp::RawIkWorkspaceTemplate'
-                           '<intermediate_solution_size, max_n_solutions, robot_nq>;')
+                           '<intermediate_solution_size, max_n_solutions, robot_nq, '
+                           'SolutionQueueType, NodeIndexWorkspaceType>;')
         if not generate_parameter:
             return
 
@@ -475,8 +479,8 @@ class CodeGenerationCpp(CodeGenerationBase):
         func_arguments = '(const Eigen::Matrix4d& T_ee'
         for symbol_i in free_symbols:
             func_arguments += ', double ' + str(symbol_i)
-        func_arguments += ', SolutionQueue<intermediate_solution_size, max_n_solutions>& solution_queue'
-        func_arguments += ', NodeIndexWorkspace<max_n_solutions>& node_index_workspace'
+        func_arguments += ', SolutionQueueType& solution_queue'
+        func_arguments += ', NodeIndexWorkspaceType& node_index_workspace'
         func_arguments += ', std::vector<std::array<double, robot_nq>>& ik_output'
         func_arguments += ')'
         return func_arguments
@@ -510,7 +514,6 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('static void ' + self.ik_function_name(True) + func_arguments)
         self.enter_scope('workspace_raw_ik')
         self.add_code_line('workspace.raw_ik_out.clear();')
-        self.add_code_line('workspace.raw_ik_out.reserve(max_n_solutions);')
 
         func_arguments_call = '(T_ee_raw'
         for symbol_i in free_symbols:
@@ -575,16 +578,13 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # Handle offset
         unknown_offset = self.robot.get_unknown_offset()
-        if unknown_offset is not None:
-            unknowns = self.robot.unknowns
-            for j in range(len(unknown_offset)):
-                unknown_j = unknowns[j]
-                if unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
-                    self.add_code_line(f'ik_out_i[{j}] = {unknown_j.symbol};')
-                else:
-                    expression = self.joint_offset_expression(
-                        unknown_j.symbol, f'ik_out_i[{j}]', cpp=True, subtract=True)
-                    self.add_code_line(f'ik_out_i[{j}] = {expression};')
+        for j, unknown_j in enumerate(self.robot.unknowns):
+            if unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
+                self.add_code_line(f'ik_out_i[{j}] = {unknown_j.symbol};')
+            elif unknown_offset is not None:
+                expression = self.joint_offset_expression(
+                    unknown_j.symbol, f'ik_out_i[{j}]', cpp=True, subtract=True)
+                self.add_code_line(f'ik_out_i[{j}] = {expression};')
 
         self.add_code_line('ik_output.push_back(ik_out_i);')
         self.exit_scope('for')
@@ -625,11 +625,14 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # The ik define
         handler_arguments = func_arguments
-        if self._has_frame_fallback:
+        wrapped = self._has_frame_fallback or bool(self.fixed_joint_phase_centers)
+        if wrapped:
             handler_arguments = func_arguments.replace('(const Eigen::Matrix4d& T_ee',
                 '(const Eigen::Matrix4d& T_ee, const Eigen::Matrix4d& T_ee_raw')
             handler_arguments = handler_arguments[:-1]+', Eigen::Matrix4d& frame_disturbance, bool& frame_disturbance_ready, bool allow_disturbance)'
-        method = 'computeIKForRawTarget' if self._has_frame_fallback else self.ik_function_name(False)
+        if self.fixed_joint_phase_centers:
+            handler_arguments = handler_arguments[:-1]+f', const std::array<double, {len(free_symbols)}>* _yaik_phase_parameters = nullptr)'
+        method = 'computeIKForRawTarget' if wrapped else self.ik_function_name(False)
         self.add_code_line('static void ' + method + handler_arguments)
         self.enter_scope('checked_ik')
         self.add_code_line('if (!T_ee.allFinite()) { ik_output.clear(); return; }')
@@ -638,7 +641,7 @@ class CodeGenerationCpp(CodeGenerationBase):
             self.add_code_line('if (' + invalid_parameters + ') { ik_output.clear(); return; }')
 
         # To raw target
-        if self._has_frame_fallback:
+        if wrapped:
             self.add_code_line('if (!T_ee_raw.allFinite()) { ik_output.clear(); return; }')
         elif (self.robot.get_pre_transform_sp() is not None) or (self.robot.get_post_transform_sp() is not None):
             self.add_code_line('const Eigen::Matrix4d& T_ee_raw = ' + self.frame_transform_call(
@@ -653,13 +656,15 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         def make_func_call_args(ee_pose_name: str = 'T_ee_raw'):
             func_call_arguments = '(' + ee_pose_name
-            for symbol_j in free_symbols:
+            for index, symbol_j in enumerate(free_symbols):
                 # We need to add offset here, since the parameter from unknown used in rawIK is with offset.
                 if symbol_j in unknown_symbols and self.robot.get_unknown_offset() is not None:
-                    func_call_arguments += ', ' + self.joint_offset_expression(
-                        symbol_j, str(symbol_j), cpp=True)
+                    argument = self.joint_offset_expression(symbol_j, str(symbol_j), cpp=True)
                 else:
-                    func_call_arguments += ', ' + str(symbol_j)
+                    argument = str(symbol_j)
+                if self.fixed_joint_phase_centers:
+                    argument = f'(_yaik_phase_parameters ? (*_yaik_phase_parameters)[{index}] : ({argument}))'
+                func_call_arguments += ', '+argument
             func_call_arguments += ', workspace'
             func_call_arguments += ');'
             return func_call_arguments
@@ -676,16 +681,13 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # Handle offset
         unknown_offset = self.robot.get_unknown_offset()
-        if unknown_offset is not None:
-            unknowns = self.robot.unknowns
-            for j in range(len(unknown_offset)):
-                unknown_j = unknowns[j]
-                if unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
-                    self.add_code_line(f'ik_out_i[{j}] = {unknown_j.symbol};')
-                else:
-                    expression = self.joint_offset_expression(
-                        unknown_j.symbol, f'ik_out_i[{j}]', cpp=True, subtract=True)
-                    self.add_code_line(f'ik_out_i[{j}] = {expression};')
+        for j, unknown_j in enumerate(self.robot.unknowns):
+            if unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
+                self.add_code_line(f'ik_out_i[{j}] = {unknown_j.symbol};')
+            elif unknown_offset is not None:
+                expression = self.joint_offset_expression(
+                    unknown_j.symbol, f'ik_out_i[{j}]', cpp=True, subtract=True)
+                self.add_code_line(f'ik_out_i[{j}] = {expression};')
 
         # Make the fk call
         unknown_symbols = [elem.symbol for elem in self.skeleton_tree.robot.unknowns]
@@ -726,7 +728,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         # Numerical handling of degenerate case
         self.add_empty_line()
         self.add_code_line('// Disturbing method for degenerate handling')
-        if self._has_frame_fallback:
+        if wrapped:
             self.add_code_line('if (!allow_disturbance) return;')
         self.add_code_line('for (int perturbation = 0; perturbation < 3; ++perturbation)')
         self.enter_scope('disturbance_attempt')
@@ -758,16 +760,13 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # Handle offset
         unknown_offset = self.robot.get_unknown_offset()
-        if unknown_offset is not None:
-            unknowns = self.robot.unknowns
-            for j in range(len(unknown_offset)):
-                unknown_j = unknowns[j]
-                if unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
-                    self.add_code_line(f'ik_out_i[{j}] = {unknown_j.symbol};')
-                else:
-                    expression = self.joint_offset_expression(
-                        unknown_j.symbol, f'ik_out_i[{j}]', cpp=True, subtract=True)
-                    self.add_code_line(f'ik_out_i[{j}] = {expression};')
+        for j, unknown_j in enumerate(self.robot.unknowns):
+            if unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
+                self.add_code_line(f'ik_out_i[{j}] = {unknown_j.symbol};')
+            elif unknown_offset is not None:
+                expression = self.joint_offset_expression(
+                    unknown_j.symbol, f'ik_out_i[{j}]', cpp=True, subtract=True)
+                self.add_code_line(f'ik_out_i[{j}] = {expression};')
 
         # Compute the pose again, note that we can use same fk_func_args
         self.add_code_line('wrapAngleToPi(ik_out_i);')
@@ -813,7 +812,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, '
                            + classify_candidates + ');')
         self.exit_scope('checked_ik')
-        if self._has_frame_fallback:
+        if wrapped:
             self._generate_frame_checked_wrapper(func_arguments)
 
     def _generate_frame_checked_wrapper(self, arguments):
@@ -827,10 +826,11 @@ class CodeGenerationCpp(CodeGenerationBase):
             self.add_code_line('if ('+' || '.join('!std::isfinite('+str(s)+')' for s in free)+') return;')
         self.add_code_line('Eigen::Matrix4d frame_disturbance;')
         self.add_code_line('bool frame_disturbance_ready = false;')
-        self.add_code_line('for (bool legacy : {true, false})')
+        self.add_code_line('for (bool legacy : {'+('true, false' if self._has_frame_fallback else 'false')+'})')
         self.enter_scope('frame_chart')
         primary = self.frame_transform_call('endEffectorTargetOriginalToRaw', 'T_ee')
-        previous = self.frame_transform_call('endEffectorTargetOriginalToRawLegacyFrame', 'T_ee')
+        previous = (self.frame_transform_call('endEffectorTargetOriginalToRawLegacyFrame', 'T_ee')
+                    if self._has_frame_fallback else primary)
         self.add_code_line('const Eigen::Matrix4d raw_target = legacy ? '+previous+' : '+primary+';')
         self.add_code_line('std::vector<std::array<double, robot_nq>> candidates;')
         tail = ', '+', '.join(map(str, free)) if free else ''
@@ -841,6 +841,32 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line(indent()+'ik_output.push_back(candidate);')
         self.exit_scope('frame_candidate')
         self.exit_scope('frame_chart')
+        if self.fixed_joint_phase_centers:
+            raw = [self.joint_offset_expression(symbol, str(symbol), cpp=True)
+                   if symbol in self.robot.unknown_as_parameter_more_dof else str(symbol) for symbol in free]
+            centers = ', '.join('{'+str(free.index(symbol))+', '+repr(value)+'}'
+                                for symbol, value in self.fixed_joint_phase_centers)
+            self.add_code_line('if (ik_output.empty())')
+            self.enter_scope('phase_recovery')
+            self.add_code_line(f'const std::array<double, {len(free)}> phase_parameters = {{{{'+', '.join(raw)+'}};')
+            self.add_code_line('const std::array<std::pair<std::size_t,double>, '
+                               +str(len(self.fixed_joint_phase_centers))+'> phase_centers = {{'+centers+'}};')
+            self.add_code_line('for (const auto& alias : fixedJointPhaseAliases(phase_parameters, phase_centers, zero_tolerance))')
+            self.enter_scope('phase_alias')
+            self.add_code_line('for (bool legacy : {'+('true, false' if self._has_frame_fallback else 'false')+'})')
+            self.enter_scope('phase_chart')
+            self.add_code_line('const Eigen::Matrix4d raw_target = legacy ? '+previous+' : '+primary+';')
+            self.add_code_line('std::vector<std::array<double, robot_nq>> candidates;')
+            self.add_code_line('computeIKForRawTarget(T_ee, raw_target'+tail+', workspace, candidates, '
+                               'frame_disturbance, frame_disturbance_ready, false, &alias);')
+            self.add_code_line('for (const auto& candidate : candidates)')
+            self.enter_scope('phase_candidate')
+            self.add_code_line('if (std::find(ik_output.begin(), ik_output.end(), candidate) == ik_output.end())')
+            self.add_code_line(indent()+'ik_output.push_back(candidate);')
+            self.exit_scope('phase_candidate')
+            self.exit_scope('phase_chart')
+            self.exit_scope('phase_alias')
+            self.exit_scope('phase_recovery')
         self.exit_scope('checked_frame_charts')
 
     def _generate_handy_ik(self):

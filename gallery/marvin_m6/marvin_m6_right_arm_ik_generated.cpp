@@ -16,7 +16,9 @@ static constexpr int intermediate_solution_size = 6;
 static constexpr double pose_tolerance = 1e-6;
 static constexpr double pose_tolerance_degenerate = 1e-4;
 static constexpr double zero_tolerance = 1e-6;
-using RawIKWorksace = ::yaik_cpp::RawIkWorkspaceTemplate<intermediate_solution_size, max_n_solutions, robot_nq>;
+using SolutionQueueType = ::yaik_cpp::CompactSolutionQueue<intermediate_solution_size, max_n_solutions>;
+using NodeIndexWorkspaceType = ::yaik_cpp::CompactNodeIndexWorkspace;
+using RawIKWorksace = ::yaik_cpp::RawIkWorkspaceTemplate<intermediate_solution_size, max_n_solutions, robot_nq, SolutionQueueType, NodeIndexWorkspaceType>;
 
 // Robot parameters
 static constexpr double a_1 = 0.018;
@@ -435,7 +437,7 @@ static void computeTransformPointJacobian(const std::array<double, robot_nq>& th
     return;
 }
 
-static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue<intermediate_solution_size, max_n_solutions>& solution_queue, NodeIndexWorkspace<max_n_solutions>& node_index_workspace, std::vector<std::array<double, robot_nq>>& ik_output)
+static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueueType& solution_queue, NodeIndexWorkspaceType& node_index_workspace, std::vector<std::array<double, robot_nq>>& ik_output)
 {
     // Extracting the ik target symbols
     const double r_11 = T_ee(0, 0);
@@ -458,7 +460,8 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
     const double inv_Pz = inv_ee_translation(2);
 
     solution_queue.reset();
-    node_index_workspace.reset(n_tree_nodes);
+    static constexpr std::array<std::size_t, n_tree_nodes> node_input_capacities = {{1, 1, 2, 2, 74, 74, 74, 74, 222, 222, 222, 222, 2, 136, 136, 136, 136, 408, 408, 408, 408, 74, 2442, 2442, 7326, 7326, 7326, 7326}};
+    node_index_workspace.reset(node_input_capacities, max_n_solutions);
 
     using RawSolution = IntermediateSolution<intermediate_solution_size>;
     auto make_raw_solution = []() -> RawSolution { RawSolution result; result.fill(std::numeric_limits<double>::quiet_NaN()); return result; };
@@ -2521,7 +2524,6 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_4, SolutionQueue
 static void computeRawIK(const Eigen::Matrix4d& T_ee_raw, double th_4, RawIKWorksace& workspace)
 {
     workspace.raw_ik_out.clear();
-    workspace.raw_ik_out.reserve(max_n_solutions);
     computeRawIK(T_ee_raw, th_4, workspace.solution_queue, workspace.node_index_workspace, workspace.raw_ik_out);
 }
 

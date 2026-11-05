@@ -69,4 +69,8 @@ Raw outputs require an assigned finite value for every physical joint. A
 partial symbolic leaf remains unresolved and produces no raw candidate.
 `generate --resume-tree PATH` can extend supported saved branches and records
 its input hash and continuation seed separately from the historical search.
+Checked IK can retry equivalent fixed-joint phases near implemented branches
+after the original paths fail. This requires a symbolic `2*pi` periodicity check
+for the model and its base/tool frames; the returned fixed coordinate retains
+the caller's exact value. Raw IK evaluates the raw phase supplied by the caller.
 

@@ -52,6 +52,8 @@ class CodeGenerationBase(object):
             print('Generation coverage for {name}: {count} unimplemented degenerate branches.'.format(
                 name=tree.robot.name, count=len(self.unhandled_degenerate_branches)))
         self.queue_capacity_bound = queue_capacity_bound(tree.root)
+        from codegen.skeleton.fixed_joint_phases import fixed_joint_branch_centers
+        self.fixed_joint_phase_centers = fixed_joint_branch_centers(tree)
 
     @property
     def skeleton_tree(self) -> SkeletonTree:
@@ -117,6 +119,8 @@ class CodeGenerationBase(object):
         return function_name + '(' + ', '.join(arguments) + ')'
 
     def joint_offset_expression(self, symbol, value, cpp=False, subtract=False):
+        if self.robot.get_unknown_offset() is None:
+            return value
         index = next(i for i, unknown in enumerate(self.robot.unknowns) if unknown.symbol == symbol)
         offset = self.get_unknown_offset_name(symbol.name)
         unknown = self.robot.unknowns[index]
@@ -162,6 +166,31 @@ def queue_capacity_bound(node, has_prefix=False):
         copies = max(0, count-1) if has_prefix else 0
         return max(costs[0], copies + sum(costs[1:]))
     return max(costs, default=0)
+
+
+def node_input_capacity_bounds(tree):
+    """Bound each node's incoming indices without changing candidate limits.
+
+    Different dispatcher children can each receive every incoming prefix.
+    Formula nodes multiply that bound by their maximum active candidates.
+    Runtime index storage can grow if a future formula exceeds its estimate.
+    """
+    capacities = [0]*tree.num_nodes
+
+    def visit(node, incoming):
+        if node is None:
+            return
+        capacities[node.flatten_idx] = incoming
+        if node.is_solution_node:
+            roots = (explicit_active_bound(node.solution) if node.solution.is_explicit_solution
+                     else node.solution.num_solutions())
+            visit(node.dispatcher_child, incoming*roots)
+        else:
+            for child in node.children:
+                visit(child, incoming)
+
+    visit(tree.root, 1)
+    return capacities
 
 
 @lru_cache(maxsize=4096)

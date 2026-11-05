@@ -16,6 +16,34 @@ def add_revolute_offset(value, offset):
     return phase+shift
 
 
+def fixed_joint_phase_aliases(arguments, centers, tolerance=1e-6):
+    """Try equivalent representatives near saved branch centers after failure."""
+    original = tuple(float(value) for value in arguments)
+    aliases, seen, combined, changed = [], set(), list(original), set()
+    for index, center in centers:
+        value = original[index]
+        if not (math.isfinite(value) and math.isfinite(center)) or abs(value-center) <= tolerance:
+            continue
+        sv, cv, sc, cc = math.sin(value), math.cos(value), math.sin(center), math.cos(center)
+        phase = math.atan2(sv*cc-cv*sc, cv*cc+sv*sc)
+        if abs(phase) > tolerance:
+            continue
+        replacement = center+phase
+        alias = list(original)
+        alias[index] = replacement
+        alias = tuple(alias)
+        if alias not in seen:
+            seen.add(alias)
+            aliases.append(alias)
+        if index not in changed:
+            combined[index] = replacement
+            changed.add(index)
+    combined = tuple(combined)
+    if len(changed) > 1 and combined not in seen:
+        aliases.append(combined)
+    return aliases
+
+
 def _trig_root_offset(a, b, c):
     """atan2(sqrt(a*a+b*b-c*c), -c) for scaled finite coefficients.
 

@@ -1,6 +1,6 @@
 import copy
 
-from codegen.skeleton.codegen_base import indent, cse_by_condition, candidate_is_complete
+from codegen.skeleton.codegen_base import indent, cse_by_condition, candidate_is_complete, node_input_capacity_bounds
 from codegen.skeleton.skeleton_tree import SkeletonTree
 from codegen.skeleton.tree_node import SkeletonTreeNode, NoBranchDispatcherNode, DispatcherNodeBase
 from codegen.skeleton.tree_node import EquationAllZeroDispatcherNode, SolvedVariableDispatcherNode
@@ -67,7 +67,10 @@ class NodeIkSolutionGeneratorCpp(SkeletonNodeVisitor):
     def append_init_lines(self):
         self.add_empty_line()
         self.add_code_line('solution_queue.reset();')
-        self.add_code_line('node_index_workspace.reset(n_tree_nodes);')
+        capacities = ', '.join(map(str, node_input_capacity_bounds(self._tree)))
+        self.add_code_line('static constexpr std::array<std::size_t, n_tree_nodes> '
+                           'node_input_capacities = {{'+capacities+'}};')
+        self.add_code_line('node_index_workspace.reset(node_input_capacities, max_n_solutions);')
 
         # Functor to make intermediate solution
         self.add_empty_line()

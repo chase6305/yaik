@@ -5,7 +5,7 @@ import math
 import sympy as sp
 
 from codegen.skeleton.family_critical import spherical_shoulder_solutions, spherical_shoulder_supported
-from codegen.skeleton.tree_node import SolvedVariableDispatcherNode
+from codegen.skeleton.tree_node import SolvedVariableDispatcherNode, EquationAllZeroDispatcherNode
 from fk.kinematics_dh import modified_dh_transform
 from fk.robots import DHEntry
 from solver.solved_variable import SolutionMethod, VariableSolution
@@ -120,5 +120,40 @@ def complete_partial_shoulder_branches(tree, max_num_nodes=50):
             tree.add_node(dispatcher)
             tree.add_node(node)
             current = node
+        count += 1
+    return count
+
+
+def complete_spherical_orientation_branches(tree, max_num_nodes=50):
+    """Use the full rotation when only the first shoulder angles remain.
+
+    The third shoulder joint and all distal joints must already be assigned.
+    Existing prefixes and regular children stay attached. Translation and the
+    original target still pass the checked API's normal FK acceptance gates.
+    """
+    robot = tree.robot
+    if not spherical_shoulder_supported(robot):
+        return 0
+    from codegen.skeleton.branch_certificates import certify_unreachable_branch
+    required = {unknown.symbol for unknown in tree.solved_unknowns}
+    first_two = {unknown.symbol for unknown in robot.unknowns[:2]}
+    count, tail = 0, None
+    for node in list(tree.node_list):
+        if not isinstance(node, EquationAllZeroDispatcherNode) or node.degenerate_child is not None:
+            continue
+        known = {solution.solved_variable for solution in tree.variable_solutions_from_root(node)}
+        missing = required-known
+        if not missing or not missing <= first_two:
+            continue
+        fixed = branch_fixed_values(node)
+        if fixed is None or missing & fixed.keys() or certify_unreachable_branch(tree, node) is not None:
+            continue
+        added = 2*len(missing)-1
+        if tree.num_nodes+added > max_num_nodes:
+            continue
+        if tail is None:
+            tail = spherical_shoulder_solutions(robot)[1:]
+        solutions = [copy.deepcopy(solution) for solution in tail if solution.solved_variable in missing]
+        tree.append_branched_solution(solutions, node, 1)
         count += 1
     return count

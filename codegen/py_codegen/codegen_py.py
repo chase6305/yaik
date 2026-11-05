@@ -402,9 +402,12 @@ class CodeGenerationPython(CodeGenerationBase):
         self.append_new_function_two_empty_lines()
         func_arguments = self._ik_func_args_string()
         method = self.ik_function_name(False)
-        if self._has_frame_fallback:
+        wrapped = self._has_frame_fallback or bool(self.fixed_joint_phase_centers)
+        if wrapped:
             method += '_for_raw_target'
             func_arguments = func_arguments.replace('(T_ee: np.ndarray', '(T_ee: np.ndarray, T_ee_raw_in: np.ndarray')
+        if self.fixed_joint_phase_centers:
+            func_arguments = func_arguments[:-2]+', _yaik_phase_parameters=None):'
         self._add_code_line('def ' + method + func_arguments)
         self._add_code_line('if not np.all(np.isfinite(T_ee)):', indent_level=1)
         self._add_code_line('return []', indent_level=2)
@@ -415,7 +418,7 @@ class CodeGenerationPython(CodeGenerationBase):
             self._add_code_line('return []', indent_level=2)
 
         # The ee target
-        if self._has_frame_fallback:
+        if wrapped:
             self._add_code_line('if not np.all(np.isfinite(T_ee_raw_in)):', indent_level=1)
             self._add_code_line('return []', indent_level=2)
         elif self.robot.get_pre_transform_sp() is None and self.robot.get_post_transform_sp() is None:
@@ -429,11 +432,14 @@ class CodeGenerationPython(CodeGenerationBase):
         unknown_symbols = [elem.symbol for elem in self.robot.unknowns]
 
         func_arguments_call = '(T_ee_raw_in'
-        for symbol_i in free_symbols:
+        for index, symbol_i in enumerate(free_symbols):
             if symbol_i in unknown_symbols and self.robot.get_unknown_offset() is not None:
-                func_arguments_call += ', ' + self.joint_offset_expression(symbol_i, str(symbol_i))
+                argument = self.joint_offset_expression(symbol_i, str(symbol_i))
             else:
-                func_arguments_call += ', ' + str(symbol_i)
+                argument = str(symbol_i)
+            if self.fixed_joint_phase_centers:
+                argument = f'(_yaik_phase_parameters[{index}] if _yaik_phase_parameters is not None else ({argument}))'
+            func_arguments_call += ', '+argument
         func_arguments_call += ')'
         self._add_code_line('ik_output_raw = ' + ik_raw_func + func_arguments_call, indent_level=1)
         self._add_code_line('ik_output = list()', indent_level=1)
@@ -442,14 +448,13 @@ class CodeGenerationPython(CodeGenerationBase):
 
         # Handle joint offset
         unknown_offset = self.robot.get_unknown_offset()
-        if unknown_offset is not None:
-            for j in range(len(unknown_offset)):
-                unknown_j = self.robot.unknowns[j].symbol
-                if unknown_j in self.robot.unknown_as_parameter_more_dof:
-                    self._add_code_line(f'ik_out_i[{j}] = {unknown_j}', indent_level=2)
-                else:
-                    expression = self.joint_offset_expression(unknown_j, f'ik_out_i[{j}]', subtract=True)
-                    self._add_code_line(f'ik_out_i[{j}] = {expression}', indent_level=2)
+        for j, unknown in enumerate(self.robot.unknowns):
+            unknown_j = unknown.symbol
+            if unknown_j in self.robot.unknown_as_parameter_more_dof:
+                self._add_code_line(f'ik_out_i[{j}] = {unknown_j}', indent_level=2)
+            elif unknown_offset is not None:
+                expression = self.joint_offset_expression(unknown_j, f'ik_out_i[{j}]', subtract=True)
+                self._add_code_line(f'ik_out_i[{j}] = {expression}', indent_level=2)
 
         # Make the fk args
         unknown_symbols = [elem.symbol for elem in self.skeleton_tree.robot.unknowns]
@@ -479,7 +484,7 @@ class CodeGenerationPython(CodeGenerationBase):
 
         # Finished
         self._add_code_line('return ik_output', indent_level=1)
-        if self._has_frame_fallback:
+        if wrapped:
             self._generate_frame_checked_wrapper(method)
 
     def _generate_frame_checked_wrapper(self, handler):
@@ -493,14 +498,32 @@ class CodeGenerationPython(CodeGenerationBase):
             self._add_code_line('return []', indent_level=2)
         primary = self.get_ik_target_original_to_raw_name()
         self._add_code_line('result, seen = [], set()', indent_level=1)
-        self._add_code_line('for transform in ('+primary+'_legacy_frame, '+primary+'):', indent_level=1)
+        transforms = primary+'_legacy_frame, '+primary if self._has_frame_fallback else primary+','
+        self._add_code_line('for transform in ('+transforms+'):', indent_level=1)
         self._add_code_line('raw_target = '+self.frame_transform_call('transform', 'T_ee'), indent_level=2)
         arguments = ', '+', '.join(map(str, free)) if free else ''
         self._add_code_line('for candidate in '+handler+'(T_ee, raw_target'+arguments+'):', indent_level=2)
-        self._add_code_line('key = tuple(float(value) for value in candidate.ravel())', indent_level=3)
-        self._add_code_line('if key not in seen:', indent_level=3)
-        self._add_code_line('seen.add(key)', indent_level=4)
-        self._add_code_line('result.append(candidate)', indent_level=4)
+        if self._has_frame_fallback:
+            self._add_code_line('key = tuple(float(value) for value in candidate.ravel())', indent_level=3)
+            self._add_code_line('if key not in seen:', indent_level=3)
+            self._add_code_line('seen.add(key)', indent_level=4)
+            self._add_code_line('result.append(candidate)', indent_level=4)
+        else:
+            self._add_code_line('result.append(candidate)', indent_level=3)
+        if self.fixed_joint_phase_centers:
+            raw = [self.joint_offset_expression(symbol, str(symbol))
+                   if symbol in self.robot.unknown_as_parameter_more_dof else str(symbol) for symbol in free]
+            centers = [(free.index(symbol), value) for symbol, value in self.fixed_joint_phase_centers]
+            self._add_code_line('if not result:', indent_level=1)
+            self._add_code_line('phase_parameters = ('+', '.join(raw)+',)', indent_level=2)
+            self._add_code_line(f'for alias in fixed_joint_phase_aliases(phase_parameters, {centers!r}, zero_tolerance):', indent_level=2)
+            self._add_code_line('for transform in ('+transforms+'):', indent_level=3)
+            self._add_code_line('raw_target = '+self.frame_transform_call('transform', 'T_ee'), indent_level=4)
+            self._add_code_line('for candidate in '+handler+'(T_ee, raw_target'+arguments+', _yaik_phase_parameters=alias):', indent_level=4)
+            self._add_code_line('key = tuple(float(value) for value in candidate.ravel())', indent_level=5)
+            self._add_code_line('if key not in seen:', indent_level=5)
+            self._add_code_line('seen.add(key)', indent_level=6)
+            self._add_code_line('result.append(candidate)', indent_level=6)
         self._add_code_line('return result', indent_level=1)
 
     def _generate_test_method(self):

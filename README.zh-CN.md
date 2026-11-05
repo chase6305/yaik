@@ -145,6 +145,20 @@ python yaik.py generate --resume-tree path/to/robot_ik.yaml --seed 42 \
 原有 Python 库 API 保留；`ik_solve.py`、`py_codegen.py` 和 `cpp_codegen.py`
 也支持显式传入模型或解树，具体例子见 [英文说明](./README.md)。
 
+新生成的 C++ 内核将大型候选缓冲移到堆上，节点索引共享按各节点容量分配的区域；
+估算不足时可扩容到原有候选上限，raw 输出按实际结果增长。使用 `--with-runtime` 携带匹配运行库。
+连续求解时可复用工作区和输出向量，减少重复分配：
+
+```cpp
+using Arm = marvin_m6_left_arm_ik;
+Arm::RawIKWorksace workspace;
+std::vector<std::array<double, Arm::robot_nq>> solutions;
+Arm::computeIK(target, fixed_q5, workspace, solutions);
+```
+
+该 checked 接口接收原始坐标目标和固定关节原值；每个线程使用自己的工作区和输出向量。
+既有生成文件仍可使用更新后的公共头文件编译。
+
 ## 返回码、错误和限制
 
 | 返回码 | 含义 |
@@ -179,6 +193,11 @@ python yaik.py generate --resume-tree path/to/robot_ik.yaml --seed 42 \
 raw 输出中每个物理关节都须已赋有限值；不完整路径不输出候选，合法的大关节值仍受支持。
 对于受支持的球形肩部分支，会从完整旋转补齐肩部角度；仅在所选符号路径通过精确共轴检查时，
 才选取一个自由关节代表值。这不表示已枚举连续解族中全部满足限位的代表。
+对于第三肩部角已赋值的受支持分支，也会从完整旋转补齐其余肩部角，并保留原有前缀。
+普通 checked IK 未找到候选时，可在已实现的固定旋转关节分支附近重试等价相位；
+只有包含基座和工具变换的模型通过 `2*pi` 周期性符号检查时才启用。
+返回解中的固定关节仍是调用者原值，候选经过原目标 FK 检查，且相位重试不额外消耗随机数。
+raw 接口直接使用传入的原始相位。
 
 通用生成器现在补全“方程系数同时为零”的退化分支：从完整 FK 方程重新选择
 解析公式；较大的退化系统还会在一个旋转关节范围内枚举 33 个代表值，再由生成接口
@@ -199,6 +218,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
   solver/test_argument_guards.py solver/test_guard_domains.py solver/test_rounded_frames.py \
   solver/test_candidate_assignment.py solver/test_partial_branches.py \
+  solver/test_compact_workspace.py solver/test_fixed_joint_phases.py \
   solver/test_gallery_regeneration.py \
   solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 
