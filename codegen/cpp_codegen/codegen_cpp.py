@@ -17,6 +17,7 @@ class CodeGenerationCpp(CodeGenerationBase):
     def __init__(self, tree: SkeletonTree, use_safe_operator: bool = False):
         super().__init__(tree)
         self._all_solved_symbol = tree.all_solved_symbol()
+        self._refine_raw_seeds = tree.has_general_6dof_solution_node()
 
         # Init the code
         self._code_lines: List[str] = list()
@@ -625,13 +626,15 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # The ik define
         handler_arguments = func_arguments
-        wrapped = self._has_frame_fallback or bool(self.fixed_joint_phase_centers)
+        wrapped = self._has_frame_fallback or bool(self.fixed_joint_phase_centers) or self._refine_raw_seeds
         if wrapped:
             handler_arguments = func_arguments.replace('(const Eigen::Matrix4d& T_ee',
                 '(const Eigen::Matrix4d& T_ee, const Eigen::Matrix4d& T_ee_raw')
             handler_arguments = handler_arguments[:-1]+', Eigen::Matrix4d& frame_disturbance, bool& frame_disturbance_ready, bool allow_disturbance)'
         if self.fixed_joint_phase_centers:
             handler_arguments = handler_arguments[:-1]+f', const std::array<double, {len(free_symbols)}>* _yaik_phase_parameters = nullptr)'
+        if self._refine_raw_seeds:
+            handler_arguments = handler_arguments[:-1]+', std::vector<std::pair<double,std::array<double,robot_nq>>>* refinement_seeds = nullptr)'
         method = 'computeIKForRawTarget' if wrapped else self.ik_function_name(False)
         self.add_code_line('static void ' + method + handler_arguments)
         self.enter_scope('checked_ik')
@@ -675,6 +678,8 @@ class CodeGenerationCpp(CodeGenerationBase):
         # Check them
         self.add_code_line('const auto& raw_ik_out = workspace.raw_ik_out;')
         self.add_code_line('ik_output.clear();')
+        if self._refine_raw_seeds:
+            self.add_code_line('bool strict_raw_witness = false;')
         self.add_code_line('for(int i = 0; i < raw_ik_out.size(); i++)')
         self.enter_scope('for')
         self.add_code_line('auto ik_out_i = raw_ik_out[i];')
@@ -701,6 +706,13 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('const Eigen::Matrix4d ee_pose_i = {fk_func}{fk_args};'.
                            format(fk_func=fk_func_name, fk_args=fk_args_call))
         self.add_code_line('double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();')
+        if self._refine_raw_seeds:
+            self.add_code_line('if (refinement_seeds)')
+            self.enter_scope('retain_raw_seed')
+            self.add_code_line('const double refinement_error = (ee_pose_i-T_ee).cwiseAbs().maxCoeff();')
+            self.add_code_line('if (refinement_error < 1e-7) { strict_raw_witness=true;refinement_seeds->clear(); }')
+            self.add_code_line('else if (!strict_raw_witness) retainRefinementSeed(*refinement_seeds, ik_out_i, refinement_error);')
+            self.exit_scope('retain_raw_seed')
         self.add_code_line('if (ee_pose_diff < pose_tolerance)')
         self.add_code_line(indent() + 'ik_output.push_back(ik_out_i);')
         self.add_code_line('std::array<double, robot_nq> snapped;')
@@ -826,6 +838,8 @@ class CodeGenerationCpp(CodeGenerationBase):
             self.add_code_line('if ('+' || '.join('!std::isfinite('+str(s)+')' for s in free)+') return;')
         self.add_code_line('Eigen::Matrix4d frame_disturbance;')
         self.add_code_line('bool frame_disturbance_ready = false;')
+        if self._refine_raw_seeds:
+            self.add_code_line('std::vector<std::pair<double,std::array<double,robot_nq>>> refinement_seeds;')
         self.add_code_line('for (bool legacy : {'+('true, false' if self._has_frame_fallback else 'false')+'})')
         self.enter_scope('frame_chart')
         primary = self.frame_transform_call('endEffectorTargetOriginalToRaw', 'T_ee')
@@ -834,7 +848,10 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('const Eigen::Matrix4d raw_target = legacy ? '+previous+' : '+primary+';')
         self.add_code_line('std::vector<std::array<double, robot_nq>> candidates;')
         tail = ', '+', '.join(map(str, free)) if free else ''
-        self.add_code_line('computeIKForRawTarget(T_ee, raw_target'+tail+', workspace, candidates, frame_disturbance, frame_disturbance_ready, legacy || ik_output.empty());')
+        seed_arguments = ''
+        if self._refine_raw_seeds:
+            seed_arguments = (', nullptr' if self.fixed_joint_phase_centers else '')+', &refinement_seeds'
+        self.add_code_line('computeIKForRawTarget(T_ee, raw_target'+tail+', workspace, candidates, frame_disturbance, frame_disturbance_ready, legacy || ik_output.empty()'+seed_arguments+');')
         self.add_code_line('for (const auto& candidate : candidates)')
         self.enter_scope('frame_candidate')
         self.add_code_line('if (std::find(ik_output.begin(), ik_output.end(), candidate) == ik_output.end())')
@@ -858,7 +875,8 @@ class CodeGenerationCpp(CodeGenerationBase):
             self.add_code_line('const Eigen::Matrix4d raw_target = legacy ? '+previous+' : '+primary+';')
             self.add_code_line('std::vector<std::array<double, robot_nq>> candidates;')
             self.add_code_line('computeIKForRawTarget(T_ee, raw_target'+tail+', workspace, candidates, '
-                               'frame_disturbance, frame_disturbance_ready, false, &alias);')
+                               'frame_disturbance, frame_disturbance_ready, false, &alias'
+                               +(', &refinement_seeds' if self._refine_raw_seeds else '')+');')
             self.add_code_line('for (const auto& candidate : candidates)')
             self.enter_scope('phase_candidate')
             self.add_code_line('if (std::find(ik_output.begin(), ik_output.end(), candidate) == ik_output.end())')
@@ -867,6 +885,28 @@ class CodeGenerationCpp(CodeGenerationBase):
             self.exit_scope('phase_chart')
             self.exit_scope('phase_alias')
             self.exit_scope('phase_recovery')
+        if self._refine_raw_seeds:
+            geometry = self.free_symbols(include_unknown_as_parameter=False)
+            geometric_args = ', '+', '.join(map(str, geometry)) if geometry else ''
+            self.add_code_line('if (!refinement_seeds.empty())')
+            self.enter_scope('raw_seed_refinement')
+            self.add_code_line('auto refinement_fk = [&](const std::array<double,robot_nq>& q) { return computeFK(q'+geometric_args+'); };')
+            self.add_code_line('bool strict_witness = false;')
+            self.add_code_line('for (const auto& candidate : ik_output)')
+            self.add_code_line(indent()+'if ((refinement_fk(candidate)-T_ee).cwiseAbs().maxCoeff()<1e-7) { strict_witness=true;break; }')
+            self.add_code_line('if (!strict_witness)')
+            self.enter_scope('refine_raw_candidates')
+            self.add_code_line('for (const auto& entry : refinement_seeds)')
+            self.enter_scope('raw_refinement_seed')
+            self.add_code_line('auto candidate=entry.second;')
+            self.add_code_line('if (refineIkSeed<robot_nq>(refinement_fk,T_ee,candidate,fixedJoints()))')
+            self.enter_scope('strict_refined_candidate')
+            self.add_code_line('ik_output.push_back(candidate);')
+            self.add_code_line('break;')
+            self.exit_scope('strict_refined_candidate')
+            self.exit_scope('raw_refinement_seed')
+            self.exit_scope('refine_raw_candidates')
+            self.exit_scope('raw_seed_refinement')
         self.exit_scope('checked_frame_charts')
 
     def _generate_handy_ik(self):

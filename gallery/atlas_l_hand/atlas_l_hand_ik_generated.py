@@ -100,12 +100,12 @@ def atlas_l_hand_ik_target_raw_to_original(T_ee: np.ndarray):
 def atlas_l_hand_fk(theta_input: np.ndarray):
     theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
-    th_6 = theta_input[6] + th_6_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
+    th_6 = add_revolute_offset(theta_input[6], th_6_offset_original2raw)
 
     # Temp variable for efficiency
     x0 = math.sin(th_6)
@@ -165,13 +165,14 @@ def atlas_l_hand_fk(theta_input: np.ndarray):
 
 
 def atlas_l_hand_twist_jacobian(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
-    th_6 = theta_input[6] + th_6_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
+    th_6 = add_revolute_offset(theta_input[6], th_6_offset_original2raw)
 
     # Temp variable for efficiency
     x0 = math.cos(th_0)
@@ -268,13 +269,14 @@ def atlas_l_hand_twist_jacobian(theta_input: np.ndarray):
 
 
 def atlas_l_hand_angular_velocity_jacobian(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
-    th_6 = theta_input[6] + th_6_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
+    th_6 = add_revolute_offset(theta_input[6], th_6_offset_original2raw)
 
     # Temp variable for efficiency
     x0 = math.cos(th_0)
@@ -330,13 +332,14 @@ def atlas_l_hand_angular_velocity_jacobian(theta_input: np.ndarray):
 
 
 def atlas_l_hand_transform_point_jacobian(theta_input: np.ndarray, point_on_ee: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
-    th_6 = theta_input[6] + th_6_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
+    th_6 = add_revolute_offset(theta_input[6], th_6_offset_original2raw)
     p_on_ee_x: float = point_on_ee[0]
     p_on_ee_y: float = point_on_ee[1]
     p_on_ee_z: float = point_on_ee[2]
@@ -437,15 +440,12 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
     inv_Px = inv_ee_translation[0]
     inv_Py = inv_ee_translation[1]
     inv_Pz = inv_ee_translation[2]
-    
+
     # A new ik type. Should be a fixed array in C++
     IkSolution = NewType("IkSolution", List[float])
     def make_ik_solution():
-        tmp_sol = IkSolution(list())
-        for tmp_sol_idx in range(12):
-            tmp_sol.append(100000.0)
-        return tmp_sol
-    
+        return IkSolution([math.nan] * 12)
+
     solution_queue: List[IkSolution] = list()
     queue_element_validity: List[bool] = list()
     def append_solution_to_queue(solution_2_add: IkSolution):
@@ -453,7 +453,7 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
         solution_queue.append(solution_2_add)
         queue_element_validity.append(True)
         return index_4_appended
-    
+
     # Init for workspace as empty list. A list of fixed size array for each node
     max_n_solutions: int = 16
     node_input_index: List[List[int]] = list()
@@ -465,17 +465,17 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
         node_input_index[node_idx].append(solution_idx)
         node_input_validity[node_idx] = True
     node_input_validity[0] = True
-    
+
     # Code for non-branch dispatcher node 0
     # Actually, there is no code
-    
+
     # Code for explicit solution node 1, solved variable is th_1
     def General6DoFNumericalReduceSolutionNode_node_1_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[0]
         this_input_valid: bool = node_input_validity[0]
         if not this_input_valid:
             return
-        
+
         # The general 6-dof solution of root node with semi-symbolic reduce
         R_l = np.zeros(shape=(8, 8))
         R_l[0, 1] = d_2
@@ -561,7 +561,7 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
         R_l_inv_75 = R_l_mat_inv[7, 5]
         R_l_inv_76 = R_l_mat_inv[7, 6]
         R_l_inv_77 = R_l_mat_inv[7, 7]
-        
+
         # Temp variable for efficiency
         x0 = a_3**2
         x1 = -x0
@@ -2091,17 +2091,17 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
     # Invoke the processor
     General6DoFNumericalReduceSolutionNode_node_1_solve_th_1_processor()
     # Finish code for explicit solution node 0
-    
+
     # Code for non-branch dispatcher node 2
     # Actually, there is no code
-    
+
     # Code for explicit solution node 3, solved variable is th_3
     def ExplicitSolutionNode_node_3_solve_th_3_processor():
         this_node_input_index: List[int] = node_input_index[2]
         this_input_valid: bool = node_input_validity[2]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 3
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2109,44 +2109,32 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[2]
-            condition_0: bool = (abs(a_4) >= zero_tolerance) or (abs(d_4) >= zero_tolerance) or (abs(Px*math.sin(th_1)*math.cos(th_0) + Py*math.sin(th_0)*math.sin(th_1) - Pz*math.cos(th_1) - a_1*math.sin(th_1) + d_2) >= zero_tolerance)
+            condition_0: bool = (((abs(a_4) >= zero_tolerance)) or ((abs(d_4) >= zero_tolerance)) or ((abs(Px*math.sin(th_1)*math.cos(th_0) + Py*math.sin(th_0)*math.sin(th_1) - Pz*math.cos(th_1) - a_1*math.sin(th_1) + d_2) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.atan2(a_4, d_4)
                 x1 = math.sin(th_1)
                 x2 = Px*x1*math.cos(th_0) + Py*x1*math.sin(th_0) - Pz*math.cos(th_1) - a_1*x1 + d_2
                 x3 = safe_sqrt(a_4**2 + d_4**2 - x2**2)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[7] = x0 + math.atan2(x3, x2)
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(4, appended_idx)
-                
-            condition_1: bool = (abs(a_4) >= zero_tolerance) or (abs(d_4) >= zero_tolerance) or (abs(Px*math.sin(th_1)*math.cos(th_0) + Py*math.sin(th_0)*math.sin(th_1) - Pz*math.cos(th_1) - a_1*math.sin(th_1) + d_2) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = math.atan2(a_4, d_4)
-                x1 = math.sin(th_1)
-                x2 = Px*x1*math.cos(th_0) + Py*x1*math.sin(th_0) - Pz*math.cos(th_1) - a_1*x1 + d_2
-                x3 = safe_sqrt(a_4**2 + d_4**2 - x2**2)
-                # End of temp variables
                 this_solution[7] = x0 + math.atan2(-x3, x2)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(4, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_3_solve_th_3_processor()
     # Finish code for explicit solution node 2
-    
+
     # Code for solved_variable dispatcher node 4
     def SolvedVariableDispatcherNode_node_4_processor():
         this_node_input_index: List[int] = node_input_index[4]
         this_input_valid: bool = node_input_validity[4]
         if not this_input_valid:
             return
-        
+
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
             if not queue_element_validity[node_input_i_idx_in_queue]:
@@ -2163,7 +2151,7 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(12, branch_input_index)
-            
+
             th_3 = this_solution[7]
             degenerate_valid_1 = (abs(th_3 - 3.33833913195303e-5 + math.pi) <= 1.0e-6)
             if degenerate_valid_1:
@@ -2173,21 +2161,21 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(27, branch_input_index)
-            
+
             if not taken_by_degenerate:
                 add_input_index_to(5, node_input_i_idx_in_queue)
-    
+
     # Invoke the processor
     SolvedVariableDispatcherNode_node_4_processor()
     # Finish code for solved_variable dispatcher node 4
-    
+
     # Code for explicit solution node 27, solved variable is th_2
     def ExplicitSolutionNode_node_27_solve_th_2_processor():
         this_node_input_index: List[int] = node_input_index[27]
         this_input_valid: bool = node_input_validity[27]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 27
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2195,34 +2183,31 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[2]
-            condition_0: bool = (abs(Px*math.sin(th_0) - Py*math.cos(th_0)) >= zero_tolerance) or (abs(a_3 - 0.999999999442775*a_4 + 3.33833913133296e-5*d_4) >= zero_tolerance) or (abs(1.0*a_3 - 0.999999999442775*a_4 + 3.33833913133296e-5*d_4) >= zero_tolerance) or (abs(Px*math.cos(th_0)*math.cos(th_1) + Py*math.sin(th_0)*math.cos(th_1) + Pz*math.sin(th_1) - a_1*math.cos(th_1) - a_2) >= zero_tolerance)
+            condition_0: bool = (((abs(a_3 - 0.999999999442775*a_4 + 3.33833913133296e-5*d_4) >= zero_tolerance)) or ((abs(1.0*a_3 - 0.999999999442775*a_4 + 3.33833913133296e-5*d_4) >= zero_tolerance)) or ((abs(Px*math.sin(th_0) - Py*math.cos(th_0)) >= zero_tolerance)) or ((abs(Px*math.cos(th_0)*math.cos(th_1) + Py*math.sin(th_0)*math.cos(th_1) + Pz*math.sin(th_1) - a_1*math.cos(th_1) - a_2) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
                 x2 = -0.999999999442775*a_4 + 3.33833913133296e-5*d_4
                 x3 = math.cos(th_1)
-                # End of temp variables
                 this_solution[4] = math.atan2((-Px*x0 + Py*x1)/(1.0*a_3 + x2), (Px*x1*x3 + Py*x0*x3 + Pz*math.sin(th_1) - a_1*x3 - a_2)/(a_3 + x2))
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(28, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_27_solve_th_2_processor()
     # Finish code for explicit solution node 27
-    
+
     # Code for non-branch dispatcher node 28
     # Actually, there is no code
-    
+
     # Code for explicit solution node 29, solved variable is th_5
     def ExplicitSolutionNode_node_29_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[28]
         this_input_valid: bool = node_input_validity[28]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 29
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2231,9 +2216,8 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[2]
             th_2 = this_solution[4]
-            condition_0: bool = (abs(r_13*((0.999999999442775*math.sin(th_1) - 3.33833913133296e-5*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) + 3.33833913133296e-5*math.sin(th_0)*math.sin(th_2)) + r_23*((0.999999999442775*math.sin(th_1) - 3.33833913133296e-5*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - 3.33833913133296e-5*math.sin(th_2)*math.cos(th_0)) - r_33*(3.33833913133296e-5*math.sin(th_1)*math.cos(th_2) + 0.999999999442775*math.cos(th_1))) <= 1)
+            condition_0: bool = (abs(r_13*((0.999999999442775*math.sin(th_1) - 3.33833913133296e-5*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) + 3.33833913133296e-5*math.sin(th_0)*math.sin(th_2)) + r_23*((0.999999999442775*math.sin(th_1) - 3.33833913133296e-5*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - 3.33833913133296e-5*math.sin(th_2)*math.cos(th_0)) - r_33*(3.33833913133296e-5*math.sin(th_1)*math.cos(th_2) + 0.999999999442775*math.cos(th_1))) <= 70368744177665/70368744177664)
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_1)
                 x1 = math.sin(th_1)
                 x2 = 3.33833913133296e-5*math.cos(th_2)
@@ -2242,41 +2226,26 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 x5 = math.cos(th_0)
                 x6 = -x0*x2 + 0.999999999442775*x1
                 x7 = safe_acos(r_13*(x3*x4 + x5*x6) + r_23*(x3*x6 - x4*x5) - r_33*(0.999999999442775*x0 + x1*x2))
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[10] = x7
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(30, appended_idx)
-                
-            condition_1: bool = (abs(r_13*((0.999999999442775*math.sin(th_1) - 3.33833913133296e-5*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) + 3.33833913133296e-5*math.sin(th_0)*math.sin(th_2)) + r_23*((0.999999999442775*math.sin(th_1) - 3.33833913133296e-5*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - 3.33833913133296e-5*math.sin(th_2)*math.cos(th_0)) - r_33*(3.33833913133296e-5*math.sin(th_1)*math.cos(th_2) + 0.999999999442775*math.cos(th_1))) <= 1)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = math.cos(th_1)
-                x1 = math.sin(th_1)
-                x2 = 3.33833913133296e-5*math.cos(th_2)
-                x3 = math.sin(th_0)
-                x4 = 3.33833913133296e-5*math.sin(th_2)
-                x5 = math.cos(th_0)
-                x6 = -x0*x2 + 0.999999999442775*x1
-                x7 = safe_acos(r_13*(x3*x4 + x5*x6) + r_23*(x3*x6 - x4*x5) - r_33*(0.999999999442775*x0 + x1*x2))
-                # End of temp variables
                 this_solution[10] = -x7
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(30, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_29_solve_th_5_processor()
     # Finish code for explicit solution node 28
-    
+
     # Code for solved_variable dispatcher node 30
     def SolvedVariableDispatcherNode_node_30_processor():
         this_node_input_index: List[int] = node_input_index[30]
         this_input_valid: bool = node_input_validity[30]
         if not this_input_valid:
             return
-        
+
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
             if not queue_element_validity[node_input_i_idx_in_queue]:
@@ -2287,28 +2256,28 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             degenerate_valid_0 = (abs(th_5) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-            
+
             th_5 = this_solution[10]
             degenerate_valid_1 = (abs(th_5 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-            
+
             if not taken_by_degenerate:
                 add_input_index_to(31, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-    
+
     # Invoke the processor
     SolvedVariableDispatcherNode_node_30_processor()
     # Finish code for solved_variable dispatcher node 30
-    
+
     # Code for explicit solution node 31, solved variable is th_4
     def ExplicitSolutionNode_node_31_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[31]
         this_input_valid: bool = node_input_validity[31]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 31
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2318,10 +2287,9 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_1 = this_solution[2]
             th_2 = this_solution[4]
             th_5 = this_solution[10]
-            condition_0: bool = (abs(r_13*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_23*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_33*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance) or (abs(r_13*math.sin(th_1)*math.cos(th_0) + r_23*math.sin(th_0)*math.sin(th_1) - r_33*math.cos(th_1) - 0.999999999442775*math.cos(th_5)) >= zero_tolerance) or (3.33833913133296e-5*abs(math.sin(th_5)) >= zero_tolerance) or (abs(math.sin(th_5)) >= zero_tolerance)
+            condition_0: bool = (((abs(math.sin(th_5)) >= zero_tolerance)) or ((3.33833913133296e-5*abs(math.sin(th_5)) >= zero_tolerance)) or ((abs(r_13*math.sin(th_1)*math.cos(th_0) + r_23*math.sin(th_0)*math.sin(th_1) - r_33*math.cos(th_1) - 0.999999999442775*math.cos(th_5)) >= zero_tolerance)) or ((abs(r_13*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_23*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_33*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
-                x0 = math.sin(th_5)**(-1)
+                x0 = 1/math.sin(th_5)
                 x1 = math.sin(th_1)
                 x2 = math.sin(th_2)
                 x3 = math.sin(th_0)
@@ -2330,27 +2298,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 x6 = math.cos(th_1)
                 x7 = x2*x6
                 x8 = 29955.0153731898*x1
-                # End of temp variables
                 this_solution[8] = math.atan2(x0*(-r_13*(x3*x4 + x5*x7) + r_23*(-x3*x7 + x4*x5) - r_33*x1*x2), x0*(r_13*x5*x8 + r_23*x3*x8 - 29955.0153731898*r_33*x6 - 29955.0153564981*math.cos(th_5)))
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(32, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_31_solve_th_4_processor()
     # Finish code for explicit solution node 31
-    
+
     # Code for non-branch dispatcher node 32
     # Actually, there is no code
-    
+
     # Code for explicit solution node 33, solved variable is th_2th_4th_5_soa
     def ExplicitSolutionNode_node_33_solve_th_2th_4th_5_soa_processor():
         this_node_input_index: List[int] = node_input_index[32]
         this_input_valid: bool = node_input_validity[32]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 33
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2362,28 +2328,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_5 = this_solution[10]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[5] = th_2 + th_4 + th_5
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(34, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_33_solve_th_2th_4th_5_soa_processor()
     # Finish code for explicit solution node 32
-    
+
     # Code for non-branch dispatcher node 34
     # Actually, there is no code
-    
+
     # Code for explicit solution node 35, solved variable is th_0th_2th_4_soa
     def ExplicitSolutionNode_node_35_solve_th_0th_2th_4_soa_processor():
         this_node_input_index: List[int] = node_input_index[34]
         this_input_valid: bool = node_input_validity[34]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 35
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2394,28 +2357,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_4 = this_solution[8]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[1] = th_0 + th_2 + th_4
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(36, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_35_solve_th_0th_2th_4_soa_processor()
     # Finish code for explicit solution node 34
-    
+
     # Code for non-branch dispatcher node 36
     # Actually, there is no code
-    
+
     # Code for explicit solution node 37, solved variable is th_1th_2th_4_soa
     def ExplicitSolutionNode_node_37_solve_th_1th_2th_4_soa_processor():
         this_node_input_index: List[int] = node_input_index[36]
         this_input_valid: bool = node_input_validity[36]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 37
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2427,28 +2387,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_4 = this_solution[8]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[3] = th_1 + th_2 + th_4
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(38, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_37_solve_th_1th_2th_4_soa_processor()
     # Finish code for explicit solution node 36
-    
+
     # Code for non-branch dispatcher node 38
     # Actually, there is no code
-    
+
     # Code for explicit solution node 39, solved variable is th_6
     def ExplicitSolutionNode_node_39_solve_th_6_processor():
         this_node_input_index: List[int] = node_input_index[38]
         this_input_valid: bool = node_input_validity[38]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 39
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2459,9 +2416,8 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_2 = this_solution[4]
             th_4 = this_solution[8]
             th_5 = this_solution[10]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*(-(((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) - math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.999999999442775*math.sin(th_5) - 3.33833913133296e-5*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.cos(th_0) + ((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) + math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.sin(th_0)) + r_21*(-(((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) - math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.999999999442775*math.sin(th_5) - 3.33833913133296e-5*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.sin(th_0) - ((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) + math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.cos(th_0)) - r_31*(((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) - math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.sin(th_1) + (0.999999999442775*math.sin(th_5) - 3.33833913133296e-5*math.cos(th_4)*math.cos(th_5))*math.cos(th_1))) >= zero_tolerance) or (abs(r_12*(-(((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) - math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.999999999442775*math.sin(th_5) - 3.33833913133296e-5*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.cos(th_0) + ((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) + math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.sin(th_0)) + r_22*(-(((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) - math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.999999999442775*math.sin(th_5) - 3.33833913133296e-5*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.sin(th_0) - ((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) + math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.cos(th_0)) - r_32*(((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) - math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.sin(th_1) + (0.999999999442775*math.sin(th_5) - 3.33833913133296e-5*math.cos(th_4)*math.cos(th_5))*math.cos(th_1))) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*(-(((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) - math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.999999999442775*math.sin(th_5) - 3.33833913133296e-5*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.cos(th_0) + ((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) + math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.sin(th_0)) + r_21*(-(((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) - math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.999999999442775*math.sin(th_5) - 3.33833913133296e-5*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.sin(th_0) - ((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) + math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.cos(th_0)) - r_31*(((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) - math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.sin(th_1) + (0.999999999442775*math.sin(th_5) - 3.33833913133296e-5*math.cos(th_4)*math.cos(th_5))*math.cos(th_1))) >= zero_tolerance)) or ((abs(r_12*(-(((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) - math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.999999999442775*math.sin(th_5) - 3.33833913133296e-5*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.cos(th_0) + ((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) + math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.sin(th_0)) + r_22*(-(((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) - math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.999999999442775*math.sin(th_5) - 3.33833913133296e-5*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.sin(th_0) - ((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) + math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.cos(th_0)) - r_32*(((3.33833913133296e-5*math.sin(th_5) + 0.999999999442775*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) - math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.sin(th_1) + (0.999999999442775*math.sin(th_5) - 3.33833913133296e-5*math.cos(th_4)*math.cos(th_5))*math.cos(th_1))) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_1)
                 x1 = math.sin(th_5)
                 x2 = math.cos(th_4)
@@ -2480,27 +2436,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 x15 = x0*x10 - x4*x5
                 x16 = x12*x13 + x14*x15
                 x17 = x12*x15 - x13*x14
-                # End of temp variables
                 this_solution[11] = math.atan2(-r_12*x17 - r_22*x16 - r_32*x11, r_11*x17 + r_21*x16 + r_31*x11)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(40, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_39_solve_th_6_processor()
     # Finish code for explicit solution node 38
-    
+
     # Code for non-branch dispatcher node 40
     # Actually, there is no code
-    
+
     # Code for explicit solution node 41, solved variable is th_2th_4th_6_soa
     def ExplicitSolutionNode_node_41_solve_th_2th_4th_6_soa_processor():
         this_node_input_index: List[int] = node_input_index[40]
         this_input_valid: bool = node_input_validity[40]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 41
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2512,24 +2466,19 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_6 = this_solution[11]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[6] = th_2 + th_4 + th_6
                 solution_queue[node_input_i_idx_in_queue] = this_solution
-            else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_41_solve_th_2th_4th_6_soa_processor()
     # Finish code for explicit solution node 40
-    
+
     # Code for explicit solution node 12, solved variable is th_2
     def ExplicitSolutionNode_node_12_solve_th_2_processor():
         this_node_input_index: List[int] = node_input_index[12]
         this_input_valid: bool = node_input_validity[12]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 12
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2537,34 +2486,31 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[2]
-            condition_0: bool = (abs(Px*math.sin(th_0) - Py*math.cos(th_0)) >= zero_tolerance) or (abs(a_3 + 0.998113188221811*a_4 - 0.06140084280929*d_4) >= zero_tolerance) or (abs(1.0*a_3 + 0.998113188221811*a_4 - 0.06140084280929*d_4) >= zero_tolerance) or (abs(Px*math.cos(th_0)*math.cos(th_1) + Py*math.sin(th_0)*math.cos(th_1) + Pz*math.sin(th_1) - a_1*math.cos(th_1) - a_2) >= zero_tolerance)
+            condition_0: bool = (((abs(a_3 + 0.998113188221811*a_4 - 0.06140084280929*d_4) >= zero_tolerance)) or ((abs(1.0*a_3 + 0.998113188221811*a_4 - 0.06140084280929*d_4) >= zero_tolerance)) or ((abs(Px*math.sin(th_0) - Py*math.cos(th_0)) >= zero_tolerance)) or ((abs(Px*math.cos(th_0)*math.cos(th_1) + Py*math.sin(th_0)*math.cos(th_1) + Pz*math.sin(th_1) - a_1*math.cos(th_1) - a_2) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
                 x2 = 0.998113188221811*a_4 - 0.06140084280929*d_4
                 x3 = math.cos(th_1)
-                # End of temp variables
                 this_solution[4] = math.atan2((-Px*x0 + Py*x1)/(1.0*a_3 + x2), (Px*x1*x3 + Py*x0*x3 + Pz*math.sin(th_1) - a_1*x3 - a_2)/(a_3 + x2))
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(13, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_12_solve_th_2_processor()
     # Finish code for explicit solution node 12
-    
+
     # Code for non-branch dispatcher node 13
     # Actually, there is no code
-    
+
     # Code for explicit solution node 14, solved variable is th_5
     def ExplicitSolutionNode_node_14_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[13]
         this_input_valid: bool = node_input_validity[13]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 14
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2573,9 +2519,8 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[2]
             th_2 = this_solution[4]
-            condition_0: bool = (abs(r_13*((0.998113188221811*math.sin(th_1) - 0.06140084280929*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) + 0.06140084280929*math.sin(th_0)*math.sin(th_2)) + r_23*((0.998113188221811*math.sin(th_1) - 0.06140084280929*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - 0.06140084280929*math.sin(th_2)*math.cos(th_0)) - r_33*(0.06140084280929*math.sin(th_1)*math.cos(th_2) + 0.998113188221811*math.cos(th_1))) <= 1)
+            condition_0: bool = (abs(r_13*((0.998113188221811*math.sin(th_1) - 0.06140084280929*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) + 0.06140084280929*math.sin(th_0)*math.sin(th_2)) + r_23*((0.998113188221811*math.sin(th_1) - 0.06140084280929*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - 0.06140084280929*math.sin(th_2)*math.cos(th_0)) - r_33*(0.06140084280929*math.sin(th_1)*math.cos(th_2) + 0.998113188221811*math.cos(th_1))) <= 70368744177665/70368744177664)
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_1)
                 x1 = math.sin(th_1)
                 x2 = 0.06140084280929*math.cos(th_2)
@@ -2584,41 +2529,26 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 x5 = math.cos(th_0)
                 x6 = -x0*x2 + 0.998113188221811*x1
                 x7 = safe_acos(-r_13*(x3*x4 + x5*x6) - r_23*(x3*x6 - x4*x5) + r_33*(0.998113188221811*x0 + x1*x2))
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[10] = x7
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(15, appended_idx)
-                
-            condition_1: bool = (abs(r_13*((0.998113188221811*math.sin(th_1) - 0.06140084280929*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) + 0.06140084280929*math.sin(th_0)*math.sin(th_2)) + r_23*((0.998113188221811*math.sin(th_1) - 0.06140084280929*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - 0.06140084280929*math.sin(th_2)*math.cos(th_0)) - r_33*(0.06140084280929*math.sin(th_1)*math.cos(th_2) + 0.998113188221811*math.cos(th_1))) <= 1)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = math.cos(th_1)
-                x1 = math.sin(th_1)
-                x2 = 0.06140084280929*math.cos(th_2)
-                x3 = math.sin(th_0)
-                x4 = 0.06140084280929*math.sin(th_2)
-                x5 = math.cos(th_0)
-                x6 = -x0*x2 + 0.998113188221811*x1
-                x7 = safe_acos(-r_13*(x3*x4 + x5*x6) - r_23*(x3*x6 - x4*x5) + r_33*(0.998113188221811*x0 + x1*x2))
-                # End of temp variables
                 this_solution[10] = -x7
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(15, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_14_solve_th_5_processor()
     # Finish code for explicit solution node 13
-    
+
     # Code for solved_variable dispatcher node 15
     def SolvedVariableDispatcherNode_node_15_processor():
         this_node_input_index: List[int] = node_input_index[15]
         this_input_valid: bool = node_input_validity[15]
         if not this_input_valid:
             return
-        
+
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
             if not queue_element_validity[node_input_i_idx_in_queue]:
@@ -2629,28 +2559,28 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             degenerate_valid_0 = (abs(th_5) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
-            
+
             th_5 = this_solution[10]
             degenerate_valid_1 = (abs(th_5 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
-            
+
             if not taken_by_degenerate:
                 add_input_index_to(16, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-    
+
     # Invoke the processor
     SolvedVariableDispatcherNode_node_15_processor()
     # Finish code for solved_variable dispatcher node 15
-    
+
     # Code for explicit solution node 16, solved variable is th_4
     def ExplicitSolutionNode_node_16_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[16]
         this_input_valid: bool = node_input_validity[16]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 16
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2660,10 +2590,9 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_1 = this_solution[2]
             th_2 = this_solution[4]
             th_5 = this_solution[10]
-            condition_0: bool = (abs(r_13*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_23*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_33*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance) or (abs(r_13*math.sin(th_1)*math.cos(th_0) + r_23*math.sin(th_0)*math.sin(th_1) - r_33*math.cos(th_1) + 0.998113188221811*math.cos(th_5)) >= zero_tolerance) or (0.06140084280929*abs(math.sin(th_5)) >= zero_tolerance) or (abs(math.sin(th_5)) >= zero_tolerance)
+            condition_0: bool = (((abs(math.sin(th_5)) >= zero_tolerance)) or ((0.06140084280929*abs(math.sin(th_5)) >= zero_tolerance)) or ((abs(r_13*math.sin(th_1)*math.cos(th_0) + r_23*math.sin(th_0)*math.sin(th_1) - r_33*math.cos(th_1) + 0.998113188221811*math.cos(th_5)) >= zero_tolerance)) or ((abs(r_13*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_23*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_33*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
-                x0 = math.sin(th_5)**(-1)
+                x0 = 1/math.sin(th_5)
                 x1 = math.sin(th_1)
                 x2 = math.sin(th_2)
                 x3 = math.sin(th_0)
@@ -2672,27 +2601,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 x6 = math.cos(th_1)
                 x7 = x2*x6
                 x8 = 16.2864213949959*x1
-                # End of temp variables
                 this_solution[8] = math.atan2(x0*(-r_13*(x3*x4 + x5*x7) + r_23*(-x3*x7 + x4*x5) - r_33*x1*x2), x0*(-r_13*x5*x8 - r_23*x3*x8 + 16.2864213949959*r_33*x6 - 16.2556919832833*math.cos(th_5)))
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(17, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_16_solve_th_4_processor()
     # Finish code for explicit solution node 16
-    
+
     # Code for non-branch dispatcher node 17
     # Actually, there is no code
-    
+
     # Code for explicit solution node 18, solved variable is th_2th_4th_5_soa
     def ExplicitSolutionNode_node_18_solve_th_2th_4th_5_soa_processor():
         this_node_input_index: List[int] = node_input_index[17]
         this_input_valid: bool = node_input_validity[17]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 18
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2704,28 +2631,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_5 = this_solution[10]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[5] = th_2 + th_4 + th_5
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(19, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_18_solve_th_2th_4th_5_soa_processor()
     # Finish code for explicit solution node 17
-    
+
     # Code for non-branch dispatcher node 19
     # Actually, there is no code
-    
+
     # Code for explicit solution node 20, solved variable is th_0th_2th_4_soa
     def ExplicitSolutionNode_node_20_solve_th_0th_2th_4_soa_processor():
         this_node_input_index: List[int] = node_input_index[19]
         this_input_valid: bool = node_input_validity[19]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 20
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2736,28 +2660,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_4 = this_solution[8]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[1] = th_0 + th_2 + th_4
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(21, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_20_solve_th_0th_2th_4_soa_processor()
     # Finish code for explicit solution node 19
-    
+
     # Code for non-branch dispatcher node 21
     # Actually, there is no code
-    
+
     # Code for explicit solution node 22, solved variable is th_1th_2th_4_soa
     def ExplicitSolutionNode_node_22_solve_th_1th_2th_4_soa_processor():
         this_node_input_index: List[int] = node_input_index[21]
         this_input_valid: bool = node_input_validity[21]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 22
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2769,28 +2690,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_4 = this_solution[8]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[3] = th_1 + th_2 + th_4
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(23, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_22_solve_th_1th_2th_4_soa_processor()
     # Finish code for explicit solution node 21
-    
+
     # Code for non-branch dispatcher node 23
     # Actually, there is no code
-    
+
     # Code for explicit solution node 24, solved variable is th_6
     def ExplicitSolutionNode_node_24_solve_th_6_processor():
         this_node_input_index: List[int] = node_input_index[23]
         this_input_valid: bool = node_input_validity[23]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 24
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2801,9 +2719,8 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_2 = this_solution[4]
             th_4 = this_solution[8]
             th_5 = this_solution[10]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*((((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) + math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.998113188221811*math.sin(th_5) - 0.06140084280929*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.cos(th_0) - ((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) - math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.sin(th_0)) + r_21*((((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) + math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.998113188221811*math.sin(th_5) - 0.06140084280929*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.sin(th_0) + ((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) - math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.cos(th_0)) + r_31*(((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) + math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.sin(th_1) + (0.998113188221811*math.sin(th_5) - 0.06140084280929*math.cos(th_4)*math.cos(th_5))*math.cos(th_1))) >= zero_tolerance) or (abs(r_12*((((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) + math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.998113188221811*math.sin(th_5) - 0.06140084280929*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.cos(th_0) - ((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) - math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.sin(th_0)) + r_22*((((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) + math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.998113188221811*math.sin(th_5) - 0.06140084280929*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.sin(th_0) + ((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) - math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.cos(th_0)) + r_32*(((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) + math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.sin(th_1) + (0.998113188221811*math.sin(th_5) - 0.06140084280929*math.cos(th_4)*math.cos(th_5))*math.cos(th_1))) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*((((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) + math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.998113188221811*math.sin(th_5) - 0.06140084280929*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.cos(th_0) - ((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) - math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.sin(th_0)) + r_21*((((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) + math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.998113188221811*math.sin(th_5) - 0.06140084280929*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.sin(th_0) + ((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) - math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.cos(th_0)) + r_31*(((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) + math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.sin(th_1) + (0.998113188221811*math.sin(th_5) - 0.06140084280929*math.cos(th_4)*math.cos(th_5))*math.cos(th_1))) >= zero_tolerance)) or ((abs(r_12*((((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) + math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.998113188221811*math.sin(th_5) - 0.06140084280929*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.cos(th_0) - ((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) - math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.sin(th_0)) + r_22*((((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) + math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.cos(th_1) - (0.998113188221811*math.sin(th_5) - 0.06140084280929*math.cos(th_4)*math.cos(th_5))*math.sin(th_1))*math.sin(th_0) + ((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.sin(th_2) - math.sin(th_4)*math.cos(th_2)*math.cos(th_5))*math.cos(th_0)) + r_32*(((0.06140084280929*math.sin(th_5) + 0.998113188221811*math.cos(th_4)*math.cos(th_5))*math.cos(th_2) + math.sin(th_2)*math.sin(th_4)*math.cos(th_5))*math.sin(th_1) + (0.998113188221811*math.sin(th_5) - 0.06140084280929*math.cos(th_4)*math.cos(th_5))*math.cos(th_1))) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_1)
                 x1 = math.sin(th_5)
                 x2 = math.cos(th_5)
@@ -2822,27 +2739,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 x15 = x0*x10 - x4*x5
                 x16 = x12*x13 + x14*x15
                 x17 = x12*x15 - x13*x14
-                # End of temp variables
                 this_solution[11] = math.atan2(-r_12*x17 - r_22*x16 - r_32*x11, r_11*x17 + r_21*x16 + r_31*x11)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(25, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_24_solve_th_6_processor()
     # Finish code for explicit solution node 23
-    
+
     # Code for non-branch dispatcher node 25
     # Actually, there is no code
-    
+
     # Code for explicit solution node 26, solved variable is th_2th_4th_6_soa
     def ExplicitSolutionNode_node_26_solve_th_2th_4th_6_soa_processor():
         this_node_input_index: List[int] = node_input_index[25]
         this_input_valid: bool = node_input_validity[25]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 26
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2854,24 +2769,19 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_6 = this_solution[11]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[6] = th_2 + th_4 + th_6
                 solution_queue[node_input_i_idx_in_queue] = this_solution
-            else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_26_solve_th_2th_4th_6_soa_processor()
     # Finish code for explicit solution node 25
-    
+
     # Code for explicit solution node 5, solved variable is th_2
     def ExplicitSolutionNode_node_5_solve_th_2_processor():
         this_node_input_index: List[int] = node_input_index[5]
         this_input_valid: bool = node_input_validity[5]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 5
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2879,41 +2789,32 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_3 = this_solution[7]
-            condition_0: bool = (abs((Px*math.sin(th_0) - Py*math.cos(th_0))/(a_3 + a_4*math.cos(th_3) - d_4*math.sin(th_3))) <= 1)
+            condition_0: bool = (((a_3 + a_4*math.cos(th_3) - d_4*math.sin(th_3) != 0)) and ((abs((Px*math.sin(th_0) - Py*math.cos(th_0))/(a_3 + a_4*math.cos(th_3) - d_4*math.sin(th_3))) <= 70368744177665/70368744177664)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = safe_asin((-Px*math.sin(th_0) + Py*math.cos(th_0))/(a_3 + a_4*math.cos(th_3) - d_4*math.sin(th_3)))
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[4] = x0
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(6, appended_idx)
-                
-            condition_1: bool = (abs((Px*math.sin(th_0) - Py*math.cos(th_0))/(a_3 + a_4*math.cos(th_3) - d_4*math.sin(th_3))) <= 1)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = safe_asin((-Px*math.sin(th_0) + Py*math.cos(th_0))/(a_3 + a_4*math.cos(th_3) - d_4*math.sin(th_3)))
-                # End of temp variables
                 this_solution[4] = math.pi - x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(6, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_5_solve_th_2_processor()
     # Finish code for explicit solution node 5
-    
+
     # Code for non-branch dispatcher node 6
     # Actually, there is no code
-    
+
     # Code for explicit solution node 7, solved variable is th_5
     def ExplicitSolutionNode_node_7_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[6]
         this_input_valid: bool = node_input_validity[6]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 7
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2923,9 +2824,8 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_1 = this_solution[2]
             th_2 = this_solution[4]
             th_3 = this_solution[7]
-            condition_0: bool = (abs(r_13*((math.sin(th_1)*math.cos(th_3) - math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) + math.sin(th_0)*math.sin(th_2)*math.sin(th_3)) + r_23*((math.sin(th_1)*math.cos(th_3) - math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - math.sin(th_2)*math.sin(th_3)*math.cos(th_0)) - r_33*(math.sin(th_1)*math.sin(th_3)*math.cos(th_2) + math.cos(th_1)*math.cos(th_3))) <= 1)
+            condition_0: bool = (abs(r_13*((math.sin(th_1)*math.cos(th_3) - math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) + math.sin(th_0)*math.sin(th_2)*math.sin(th_3)) + r_23*((math.sin(th_1)*math.cos(th_3) - math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - math.sin(th_2)*math.sin(th_3)*math.cos(th_0)) - r_33*(math.sin(th_1)*math.sin(th_3)*math.cos(th_2) + math.cos(th_1)*math.cos(th_3))) <= 70368744177665/70368744177664)
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_1)
                 x1 = math.cos(th_3)
                 x2 = math.sin(th_1)
@@ -2936,43 +2836,26 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 x7 = math.cos(th_0)
                 x8 = -x0*x4 + x1*x2
                 x9 = safe_acos(-r_13*(x5*x6 + x7*x8) - r_23*(x5*x8 - x6*x7) + r_33*(x0*x1 + x2*x4))
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[10] = x9
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(8, appended_idx)
-                
-            condition_1: bool = (abs(r_13*((math.sin(th_1)*math.cos(th_3) - math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) + math.sin(th_0)*math.sin(th_2)*math.sin(th_3)) + r_23*((math.sin(th_1)*math.cos(th_3) - math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - math.sin(th_2)*math.sin(th_3)*math.cos(th_0)) - r_33*(math.sin(th_1)*math.sin(th_3)*math.cos(th_2) + math.cos(th_1)*math.cos(th_3))) <= 1)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = math.cos(th_1)
-                x1 = math.cos(th_3)
-                x2 = math.sin(th_1)
-                x3 = math.sin(th_3)
-                x4 = x3*math.cos(th_2)
-                x5 = math.sin(th_0)
-                x6 = x3*math.sin(th_2)
-                x7 = math.cos(th_0)
-                x8 = -x0*x4 + x1*x2
-                x9 = safe_acos(-r_13*(x5*x6 + x7*x8) - r_23*(x5*x8 - x6*x7) + r_33*(x0*x1 + x2*x4))
-                # End of temp variables
                 this_solution[10] = -x9
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(8, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_7_solve_th_5_processor()
     # Finish code for explicit solution node 6
-    
+
     # Code for solved_variable dispatcher node 8
     def SolvedVariableDispatcherNode_node_8_processor():
         this_node_input_index: List[int] = node_input_index[8]
         this_input_valid: bool = node_input_validity[8]
         if not this_input_valid:
             return
-        
+
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
             if not queue_element_validity[node_input_i_idx_in_queue]:
@@ -2989,7 +2872,7 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(42, branch_input_index)
-            
+
             th_5 = this_solution[10]
             degenerate_valid_1 = (abs(th_5 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
@@ -2999,21 +2882,21 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(47, branch_input_index)
-            
+
             if not taken_by_degenerate:
                 add_input_index_to(9, node_input_i_idx_in_queue)
-    
+
     # Invoke the processor
     SolvedVariableDispatcherNode_node_8_processor()
     # Finish code for solved_variable dispatcher node 8
-    
+
     # Code for explicit solution node 47, solved variable is th_4th_6_soa
     def ExplicitSolutionNode_node_47_solve_th_4th_6_soa_processor():
         this_node_input_index: List[int] = node_input_index[47]
         this_input_valid: bool = node_input_validity[47]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 47
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -3022,9 +2905,8 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[2]
             th_2 = this_solution[4]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_21*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_31*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance) or (abs(r_12*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_22*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_32*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_21*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_31*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance)) or ((abs(r_12*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_22*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_32*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_2)
                 x1 = x0*math.sin(th_1)
                 x2 = math.sin(th_0)
@@ -3033,27 +2915,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 x5 = x0*math.cos(th_1)
                 x6 = x2*x3 + x4*x5
                 x7 = -x2*x5 + x3*x4
-                # End of temp variables
                 this_solution[9] = math.atan2(-r_11*x6 + r_21*x7 - r_31*x1, -r_12*x6 + r_22*x7 - r_32*x1)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(48, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_47_solve_th_4th_6_soa_processor()
     # Finish code for explicit solution node 47
-    
+
     # Code for non-branch dispatcher node 48
     # Actually, there is no code
-    
+
     # Code for explicit solution node 49, solved variable is th_4
     def ExplicitSolutionNode_node_49_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[48]
         this_input_valid: bool = node_input_validity[48]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 49
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -3062,28 +2942,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             condition_0: bool = True
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[8] = 0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(50, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_49_solve_th_4_processor()
     # Finish code for explicit solution node 48
-    
+
     # Code for non-branch dispatcher node 50
     # Actually, there is no code
-    
+
     # Code for explicit solution node 51, solved variable is th_6
     def ExplicitSolutionNode_node_51_solve_th_6_processor():
         this_node_input_index: List[int] = node_input_index[50]
         this_input_valid: bool = node_input_validity[50]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 51
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -3094,24 +2971,21 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_4th_6_soa = this_solution[9]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[11] = -th_4 + th_4th_6_soa
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_51_solve_th_6_processor()
     # Finish code for explicit solution node 50
-    
+
     # Code for explicit solution node 42, solved variable is negative_th_6_positive_th_4__soa
     def ExplicitSolutionNode_node_42_solve_negative_th_6_positive_th_4__soa_processor():
         this_node_input_index: List[int] = node_input_index[42]
         this_input_valid: bool = node_input_validity[42]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 42
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -3120,9 +2994,8 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[2]
             th_2 = this_solution[4]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_21*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_31*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance) or (abs(r_12*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_22*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_32*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_21*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_31*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance)) or ((abs(r_12*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_22*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_32*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_2)
                 x1 = x0*math.sin(th_1)
                 x2 = math.sin(th_0)
@@ -3131,27 +3004,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 x5 = x0*math.cos(th_1)
                 x6 = x2*x3 + x4*x5
                 x7 = -x2*x5 + x3*x4
-                # End of temp variables
                 this_solution[0] = math.atan2(r_11*x6 - r_21*x7 + r_31*x1, -r_12*x6 + r_22*x7 - r_32*x1)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(43, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_42_solve_negative_th_6_positive_th_4__soa_processor()
     # Finish code for explicit solution node 42
-    
+
     # Code for non-branch dispatcher node 43
     # Actually, there is no code
-    
+
     # Code for explicit solution node 44, solved variable is th_4
     def ExplicitSolutionNode_node_44_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[43]
         this_input_valid: bool = node_input_validity[43]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 44
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -3160,28 +3031,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             condition_0: bool = True
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[8] = 0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(45, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_44_solve_th_4_processor()
     # Finish code for explicit solution node 43
-    
+
     # Code for non-branch dispatcher node 45
     # Actually, there is no code
-    
+
     # Code for explicit solution node 46, solved variable is th_6
     def ExplicitSolutionNode_node_46_solve_th_6_processor():
         this_node_input_index: List[int] = node_input_index[45]
         this_input_valid: bool = node_input_validity[45]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 46
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -3192,24 +3060,21 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_4 = this_solution[8]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[11] = -negative_th_6_positive_th_4__soa + th_4
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_46_solve_th_6_processor()
     # Finish code for explicit solution node 45
-    
+
     # Code for explicit solution node 9, solved variable is th_4
     def ExplicitSolutionNode_node_9_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[9]
         this_input_valid: bool = node_input_validity[9]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 9
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -3220,10 +3085,9 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_2 = this_solution[4]
             th_3 = this_solution[7]
             th_5 = this_solution[10]
-            condition_0: bool = (abs(r_13*((math.sin(th_1)*math.sin(th_3) + math.cos(th_1)*math.cos(th_2)*math.cos(th_3))*math.cos(th_0) - math.sin(th_0)*math.sin(th_2)*math.cos(th_3)) + r_23*((math.sin(th_1)*math.sin(th_3) + math.cos(th_1)*math.cos(th_2)*math.cos(th_3))*math.sin(th_0) + math.sin(th_2)*math.cos(th_0)*math.cos(th_3)) + r_33*(math.sin(th_1)*math.cos(th_2)*math.cos(th_3) - math.sin(th_3)*math.cos(th_1))) >= zero_tolerance) or (abs(r_13*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_23*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_33*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance) or (abs(math.sin(th_5)) >= zero_tolerance)
+            condition_0: bool = (((abs(math.sin(th_5)) >= zero_tolerance)) or ((abs(r_13*(math.sin(th_0)*math.cos(th_2) + math.sin(th_2)*math.cos(th_0)*math.cos(th_1)) - r_23*(-math.sin(th_0)*math.sin(th_2)*math.cos(th_1) + math.cos(th_0)*math.cos(th_2)) + r_33*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance)) or ((abs(r_13*((math.sin(th_1)*math.sin(th_3) + math.cos(th_1)*math.cos(th_2)*math.cos(th_3))*math.cos(th_0) - math.sin(th_0)*math.sin(th_2)*math.cos(th_3)) + r_23*((math.sin(th_1)*math.sin(th_3) + math.cos(th_1)*math.cos(th_2)*math.cos(th_3))*math.sin(th_0) + math.sin(th_2)*math.cos(th_0)*math.cos(th_3)) + r_33*(math.sin(th_1)*math.cos(th_2)*math.cos(th_3) - math.sin(th_3)*math.cos(th_1))) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
-                x0 = math.sin(th_5)**(-1)
+                x0 = 1/math.sin(th_5)
                 x1 = math.sin(th_1)
                 x2 = math.sin(th_2)
                 x3 = math.sin(th_0)
@@ -3236,27 +3100,25 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 x10 = x4*x9
                 x11 = x2*x9
                 x12 = x1*x8 + x10*x6
-                # End of temp variables
                 this_solution[8] = math.atan2(x0*(-r_13*(x3*x4 + x5*x7) + r_23*(-x3*x7 + x4*x5) - r_33*x1*x2), x0*(-r_13*(-x11*x3 + x12*x5) - r_23*(x11*x5 + x12*x3) - r_33*(x1*x10 - x6*x8)))
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(10, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_9_solve_th_4_processor()
     # Finish code for explicit solution node 9
-    
+
     # Code for non-branch dispatcher node 10
     # Actually, there is no code
-    
+
     # Code for explicit solution node 11, solved variable is th_6
     def ExplicitSolutionNode_node_11_solve_th_6_processor():
         this_node_input_index: List[int] = node_input_index[10]
         this_input_valid: bool = node_input_validity[10]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 11
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -3267,10 +3129,9 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
             th_2 = this_solution[4]
             th_3 = this_solution[7]
             th_5 = this_solution[10]
-            condition_0: bool = (abs(-r_11*((-math.sin(th_1)*math.cos(th_3) + math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) - math.sin(th_0)*math.sin(th_2)*math.sin(th_3)) - r_21*((-math.sin(th_1)*math.cos(th_3) + math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) + math.sin(th_2)*math.sin(th_3)*math.cos(th_0)) - r_31*(math.sin(th_1)*math.sin(th_3)*math.cos(th_2) + math.cos(th_1)*math.cos(th_3))) >= zero_tolerance) or (abs(r_12*((math.sin(th_1)*math.cos(th_3) - math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) + math.sin(th_0)*math.sin(th_2)*math.sin(th_3)) + r_22*((math.sin(th_1)*math.cos(th_3) - math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - math.sin(th_2)*math.sin(th_3)*math.cos(th_0)) - r_32*(math.sin(th_1)*math.sin(th_3)*math.cos(th_2) + math.cos(th_1)*math.cos(th_3))) >= zero_tolerance) or (abs(math.sin(th_5)) >= zero_tolerance)
+            condition_0: bool = (((abs(math.sin(th_5)) >= zero_tolerance)) or ((abs(r_12*((math.sin(th_1)*math.cos(th_3) - math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) + math.sin(th_0)*math.sin(th_2)*math.sin(th_3)) + r_22*((math.sin(th_1)*math.cos(th_3) - math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - math.sin(th_2)*math.sin(th_3)*math.cos(th_0)) - r_32*(math.sin(th_1)*math.sin(th_3)*math.cos(th_2) + math.cos(th_1)*math.cos(th_3))) >= zero_tolerance)) or ((abs(-r_11*((-math.sin(th_1)*math.cos(th_3) + math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.cos(th_0) - math.sin(th_0)*math.sin(th_2)*math.sin(th_3)) - r_21*((-math.sin(th_1)*math.cos(th_3) + math.sin(th_3)*math.cos(th_1)*math.cos(th_2))*math.sin(th_0) + math.sin(th_2)*math.sin(th_3)*math.cos(th_0)) - r_31*(math.sin(th_1)*math.sin(th_3)*math.cos(th_2) + math.cos(th_1)*math.cos(th_3))) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
-                x0 = math.sin(th_5)**(-1)
+                x0 = 1/math.sin(th_5)
                 x1 = math.cos(th_1)
                 x2 = math.cos(th_3)
                 x3 = math.sin(th_1)
@@ -3284,16 +3145,14 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
                 x11 = -x1*x5 + x2*x3
                 x12 = x10*x8
                 x13 = -x11
-                # End of temp variables
                 this_solution[11] = math.atan2(x0*(r_12*(x10*x11 + x9) + r_22*(x11*x7 - x12) - r_32*x6), x0*(r_11*(x10*x13 - x9) + r_21*(x12 + x13*x7) + r_31*x6))
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_11_solve_th_6_processor()
     # Finish code for explicit solution node 10
-    
+
     # Collect the output
     ik_out: List[np.ndarray] = list()
     for i in range(len(solution_queue)):
@@ -3315,8 +3174,47 @@ def atlas_l_hand_ik_solve_raw(T_ee: np.ndarray, th_0):
         new_ik_i[5] = value_at_5
         value_at_6 = ik_out_i[11]  # th_6
         new_ik_i[6] = value_at_6
-        ik_out.append(new_ik_i)
+        if np.all(np.isfinite(new_ik_i)):
+            ik_out.append(new_ik_i)
     return ik_out
+
+
+def atlas_l_hand_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarray, th_0, _yaik_seed_candidates=None):
+    if not np.all(np.isfinite(T_ee)):
+        return []
+    if not (math.isfinite(th_0)):
+        return []
+    if not np.all(np.isfinite(T_ee_raw_in)):
+        return []
+    ik_output_raw = atlas_l_hand_ik_solve_raw(T_ee_raw_in, th_0 + th_0_offset_original2raw)
+    ik_output = list()
+    strict_raw_witness = False
+    for i in range(len(ik_output_raw)):
+        ik_out_i = ik_output_raw[i]
+        ik_out_i[0] = th_0
+        ik_out_i[1] = add_revolute_offset(ik_out_i[1], -th_1_offset_original2raw)
+        ik_out_i[2] = add_revolute_offset(ik_out_i[2], -th_2_offset_original2raw)
+        ik_out_i[3] = add_revolute_offset(ik_out_i[3], -th_3_offset_original2raw)
+        ik_out_i[4] = add_revolute_offset(ik_out_i[4], -th_4_offset_original2raw)
+        ik_out_i[5] = add_revolute_offset(ik_out_i[5], -th_5_offset_original2raw)
+        ik_out_i[6] = add_revolute_offset(ik_out_i[6], -th_6_offset_original2raw)
+        ee_pose_i = atlas_l_hand_fk(ik_out_i)
+        ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
+        if _yaik_seed_candidates is not None:
+            if ee_pose_diff < 1e-7:
+                strict_raw_witness = True
+                _yaik_seed_candidates.clear()
+            elif not strict_raw_witness:
+                retain_refinement_seed(_yaik_seed_candidates, ik_out_i, ee_pose_diff)
+        if ee_pose_diff < pose_tolerance:
+            ik_output.append(ik_out_i)
+        snapped = snap_near_joint_limits(ik_out_i, [-3.141592653589793, -1.5707963267948966, -6.283185307179586, -6.283185307179586, -6.283185307179586, -6.283185307179586, -1.5707963267948966], [3.141592653589793, 4.71238898038469, 0.0, 0.0, 0.0, 0.0, 4.71238898038469], [True, True, True, True, True, True, True], [True, False, False, False, False, False, False])
+        if snapped is not None:
+            snapped = snapped.reshape(ik_out_i.shape)
+            snapped_pose = atlas_l_hand_fk(snapped)
+            if (np.linalg.norm(snapped_pose[:3, 3]-T_ee[:3, 3]) <= 1e-7 and np.max(np.abs(snapped_pose[:3, :3]-T_ee[:3, :3])) <= 1e-7):
+                ik_output.append(snapped)
+    return ik_output
 
 
 def atlas_l_hand_ik_solve(T_ee: np.ndarray, th_0):
@@ -3324,23 +3222,20 @@ def atlas_l_hand_ik_solve(T_ee: np.ndarray, th_0):
         return []
     if not (math.isfinite(th_0)):
         return []
-    T_ee_raw_in = atlas_l_hand_ik_target_original_to_raw(T_ee)
-    ik_output_raw = atlas_l_hand_ik_solve_raw(T_ee_raw_in, th_0 + th_0_offset_original2raw)
-    ik_output = list()
-    for i in range(len(ik_output_raw)):
-        ik_out_i = ik_output_raw[i]
-        ik_out_i[0] -= th_0_offset_original2raw
-        ik_out_i[1] -= th_1_offset_original2raw
-        ik_out_i[2] -= th_2_offset_original2raw
-        ik_out_i[3] -= th_3_offset_original2raw
-        ik_out_i[4] -= th_4_offset_original2raw
-        ik_out_i[5] -= th_5_offset_original2raw
-        ik_out_i[6] -= th_6_offset_original2raw
-        ee_pose_i = atlas_l_hand_fk(ik_out_i)
-        ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
-        if ee_pose_diff < pose_tolerance:
-            ik_output.append(ik_out_i)
-    return ik_output
+    result, seen = [], set()
+    refinement_seeds = []
+    for transform in (atlas_l_hand_ik_target_original_to_raw,):
+        raw_target = transform(T_ee)
+        for candidate in atlas_l_hand_ik_solve_for_raw_target(T_ee, raw_target, th_0, _yaik_seed_candidates=refinement_seeds):
+            result.append(candidate)
+    refinement_fk = lambda q: atlas_l_hand_fk(q)
+    if refinement_seeds and not any(np.max(np.abs(refinement_fk(q)-T_ee)) < 1e-7 for q in result):
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [True, False, False, False, False, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                break
+    return result
 
 
 def test_ik_solve_atlas_l_hand():
