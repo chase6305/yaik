@@ -13,6 +13,7 @@ from codegen.py_codegen.codegen_py import CodeGenerationPython
 from codegen.skeleton.skeleton_tree import SkeletonTree
 from codegen.skeleton.tree_serialize import read_skeleton_tree
 from fk.robots import DHEntry, RobotAuxiliaryData, RobotDescription
+from python_run_import import add_revolute_offset
 from solver.equation_types import Unknown, UnknownType
 from solver.solved_variable import SolutionMethod, VariableSolution
 
@@ -47,6 +48,13 @@ def large_angle_tree(offset=None):
     return SkeletonTree([solution], robot)
 
 
+def offset_fixed_tree():
+    tree = runtime_tree()
+    tree.robot.name = 'runtime_offset_fixed'
+    tree.robot.auxiliary_data = RobotAuxiliaryData(unknown_offset=[0., .7])
+    return tree
+
+
 def periodic_angle_tree():
     model = large_angle_tree().robot
     model.name = 'runtime_periodic'
@@ -67,6 +75,47 @@ def prismatic_periodic_tree():
 
 
 class TestRuntimeSafety(TestCase):
+    def test_large_offset_composition_matches_independent_rotation_products(self):
+        def rz(angle):
+            c, s = np.cos(angle), np.sin(angle)
+            return np.array([[c, -s], [s, c]])
+        for angle, offset in ((1e20, .7), (.3, 1e20), (1e308, 1e308), (-1e20, -.7)):
+            with self.subTest(angle=angle, offset=offset):
+                np.testing.assert_allclose(rz(add_revolute_offset(angle, offset)),
+                                           rz(angle)@rz(offset), atol=1e-14, rtol=0)
+
+    def test_python_large_fixed_joint_offsets_preserve_fk_jacobian_and_input_value(self):
+        scope = {}
+        exec('\n'.join(CodeGenerationPython(offset_fixed_tree()).generate_code()), scope)
+        for angle in (2*np.pi+.3, 1e20, -1e20, 1e300):
+            c, s, co, so = np.cos(angle), np.sin(angle), np.cos(.7), np.sin(.7)
+            rotation = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])@np.array([
+                [co, -so, 0], [so, co, 0], [0, 0, 1]])
+            expected = np.eye(4); expected[:3, :3] = rotation; expected[:3, 3] = [.4, 0, 1.]
+            target = scope['runtime_offset_fixed_fk']([1., angle], .4)
+            np.testing.assert_allclose(target, expected, atol=1e-14, rtol=0)
+            output = scope['runtime_offset_fixed_ik_solve'](target, y_angle=angle, z_length=.4)
+            self.assertTrue(output)
+            for candidate in output:
+                self.assertEqual(candidate[1, 0], angle)
+                np.testing.assert_allclose(scope['runtime_offset_fixed_fk'](candidate, .4), expected, atol=1e-14, rtol=0)
+            local = np.array([.2, -.1, .3])
+            world = rotation@local+expected[:3, 3]
+            jacobian = scope['runtime_offset_fixed_transform_point_jacobian']([1., angle], .4, world)
+            relative = rotation@local
+            np.testing.assert_allclose(jacobian[:, 1], [-relative[1], relative[0], 0.], atol=1e-14, rtol=0)
+
+    def test_python_large_raw_root_recovers_a_valid_original_joint_angle(self):
+        scope = {}
+        exec('\n'.join(CodeGenerationPython(large_angle_tree(.7)).generate_code()), scope)
+        target = np.eye(4)
+        c, s = np.cos(1e20), np.sin(1e20)
+        target[:2, :2] = [[c, -s], [s, c]]
+        output = scope['runtime_angle_offset_ik_solve'](target)
+        self.assertTrue(output)
+        for candidate in output:
+            np.testing.assert_allclose(scope['runtime_angle_offset_fk'](candidate), target, atol=1e-14, rtol=0)
+
     def python_solver(self):
         scope = {}
         exec('\n'.join(CodeGenerationPython(runtime_tree()).generate_code()), scope)
@@ -104,7 +153,7 @@ class TestRuntimeSafety(TestCase):
         iiwa = read_skeleton_tree(str(ROOT / 'gallery/kuka_iiwa/kuka_iiwa_ik.yaml'))
         code = '\n'.join('\n'.join(CodeGenerationCpp(tree, use_safe_operator=True).generate_code())
                          .split('// Code below for debug')[0]
-                         for tree in (runtime_tree(), large_angle_tree(), large_angle_tree(0.7),
+                         for tree in (runtime_tree(), offset_fixed_tree(), large_angle_tree(), large_angle_tree(0.7),
                                       periodic_angle_tree(), prismatic_periodic_tree(), iiwa))
         main = r'''
 int main() {
@@ -170,6 +219,20 @@ int main() {
             assert((runtime_safety_ik::computeFK(q, 0.4) - target).squaredNorm() < 1e-20);
         }
     }
+    for (double angle : {2*M_PI+.3, 1e20, -1e20, 1e300}) {
+        Eigen::Matrix4d expected=Eigen::Matrix4d::Identity();
+        expected.block<3,3>(0,0)=(Eigen::AngleAxisd(angle,Eigen::Vector3d::UnitZ())*
+                                  Eigen::AngleAxisd(.7,Eigen::Vector3d::UnitZ())).toRotationMatrix();
+        expected(0,3)=.4; expected(2,3)=1.;
+        const auto target=runtime_offset_fixed_ik::computeFK({{1.,angle}},.4);
+        assert((target-expected).cwiseAbs().maxCoeff()<1e-14);
+        const auto output=runtime_offset_fixed_ik::computeIK(target,.4,angle);
+        assert(!output.empty());
+        for(const auto& q : output) {
+            assert(q[1]==angle);
+            assert((runtime_offset_fixed_ik::computeFK(q,.4)-expected).cwiseAbs().maxCoeff()<1e-14);
+        }
+    }
     const auto target = runtime_safety_ik::computeFK({{1, 0.25}}, 0.4);
     runtime_safety_ik::RawIKWorksace workspace;
     for (double invalid : {std::numeric_limits<double>::quiet_NaN(),
@@ -205,6 +268,12 @@ int main() {
         assert((runtime_angle_offset_ik::computeFK(q) - offset_target).squaredNorm() <
                runtime_angle_offset_ik::pose_tolerance_degenerate);
     }
+    Eigen::Matrix4d raw_angle_target=Eigen::Matrix4d::Identity();
+    raw_angle_target.block<3,3>(0,0)=Eigen::AngleAxisd(1e20,Eigen::Vector3d::UnitZ()).toRotationMatrix();
+    const auto recovered_offset=runtime_angle_offset_ik::computeIK(raw_angle_target);
+    assert(!recovered_offset.empty());
+    for(const auto& candidate : recovered_offset)
+        assert((runtime_angle_offset_ik::computeFK(candidate)-raw_angle_target).cwiseAbs().maxCoeff()<1e-14);
     for (double fixed : {2 * M_PI + 0.3, 1e20, -1e20}) {
         const std::array<double, 7> q{{fixed, 0.2, 0.4, 0.6, 0.8, 1.0, 0.5}};
         const auto pose = kuka_iiwa_ik::computeFK(q);

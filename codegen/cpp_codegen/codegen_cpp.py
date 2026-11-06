@@ -7,7 +7,7 @@ from codegen.skeleton.skeleton_tree import SkeletonTree
 from codegen.cpp_codegen.scope_manager import ScopeManager
 from codegen.cpp_codegen.cpp_codegen_visitor import NodeIkSolutionGeneratorCpp
 from solver.general_6dof.dh_utils import print_sp_matrix_by_row
-from utility.symbolic_utils import inverse_transform
+from utility.symbolic_utils import inverse_auxiliary_transform, inverse_transform
 from typing import List, Optional
 import sympy as sp
 
@@ -107,8 +107,22 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('static constexpr int robot_nq = {nq};'.format(nq=len(robot.unknowns)))
 
         base_n_solutions = 128 if tree.has_general_6dof_solution_node() else 16
-        max_n_solution = base_n_solutions * self.branch_capacity_multiplier
+        max_n_solution = max(base_n_solutions * self.branch_capacity_multiplier, self.queue_capacity_bound)
         self.add_code_line(f'static constexpr int max_n_solutions = {max_n_solution};')
+        offsets = robot.get_unknown_offset() or [0.]*len(robot.unknowns)
+        lower = ', '.join(repr(float(unknown.lower_bound)-float(offset))
+                          for unknown, offset in zip(robot.unknowns, offsets))
+        upper = ', '.join(repr(float(unknown.upper_bound)-float(offset))
+                          for unknown, offset in zip(robot.unknowns, offsets))
+        periodic = ', '.join('true' if unknown.is_revolute and
+                             unknown.symbol not in robot.unknown_as_parameter_more_dof else 'false'
+                             for unknown in robot.unknowns)
+        self.add_code_line('static std::array<double, robot_nq> jointLower() { return {{' + lower + '}}; }')
+        self.add_code_line('static std::array<double, robot_nq> jointUpper() { return {{' + upper + '}}; }')
+        self.add_code_line('static std::array<bool, robot_nq> periodicLimitJoints() { return {{' + periodic + '}}; }')
+        fixed = ', '.join('true' if unknown.symbol in robot.unknown_as_parameter_more_dof else 'false'
+                          for unknown in robot.unknowns)
+        self.add_code_line('static std::array<bool, robot_nq> fixedJoints() { return {{' + fixed + '}}; }')
         self.add_code_line('static constexpr int n_tree_nodes = {n_tree_nodes};'.
                            format(n_tree_nodes=self.skeleton_tree.num_nodes))
         # The size of intermediate solutions
@@ -120,19 +134,24 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('static constexpr double pose_tolerance_degenerate = 1e-4;')
         self.add_code_line('static constexpr double {zero_tolerance} = 1e-6;'.
                            format(zero_tolerance=fk_equations.zero_tolerance))
+        self.add_code_line('using SolutionQueueType = ::yaik_cpp::CompactSolutionQueue'
+                           '<intermediate_solution_size, max_n_solutions>;')
+        self.add_code_line('using NodeIndexWorkspaceType = ::yaik_cpp::CompactNodeIndexWorkspace;')
         self.add_code_line('using RawIKWorksace = ::yaik_cpp::RawIkWorkspaceTemplate'
-                           '<intermediate_solution_size, max_n_solutions, robot_nq>;')
+                           '<intermediate_solution_size, max_n_solutions, robot_nq, '
+                           'SolutionQueueType, NodeIndexWorkspaceType>;')
         if not generate_parameter:
             return
 
         # We also need to generate parameters
         self.add_empty_line()
         self.add_code_line('// Robot parameters')
-        for parameter in parameter_values:
+        for parameter in sorted(parameter_values, key=str):
             parameter_value = parameter_values[parameter]
             variable_name = parameter.name
             define_line = "static constexpr double {var_name} = {var_value};". \
-                format(var_name=variable_name, var_value=parameter_value)
+                format(var_name=variable_name, var_value=(sp.cxxcode(parameter_value)
+                       if isinstance(parameter_value, sp.Basic) else parameter_value))
             self.add_code_line(define_line)
 
         # The unknown offset
@@ -150,7 +169,8 @@ class CodeGenerationCpp(CodeGenerationBase):
                 unknown_offset_i = unknown_offset[i]
                 offset_name_i = self.get_unknown_offset_name(unknown_i.symbol.name)
                 define_line = "static constexpr double {var_name} = {var_value};". \
-                    format(var_name=offset_name_i, var_value=unknown_offset_i)
+                    format(var_name=offset_name_i, var_value=(sp.cxxcode(unknown_offset_i)
+                           if isinstance(unknown_offset_i, sp.Basic) else unknown_offset_i))
                 self.add_code_line(define_line)
 
     def _generate_direct_forward_ee_transform(self, func_name: str):
@@ -175,8 +195,10 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # Generate the code
         assert self._scope_manager.indent_level == 0
+        parameters = ''.join(', double ' + str(symbol) for symbol in self.frame_parameters())
         self.add_code_line(
-            'static Eigen::Matrix4d {func_name}(const Eigen::Matrix4d& T_ee)'.format(func_name=func_name))
+            'static Eigen::Matrix4d {func_name}(const Eigen::Matrix4d& T_ee{parameters})'.format(
+                func_name=func_name, parameters=parameters))
         self.enter_scope(func_name)
 
         # Extract the original symbol
@@ -201,6 +223,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.exit_scope(func_name)
 
     def _generate_ik_target_transform(self):
+        self._has_frame_fallback = False
         self.add_empty_line()
         self.add_code_line('// The transformation between raw and original ee target')
         self.add_code_line('// Original value are the ones corresponded to robot (usually urdf/sdf)')
@@ -217,13 +240,19 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # Non-trivial codegen
         pre_transform_sp_inv = None if self.robot.get_pre_transform_sp() is None \
-            else inverse_transform(self.robot.get_pre_transform_sp())
+            else inverse_auxiliary_transform(self.robot.get_pre_transform_sp(), self.robot.parameters_value)
         post_transform_sp_inv = None if self.robot.get_post_transform_sp() is None \
-            else inverse_transform(self.robot.get_post_transform_sp())
+            else inverse_auxiliary_transform(self.robot.get_post_transform_sp(), self.robot.parameters_value)
+        legacy_pre = None if self.robot.get_pre_transform_sp() is None else inverse_transform(self.robot.get_pre_transform_sp())
+        legacy_post = None if self.robot.get_post_transform_sp() is None else inverse_transform(self.robot.get_post_transform_sp())
+        self._has_frame_fallback = pre_transform_sp_inv != legacy_pre or post_transform_sp_inv != legacy_post
         self._generate_ee_transform_sp('endEffectorTargetOriginalToRaw', pre_transform_sp_inv, post_transform_sp_inv)
         self.add_empty_line()
         self._generate_ee_transform_sp(
             'endEffectorTargetRawToOriginal', self.robot.get_pre_transform_sp(), self.robot.get_post_transform_sp())
+        if self._has_frame_fallback:
+            self.add_empty_line()
+            self._generate_ee_transform_sp('endEffectorTargetOriginalToRawLegacyFrame', legacy_pre, legacy_post)
 
     @staticmethod
     def get_unknown_offset_name(unknown_name: str):
@@ -258,9 +287,8 @@ class CodeGenerationCpp(CodeGenerationBase):
             if unknown_offset is None:
                 self.add_code_line('const double {var} = theta_input_original[{idx}];'.format(var=symbol_i.name, idx=i))
             else:
-                self.add_code_line('const double {var} = theta_input_original[{idx}] + {offset_value};'.
-                                   format(var=symbol_i.name, idx=i,
-                                          offset_value=self.get_unknown_offset_name(symbol_i.name)))
+                expression = self.joint_offset_expression(symbol_i, f'theta_input_original[{i}]', cpp=True)
+                self.add_code_line(f'const double {symbol_i.name} = {expression};')
 
         # Collect the fk code and perform cse
         fk_expressions: List[sp.Expr] = list()
@@ -288,7 +316,8 @@ class CodeGenerationCpp(CodeGenerationBase):
                 ij_code = sp.cxxcode(out_ij_expr)
                 self.add_code_line('ee_pose_raw({i}, {j}) = {ij_code};'.format(i=i, j=j, ij_code=ij_code))
         # Finish
-        self.add_code_line('return endEffectorTargetRawToOriginal(ee_pose_raw);')
+        self.add_code_line('return ' + self.frame_transform_call(
+            'endEffectorTargetRawToOriginal', 'ee_pose_raw') + ';')
 
         # End the codegen
         self.exit_scope(fk_function_name)
@@ -330,9 +359,8 @@ class CodeGenerationCpp(CodeGenerationBase):
             if unknown_offset is None:
                 self.add_code_line('const double {var} = theta_input_original[{idx}];'.format(var=symbol_i.name, idx=i))
             else:
-                self.add_code_line('const double {var} = theta_input_original[{idx}] + {offset_value};'.
-                                   format(var=symbol_i.name, idx=i,
-                                          offset_value=self.get_unknown_offset_name(symbol_i.name)))
+                expression = self.joint_offset_expression(symbol_i, f'theta_input_original[{i}]', cpp=True)
+                self.add_code_line(f'const double {symbol_i.name} = {expression};')
 
         # If this is point jacobian
         if point_jacobian_point_on_ee is not None:
@@ -451,8 +479,8 @@ class CodeGenerationCpp(CodeGenerationBase):
         func_arguments = '(const Eigen::Matrix4d& T_ee'
         for symbol_i in free_symbols:
             func_arguments += ', double ' + str(symbol_i)
-        func_arguments += ', SolutionQueue<intermediate_solution_size, max_n_solutions>& solution_queue'
-        func_arguments += ', NodeIndexWorkspace<max_n_solutions>& node_index_workspace'
+        func_arguments += ', SolutionQueueType& solution_queue'
+        func_arguments += ', NodeIndexWorkspaceType& node_index_workspace'
         func_arguments += ', std::vector<std::array<double, robot_nq>>& ik_output'
         func_arguments += ')'
         return func_arguments
@@ -486,7 +514,6 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('static void ' + self.ik_function_name(True) + func_arguments)
         self.enter_scope('workspace_raw_ik')
         self.add_code_line('workspace.raw_ik_out.clear();')
-        self.add_code_line('workspace.raw_ik_out.reserve(max_n_solutions);')
 
         func_arguments_call = '(T_ee_raw'
         for symbol_i in free_symbols:
@@ -516,7 +543,8 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # To raw target
         if (self.robot.get_pre_transform_sp() is not None) or (self.robot.get_post_transform_sp() is not None):
-            self.add_code_line('const Eigen::Matrix4d& T_ee_raw = endEffectorTargetOriginalToRaw(T_ee);')
+            self.add_code_line('const Eigen::Matrix4d& T_ee_raw = ' + self.frame_transform_call(
+                'endEffectorTargetOriginalToRaw', 'T_ee') + ';')
         else:
             self.add_code_line('const Eigen::Matrix4d& T_ee_raw = T_ee;')
 
@@ -530,8 +558,8 @@ class CodeGenerationCpp(CodeGenerationBase):
             for symbol_j in free_symbols:
                 # We need to add offset here, since the parameter from unknown used in rawIK is with offset.
                 if symbol_j in unknown_symbols and self.robot.get_unknown_offset() is not None:
-                    offset_var_i = self.get_unknown_offset_name(symbol_j.name)
-                    func_call_arguments += ', ' + str(symbol_j) + ' + ' + offset_var_i
+                    func_call_arguments += ', ' + self.joint_offset_expression(
+                        symbol_j, str(symbol_j), cpp=True)
                 else:
                     func_call_arguments += ', ' + str(symbol_j)
             func_call_arguments += ', workspace'
@@ -550,12 +578,13 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # Handle offset
         unknown_offset = self.robot.get_unknown_offset()
-        if unknown_offset is not None:
-            unknowns = self.robot.unknowns
-            for j in range(len(unknown_offset)):
-                unknown_j = unknowns[j]
-                self.add_code_line('ik_out_i[{j}] -= {offset_j};'.
-                                   format(j=j, offset_j=self.get_unknown_offset_name(unknown_j.symbol.name)))
+        for j, unknown_j in enumerate(self.robot.unknowns):
+            if unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
+                self.add_code_line(f'ik_out_i[{j}] = {unknown_j.symbol};')
+            elif unknown_offset is not None:
+                expression = self.joint_offset_expression(
+                    unknown_j.symbol, f'ik_out_i[{j}]', cpp=True, subtract=True)
+                self.add_code_line(f'ik_out_i[{j}] = {expression};')
 
         self.add_code_line('ik_output.push_back(ik_out_i);')
         self.exit_scope('for')
@@ -595,7 +624,16 @@ class CodeGenerationCpp(CodeGenerationBase):
         func_arguments += ')'
 
         # The ik define
-        self.add_code_line('static void ' + self.ik_function_name(False) + func_arguments)
+        handler_arguments = func_arguments
+        wrapped = self._has_frame_fallback or bool(self.fixed_joint_phase_centers)
+        if wrapped:
+            handler_arguments = func_arguments.replace('(const Eigen::Matrix4d& T_ee',
+                '(const Eigen::Matrix4d& T_ee, const Eigen::Matrix4d& T_ee_raw')
+            handler_arguments = handler_arguments[:-1]+', Eigen::Matrix4d& frame_disturbance, bool& frame_disturbance_ready, bool allow_disturbance)'
+        if self.fixed_joint_phase_centers:
+            handler_arguments = handler_arguments[:-1]+f', const std::array<double, {len(free_symbols)}>* _yaik_phase_parameters = nullptr)'
+        method = 'computeIKForRawTarget' if wrapped else self.ik_function_name(False)
+        self.add_code_line('static void ' + method + handler_arguments)
         self.enter_scope('checked_ik')
         self.add_code_line('if (!T_ee.allFinite()) { ik_output.clear(); return; }')
         if free_symbols:
@@ -603,8 +641,11 @@ class CodeGenerationCpp(CodeGenerationBase):
             self.add_code_line('if (' + invalid_parameters + ') { ik_output.clear(); return; }')
 
         # To raw target
-        if (self.robot.get_pre_transform_sp() is not None) or (self.robot.get_post_transform_sp() is not None):
-            self.add_code_line('const Eigen::Matrix4d& T_ee_raw = endEffectorTargetOriginalToRaw(T_ee);')
+        if wrapped:
+            self.add_code_line('if (!T_ee_raw.allFinite()) { ik_output.clear(); return; }')
+        elif (self.robot.get_pre_transform_sp() is not None) or (self.robot.get_post_transform_sp() is not None):
+            self.add_code_line('const Eigen::Matrix4d& T_ee_raw = ' + self.frame_transform_call(
+                'endEffectorTargetOriginalToRaw', 'T_ee') + ';')
         else:
             self.add_code_line('const Eigen::Matrix4d& T_ee_raw = T_ee;')
 
@@ -615,13 +656,15 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         def make_func_call_args(ee_pose_name: str = 'T_ee_raw'):
             func_call_arguments = '(' + ee_pose_name
-            for symbol_j in free_symbols:
+            for index, symbol_j in enumerate(free_symbols):
                 # We need to add offset here, since the parameter from unknown used in rawIK is with offset.
                 if symbol_j in unknown_symbols and self.robot.get_unknown_offset() is not None:
-                    offset_var_j = self.get_unknown_offset_name(symbol_j.name)
-                    func_call_arguments += ', ' + str(symbol_j) + ' + ' + offset_var_j
+                    argument = self.joint_offset_expression(symbol_j, str(symbol_j), cpp=True)
                 else:
-                    func_call_arguments += ', ' + str(symbol_j)
+                    argument = str(symbol_j)
+                if self.fixed_joint_phase_centers:
+                    argument = f'(_yaik_phase_parameters ? (*_yaik_phase_parameters)[{index}] : ({argument}))'
+                func_call_arguments += ', '+argument
             func_call_arguments += ', workspace'
             func_call_arguments += ');'
             return func_call_arguments
@@ -638,12 +681,13 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # Handle offset
         unknown_offset = self.robot.get_unknown_offset()
-        if unknown_offset is not None:
-            unknowns = self.robot.unknowns
-            for j in range(len(unknown_offset)):
-                unknown_j = unknowns[j]
-                self.add_code_line('ik_out_i[{j}] -= {offset_j};'.
-                                   format(j=j, offset_j=self.get_unknown_offset_name(unknown_j.symbol.name)))
+        for j, unknown_j in enumerate(self.robot.unknowns):
+            if unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
+                self.add_code_line(f'ik_out_i[{j}] = {unknown_j.symbol};')
+            elif unknown_offset is not None:
+                expression = self.joint_offset_expression(
+                    unknown_j.symbol, f'ik_out_i[{j}]', cpp=True, subtract=True)
+                self.add_code_line(f'ik_out_i[{j}] = {expression};')
 
         # Make the fk call
         unknown_symbols = [elem.symbol for elem in self.skeleton_tree.robot.unknowns]
@@ -659,21 +703,53 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();')
         self.add_code_line('if (ee_pose_diff < pose_tolerance)')
         self.add_code_line(indent() + 'ik_output.push_back(ik_out_i);')
+        self.add_code_line('std::array<double, robot_nq> snapped;')
+        self.add_code_line('if (snapNearJointLimits<robot_nq>(ik_out_i, snapped, jointLower(), jointUpper(), periodicLimitJoints(), fixedJoints()))')
+        self.enter_scope('snapped_candidate')
+        self.add_code_line('const Eigen::Matrix4d snapped_pose = '+fk_func_name+fk_args_call.replace('ik_out_i', 'snapped')+';')
+        self.add_code_line('if ((snapped_pose.block<3, 1>(0, 3)-T_ee.block<3, 1>(0, 3)).norm() <= 1e-7 && '
+                           '(snapped_pose.block<3, 3>(0, 0)-T_ee.block<3, 3>(0, 0)).cwiseAbs().maxCoeff() <= 1e-7)')
+        self.add_code_line(indent() + 'ik_output.push_back(snapped);')
+        self.exit_scope('snapped_candidate')
         self.exit_scope('for')
 
         # We have solutions here
         self.add_empty_line()
+        classify_candidates = ('ikCandidateClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints(), '
+                               '[&](const std::array<double, robot_nq>& candidate) { return '
+                               + fk_func_name + fk_args_call.replace('ik_out_i', 'candidate') + '; }, T_ee)')
         self.add_code_line('if (!ik_output.empty())')
         self.enter_scope('if_valid_solution')
-        self.add_code_line('removeDuplicate<robot_nq>(ik_output, zero_tolerance);')
+        self.add_code_line('removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, '
+                           + classify_candidates + ');')
         self.add_code_line('return;')
         self.exit_scope('if_valid_solution')
 
         # Numerical handling of degenerate case
         self.add_empty_line()
         self.add_code_line('// Disturbing method for degenerate handling')
-        self.add_code_line('Eigen::Matrix4d T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);')
-        self.add_code_line('Eigen::Matrix4d T_ee_disturbed = endEffectorTargetRawToOriginal(T_ee_raw_disturbed);')
+        if wrapped:
+            self.add_code_line('if (!allow_disturbance) return;')
+        self.add_code_line('for (int perturbation = 0; perturbation < 3; ++perturbation)')
+        self.enter_scope('disturbance_attempt')
+        self.add_code_line('Eigen::Matrix4d T_ee_raw_disturbed;')
+        self.add_code_line('if (perturbation != 0)')
+        self.add_code_line(indent()+'T_ee_raw_disturbed = yaik_cpp::disturbTransform<double>(T_ee_raw, 1e-2, 1e-2, nullptr, perturbation-1);')
+        self.add_code_line('else')
+        self.enter_scope('legacy_disturbance')
+        if self._has_frame_fallback:
+            self.add_code_line('if (frame_disturbance_ready)')
+            self.add_code_line(indent()+'T_ee_raw_disturbed = frame_disturbance * T_ee_raw;')
+            self.add_code_line('else')
+            self.enter_scope('shared_frame_disturbance')
+            self.add_code_line('T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw, 1e-2, 1e-2, &frame_disturbance);')
+            self.add_code_line('frame_disturbance_ready = true;')
+            self.exit_scope('shared_frame_disturbance')
+        else:
+            self.add_code_line('T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);')
+        self.exit_scope('legacy_disturbance')
+        self.add_code_line('Eigen::Matrix4d T_ee_disturbed = ' + self.frame_transform_call(
+            'endEffectorTargetRawToOriginal', 'T_ee_raw_disturbed') + ';')
         func_arguments_call = make_func_call_args('T_ee_raw_disturbed')
         self.add_code_line(ik_raw_func + func_arguments_call)
 
@@ -684,12 +760,13 @@ class CodeGenerationCpp(CodeGenerationBase):
 
         # Handle offset
         unknown_offset = self.robot.get_unknown_offset()
-        if unknown_offset is not None:
-            unknowns = self.robot.unknowns
-            for j in range(len(unknown_offset)):
-                unknown_j = unknowns[j]
-                self.add_code_line('ik_out_i[{j}] -= {offset_j};'.
-                                   format(j=j, offset_j=self.get_unknown_offset_name(unknown_j.symbol.name)))
+        for j, unknown_j in enumerate(self.robot.unknowns):
+            if unknown_j.symbol in self.robot.unknown_as_parameter_more_dof:
+                self.add_code_line(f'ik_out_i[{j}] = {unknown_j.symbol};')
+            elif unknown_offset is not None:
+                expression = self.joint_offset_expression(
+                    unknown_j.symbol, f'ik_out_i[{j}]', cpp=True, subtract=True)
+                self.add_code_line(f'ik_out_i[{j}] = {expression};')
 
         # Compute the pose again, note that we can use same fk_func_args
         self.add_code_line('wrapAngleToPi(ik_out_i);')
@@ -728,11 +805,69 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('if (ee_pose_diff < pose_tolerance_degenerate)')
         self.add_code_line(indent() + 'ik_output.push_back(ik_out_i);')
         self.exit_scope('for')
+        self.exit_scope('disturbance_attempt')
 
         # De-duplicate and end the function
         self.add_empty_line()
-        self.add_code_line('removeDuplicate<robot_nq>(ik_output, zero_tolerance);')
+        self.add_code_line('removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, '
+                           + classify_candidates + ');')
         self.exit_scope('checked_ik')
+        if wrapped:
+            self._generate_frame_checked_wrapper(func_arguments)
+
+    def _generate_frame_checked_wrapper(self, arguments):
+        self.add_empty_line()
+        self.add_code_line('static void computeIK'+arguments)
+        self.enter_scope('checked_frame_charts')
+        self.add_code_line('ik_output.clear();')
+        self.add_code_line('if (!T_ee.allFinite()) return;')
+        free = self.free_symbols()
+        if free:
+            self.add_code_line('if ('+' || '.join('!std::isfinite('+str(s)+')' for s in free)+') return;')
+        self.add_code_line('Eigen::Matrix4d frame_disturbance;')
+        self.add_code_line('bool frame_disturbance_ready = false;')
+        self.add_code_line('for (bool legacy : {'+('true, false' if self._has_frame_fallback else 'false')+'})')
+        self.enter_scope('frame_chart')
+        primary = self.frame_transform_call('endEffectorTargetOriginalToRaw', 'T_ee')
+        previous = (self.frame_transform_call('endEffectorTargetOriginalToRawLegacyFrame', 'T_ee')
+                    if self._has_frame_fallback else primary)
+        self.add_code_line('const Eigen::Matrix4d raw_target = legacy ? '+previous+' : '+primary+';')
+        self.add_code_line('std::vector<std::array<double, robot_nq>> candidates;')
+        tail = ', '+', '.join(map(str, free)) if free else ''
+        self.add_code_line('computeIKForRawTarget(T_ee, raw_target'+tail+', workspace, candidates, frame_disturbance, frame_disturbance_ready, legacy || ik_output.empty());')
+        self.add_code_line('for (const auto& candidate : candidates)')
+        self.enter_scope('frame_candidate')
+        self.add_code_line('if (std::find(ik_output.begin(), ik_output.end(), candidate) == ik_output.end())')
+        self.add_code_line(indent()+'ik_output.push_back(candidate);')
+        self.exit_scope('frame_candidate')
+        self.exit_scope('frame_chart')
+        if self.fixed_joint_phase_centers:
+            raw = [self.joint_offset_expression(symbol, str(symbol), cpp=True)
+                   if symbol in self.robot.unknown_as_parameter_more_dof else str(symbol) for symbol in free]
+            centers = ', '.join('{'+str(free.index(symbol))+', '+repr(value)+'}'
+                                for symbol, value in self.fixed_joint_phase_centers)
+            self.add_code_line('if (ik_output.empty())')
+            self.enter_scope('phase_recovery')
+            self.add_code_line(f'const std::array<double, {len(free)}> phase_parameters = {{{{'+', '.join(raw)+'}};')
+            self.add_code_line('const std::array<std::pair<std::size_t,double>, '
+                               +str(len(self.fixed_joint_phase_centers))+'> phase_centers = {{'+centers+'}};')
+            self.add_code_line('for (const auto& alias : fixedJointPhaseAliases(phase_parameters, phase_centers, zero_tolerance))')
+            self.enter_scope('phase_alias')
+            self.add_code_line('for (bool legacy : {'+('true, false' if self._has_frame_fallback else 'false')+'})')
+            self.enter_scope('phase_chart')
+            self.add_code_line('const Eigen::Matrix4d raw_target = legacy ? '+previous+' : '+primary+';')
+            self.add_code_line('std::vector<std::array<double, robot_nq>> candidates;')
+            self.add_code_line('computeIKForRawTarget(T_ee, raw_target'+tail+', workspace, candidates, '
+                               'frame_disturbance, frame_disturbance_ready, false, &alias);')
+            self.add_code_line('for (const auto& candidate : candidates)')
+            self.enter_scope('phase_candidate')
+            self.add_code_line('if (std::find(ik_output.begin(), ik_output.end(), candidate) == ik_output.end())')
+            self.add_code_line(indent()+'ik_output.push_back(candidate);')
+            self.exit_scope('phase_candidate')
+            self.exit_scope('phase_chart')
+            self.exit_scope('phase_alias')
+            self.exit_scope('phase_recovery')
+        self.exit_scope('checked_frame_charts')
 
     def _generate_handy_ik(self):
         # The function definition
@@ -820,6 +955,7 @@ class CodeGenerationCpp(CodeGenerationBase):
         self.add_code_line('int main()')
         self.enter_scope('main')
         self.add_code_line(ik_test_name + '();')
+        self.add_code_line('return 0;')
         self.exit_scope('main')
 
 

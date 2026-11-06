@@ -4,7 +4,7 @@ from solver.equation_utils import find_unknown_idx
 from codegen.skeleton.codegen_base import CodeGenerationBase, indent
 from codegen.skeleton.skeleton_tree import SkeletonTree
 from codegen.py_codegen.py_codegen_visitor_v2 import NodeIkSolutionGeneratorPython_v2
-from utility.symbolic_utils import inverse_transform
+from utility.symbolic_utils import inverse_auxiliary_transform, inverse_transform
 from typing import List, Optional
 import sympy as sp
 
@@ -63,11 +63,12 @@ class CodeGenerationPython(CodeGenerationBase):
         parameter_values = robot.parameters_value
         self._add_empty_line()
         self._add_code_line('# Robot parameters')
-        for parameter in parameter_values:
+        for parameter in sorted(parameter_values, key=str):
             parameter_value = parameter_values[parameter]
             variable_name = parameter.name
             define_line = "{var_name}: float = {var_value}". \
-                format(var_name=variable_name, var_value=parameter_value)
+                format(var_name=variable_name, var_value=(sp.pycode(parameter_value)
+                       if isinstance(parameter_value, sp.Basic) else parameter_value))
             self._add_code_line(define_line)
 
         # The unknown offset
@@ -85,7 +86,8 @@ class CodeGenerationPython(CodeGenerationBase):
                 unknown_offset_i = unknown_offset[i]
                 offset_name_i = self.get_unknown_offset_name(unknown_i.symbol.name)
                 define_line = "{var_name}: float = {var_value}". \
-                    format(var_name=offset_name_i, var_value=unknown_offset_i)
+                    format(var_name=offset_name_i, var_value=(sp.pycode(unknown_offset_i)
+                           if isinstance(unknown_offset_i, sp.Basic) else unknown_offset_i))
                 self._add_code_line(define_line)
 
     @staticmethod
@@ -116,8 +118,9 @@ class CodeGenerationPython(CodeGenerationBase):
         transformed_4x4 = left_4x4 * (ik_target_4x4 * right_4x4)
 
         # Generate the code
-        self._add_code_line(
-            'def {func_name}(T_ee: np.ndarray):'.format(func_name=func_name))
+        parameters = ''.join(', ' + str(symbol) for symbol in self.frame_parameters())
+        self._add_code_line('def {func_name}(T_ee: np.ndarray{parameters}):'.format(
+            func_name=func_name, parameters=parameters))
 
         # Extract the original symbol
         for r in range(3):
@@ -134,12 +137,13 @@ class CodeGenerationPython(CodeGenerationBase):
             for c in range(4):
                 expr_rc = transformed_4x4[r, c]
                 expr_rc = sp.simplify(expr_rc)
-                expr_code = sp.cxxcode(expr_rc)
+                expr_code = sp.pycode(expr_rc)
                 self._add_code_line('ee_transformed[{r}, {c}] = {expr_code}'.
                                     format(r=r, c=c, expr_code=expr_code), indent_level=1)
         self._add_code_line('return ee_transformed', indent_level=1)
 
     def _generate_ik_target_transform(self):
+        self._has_frame_fallback = False
         self.append_new_function_two_empty_lines()
         self._add_code_line('# The transformation between raw and original ee target')
         self._add_code_line('# Original value are the ones corresponded to robot (usually urdf/sdf)')
@@ -156,14 +160,20 @@ class CodeGenerationPython(CodeGenerationBase):
 
         # Non-trivial codegen
         pre_transform_sp_inv = None if self.robot.get_pre_transform_sp() is None \
-            else inverse_transform(self.robot.get_pre_transform_sp())
+            else inverse_auxiliary_transform(self.robot.get_pre_transform_sp(), self.robot.parameters_value)
         post_transform_sp_inv = None if self.robot.get_post_transform_sp() is None \
-            else inverse_transform(self.robot.get_post_transform_sp())
+            else inverse_auxiliary_transform(self.robot.get_post_transform_sp(), self.robot.parameters_value)
+        legacy_pre = None if self.robot.get_pre_transform_sp() is None else inverse_transform(self.robot.get_pre_transform_sp())
+        legacy_post = None if self.robot.get_post_transform_sp() is None else inverse_transform(self.robot.get_post_transform_sp())
+        self._has_frame_fallback = pre_transform_sp_inv != legacy_pre or post_transform_sp_inv != legacy_post
         self._generate_ee_transform_sp(self.get_ik_target_original_to_raw_name(),
                                        pre_transform_sp_inv, post_transform_sp_inv)
         self.append_new_function_two_empty_lines()
         self._generate_ee_transform_sp(self.get_ik_target_raw_to_original_name(),
                                        self.robot.get_pre_transform_sp(), self.robot.get_post_transform_sp())
+        if self._has_frame_fallback:
+            self.append_new_function_two_empty_lines()
+            self._generate_ee_transform_sp(self.get_ik_target_original_to_raw_name()+'_legacy_frame', legacy_pre, legacy_post)
 
     def _ik_func_args_string(self) -> str:
         free_symbols = self.free_symbols()
@@ -256,9 +266,8 @@ class CodeGenerationPython(CodeGenerationBase):
             if unknown_offset is None:
                 self._add_code_line('{var} = theta_input[{idx}]'.format(var=symbol_i.name, idx=i), indent_level=1)
             else:
-                self._add_code_line('{var} = theta_input[{idx}] + {offset_i}'.
-                                    format(var=symbol_i.name, idx=i,
-                                           offset_i=self.get_unknown_offset_name(symbol_i.name)), indent_level=1)
+                expression = self.joint_offset_expression(symbol_i, f'theta_input[{i}]')
+                self._add_code_line(f'{symbol_i.name} = {expression}', indent_level=1)
 
         # Collect the fk code and perform cse
         fk_expressions: List[sp.Expr] = list()
@@ -320,10 +329,8 @@ class CodeGenerationPython(CodeGenerationBase):
             if unknown_offset is None:
                 self._add_code_line('{var} = theta_input[{idx}]'.format(var=symbol_i.name, idx=i), indent_level=1)
             else:
-                self._add_code_line('{var} = theta_input[{idx}] + {offset_i}'.
-                                    format(var=symbol_i.name, idx=i,
-                                           offset_i=self.get_unknown_offset_name(symbol_i.name)),
-                                    indent_level=1)
+                expression = self.joint_offset_expression(symbol_i, f'theta_input[{i}]')
+                self._add_code_line(f'{symbol_i.name} = {expression}', indent_level=1)
 
         # If this is point jacobian
         if point_jacobian_point_on_ee is not None:
@@ -394,7 +401,14 @@ class CodeGenerationPython(CodeGenerationBase):
         # The function definition
         self.append_new_function_two_empty_lines()
         func_arguments = self._ik_func_args_string()
-        self._add_code_line('def ' + self.ik_function_name(False) + func_arguments)
+        method = self.ik_function_name(False)
+        wrapped = self._has_frame_fallback or bool(self.fixed_joint_phase_centers)
+        if wrapped:
+            method += '_for_raw_target'
+            func_arguments = func_arguments.replace('(T_ee: np.ndarray', '(T_ee: np.ndarray, T_ee_raw_in: np.ndarray')
+        if self.fixed_joint_phase_centers:
+            func_arguments = func_arguments[:-2]+', _yaik_phase_parameters=None):'
+        self._add_code_line('def ' + method + func_arguments)
         self._add_code_line('if not np.all(np.isfinite(T_ee)):', indent_level=1)
         self._add_code_line('return []', indent_level=2)
         free_symbols = self.free_symbols()
@@ -404,22 +418,28 @@ class CodeGenerationPython(CodeGenerationBase):
             self._add_code_line('return []', indent_level=2)
 
         # The ee target
-        if self.robot.get_pre_transform_sp() is None and self.robot.get_post_transform_sp() is None:
+        if wrapped:
+            self._add_code_line('if not np.all(np.isfinite(T_ee_raw_in)):', indent_level=1)
+            self._add_code_line('return []', indent_level=2)
+        elif self.robot.get_pre_transform_sp() is None and self.robot.get_post_transform_sp() is None:
             self._add_code_line('T_ee_raw_in = T_ee', indent_level=1)
         else:
-            self._add_code_line('T_ee_raw_in = ' + self.get_ik_target_original_to_raw_name() + '(T_ee)', indent_level=1)
+            self._add_code_line('T_ee_raw_in = ' + self.frame_transform_call(
+                self.get_ik_target_original_to_raw_name(), 'T_ee'), indent_level=1)
 
         # Call the old method
         ik_raw_func = self.ik_function_name(True)
         unknown_symbols = [elem.symbol for elem in self.robot.unknowns]
 
         func_arguments_call = '(T_ee_raw_in'
-        for symbol_i in free_symbols:
+        for index, symbol_i in enumerate(free_symbols):
             if symbol_i in unknown_symbols and self.robot.get_unknown_offset() is not None:
-                offset_var_i = self.get_unknown_offset_name(symbol_i.name)
-                func_arguments_call += ', ' + str(symbol_i) + ' + ' + offset_var_i
+                argument = self.joint_offset_expression(symbol_i, str(symbol_i))
             else:
-                func_arguments_call += ', ' + str(symbol_i)
+                argument = str(symbol_i)
+            if self.fixed_joint_phase_centers:
+                argument = f'(_yaik_phase_parameters[{index}] if _yaik_phase_parameters is not None else ({argument}))'
+            func_arguments_call += ', '+argument
         func_arguments_call += ')'
         self._add_code_line('ik_output_raw = ' + ik_raw_func + func_arguments_call, indent_level=1)
         self._add_code_line('ik_output = list()', indent_level=1)
@@ -428,12 +448,13 @@ class CodeGenerationPython(CodeGenerationBase):
 
         # Handle joint offset
         unknown_offset = self.robot.get_unknown_offset()
-        if unknown_offset is not None:
-            for j in range(len(unknown_offset)):
-                unknown_j = self.robot.unknowns[j].symbol
-                self._add_code_line('ik_out_i[{j}] -= {offset_j}'.
-                                    format(j=j, offset_j=self.get_unknown_offset_name(unknown_j.name)),
-                                    indent_level=2)
+        for j, unknown in enumerate(self.robot.unknowns):
+            unknown_j = unknown.symbol
+            if unknown_j in self.robot.unknown_as_parameter_more_dof:
+                self._add_code_line(f'ik_out_i[{j}] = {unknown_j}', indent_level=2)
+            elif unknown_offset is not None:
+                expression = self.joint_offset_expression(unknown_j, f'ik_out_i[{j}]', subtract=True)
+                self._add_code_line(f'ik_out_i[{j}] = {expression}', indent_level=2)
 
         # Make the fk args
         unknown_symbols = [elem.symbol for elem in self.skeleton_tree.robot.unknowns]
@@ -448,9 +469,62 @@ class CodeGenerationPython(CodeGenerationBase):
         self._add_code_line('ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))', indent_level=2)
         self._add_code_line('if ee_pose_diff < pose_tolerance:', indent_level=2)
         self._add_code_line('ik_output.append(ik_out_i)', indent_level=3)
+        offsets = self.robot.get_unknown_offset() or [0.]*len(self.robot.unknowns)
+        lower = [float(u.lower_bound)-float(o) for u, o in zip(self.robot.unknowns, offsets)]
+        upper = [float(u.upper_bound)-float(o) for u, o in zip(self.robot.unknowns, offsets)]
+        periodic = [u.is_revolute for u in self.robot.unknowns]
+        fixed = [u.symbol in self.robot.unknown_as_parameter_more_dof for u in self.robot.unknowns]
+        self._add_code_line(f'snapped = snap_near_joint_limits(ik_out_i, {lower!r}, {upper!r}, {periodic!r}, {fixed!r})', indent_level=2)
+        self._add_code_line('if snapped is not None:', indent_level=2)
+        self._add_code_line('snapped = snapped.reshape(ik_out_i.shape)', indent_level=3)
+        self._add_code_line('snapped_pose = '+fk_func_name+fk_args_call.replace('ik_out_i', 'snapped'), indent_level=3)
+        self._add_code_line('if (np.linalg.norm(snapped_pose[:3, 3]-T_ee[:3, 3]) <= 1e-7 and '
+                            'np.max(np.abs(snapped_pose[:3, :3]-T_ee[:3, :3])) <= 1e-7):', indent_level=3)
+        self._add_code_line('ik_output.append(snapped)', indent_level=4)
 
         # Finished
         self._add_code_line('return ik_output', indent_level=1)
+        if wrapped:
+            self._generate_frame_checked_wrapper(method)
+
+    def _generate_frame_checked_wrapper(self, handler):
+        self.append_new_function_two_empty_lines()
+        self._add_code_line('def '+self.ik_function_name(False)+self._ik_func_args_string())
+        self._add_code_line('if not np.all(np.isfinite(T_ee)):', indent_level=1)
+        self._add_code_line('return []', indent_level=2)
+        free = self.free_symbols()
+        if free:
+            self._add_code_line('if not ('+' and '.join('math.isfinite('+str(s)+')' for s in free)+'):', indent_level=1)
+            self._add_code_line('return []', indent_level=2)
+        primary = self.get_ik_target_original_to_raw_name()
+        self._add_code_line('result, seen = [], set()', indent_level=1)
+        transforms = primary+'_legacy_frame, '+primary if self._has_frame_fallback else primary+','
+        self._add_code_line('for transform in ('+transforms+'):', indent_level=1)
+        self._add_code_line('raw_target = '+self.frame_transform_call('transform', 'T_ee'), indent_level=2)
+        arguments = ', '+', '.join(map(str, free)) if free else ''
+        self._add_code_line('for candidate in '+handler+'(T_ee, raw_target'+arguments+'):', indent_level=2)
+        if self._has_frame_fallback:
+            self._add_code_line('key = tuple(float(value) for value in candidate.ravel())', indent_level=3)
+            self._add_code_line('if key not in seen:', indent_level=3)
+            self._add_code_line('seen.add(key)', indent_level=4)
+            self._add_code_line('result.append(candidate)', indent_level=4)
+        else:
+            self._add_code_line('result.append(candidate)', indent_level=3)
+        if self.fixed_joint_phase_centers:
+            raw = [self.joint_offset_expression(symbol, str(symbol))
+                   if symbol in self.robot.unknown_as_parameter_more_dof else str(symbol) for symbol in free]
+            centers = [(free.index(symbol), value) for symbol, value in self.fixed_joint_phase_centers]
+            self._add_code_line('if not result:', indent_level=1)
+            self._add_code_line('phase_parameters = ('+', '.join(raw)+',)', indent_level=2)
+            self._add_code_line(f'for alias in fixed_joint_phase_aliases(phase_parameters, {centers!r}, zero_tolerance):', indent_level=2)
+            self._add_code_line('for transform in ('+transforms+'):', indent_level=3)
+            self._add_code_line('raw_target = '+self.frame_transform_call('transform', 'T_ee'), indent_level=4)
+            self._add_code_line('for candidate in '+handler+'(T_ee, raw_target'+arguments+', _yaik_phase_parameters=alias):', indent_level=4)
+            self._add_code_line('key = tuple(float(value) for value in candidate.ravel())', indent_level=5)
+            self._add_code_line('if key not in seen:', indent_level=5)
+            self._add_code_line('seen.add(key)', indent_level=6)
+            self._add_code_line('result.append(candidate)', indent_level=6)
+        self._add_code_line('return result', indent_level=1)
 
     def _generate_test_method(self):
         free_symbols = self.free_symbols()

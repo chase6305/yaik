@@ -3,7 +3,151 @@ import math
 from typing import Tuple, Optional, List
 
 
+def add_revolute_offset(value, offset):
+    """Add an angular offset without losing it to a large angle's float ulp."""
+    if isinstance(value, np.ndarray):
+        value = value.item()
+    if isinstance(offset, np.ndarray):
+        offset = offset.item()
+    if offset == 0 or (abs(value) <= 1048576. and abs(offset) <= 1048576.):
+        return value+offset
+    phase = math.atan2(math.sin(value), math.cos(value))
+    shift = math.atan2(math.sin(offset), math.cos(offset)) if abs(offset) > math.pi else offset
+    return phase+shift
+
+
+def fixed_joint_phase_aliases(arguments, centers, tolerance=1e-6):
+    """Try equivalent representatives near saved branch centers after failure."""
+    original = tuple(float(value) for value in arguments)
+    aliases, seen, combined, changed = [], set(), list(original), set()
+    for index, center in centers:
+        value = original[index]
+        if not (math.isfinite(value) and math.isfinite(center)) or abs(value-center) <= tolerance:
+            continue
+        sv, cv, sc, cc = math.sin(value), math.cos(value), math.sin(center), math.cos(center)
+        phase = math.atan2(sv*cc-cv*sc, cv*cc+sv*sc)
+        if abs(phase) > tolerance:
+            continue
+        replacement = center+phase
+        alias = list(original)
+        alias[index] = replacement
+        alias = tuple(alias)
+        if alias not in seen:
+            seen.add(alias)
+            aliases.append(alias)
+        if index not in changed:
+            combined[index] = replacement
+            changed.add(index)
+    combined = tuple(combined)
+    if len(changed) > 1 and combined not in seen:
+        aliases.append(combined)
+    return aliases
+
+
+def _trig_root_offset(a, b, c):
+    """atan2(sqrt(a*a+b*b-c*c), -c) for scaled finite coefficients.
+
+    acos(-c/hypot(a,b)) can round two distinct near-tangent roots together.
+    Error-free square products and fsum retain the small discriminant instead.
+    The exact equal-magnitude case also avoids underflow of the small square.
+    """
+    if c == 0:
+        return math.pi/2
+    large, small = max(abs(a), abs(b)), min(abs(a), abs(b))
+    if large == abs(c):
+        root = small
+    else:
+        terms = []
+        for value, sign in ((a, 1.), (b, 1.), (c, -1.)):
+            product = value*value
+            split = 134217729.*value
+            high = split-(split-value)
+            low = value-high
+            error = product-high*high
+            error -= low*high
+            error -= high*low
+            error = low*low-error
+            terms.extend((sign*product, sign*error))
+        root = math.sqrt(max(0., math.fsum(terms)))
+    return math.atan2(root, -c)
+
+
+def trig_family_representatives(coefficients, lower, upper, seeds=()):
+    """Cover every cell cut by a*cos(t)+b*sin(t)+c=0 on one revolution.
+
+    Endpoints and every analytic boundary are retained, plus one midpoint per
+    open cell. No distance-based deduplication is used: a feasible cell can be
+    arbitrarily narrow. Floating-point roots are not certified interval roots.
+    """
+    lower, upper = float(lower), float(upper)
+    period = 2*math.pi
+    if not (math.isfinite(lower) and math.isfinite(upper) and
+            lower <= upper and upper-lower <= period):
+        raise ValueError('family bounds must span at most one finite revolution')
+    points = [lower, upper]
+    margin = 64*np.finfo(float).eps*(1+max(abs(lower), abs(upper)))
+    # Multiplying a huge turn count by a rounded 2*pi loses the target phase.
+    # The library sin/cos reduction retains it; only small offsets are added.
+    origin_phase = math.atan2(math.sin(lower), math.cos(lower)) if abs(lower) > period else None
+    for a, b, c in coefficients:
+        a, b, c = float(a), float(b), float(c)
+        if not all(math.isfinite(value) for value in (a, b, c)):
+            continue
+        scale = max(abs(a), abs(b), abs(c))
+        if not math.isfinite(scale) or scale == 0:
+            continue
+        a, b, c = a/scale, b/scale, c/scale
+        radius = math.hypot(a, b)
+        if radius == 0 or abs(c) > radius + 64*np.finfo(float).eps:
+            continue
+        center = math.atan2(b, a)
+        angle = _trig_root_offset(a, b, c)
+        for root in (center-angle, center+angle):
+            if origin_phase is None:
+                first = math.ceil((lower-root)/period)
+                candidates = (root+turns*period for turns in (first-1, first, first+1))
+            else:
+                offset = math.remainder(root-origin_phase, period)
+                candidates = (lower+(offset+turns*period) for turns in (-1, 0, 1))
+            for value in candidates:
+                if lower-margin <= value <= upper+margin:
+                    points.append(min(upper, max(lower, value)))
+    points = sorted(set(points))
+    values = points + [a+.5*(b-a) for a, b in zip(points, points[1:])]
+    values.extend(float(value) for value in seeds
+                  if math.isfinite(float(value)) and lower <= float(value) <= upper)
+    return sorted(set(values))
+
+
 # General utility
+def snap_near_joint_limits(values, lower, upper, periodic, fixed, tolerance=1e-6):
+    result = np.asarray(values, dtype=float).reshape(-1).copy()
+    changed = False
+    for index, value in enumerate(result):
+        lo, hi = lower[index], upper[index]
+        if not math.isfinite(value):
+            return None
+        if fixed[index]:
+            if value < lo or value > hi:
+                return None
+            continue
+        if periodic[index] and (value < lo or value > hi):
+            turns = math.ceil((lo-tolerance-value)/(2*math.pi))
+            value += turns*2*math.pi
+        if value < lo:
+            if lo-value > tolerance:
+                return None
+            value = lo
+            changed = True
+        elif value > hi:
+            if value-hi > tolerance:
+                return None
+            value = hi
+            changed = True
+        result[index] = value
+    return result if changed else None
+
+
 def safe_sqrt(a):
     return math.sqrt(a) if a >= 0 else 0
 
@@ -61,65 +205,196 @@ def compute_solution_from_tanhalf_LME(
         return_coupled_3_solution: bool = False):
     """
     The solver in Equation 15 of Efficient Inverse Kinematics for General 6R Manipulators.
+
+    Each 6x9 coefficient matrix multiplies
+    [y*y*z*z, y*y*z, y*y, y*z*z, y*z, y, z*z, z, 1].
+    Return angles for x=tan(theta/2), or (theta, 2*atan(y), 2*atan(z))
+    when coupled output is requested. At most two 24-value eigensystems are
+    evaluated; candidates still require the remaining equations and FK checks.
+    Empty output does not establish infeasibility.
     """
-    # To 12x12 matrix
-    A_12x12 = np.zeros(shape=(12, 12))
-    A_12x12[0:6, 0:9] = A_x2
-    A_12x12[6:12, 3:12] = A_x2
-    A_inv = None
-    try:
-        A_inv = np.linalg.inv(A_12x12)
-    except:
-        # print('Cannot inverse the matrix A', print(np.linalg.det(A_12x12)))
-        return None
-    assert A_inv is not None
-    B_12x12 = np.zeros(shape=(12, 12))
-    B_12x12[0:6, 0:9] = B_x
-    B_12x12[6:12, 3:12] = B_x
-    C_12x12 = np.zeros(shape=(12, 12))
-    C_12x12[0:6, 0:9] = C
-    C_12x12[6:12, 3:12] = C
+    inputs = (A_x2, B_x, C)
+    if any(np.iscomplexobj(value) for value in inputs):
+        return []
+    arrays = [np.asarray(value, dtype=float) for value in inputs]
+    if any(value.shape != (6, 9) or not np.isfinite(value).all() for value in arrays):
+        return []
+    scale = max(float(np.max(np.abs(value))) for value in arrays)
+    if scale == 0:
+        return []
+    a, b, c = (value/scale for value in arrays)
 
-    M = np.zeros(shape=(24, 24))
-    M[0:12, 12:24] = np.eye(12)
-    M[12:24, 0:12] = - A_inv.dot(C_12x12)
-    M[12:24, 12:24] = - A_inv.dot(B_12x12)
+    def expand(value):
+        matrix = np.zeros((12, 12))
+        matrix[:6, :9], matrix[6:, 3:] = value, value
+        return matrix
 
-    # The case only need one solution
-    if not return_coupled_3_solution:
-        eigen_values = np.linalg.eigvals(M)
-        imag_part = np.imag(eigen_values)
-        real_part = np.real(eigen_values)
-        solution: List[float] = list()
-        for i in range(eigen_values.size):
-            if abs(imag_part[i]) < 1e-6:
-                atan_value = np.arctan(real_part[i])
-                solution.append(2 * atan_value)
-        return solution
+    def companion(leading, linear, constant, legacy=False):
+        matrix = np.zeros((24, 24))
+        matrix[:12, 12:] = np.eye(12)
+        try:
+            with np.errstate(over='ignore', invalid='ignore', divide='ignore'):
+                if legacy:
+                    inverse = np.linalg.inv(leading)
+                    matrix[12:, :12] = -inverse.dot(constant)
+                    matrix[12:, 12:] = -inverse.dot(linear)
+                else:
+                    matrix[12:, :] = -np.linalg.solve(leading, np.concatenate((constant, linear), axis=1))
+        except np.linalg.LinAlgError:
+            return None
+        return matrix if np.isfinite(matrix).all() else None
 
-    # We need all three coupled solution
-    solution: List[Tuple[float]] = list()
-    eigen_values, eigen_vectors = np.linalg.eig(M)
-    for i in range(eigen_values.size):
-        if abs(np.imag(eigen_values[i])) > 1e-6:
+    # Keep the established candidates: switching charts can improve one nearly
+    # singular root while perturbing another. Their final FK checks decide which
+    # representatives are acceptable, rather than a condition estimate alone.
+    systems = []
+    legacy = companion(*(expand(value) for value in arrays), legacy=True)
+    if legacy is not None:
+        systems.append((legacy, 0.))
+
+    # x=(y+t)/(1-t*y) is an exact change of angular chart. A singular leading
+    # coefficient can hide finite angles (including x=infinity at theta=pi).
+    # Add at most one stable chart, retaining a 48-candidate bound across both
+    # eigensystems. Structurally singular polynomials still need other methods.
+    best = None
+    for t in (0., 1., -1., .5, -.5, 2., -2.):
+        leading = expand(a-t*b+t*t*c)
+        try:
+            condition = np.linalg.cond(leading)
+        except np.linalg.LinAlgError:
             continue
-        tanhalf_x3 = np.real(eigen_values[i])
-        theta3_value = 2.0 * np.arctan(tanhalf_x3)
+        if math.isfinite(condition) and (best is None or condition < best[0]):
+            best = (condition, t, leading)
+        if t == 0. and condition < 1e8 and np.max(np.abs(a)) > 1e-8:
+            break
+    ordinary_stable = (best is not None and best[1] == 0. and best[0] < 1e8
+                       and np.max(np.abs(a)) > 1e-8)
+    if (not ordinary_stable or not systems) and best is not None and best[0] <= 1e14:
+        _, t, leading = best
+        shifted = companion(leading, expand(2*t*a+(1-t*t)*b-2*t*c),
+                            expand(t*t*a+t*b+c))
+        if shifted is not None:
+            systems.append((shifted, t))
 
-        # The remaining part
-        full_ev_i = eigen_vectors[:, i]
-        ev_i = full_ev_i[0:12]
-        tanhalf_x4 = ev_i[3] / ev_i[0]
-        tanhalf_x5 = ev_i[1] / ev_i[0]
-        if np.imag(tanhalf_x4) > 1e-6 or np.imag(tanhalf_x5) > 1e-6:
+    solution = []
+
+    def coupled_angle(vector, pairs):
+        # The lifted vector is [y^3*z^2,y^3*z,y^3,...,z^2,z,1]. Ratios
+        # numerator/denominator give y or z, not their reciprocals. Use a
+        # projective pair with the largest magnitude so zeros and infinite
+        # tangent values do not require division by a vanishing component.
+        numerator, denominator = max(((vector[i], vector[j]) for i, j in pairs),
+                                     key=lambda pair: max(abs(pair[0]), abs(pair[1])))
+        scale = max(abs(numerator), abs(denominator))
+        if scale == 0:
+            return None
+        anchor = numerator if abs(numerator) >= abs(denominator) else denominator
+        phase = anchor.conjugate()/abs(anchor)
+        numerator, denominator = (numerator/scale)*phase, (denominator/scale)*phase
+        if abs(numerator.imag) > 1e-6 or abs(denominator.imag) > 1e-6:
+            return None
+        angle = 2*math.atan2(numerator.real, denominator.real)
+        return math.atan2(math.sin(angle), math.cos(angle))
+
+    for matrix, t in systems:
+        try:
+            if return_coupled_3_solution:
+                eigen_values, eigen_vectors = np.linalg.eig(matrix)
+            else:
+                eigen_values = np.linalg.eigvals(matrix)
+        except np.linalg.LinAlgError:
             continue
-        theta4_value = 2.0 * np.arctan(np.real(tanhalf_x4))
-        theta5_value = 2.0 * np.arctan(np.real(tanhalf_x5))
-        solution.append((float(theta3_value), float(theta4_value), float(theta5_value)))
+        for i, value in enumerate(eigen_values):
+            if not np.isfinite(value) or abs(value.imag) > 1e-6:
+                continue
+            angle = 2*np.arctan(value.real)+2*math.atan(t)
+            theta3 = math.atan2(math.sin(angle), math.cos(angle)) if t else float(angle)
+            if not return_coupled_3_solution:
+                solution.append(theta3)
+                continue
+            vector = eigen_vectors[:12, i]
+            if not np.isfinite(vector).all():
+                continue
+            theta4 = coupled_angle(vector, [(j, j+3) for j in range(9)])
+            theta5 = coupled_angle(vector, [(j, j+1) for j in range(12) if j % 3 != 2])
+            if theta4 is None or theta5 is None:
+                continue
+            sy, cy = math.sin(theta4/2), math.cos(theta4/2)
+            sz, cz = math.sin(theta5/2), math.cos(theta5/2)
+            monomials = np.kron([sy*sy, sy*cy, cy*cy], [sz*sz, sz*cz, cz*cz])
+            sx, cx = math.sin(theta3/2), math.cos(theta3/2)
+            polynomial = a*sx*sx+b*sx*cx+c*cx*cx
+            residual = polynomial@monomials
+            bound = np.abs(polynomial)@np.abs(monomials)
+            if np.max(np.abs(residual)/(1+bound)) > 1e-6:
+                continue
+            solution.append((theta3, theta4, theta5))
     return solution
 
 
 # For linear solver type2
+def solve_linear_type2_all(matrix):
+    """Return up to four candidate y angles for two coupled unit circles.
+
+    Rows multiply (sin(x), cos(x), sin(y), cos(y)). A rank-two nullspace
+    intersects the equal-circle-norm quadratic in up to two projective lines,
+    each giving an antipodal pair. Rank-three systems give at most one pair.
+    Continuous families receive finite representatives. Numerical rank tests
+    and empty output are not completeness or infeasibility certificates.
+    Legacy two-root helpers below retain their existing APIs.
+    """
+    matrix = np.asarray(matrix, dtype=float)
+    if matrix.ndim != 2 or matrix.shape[1] != 4:
+        raise ValueError('linear type2 requires a matrix with four columns')
+    if not matrix.size or not np.all(np.isfinite(matrix)):
+        return []
+    scale = np.max(np.abs(matrix))
+    if scale == 0:
+        return []
+    try:
+        _, singular, vectors = np.linalg.svd(matrix/scale, full_matrices=len(matrix) < 4)
+    except np.linalg.LinAlgError:
+        return []
+    tolerance = 64*np.finfo(float).eps*max(matrix.shape)*singular[0]
+    if len(singular) < 2 or singular[1] <= tolerance:
+        return []
+    if len(singular) >= 3 and singular[2] > tolerance:
+        if len(singular) >= 4 and singular[3] > 1e-8*singular[0]:
+            return []
+        directions = [vectors[-1]]
+    else:
+        basis = vectors[-2:].T
+        quadratic = basis[:2].T@basis[:2]-basis[2:].T@basis[2:]
+        try:
+            eigenvalues, eigenvectors = np.linalg.eigh(quadratic)
+        except np.linalg.LinAlgError:
+            return []
+        low, high = eigenvalues
+        if low < 0 < high:
+            negative = math.sqrt(high)*eigenvectors[:, 0]
+            positive = math.sqrt(-low)*eigenvectors[:, 1]
+            directions = [basis@(negative+positive), basis@(negative-positive)]
+        elif max(abs(low), abs(high)) <= 64*np.finfo(float).eps:
+            return [0., math.pi]
+        else:
+            zero = int(np.argmin(np.abs(eigenvalues)))
+            if abs(eigenvalues[zero]) > 64*np.finfo(float).eps:
+                return []
+            directions = [basis@eigenvectors[:, zero]]
+    angles = []
+    for direction in directions:
+        if math.hypot(float(direction[2]), float(direction[3])) <= 1e-12:
+            continue
+        angle = math.atan2(float(direction[2]), float(direction[3]))
+        other = angle+math.pi
+        if other > math.pi:
+            other -= 2*math.pi
+        for value in (angle, other):
+            if value not in angles:
+                angles.append(value)
+    return angles
+
+
 def try_solve_linear_type2(A: np.ndarray, allow_family: bool = True) -> Optional[Tuple[float, float]]:
     """
     Solve y from three linear equations in the form
@@ -167,6 +442,25 @@ def try_solve_linear_type2_specific_rows(
     A sin(x) + B cos(x) + C sin(y) + D cos(y) == 0
     Select three equations from row_0/1/2 and solve it
     """
+    # A rank-three homogeneous system has a one-dimensional nullspace.
+    # Recover it from all rows instead of subtracting nearly equal elimination
+    # residuals from a preselected triple near a singular configuration.
+    if np.all(np.isfinite(A_combined)):
+        scale = np.max(np.abs(A_combined))
+        if scale > 0:
+            try:
+                _, singular, vectors = np.linalg.svd(A_combined/scale, full_matrices=len(A_combined) < 4)
+                if (len(singular) >= 3 and singular[2] > 1e-10*singular[0] and
+                        (len(singular) == 3 or singular[3] <= 1e-8*singular[0])):
+                    direction = vectors[-1, 2:]
+                    if np.linalg.norm(direction) > 1e-10:
+                        angle = math.atan2(float(direction[0]), float(direction[1]))
+                        other = angle+math.pi
+                        if other > math.pi:
+                            other -= 2*math.pi
+                        return angle, other
+            except np.linalg.LinAlgError:
+                pass
     A_tmp = np.zeros(shape=(3, 4))
     A_tmp[0, :] = A_combined[row_0, :]
     A_tmp[1, :] = A_combined[row_1, :]
@@ -195,3 +489,30 @@ def try_solve_linear_type2_specific_rows(
     remaining = [i for i in range(len(A_combined)) if i not in best_pair]
     third = max(remaining, key=lambda i: float(residual[i] @ residual[i]))
     return try_solve_linear_type2(A_combined[[best_pair[0], best_pair[1], third]])
+
+
+def solve_linear_type2_candidates(matrix, rows_to_try=()):
+    """Preserve the legacy pair and add up to four coupled-circle candidates.
+
+    Approximate legacy models can have a full-rank matrix within the public
+    FK tolerance. Their existing row-selection fallback must remain available.
+    Exact equality is the only deduplication here, preserving nearby branches.
+    """
+    matrix = np.asarray(matrix, dtype=float)
+    conic = solve_linear_type2_all(matrix)
+    if not matrix.size or not np.all(np.isfinite(matrix)):
+        return []
+    scale = np.max(np.abs(matrix))
+    if scale == 0:
+        return []
+    legacy_matrix = matrix/scale if scale < 1e-100 or scale > 1e100 else matrix
+    angles = []
+    for rows in rows_to_try:
+        pair = try_solve_linear_type2_specific_rows(legacy_matrix, *rows)
+        if pair is not None:
+            angles.extend(value for value in pair if math.isfinite(value))
+            break
+    for value in conic:
+        if value not in angles:
+            angles.append(value)
+    return angles

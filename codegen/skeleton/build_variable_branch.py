@@ -3,6 +3,8 @@ from codegen.skeleton.tree_node import SolutionNodeBase, SolvedVariableDispatche
 from codegen.skeleton.tree_serialize import save_ik_tree, save_ik_list
 from solver.solve_equations import solve_from_snapshot, SolveEquationOption
 from solver.solve_branched import branched_equations_at_solved_variable_degeneration
+from solver.solved_variable import DegenerateType
+from codegen.skeleton.build_equation_branch import build_equation_zero_branches
 from typing import Optional, Set, Dict, List
 import sympy as sp
 
@@ -22,14 +24,8 @@ def find_node_to_visit(tree: SkeletonTree, visited_node: Set[int]) -> Optional[S
             assert parent.is_dispatcher_node
             if degenerate_record.is_degenerate_on_variable_values and \
                     isinstance(parent, SolvedVariableDispatcherNode):
-                already_visited = False
-                for j in range(len(parent.children)):
-                    if j != 0 and parent.children[j] is not None:
-                        already_visited = True
-                        break
-
-                # If not visited, do it
-                if not already_visited:
+                if node_i is parent.non_degenerate_child and any(
+                        child is None for child in parent.children[1:]):
                     return node_i
 
     # We are done, there is nothing to visit
@@ -45,6 +41,10 @@ def build_solved_variable_branches(
     Although this is a visiting to different nodes, we do not implement it as a visitor
     because it alters the tree structure
     """
+    from codegen.skeleton.complete_partial_branches import (
+        complete_partial_shoulder_branches, complete_spherical_orientation_branches)
+    complete_partial_shoulder_branches(tree, max_num_nodes)
+    complete_spherical_orientation_branches(tree, max_num_nodes)
     # The shared solve option
     solve_option = SolveEquationOption()
     solve_option.on_main_branch = False
@@ -55,7 +55,7 @@ def build_solved_variable_branches(
     save_counter = 0
     while True:
         # Exist if tree is too large
-        if tree.num_nodes > max_num_nodes:
+        if tree.num_nodes >= max_num_nodes:
             break
 
         # Done if nothing to visit
@@ -75,12 +75,28 @@ def build_solved_variable_branches(
         branch_solver_input_list = branched_equations_at_solved_variable_degeneration(
             tree.solved_equation_record, variable_solutions)
         for i in range(len(branch_solver_input_list)):
+            if parent.degenerate_branch_child(i) is not None:
+                continue
             solver_input_i, new_solution_i = branch_solver_input_list[i]
             print('Trying to solve variable degenerate branch at node index', current_solution_node.flatten_idx,
                   'branch', i, 'with unknowns', [elem.symbol.name for elem in solver_input_i.unknowns])
             solution_i = solve_from_snapshot(solver_input_i, option=solve_option)
             if len(solution_i) > 0:
                 new_solution_i.extend(solution_i)
+                solved = {solution.solved_variable for solution in
+                          tree.variable_solutions_from_root(current_solution_node, include_current_node=False)}
+                solved.update(solution.solved_variable for solution in new_solution_i)
+                if not {unknown.symbol for unknown in tree.solved_unknowns} <= solved:
+                    print('Discarding incomplete variable-value branch at node', current_solution_node.flatten_idx)
+                    continue
+                first_record = new_solution_i[0].degenerate_record
+                preserve = first_record.type in (
+                    DegenerateType.DegenerateIfAllEquationsZero.name,
+                    DegenerateType.DegenerateOnVariableValue.name)
+                added_nodes = 2*len(new_solution_i) - (0 if preserve else 1)
+                if tree.num_nodes + added_nodes > max_num_nodes:
+                    print('Variable-value branch exceeds the node budget:', current_solution_node.flatten_idx, i)
+                    continue
                 tree.append_branched_solution(new_solution_i, parent, i + 1)
 
                 # Save in each update
@@ -89,6 +105,8 @@ def build_solved_variable_branches(
                 save_tree_name = 'branch_tree_at_{idx}.yaml'.format(idx=save_counter)
                 save_ik_list(solution_i, save_list_name)
                 save_ik_tree(tree, save_tree_name)
+
+    build_equation_zero_branches(tree, max_num_nodes=max_num_nodes)
 
 
 # Debug code

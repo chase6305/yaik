@@ -10,10 +10,11 @@ import attr
 @attr.s
 class RobotAuxiliaryData(object):
     """
-    unknown = raw_unknown + unknown_offset
+    q_raw = q_original + unknown_offset
     ee_pose = pre_transform * FK(dh_params, unknown) * post_transform
-    unknown will be solved in the solver, while in generated code from codegen raw_unknown will be returned
-    These data will not be involved in solver, only codegen will use them
+    The symbolic solver works in raw DH coordinates. Generated checked FK/IK
+    accepts and returns the original joint convention. These transforms and
+    offsets are applied by code generation, outside the symbolic DH equations.
     """
     # The pre- & post-transform, None implies identity
     pre_transform_sp: Optional[sp.Matrix] = None

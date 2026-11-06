@@ -1,5 +1,6 @@
 import os.path
 import random
+from contextlib import contextmanager
 import solver.build_equations as build_equations
 from fk.robots import RobotDescription
 import fk.robot_models as robot_models
@@ -20,6 +21,7 @@ class RunIKOption(object):
     try_intersecting_axis_equation: bool = True
     use_polynomial_solver_in_main_branch: bool = True
     random_seed: Optional[int] = attr.ib(default=None)
+    max_num_nodes: int = attr.ib(default=50)
 
 
 def check_robot(robot: RobotDescription) -> bool:
@@ -119,24 +121,40 @@ def check_robot(robot: RobotDescription) -> bool:
     return not errors
 
 
+@contextmanager
+def offline_random_seed(seed):
+    if seed is None:
+        yield
+        return
+    if not isinstance(seed, (int, np.integer)):
+        raise ValueError('random_seed must be an integer')
+    python_state, numpy_state = random.getstate(), np.random.get_state()
+    try:
+        np.random.seed(int(seed))
+        random.seed(int(seed))
+        print('Offline generation random seed:', seed)
+        yield
+    finally:
+        random.setstate(python_state)
+        np.random.set_state(numpy_state)
+
+
 def run_ik(
         robot: RobotDescription,
         numerical_test_cases_path: Optional[str] = None,
         run_ik_option: Optional[RunIKOption] = None):
     option = run_ik_option if run_ik_option is not None else RunIKOption()
-    if option.random_seed is None:
+    with offline_random_seed(option.random_seed):
         return _run_ik(robot, numerical_test_cases_path, option)
-    if not isinstance(option.random_seed, (int, np.integer)):
-        raise ValueError('random_seed must be an integer')
-    python_state, numpy_state = random.getstate(), np.random.get_state()
-    try:
-        np.random.seed(int(option.random_seed))
-        random.seed(int(option.random_seed))
-        print('Offline generation random seed:', option.random_seed)
-        return _run_ik(robot, numerical_test_cases_path, option)
-    finally:
-        random.setstate(python_state)
-        np.random.set_state(numpy_state)
+
+
+def resume_ik_tree(tree: SkeletonTree, random_seed=None, max_num_nodes=50):
+    """Extend a saved tree without rerunning or replacing its main branch."""
+    if not check_robot(tree.robot):
+        raise ValueError('invalid robot model in the saved IK tree')
+    with offline_random_seed(random_seed):
+        build_solved_variable_branches(tree, max_num_nodes=max_num_nodes)
+    return tree
 
 
 def _run_ik(
@@ -181,7 +199,7 @@ def _run_ik(
     save_ik_tree(tree, non_degenerate_save_path)
 
     # Build the variable branch, and do it again
-    build_solved_variable_branches(tree, max_num_nodes=50)
+    build_solved_variable_branches(tree, max_num_nodes=run_ik_option.max_num_nodes)
     save_path = robot.name + '_ik.yaml'
     save_ik_tree(tree, save_path)
 
@@ -228,6 +246,6 @@ def extend_main_branch_tree():
 
 
 if __name__ == '__main__':
-    # run_robot_from_script()
-    run_robot_ik_from_yaml()
-    # extend_main_branch_tree()
+    import sys
+    from yaik import main
+    raise SystemExit(main(sys.argv[1:], command='generate'))

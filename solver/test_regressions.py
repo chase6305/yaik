@@ -177,6 +177,22 @@ class TestRegressions(TestCase):
             warnings.simplefilter('error')
             self.assertEqual(compute_polynomial_real_roots([1e-320, 1, 1]), [])
 
+    def test_polynomial_verification_retries_ill_conditioned_cosine_roots(self):
+        from solver.polynomial_solver.groebner_reduce_sympy import groebner_reduce_sympy
+        x, a, b, target = sp.symbols('x a b target')
+        equation = a*sp.sin(x)+b*sp.cos(x)-target
+        output = groebner_reduce_sympy([equation], [Unknown(x)], {a, b, target}, True)
+        cases = []
+        for small in (1e-4, 1e-7, 1e-10):
+            for angle in (1e-6, 1e-4, .1, .31, .7):
+                values = {a: small, b: .62, x: angle}
+                values[target] = (a*sp.sin(x)+b*sp.cos(x)).subs(values)
+                cases.append(values)
+        self.assertEqual(verify_polynomial_solution([equation], output, cases), (True, 1.0))
+        wrong = ({0: (sp.S.Zero, sp.S.One), 1: (sp.S.One, sp.S.One)},
+                 x, Unknown(x, UnknownType.Translational.name), SolutionMethod.PolynomialDirect.name)
+        self.assertEqual(verify_polynomial_solution([x-1], wrong, [{x: 1.}]), (False, 0.0))
+
     def test_linear_type2_recovers_unit_circle_families(self):
         angle = 0.73
         B = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])

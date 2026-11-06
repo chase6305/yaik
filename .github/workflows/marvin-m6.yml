@@ -1,0 +1,84 @@
+name: Marvin M6 solvers
+
+on:
+  pull_request:
+    paths:
+      - 'gallery/marvin_m6/**'
+      - 'gallery/abb_irb460_110_240/**'
+      - 'gallery/kawasaki_CP130L/**'
+      - 'gallery/franka_panda/**'
+      - 'codegen/**'
+      - 'fk/**'
+      - 'solver/**'
+      - 'utility/**'
+      - '*codegen.py'
+      - 'ik_solve.py'
+      - 'convert_kinematic_chain.py'
+      - 'python_run_import.py'
+      - 'yaik_cpp_common.h'
+      - 'yaik.py'
+      - 'test_cli.py'
+      - 'requirements.txt'
+      - '.github/workflows/marvin-m6.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'gallery/marvin_m6/**'
+      - 'gallery/abb_irb460_110_240/**'
+      - 'gallery/kawasaki_CP130L/**'
+      - 'gallery/franka_panda/**'
+      - 'codegen/**'
+      - 'fk/**'
+      - 'solver/**'
+      - 'utility/**'
+      - '*codegen.py'
+      - 'ik_solve.py'
+      - 'convert_kinematic_chain.py'
+      - 'python_run_import.py'
+      - 'yaik_cpp_common.h'
+      - 'yaik.py'
+      - 'test_cli.py'
+      - 'requirements.txt'
+      - '.github/workflows/marvin-m6.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install validation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libeigen3-dev
+          python -m pip install -r requirements.txt pytest
+      - name: Check generated artifacts
+        run: python yaik.py marvin check
+      - name: Run regression tests
+        run: >-
+          python -m pytest test_cli.py gallery/marvin_m6 utility/test_artifacts.py
+          solver/test_regressions.py solver/test_codegen_safety.py solver/test_runtime_safety.py
+          solver/test_argument_guards.py
+          solver/test_guard_domains.py solver/test_rounded_frames.py
+          solver/test_candidate_assignment.py solver/test_partial_branches.py
+          solver/test_compact_workspace.py solver/test_fixed_joint_phases.py
+          solver/test_gallery_regeneration.py
+          solver/test_equation_branches.py solver/test_family_critical.py
+          solver/test_completeness.py solver/test_linear_circles.py
+          solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py -q -W error
+      - name: Validate Python and compiled C++ against URDF
+        run: python yaik.py marvin validate --samples 1000 --stress-samples 2000 --seed 20261103 --output /tmp/marvin-m6-validation.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: marvin-m6-validation
+          path: /tmp/marvin-m6-validation.json
+          if-no-files-found: ignore

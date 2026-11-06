@@ -15,6 +15,31 @@ def inverse_transform(T: sp.Matrix) -> sp.Matrix:
     return invT
 
 
+def inverse_auxiliary_transform(transform: sp.Matrix, parameter_values=None) -> sp.Matrix:
+    """Invert a stored base/tool frame, including rounded rotation entries.
+
+    DH transforms retain the fast rigid inverse above. Auxiliary frames may
+    contain rounded constants whose transpose is not the configured inverse.
+    Runtime frame parameters must describe nonsingular affine transforms.
+    """
+    values = parameter_values or {}
+    if transform.shape != (4, 4) or any(
+            sp.simplify((transform[3, col]-(1 if col == 3 else 0)).subs(values)).is_zero is not True
+            for col in range(4)):
+        raise ValueError('Base/tool transforms must have homogeneous bottom row [0, 0, 0, 1]')
+    rotation = transform[:3, :3]
+    known = rotation.subs(values)
+    if not known.free_symbols and any(value.is_real is not True or value.is_finite is not True for value in known):
+        raise ValueError('Base/tool rotation entries must be finite real numbers')
+    if known.det().is_zero is True:
+        raise ValueError('Base/tool transforms must be nonsingular')
+    residual = rotation.T*rotation-sp.eye(3)
+    if all(sp.trigsimp(value).is_zero is True for value in residual):
+        return inverse_transform(transform)
+    inverse = rotation.inv().applyfunc(sp.trigsimp)
+    return inverse.row_join(-inverse*transform[:3, 3]).col_join(sp.Matrix([[0, 0, 0, 1]]))
+
+
 def inverse_rotation(rotation_mat: sp.Matrix) -> sp.Matrix:
     """
     Compute the inverse of a rotation matrix

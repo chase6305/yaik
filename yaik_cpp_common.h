@@ -6,9 +6,12 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <iostream>
 #include <limits>
 #include <random>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include <Eigen/Eigen>
@@ -18,6 +21,141 @@ namespace yaik_cpp {
 
 // Indicate the value is invalid
 constexpr double invalid_value = std::numeric_limits<double>::max();
+
+inline double addRevoluteOffset(double value, double offset) {
+  if (offset == 0 || (std::abs(value) <= 1048576. && std::abs(offset) <= 1048576.))
+    return value+offset;
+  const double phase=std::atan2(std::sin(value), std::cos(value));
+  const double shift=std::abs(offset) > M_PI ? std::atan2(std::sin(offset), std::cos(offset)) : offset;
+  return phase+shift;
+}
+
+template <std::size_t N, std::size_t K>
+std::vector<std::array<double,N>> fixedJointPhaseAliases(
+    const std::array<double,N>& arguments,
+    const std::array<std::pair<std::size_t,double>,K>& centers, double tolerance=1e-6) {
+  std::vector<std::array<double,N>> aliases;
+  auto combined=arguments;
+  std::array<bool,N> changed{};
+  std::size_t count=0;
+  for (const auto& entry : centers) {
+    const auto index=entry.first;
+    const double center=entry.second, value=arguments.at(index);
+    if (!std::isfinite(value) || !std::isfinite(center) || std::abs(value-center)<=tolerance) continue;
+    const double sv=std::sin(value), cv=std::cos(value), sc=std::sin(center), cc=std::cos(center);
+    const double phase=std::atan2(sv*cc-cv*sc,cv*cc+sv*sc);
+    if (std::abs(phase)>tolerance) continue;
+    auto alias=arguments;
+    alias[index]=center+phase;
+    if (std::find(aliases.begin(),aliases.end(),alias)==aliases.end()) aliases.push_back(alias);
+    if (!changed[index]) { changed[index]=true; combined[index]=alias[index]; ++count; }
+  }
+  if (count>1 && std::find(aliases.begin(),aliases.end(),combined)==aliases.end()) aliases.push_back(combined);
+  return aliases;
+}
+
+template <int N>
+bool snapNearJointLimits(const std::array<double, N>& source, std::array<double, N>& result,
+                        const std::array<double, N>& lower, const std::array<double, N>& upper,
+                        const std::array<bool, N>& periodic, const std::array<bool, N>& fixed) {
+  result = source;
+  bool changed = false;
+  for (int i = 0; i < N; ++i) {
+    double value = result[i];
+    if (!std::isfinite(value)) return false;
+    if (fixed[i]) { if (value < lower[i] || value > upper[i]) return false; continue; }
+    if (periodic[i] && (value < lower[i] || value > upper[i]))
+      value += std::ceil((lower[i]-1e-6-value)/(2*M_PI))*2*M_PI;
+    if (value < lower[i]) {
+      if (lower[i]-value > 1e-6) return false;
+      value = lower[i]; changed = true;
+    } else if (value > upper[i]) {
+      if (value-upper[i] > 1e-6) return false;
+      value = upper[i]; changed = true;
+    }
+    result[i] = value;
+  }
+  return changed;
+}
+
+// Compensated square products keep distinct near-tangent roots from collapsing
+// through a rounded acos argument. Inputs have already been scaled to [-1,1].
+inline double trigRootOffset(double a, double b, double c) {
+  if (c == 0) return 1.57079632679489661923;
+  const double large = std::max(std::abs(a), std::abs(b));
+  const double small = std::min(std::abs(a), std::abs(b));
+  double root;
+  if (large == std::abs(c)) {
+    root = small;  // Also avoid underflow in small*small.
+  } else {
+    std::array<double, 6> partials{};
+    std::size_t count = 0;
+    for (const auto& term : std::array<std::array<double, 2>, 3>{{{{a, 1}}, {{b, 1}}, {{c, -1}}}}) {
+      const double square = term[0]*term[0];
+      for (double value : {term[1]*square, term[1]*std::fma(term[0], term[0], -square)}) {
+        std::size_t kept = 0;
+        for (std::size_t i = 0; i < count; ++i) {
+          double previous = partials[i];
+          if (std::abs(value) < std::abs(previous)) std::swap(value, previous);
+          const double high = value+previous, low = previous-(high-value);
+          if (low != 0) partials[kept++] = low;
+          value = high;
+        }
+        partials[kept++] = value;
+        count = kept;
+      }
+    }
+    double discriminant = 0;
+    while (count) discriminant += partials[--count];
+    root = std::sqrt(std::max(0.0, discriminant));
+  }
+  return std::atan2(root, -c);
+}
+
+// Analytic cuts of a one-dimensional angular family, followed by one midpoint
+// per open cell. Preserve distinct nearby cuts; feasible intervals may be tiny.
+inline std::vector<double> trigFamilyRepresentatives(
+    const std::vector<std::array<double, 3>>& coefficients,
+    double lower, double upper, const std::vector<double>& seeds = {}) {
+  const double period = 2*M_PI;
+  if (!(std::isfinite(lower) && std::isfinite(upper) && lower <= upper && upper-lower <= period))
+    throw std::invalid_argument("family bounds must span at most one finite revolution");
+  const double epsilon = 64*std::numeric_limits<double>::epsilon();
+  const double margin = epsilon*(1+std::max(std::abs(lower), std::abs(upper)));
+  const bool shifted = std::abs(lower) > period;
+  const double origin_phase = shifted ? std::atan2(std::sin(lower), std::cos(lower)) : 0;
+  std::vector<double> points{lower, upper};
+  for (const auto& row : coefficients) {
+    double a = row[0], b = row[1], c = row[2];
+    if (!(std::isfinite(a) && std::isfinite(b) && std::isfinite(c))) continue;
+    const double scale = std::max({std::abs(a), std::abs(b), std::abs(c)});
+    if (!std::isfinite(scale) || scale == 0) continue;
+    a /= scale; b /= scale; c /= scale;
+    const double radius = std::hypot(a, b);
+    if (radius == 0 || std::abs(c) > radius+epsilon) continue;
+    const double center = std::atan2(b, a);
+    const double angle = trigRootOffset(a, b, c);
+    for (double root : {center-angle, center+angle}) {
+      const double first = shifted ? 0 : std::ceil((lower-root)/period);
+      const double relative = shifted ? std::remainder(root-origin_phase, period) : 0;
+      for (int offset : {-1, 0, 1}) {
+        const double value = shifted ? lower+(relative+offset*period) : root+(first+offset)*period;
+        if (value >= lower-margin && value <= upper+margin)
+          points.push_back(std::max(lower, std::min(upper, value)));
+      }
+    }
+  }
+  std::sort(points.begin(), points.end());
+  points.erase(std::unique(points.begin(), points.end()), points.end());
+  auto result = points;
+  for (std::size_t i = 1; i < points.size(); ++i)
+    result.push_back(points[i-1]+.5*(points[i]-points[i-1]));
+  for (double value : seeds)
+    if (std::isfinite(value) && value >= lower && value <= upper) result.push_back(value);
+  std::sort(result.begin(), result.end());
+  result.erase(std::unique(result.begin(), result.end()), result.end());
+  return result;
+}
 
 // Safe operations
 template <typename T>
@@ -47,9 +185,13 @@ T safe_acos(T a) {
 
 // Periodic comparison is opt-in; select limit-compatible representatives first.
 template <int N>
-void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
+void removeDuplicateImpl(std::vector<std::array<double, N>>& ik_output,
                       double tolerance,
-                      const std::array<bool, N>& revolute_joints) {
+                      const std::array<bool, N>& revolute_joints,
+                      const std::vector<int>* classes = nullptr) {
+  if (classes && classes->size() != ik_output.size())
+    throw std::invalid_argument("duplicate classes must match the candidate count");
+  std::vector<int> kept_classes = classes ? *classes : std::vector<int>{};
   // Do nothing if size less than 1
   if (ik_output.size() <= 1) return;
 
@@ -90,7 +232,8 @@ void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
     bool contains_duplicate = false;
     assert(no_duplicate_until + 1 <= next_to_try);
     for (std::size_t i = 0; i <= no_duplicate_until; i++) {
-      if (is_duplicate(ik_output[i], ik_output[next_to_try])) {
+      if ((!classes || kept_classes[i] == (*classes)[next_to_try]) &&
+          is_duplicate(ik_output[i], ik_output[next_to_try])) {
         contains_duplicate = true;
         break;
       }
@@ -106,6 +249,9 @@ void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
       if (copied_to != next_to_try) {
         ik_output[copied_to] = ik_output[next_to_try];
       }
+      if (classes) {
+        kept_classes[copied_to] = (*classes)[next_to_try];
+      }
 
       // Update the index
       no_duplicate_until = copied_to;
@@ -116,6 +262,72 @@ void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
   // [0, no_duplicate_until] is the range
   assert(no_duplicate_until < ik_output.size());
   ik_output.resize(no_duplicate_until + 1);
+}
+
+template <int N>
+void removeDuplicate(std::vector<std::array<double, N>>& ik_output,
+                      double tolerance, const std::array<bool, N>& revolute_joints) {
+  removeDuplicateImpl<N>(ik_output, tolerance, revolute_joints);
+}
+
+template <int N>
+void removeDuplicateWithinClasses(std::vector<std::array<double, N>>& ik_output,
+                                 double tolerance, const std::vector<int>& classes) {
+  removeDuplicateImpl<N>(ik_output, tolerance, {}, &classes);
+}
+
+// Distinguish candidates that admit a bounded periodic representation before
+// deduplication. A nearby out-of-limit root must not erase a legal witness.
+template <int N>
+std::vector<int> jointLimitClasses(const std::vector<std::array<double, N>>& candidates,
+                                 const std::array<double, N>& lower,
+                                 const std::array<double, N>& upper,
+                                 const std::array<bool, N>& periodic) {
+  std::vector<int> result;
+  for (const auto& candidate : candidates) {
+    bool bounded = true;
+    for (int joint = 0; joint < N; ++joint) {
+      const double value = candidate[joint];
+      if (!std::isfinite(value)) { bounded = false; break; }
+      if (periodic[joint]) {
+        const double first = std::ceil((lower[joint]-1e-9-value)/(2*M_PI));
+        const double last = std::floor((upper[joint]+1e-9-value)/(2*M_PI));
+        if (first > last) { bounded = false; break; }
+      } else if (value < lower[joint]-1e-9 || value > upper[joint]+1e-9) {
+        bounded = false; break;
+      }
+    }
+    result.push_back(bounded ? 1 : 0);
+  }
+  return result;
+}
+
+// A coarse FK-accepted candidate must not erase a nearby strict-pose witness.
+// Keep both feasibility and pose-quality classes; the legacy acceptance
+// thresholds and candidate ordering remain unchanged.
+template <int N, typename FK>
+std::vector<int> ikCandidateClasses(const std::vector<std::array<double, N>>& candidates,
+                                  const std::array<double, N>& lower,
+                                  const std::array<double, N>& upper,
+                                  const std::array<bool, N>& periodic,
+                                  FK&& fk, const Eigen::Matrix4d& target,
+                                  double position_tolerance = 1e-7,
+                                  double rotation_tolerance = 1e-6) {
+  auto classes = jointLimitClasses<N>(candidates, lower, upper, periodic);
+  for (std::size_t i = 0; i < candidates.size(); ++i) {
+    classes[i] *= 2;
+    const Eigen::Matrix4d actual = fk(candidates[i]);
+    if (!actual.allFinite() || !target.allFinite() ||
+        actual.template block<3, 3>(0, 0).cwiseAbs().maxCoeff() > 2 ||
+        target.template block<3, 3>(0, 0).cwiseAbs().maxCoeff() > 2) continue;
+    if ((actual.template block<3, 1>(0, 3)-target.template block<3, 1>(0, 3)).norm() > position_tolerance)
+      continue;
+    const Eigen::Matrix3d delta = actual.template block<3, 3>(0, 0)*target.template block<3, 3>(0, 0).transpose();
+    const Eigen::Vector3d skew(delta(2, 1)-delta(1, 2), delta(0, 2)-delta(2, 0), delta(1, 0)-delta(0, 1));
+    const double angle = std::atan2(.5*skew.norm(), .5*(delta.trace()-1));
+    if (angle <= rotation_tolerance) ++classes[i];
+  }
+  return classes;
 }
 
 template <int N>
@@ -231,11 +443,157 @@ struct NodeIndexWorkspace {
   // clang-format on
 };
 
-/// A struct to hold all the buffers
-template <int intermediate_solution_size, int max_n_solutions, int robot_nq>
+// Heap storage keeps large generated queues out of the caller's stack. Reserve
+// the full candidate bound before references are taken, including after copies.
+template <int Nq, int Capacity>
+struct CompactSolutionQueue {
+  static_assert(Capacity >= 1, "Zero capacity not allowed");
+  std::vector<IntermediateSolution<Nq>> solutions;
+  std::vector<bool> solutions_validity;
+
+  CompactSolutionQueue() = default;
+  CompactSolutionQueue(const CompactSolutionQueue& other)
+      : solutions(other.solutions), solutions_validity(other.solutions_validity) {
+    reserve();
+  }
+  CompactSolutionQueue(CompactSolutionQueue&&) noexcept = default;
+  CompactSolutionQueue& operator=(const CompactSolutionQueue& other) {
+    if (this != &other) {
+      CompactSolutionQueue copy(other);
+      solutions.swap(copy.solutions);
+      solutions_validity.swap(copy.solutions_validity);
+    }
+    return *this;
+  }
+  CompactSolutionQueue& operator=(CompactSolutionQueue&&) noexcept = default;
+
+  void reserve() {
+    solutions.reserve(Capacity);
+    solutions_validity.reserve(Capacity);
+  }
+  void reset() {
+    solutions.clear();
+    solutions_validity.clear();
+    reserve();
+  }
+  int push_solution(IntermediateSolution<Nq> solution) {
+    if (solutions.size() >= Capacity) return -1;
+    reserve();
+    const int index = static_cast<int>(solutions.size());
+    solutions.push_back(std::move(solution));
+    solutions_validity.push_back(true);
+    return index;
+  }
+  const IntermediateSolution<Nq>& get_solution(int index) const { return solutions[index]; }
+  IntermediateSolution<Nq>& get_solution(int index) { return solutions[index]; }
+  bool is_solution_valid(int index) const { return solutions_validity[index]; }
+  int size() const { return static_cast<int>(solutions.size()); }
+};
+
+// Nodes share one index arena. Views resolve offsets on access, so growing one
+// node cannot invalidate another node's active input view. Copies own their data.
+class CompactNodeIndexWorkspace {
+  struct NodeRange {
+    std::size_t offset, capacity, size, initial_capacity;
+  };
+  std::vector<NodeRange> ranges_;
+  std::vector<int> indices_;
+  std::size_t node_capacity_limit_ = 0;
+
+ public:
+  class IndexQueue {
+    const CompactNodeIndexWorkspace* owner_;
+    std::size_t node_;
+   public:
+    IndexQueue(const CompactNodeIndexWorkspace* owner, std::size_t node)
+        : owner_(owner), node_(node) {}
+    int size() const { return static_cast<int>(owner_->ranges_[node_].size); }
+    int operator[](int index) const {
+      return owner_->indices_[owner_->ranges_[node_].offset+index];
+    }
+  };
+  std::vector<bool> node_input_validity_vector;
+
+  CompactNodeIndexWorkspace() = default;
+  CompactNodeIndexWorkspace(const CompactNodeIndexWorkspace&) = default;
+  CompactNodeIndexWorkspace(CompactNodeIndexWorkspace&&) noexcept = default;
+  CompactNodeIndexWorkspace& operator=(const CompactNodeIndexWorkspace& other) {
+    if (this != &other) {
+      CompactNodeIndexWorkspace copy(other);
+      ranges_.swap(copy.ranges_);
+      indices_.swap(copy.indices_);
+      node_input_validity_vector.swap(copy.node_input_validity_vector);
+      std::swap(node_capacity_limit_, copy.node_capacity_limit_);
+    }
+    return *this;
+  }
+  CompactNodeIndexWorkspace& operator=(CompactNodeIndexWorkspace&&) noexcept = default;
+
+  template <std::size_t N>
+  void reset(const std::array<std::size_t, N>& capacities, std::size_t limit) {
+    if (limit > static_cast<std::size_t>(std::numeric_limits<int>::max()))
+      throw std::length_error("Node queue limit exceeds the index range");
+    std::size_t total = 0;
+    bool reuse = ranges_.size() == N && node_capacity_limit_ == limit;
+    for (std::size_t i = 0; i < N; ++i) {
+      if (capacities[i] > limit) throw std::invalid_argument("Node capacity exceeds queue limit");
+      if (capacities[i] > indices_.max_size()-total)
+        throw std::length_error("Node index storage is too large");
+      total += capacities[i];
+      reuse = reuse && ranges_[i].initial_capacity == capacities[i];
+    }
+    if (!reuse) {
+      indices_.reserve(total);
+      ranges_.reserve(N);
+      node_input_validity_vector.reserve(N);
+      indices_.resize(total);
+      ranges_.resize(N);
+      std::size_t offset = 0;
+      for (std::size_t i = 0; i < N; ++i) {
+        ranges_[i] = {offset, capacities[i], 0, capacities[i]};
+        offset += capacities[i];
+      }
+      node_capacity_limit_ = limit;
+    } else {
+      for (auto& range : ranges_) range.size = 0;
+    }
+    node_input_validity_vector.assign(N, false);
+    if (N != 0) node_input_validity_vector[0] = true;
+  }
+
+  bool append_index_to_node(int node, int index) {
+    if (index < 0) return false;
+    auto& range = ranges_.at(node);
+    if (range.size == range.capacity) {
+      if (range.capacity == node_capacity_limit_) return false;
+      const auto growth = std::min(std::max(std::size_t(1), range.capacity),
+                                   node_capacity_limit_-range.capacity);
+      indices_.insert(indices_.begin()+range.offset+range.capacity, growth, 0);
+      range.capacity += growth;
+      for (std::size_t i = static_cast<std::size_t>(node)+1; i < ranges_.size(); ++i)
+        ranges_[i].offset += growth;
+    }
+    indices_[range.offset+range.size++] = index;
+    node_input_validity_vector[node] = true;
+    return true;
+  }
+  IndexQueue get_input_indices_for_node(int node) const {
+    ranges_.at(node);
+    return IndexQueue(this, static_cast<std::size_t>(node));
+  }
+  bool is_input_indices_valid_for_node(int node) const { return node_input_validity_vector.at(node); }
+  int num_nodes() const { return static_cast<int>(ranges_.size()); }
+  std::size_t index_storage_capacity() const { return indices_.capacity(); }
+  std::size_t metadata_storage_bytes() const { return ranges_.capacity()*sizeof(NodeRange); }
+};
+
+/// Default storage retains compatibility with previously generated kernels.
+template <int intermediate_solution_size, int max_n_solutions, int robot_nq,
+          typename Queue = SolutionQueue<intermediate_solution_size, max_n_solutions>,
+          typename NodeWorkspace = NodeIndexWorkspace<max_n_solutions>>
 struct RawIkWorkspaceTemplate {
-  SolutionQueue<intermediate_solution_size, max_n_solutions> solution_queue;
-  NodeIndexWorkspace<max_n_solutions> node_index_workspace;
+  Queue solution_queue;
+  NodeWorkspace node_index_workspace;
   std::vector<std::array<double, robot_nq>> raw_ik_out;
 };
 
@@ -304,7 +662,7 @@ std::array<PolynomialRealRoot, poly_order> computePolynomialRealRoots(
 namespace linear_solver {
 
 template <typename T>
-bool trySolveLinearType2(const Eigen::Ref<Eigen::Matrix<T, 3, 4>>& A,
+bool trySolveLinearType2(const Eigen::Ref<const Eigen::Matrix<T, 3, 4>>& A,
                          T& solution_0, T& solution_1, bool allow_family = true) {
   if (!A.allFinite()) return false;
   const T a = A(0, 0);
@@ -346,8 +704,26 @@ bool trySolveLinearType2(const Eigen::Ref<Eigen::Matrix<T, 3, 4>>& A,
 
 template <int n_rows>
 bool trySolveLinearType2SpecificRows(
-    const Eigen::Ref<Eigen::Matrix<double, n_rows, 4>>& A, int row_0, int row_1,
+    const Eigen::Ref<const Eigen::Matrix<double, n_rows, 4>>& A, int row_0, int row_1,
     int row_2, double& solution_0, double& solution_1) {
+  if (A.allFinite()) {
+    const double scale = A.cwiseAbs().maxCoeff();
+    if (scale > 0) {
+      const Eigen::Matrix<double, n_rows, 4> normalized = A/scale;
+      Eigen::JacobiSVD<Eigen::Matrix<double, n_rows, 4>> svd(normalized, Eigen::ComputeFullV);
+      const auto& singular = svd.singularValues();
+      if (singular.size() >= 3 && singular[2] > 1e-10*singular[0] &&
+          (singular.size() == 3 || singular[3] <= 1e-8*singular[0])) {
+        const Eigen::Vector2d direction = svd.matrixV().col(3).template tail<2>();
+        if (direction.norm() > 1e-10) {
+          solution_0 = std::atan2(direction[0], direction[1]);
+          solution_1 = solution_0+M_PI;
+          if (solution_1 > M_PI) solution_1 -= 2*M_PI;
+          return true;
+        }
+      }
+    }
+  }
   Eigen::Matrix<double, 3, 4> A_for_given_row;
   A_for_given_row.row(0) = A.row(row_0);
   A_for_given_row.row(1) = A.row(row_1);
@@ -378,6 +754,79 @@ bool trySolveLinearType2SpecificRows(
   if (best_k < 0) return false;
   A_for_given_row.row(2) = A.row(best_k);
   return trySolveLinearType2<double>(A_for_given_row, solution_0, solution_1);
+}
+
+// Up to four candidates from the intersection of a rank-two nullspace with
+// ||(sin x, cos x)||^2 = ||(sin y, cos y)||^2. Families use representatives;
+// numerical rank/empty results are not exact completeness certificates.
+template <int n_rows>
+std::vector<double> solveLinearType2All(
+    const Eigen::Ref<const Eigen::Matrix<double, n_rows, 4>>& A) {
+  std::vector<double> angles;
+  if (!A.allFinite()) return angles;
+  const double scale = A.cwiseAbs().maxCoeff();
+  if (!(scale > 0)) return angles;
+  const Eigen::Matrix<double, n_rows, 4> normalized = A/scale;
+  Eigen::JacobiSVD<Eigen::Matrix<double, n_rows, 4>> svd(normalized, Eigen::ComputeFullV);
+  const auto& singular = svd.singularValues();
+  const double epsilon = 64*std::numeric_limits<double>::epsilon();
+  const double tolerance = epsilon*std::max(n_rows, 4)*singular[0];
+  if (singular.size() < 2 || singular[1] <= tolerance) return angles;
+  std::vector<Eigen::Vector4d> directions;
+  if (singular.size() >= 3 && singular[2] > tolerance) {
+    if (singular.size() >= 4 && singular[3] > 1e-8*singular[0]) return angles;
+    directions.push_back(svd.matrixV().col(3));
+  } else {
+    const Eigen::Matrix<double, 4, 2> basis = svd.matrixV().template rightCols<2>();
+    const Eigen::Matrix2d quadratic = basis.template topRows<2>().transpose()*basis.template topRows<2>()-
+        basis.template bottomRows<2>().transpose()*basis.template bottomRows<2>();
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> eigen(quadratic);
+    if (eigen.info() != Eigen::Success) return angles;
+    const double low = eigen.eigenvalues()[0], high = eigen.eigenvalues()[1];
+    if (low < 0 && high > 0) {
+      const Eigen::Vector2d negative = std::sqrt(high)*eigen.eigenvectors().col(0);
+      const Eigen::Vector2d positive = std::sqrt(-low)*eigen.eigenvectors().col(1);
+      directions.push_back(basis*(negative+positive));
+      directions.push_back(basis*(negative-positive));
+    } else if (std::max(std::abs(low), std::abs(high)) <= epsilon) {
+      return {0.0, M_PI};
+    } else {
+      const int zero = std::abs(low) < std::abs(high) ? 0 : 1;
+      if (std::abs(eigen.eigenvalues()[zero]) > epsilon) return angles;
+      directions.push_back(basis*eigen.eigenvectors().col(zero));
+    }
+  }
+  for (const auto& direction : directions) {
+    if (direction.template tail<2>().norm() <= 1e-12) continue;
+    const double angle = std::atan2(direction[2], direction[3]);
+    double other = angle+M_PI;
+    if (other > M_PI) other -= 2*M_PI;
+    for (double value : {angle, other})
+      if (std::find(angles.begin(), angles.end(), value) == angles.end()) angles.push_back(value);
+  }
+  return angles;
+}
+
+template <int n_rows>
+std::vector<double> solveLinearType2Candidates(
+    const Eigen::Ref<const Eigen::Matrix<double, n_rows, 4>>& A,
+    const std::vector<std::array<int, 3>>& rows_to_try = {}) {
+  std::vector<double> angles;
+  if (!A.allFinite()) return angles;
+  const double scale = A.cwiseAbs().maxCoeff();
+  if (!(scale > 0)) return angles;
+  Eigen::Matrix<double, n_rows, 4> legacy = A;
+  if (scale < 1e-100 || scale > 1e100) legacy /= scale;
+  for (const auto& rows : rows_to_try) {
+    double first, second;
+    if (trySolveLinearType2SpecificRows<n_rows>(legacy, rows[0], rows[1], rows[2], first, second)) {
+      for (double value : {first, second}) if (std::isfinite(value)) angles.push_back(value);
+      break;
+    }
+  }
+  for (double value : solveLinearType2All<n_rows>(A))
+    if (std::find(angles.begin(), angles.end(), value) == angles.end()) angles.push_back(value);
+  return angles;
 }
 
 }  // namespace linear_solver
@@ -468,55 +917,83 @@ void sincosCoefficientToTanhalfCoefficient(
       A_sincos.col(3) + A_sincos.col(5) + A_sincos.col(7) + A_sincos.col(8);
 }
 
-template <typename T>
+template <typename T, std::size_t Capacity>
 int computeSolutionFromTanhalfLME(const Eigen::Matrix<T, 6, 9>& A_x2,
                                   const Eigen::Matrix<T, 6, 9>& B_x,
                                   const Eigen::Matrix<T, 6, 9>& C,
-                                  std::array<T, 16>* solution_buffer) {
-  Eigen::Matrix<T, 12, 12> A_12;
-  A_12.setZero();
-  A_12.template block<6, 9>(0, 0) = A_x2;
-  A_12.template block<6, 9>(6, 3) = A_x2;
-  Eigen::Matrix<T, 12, 12> A_inv = A_12.inverse();
-  for (auto r = 0; r < A_inv.rows(); r++) {
-    for (auto c = 0; c < A_inv.cols(); c++) {
-      if (std::isnan(A_inv(r, c)) || (!std::isfinite(A_inv(r, c)))) {
-        return 0;
-      }
+                                  std::array<T, Capacity>* solution_buffer) {
+  if (!A_x2.allFinite() || !B_x.allFinite() || !C.allFinite()) return 0;
+  const T scale = std::max({A_x2.cwiseAbs().maxCoeff(), B_x.cwiseAbs().maxCoeff(),
+                            C.cwiseAbs().maxCoeff()});
+  if (!(scale > T(0))) return 0;
+  using Matrix6 = Eigen::Matrix<T, 6, 9>;
+  using Matrix12 = Eigen::Matrix<T, 12, 12>;
+  const Matrix6 a=A_x2/scale, b=B_x/scale, c=C/scale;
+  auto expand = [](const Matrix6& value) -> Matrix12 {
+    Matrix12 matrix=Matrix12::Zero();
+    matrix.template block<6, 9>(0, 0)=value;
+    matrix.template block<6, 9>(6, 3)=value;
+    return matrix;
+  };
+  using Matrix24 = Eigen::Matrix<T, 24, 24>;
+  int solution_counter=0;
+  auto append_eigenvalues = [&](const Matrix24& matrix, T chart) {
+    if (!matrix.allFinite()) return;
+    Eigen::EigenSolver<Matrix24> solver;
+    solver.compute(matrix, false);
+    if (solver.info() != Eigen::Success) return;
+    const auto& eigenvalues=solver.eigenvalues();
+    for (Eigen::Index i=0; i<eigenvalues.size(); ++i) {
+      const auto& value=eigenvalues[i];
+      if (!std::isfinite(value.real()) || !std::isfinite(value.imag()) ||
+          std::abs(value.imag()) >= 1e-6 || solution_counter >= static_cast<int>(Capacity)) continue;
+      const T angle=T(2)*std::atan(value.real())+T(2)*std::atan(chart);
+      solution_buffer->at(solution_counter++) = chart == T(0) ? angle :
+          std::atan2(std::sin(angle), std::cos(angle));
+    }
+  };
+  // Preserve established candidates before adding a better conditioned chart.
+  // An estimate of conditioning alone must not discard an existing FK witness.
+  const Matrix12 original_leading=expand(A_x2);
+  const Matrix12 inverse=original_leading.inverse();
+  bool legacy_usable=false;
+  if (inverse.allFinite()) {
+    Matrix24 legacy=Matrix24::Zero();
+    legacy.template block<12, 12>(0, 12).setIdentity();
+    legacy.template block<12, 12>(12, 0)=-(inverse*expand(C));
+    legacy.template block<12, 12>(12, 12)=-(inverse*expand(B_x));
+    legacy_usable=legacy.allFinite();
+    append_eigenvalues(legacy, T(0));
+  }
+  // Change the tangent-half-angle chart: x=(y+t)/(1-t*y). At most one
+  // alternative chart is added, keeping the combined candidate bound at 48.
+  T best_reciprocal=T(0), chart=T(0);
+  bool ordinary_stable=false;
+  Matrix12 leading;
+  for (const T t : {T(0), T(1), T(-1), T(.5), T(-.5), T(2), T(-2)}) {
+    const Matrix12 candidate=expand(a-t*b+t*t*c);
+    const Eigen::FullPivLU<Matrix12> lu(candidate);
+    // rcond() estimates an inverse through solve(); on a rank-deficient
+    // FullPivLU it can report a deceptively large reciprocal condition.
+    const T reciprocal=lu.isInvertible() ? lu.rcond() : T(0);
+    if (std::isfinite(reciprocal) && reciprocal > best_reciprocal) {
+      best_reciprocal=reciprocal; chart=t; leading=candidate;
+    }
+    if (t == T(0) && reciprocal > T(1e-8) && a.cwiseAbs().maxCoeff() > T(1e-8)) {
+      ordinary_stable=true; break;
     }
   }
+  if ((ordinary_stable && legacy_usable) || best_reciprocal < T(1e-14)) return solution_counter;
+  const Matrix12 linear=expand(T(2)*chart*a+(T(1)-chart*chart)*b-T(2)*chart*c);
+  const Matrix12 constant=expand(chart*chart*a+chart*b+c);
+  const Eigen::PartialPivLU<Matrix12> factor(leading);
 
-  // Compute B and C
-  Eigen::Matrix<T, 12, 12> B_12, C_12;
-  B_12.setZero();
-  C_12.setZero();
-  B_12.template block<6, 9>(0, 0) = B_x;
-  B_12.template block<6, 9>(6, 3) = B_x;
-  C_12.template block<6, 9>(0, 0) = C;
-  C_12.template block<6, 9>(6, 3) = C;
-
-  Eigen::Matrix<T, 24, 24> M;
+  Matrix24 M;
   M.setZero();
   M.template block<12, 12>(0, 12).setIdentity();
-  M.template block<12, 12>(12, 0) = -(A_inv * C_12);
-  M.template block<12, 12>(12, 12) = -(A_inv * B_12);
-
-  // Compute the eigen-values of M
-  Eigen::EigenSolver<Eigen::Matrix<T, 24, 24>> solver;
-  solver.compute(M);
-  const auto& eigenvalues = solver.eigenvalues();
-  int solution_counter = 0;
-  for (auto i = 0; i < eigenvalues.size(); i++) {
-    const std::complex<T>& eigenvalue_i = eigenvalues[i];
-    const double real_part = eigenvalue_i.real();
-    const double imag_part = eigenvalue_i.imag();
-    if (std::abs(imag_part) < 1e-6 &&
-        solution_counter < solution_buffer->size()) {
-      const double atan_value = std::atan(real_part);
-      solution_buffer->at(solution_counter) = 2.0 * atan_value;
-      solution_counter += 1;
-    }
-  }
+  M.template block<12, 12>(12, 0) = -factor.solve(constant);
+  M.template block<12, 12>(12, 12) = -factor.solve(linear);
+  append_eigenvalues(M, chart);
 
   return solution_counter;
 }
@@ -537,7 +1014,8 @@ void sincosLME2TanhalfLME(
 
 };  // namespace general_6dof_internal
 
-template <int n_equations = 14, int n_lhs_unknowns = 9, int n_rhs_unknowns = 8>
+template <int n_equations = 14, int n_lhs_unknowns = 9, int n_rhs_unknowns = 8,
+          std::size_t Capacity = 16>
 int general6DofNumericalReduceSolve(
     const Eigen::Matrix<double, n_equations, n_lhs_unknowns>& A_sin,
     const Eigen::Matrix<double, n_equations, n_lhs_unknowns>& A_cos,
@@ -545,7 +1023,7 @@ int general6DofNumericalReduceSolve(
     const Eigen::Matrix<double, n_equations, n_rhs_unknowns>& rhs_matrix,
     const std::array<int, n_rhs_unknowns>& lines_to_reduce,
     const std::array<int, n_equations - n_rhs_unknowns>& remaining_lines,
-    std::array<double, 16>* solution_buffer) {
+    std::array<double, Capacity>* solution_buffer) {
   // First step, try reduce
   Eigen::Matrix<double, n_equations - n_rhs_unknowns, n_lhs_unknowns> tau_sin;
   Eigen::Matrix<double, n_equations - n_rhs_unknowns, n_lhs_unknowns> tau_cos;
@@ -603,10 +1081,14 @@ Eigen::Matrix<T, 4, 4> inverse_transform(
 template <typename T>
 Eigen::Matrix<T, 4, 4> disturbTransform(const Eigen::Matrix<T, 4, 4>& transform,
                                         T disturb_angle = T(1e-2),
-                                        T disturb_translation = T(1e-2)) {
+                                        T disturb_translation = T(1e-2),
+                                        Eigen::Matrix<T, 4, 4>* disturbance_out = nullptr,
+                                        int axis_variant = -1) {
   // Make angle axis
   Eigen::Matrix<T, 3, 1> axis;
-  axis.setRandom();
+  if (axis_variant < 0) axis.setRandom();
+  else if (axis_variant == 0) axis << T(1), T(2), T(3);
+  else axis << T(2), T(-3), T(1);
   if (axis.squaredNorm() < 1e-4) {
     axis[0] += 0.1;
   }
@@ -620,6 +1102,7 @@ Eigen::Matrix<T, 4, 4> disturbTransform(const Eigen::Matrix<T, 4, 4>& transform,
   disturb_matrix(0, 3) -= disturb_translation;
   disturb_matrix(1, 3) -= disturb_translation;
   disturb_matrix(2, 3) -= disturb_translation;
+  if (disturbance_out) *disturbance_out = disturb_matrix;
   return disturb_matrix * transform;
 }
 
@@ -676,6 +1159,9 @@ void numericalRefinement(
     if (!delta_q.allFinite()) return;
     const auto previous_q = q;
     for (auto j = 0; j < robot_nq; j++) {
+      // A zero Jacobian column can still receive a tiny QR roundoff update.
+      // Fixed coordinates retain the caller's exact value, including signed zero.
+      if (fixed_joints[j]) continue;
       q[j] += delta_q[j];
       if (!std::isfinite(q[j])) {
         q = previous_q;

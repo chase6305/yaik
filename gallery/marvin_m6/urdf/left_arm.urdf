@@ -1,0 +1,201 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="marvin_m6_new_left_arm">
+  <!---->
+  <!---->
+  <!-- Start of (links for part: left_arm) -->
+  <link name="left_arm_base" />
+  <link name="shoulder_pitch_l_j1_link">
+    <inertial>
+      <origin xyz="0.00002347 0.00557150 -0.03075998" rpy="0 0 0" />
+      <mass value="1.9705" />
+      <inertia ixx="0.00492293" ixy="0.00000550" ixz="0.00000193" iyy="0.00526513" iyz="0.00033232" izz="0.00188107" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="visual/glb/shoulder_pitch_l_j1_link.glb" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="collision/shoulder_pitch_l_j1_link.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="shoulder_roll_l_j2_link">
+    <inertial>
+      <origin xyz="0.00013483 0.06170460 0.00950639" rpy="0 0 0" />
+      <mass value="2.24398" />
+      <inertia ixx="0.01194933" ixy="0.00000336" ixz="0.00000091" iyy="0.00361581" iyz="-0.00132804" izz="0.01098356" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="visual/glb/shoulder_roll_l_j2_link.glb" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="collision/shoulder_roll_l_j2_link.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="elbow_pitch_l_j3_link">
+    <inertial>
+      <origin xyz="0.00968562 0.00246599 -0.04627302" rpy="0 0 0" />
+      <mass value="1.9242" />
+      <inertia ixx="0.00718224" ixy="0.00004413" ixz="0.00089552" iyy="0.00762563" iyz="0.00022096" izz="0.00178597" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="visual/glb/elbow_pitch_l_j3_link.glb" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="collision/elbow_pitch_l_j3_link.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="elbow_yaw_l_j4_link">
+    <inertial>
+      <origin xyz="0.00850411 -0.04718223 0.00941509" rpy="0 0 0" />
+      <mass value="1.6085" />
+      <inertia ixx="0.00580480" ixy="-0.00066669" ixz="-0.00012722" iyy="0.00223807" iyz="0.00070523" izz="0.00533060" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="visual/glb/elbow_yaw_l_j4_link.glb" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="collision/elbow_yaw_l_j4_link.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="wrist_pitch_l_j5_link">
+    <inertial>
+      <origin xyz="0.00051127 0.00101064 -0.11271739" rpy="0 0 0" />
+      <mass value="2.0883" />
+      <inertia ixx="0.00626603" ixy="0.00004009" ixz="0.00005338" iyy="0.00564387" iyz="-0.00006193" izz="0.00243632" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="visual/glb/wrist_pitch_l_j5_link.glb" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="collision/wrist_pitch_l_j5_link.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="wrist_yaw_l_j6_link">
+    <inertial>
+      <origin xyz="0.00032659 0.00531336 -0.00030182" rpy="0 0 0" />
+      <mass value="0.72496" />
+      <inertia ixx="0.00046040" ixy="0.00000189" ixz="0.00000083" iyy="0.00051716" iyz="-0.00000346" izz="0.00042521" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="visual/glb/wrist_yaw_l_j6_link.glb" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="collision/wrist_yaw_l_j6_link.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="wrist_roll_l_j7_link">
+    <inertial>
+      <origin xyz="-0.00009108 -0.03153255 0.00889371" rpy="0 0 0" />
+      <mass value="0.68606" />
+      <inertia ixx="0.00173687" ixy="-0.00000345" ixz="-0.00000116" iyy="0.00089035" iyz="0.00030680" izz="0.00139406" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="visual/glb/wrist_roll_l_j7_link.glb" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="collision/wrist_roll_l_j7_link.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="left_ee"> </link>
+  <!-- End of (links for part: left_arm) -->
+  <!---->
+  <!---->
+  <!-- Start of (joints for part: left_arm) -->
+  <joint name="SHOULDER_PITCH_L_J1" type="revolute">
+    <origin xyz="0.2215 2.9142E-05 1.121" rpy="-1.5707963267948966 0 -1.5707963267948966" />
+    <parent link="left_arm_base" />
+    <child link="shoulder_pitch_l_j1_link" />
+    <axis xyz="0 0 1" />
+    <limit lower="-3.1066860685499065" upper="3.1066860685499065" effort="108" velocity="3.141592653589793" />
+  </joint>
+  <joint name="SHOULDER_ROLL_L_J2" type="revolute">
+    <origin xyz="0 0 0" rpy="1.5707963267948966 0 0" />
+    <parent link="shoulder_pitch_l_j1_link" />
+    <child link="shoulder_roll_l_j2_link" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.0943951023931953" upper="2.0943951023931953" effort="108" velocity="3.141592653589793" />
+  </joint>
+  <joint name="ELBOW_PITCH_L_J3" type="revolute">
+    <origin xyz="0 0.287 0" rpy="-1.5707963267948966 0 0" />
+    <parent link="shoulder_roll_l_j2_link" />
+    <child link="elbow_pitch_l_j3_link" />
+    <axis xyz="0 0 1" />
+    <limit lower="-3.1066860685499065" upper="3.1066860685499065" effort="66" velocity="3.141592653589793" />
+  </joint>
+  <joint name="ELBOW_YAW_L_J4" type="revolute">
+    <origin xyz="0.018 0 0" rpy="-1.5707963267948966 0 3.141592653589793" />
+    <parent link="elbow_pitch_l_j3_link" />
+    <child link="elbow_yaw_l_j4_link" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.530727415391778" upper="1.0471975511965976" effort="66" velocity="3.141592653589793" />
+  </joint>
+  <joint name="WRIST_PITCH_L_J5" type="revolute">
+    <origin xyz="0.018 -0.314 0" rpy="-1.5707963267948966 0 3.141592653589793" />
+    <parent link="elbow_yaw_l_j4_link" />
+    <child link="wrist_pitch_l_j5_link" />
+    <axis xyz="0 0 1" />
+    <limit lower="-3.1066860685499065" upper="3.1066860685499065" effort="18" velocity="3.141592653589793" />
+  </joint>
+  <joint name="WRIST_YAW_L_J6" type="revolute">
+    <origin xyz="0 0 0" rpy="1.5707963267948966 -1.5707963267948966 0" />
+    <parent link="wrist_pitch_l_j5_link" />
+    <child link="wrist_yaw_l_j6_link" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.0471975511965976" upper="1.0471975511965976" effort="18" velocity="3.141592653589793" />
+  </joint>
+  <joint name="WRIST_ROLL_L_J7" type="revolute">
+    <origin xyz="0 0 0" rpy="1.5707963267948966 -1.5707963267948966 0" />
+    <parent link="wrist_yaw_l_j6_link" />
+    <child link="wrist_roll_l_j7_link" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.5707963267948966" upper="1.5707963267948966" effort="18" velocity="3.141592653589793" />
+  </joint>
+  <joint name="LEFT_EE" type="fixed">
+    <origin xyz="0 -0.095 0" rpy="1.5707963267948966 -1.5707963267948966 0" />
+    <parent link="wrist_roll_l_j7_link" />
+    <child link="left_ee" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <!-- End of (joints for part: left_arm) -->
+</robot>

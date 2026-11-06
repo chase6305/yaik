@@ -1,71 +1,364 @@
 # yaik
 
-A Python package for generating analytical inverse kinematic solvers for robotics manipulators. The generated solvers support many robots in [Mech-Mind Robotics](https://www.mech-mind.com/) and have been extensively tested in real-world deployment. The name **yaik** stands for **Y**et **A**nother **A**nalytical **I**nverse **K**inematics generator.
+[简体中文](./README.zh-CN.md) · [Marvin M6 guide](./gallery/marvin_m6/README.md)
 
-### Features
+**Yet Another Analytical Inverse Kinematics generator** produces Python and C++
+FK, Jacobian, and IK solvers for serial robots. It supports redundant arms,
+conditional degenerate branches, polynomial solutions, and general 6-DoF methods.
+The [gallery](./gallery) contains saved solutions and generated code.
 
-- Closed-form, analytical inverse kinematics for serial chain robots in python/C++
-- Support robots with 7 DoF or more, such as [Kuka IIwa Arm](./gallery/kuka_iiwa), [Panda Robot](./gallery/franka_panda), or arms of the Atlas humanoid
-- A new factorized polynomial solution based on *groebner reduce*
-- General 6-dof solution using linear matrix equations tangent of half angles
-- Analysis to avoid degenerated (or conditional degenerated) solutions
+## Installation
 
-### Using the generated solver
+Use Python 3.10 or newer, from a checkout of this repository:
 
-The [gallery](./gallery) contains generated IK solvers for tens of robots. Even if your robot is not included in the library, it might include a robot with the same structure and can be used after parameter modification. The file format is
-
-```
-gallery/
-    puma/
-        puma_ik.yaml
-        puma_ik_generated.cpp
-        puma_ik_generated.py
-    {robot_name}/
-        {robot_name}_ik.yaml
-        {robot_name}_ik_generated.cpp
-        {robot_name}_ik_generated.py
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+python yaik.py --help
 ```
 
-To use the generated C++ solver, you need to include the [yaik_cpp_common.h](./yaik_cpp_common.h) file, which further depends on Eigen. Please refer to the [yaik_cpp](https://bitbucket.org/gaowei19951004/yaik_cpp/src/master/) repo for an example.
+The pinned requirements match the Marvin generation environment. Marvin runtime
+FK/IK needs only NumPy; help and the built-in model list need only Python's
+standard library. Code generation additionally uses SymPy, PyYAML, and attrs.
+Native C++ validation needs `g++`, C++17, and Eigen3 headers; on Ubuntu:
 
-To use the generated Python solver, you need to import [python_run_import.py](./python_run_import.py), which further depends on numpy.
+```sh
+sudo apt-get install g++ libeigen3-dev
+```
 
-Checked IK wrappers reject nonfinite targets and scalar parameters, and verify candidates
-with generated FK. Fixed redundant joints retain the supplied angle representation.
-C++ normalizes other revolute joints before FK verification; prismatic joints are not wrapped.
-The existing error contracts are preserved: Python checks maximum matrix-entry error
-against `1e-4`, while C++ checks squared matrix error against `1e-6` (`1e-4` after refinement).
-For robot integration, validate base/tool frame conversion, URDF limits, and independent
-position/rotation errors as needed; these matrix tolerances do not impose joint limits.
-C++ callers can pass a per-joint revolute mask as the third argument to
-`yaik_cpp::removeDuplicate<N>` for periodic comparison after normalization and limit
-filtering. The default comparison preserves distinct `-pi`/`+pi` representations,
-which can differ in feasibility under joint limits; prismatic mask entries stay false.
+Run the examples below from the repository root. An absolute path to `yaik.py`
+also works from another directory; relative input/output paths follow your
+current directory. No source-code edits are needed to choose a robot or output.
 
-### Generate a solver for your robot
+## Choose a workflow
 
-To generate a new solver for a robot that is not in the gallery, you need to install python3, [pyyaml](https://github.com/yaml/pyyaml), [attrs](https://www.attrs.org/en/stable/index.html) and [sympy](https://github.com/sympy/sympy/wiki/Download-Installation) on your system. Optionally, you might install [sagemath](https://www.sagemath.org/index.html), which contains a faster groebner reduce implementation.
+| Task | Command |
+| --- | --- |
+| List built-in robot names | `python yaik.py models` |
+| Generate a new analytical solution | `python yaik.py generate --builtin puma --output-dir build/puma` |
+| Export an existing IK tree | `python yaik.py codegen gallery/puma/puma_ik.yaml --output-dir build/puma` |
+| Continue recovery from a saved tree | `python yaik.py generate --resume-tree path/to/robot_ik.yaml --max-nodes 80 --output-dir build/recovered` |
+| Use the Marvin arms | `python yaik.py marvin --help` |
 
-Then, you need to express your robot in **Modified** DH format. A documentation regarding that can be found in [here](./docs/modified_dh.md). Several examples can be found in [this file](./fk/robot_models.py). Alternatively, the modified dh model can be converted from chain model in [this file](./fk/chain_models.py), or URDF using a tool in [another library](https://bitbucket.org/gaowei19951004/multibody/src/main/examples/urdf_sdf_to_dh.cpp).
+`generate` performs offline symbolic search and can take minutes or longer.
+`codegen` reuses a saved solution tree and writes code without repeating that
+search. Both emit an artifact list as JSON; progress and diagnostics go to stderr.
+Use `COMMAND --help` for options.
 
-After that, you can run `ik_solve.py` to generate the solution for your robot in YAML format. This step can take a LOT of time, as we perform offline analysis to find the simplest solution and avoid degeneration. Moreover, this step might fail to find a feasible solution (although the pipeline succeeded for all the robots we tested).
+## Marvin M6: use the arms immediately
 
-Finally, you can use `cpp_codegen.py/py_codegen.py` to generate solvers in C++ and Python, similar to the ones in the gallery.
+The [Marvin example](./gallery/marvin_m6/README.md) contains separate left/right
+models, saved trees, generated Python/C++ kernels, and bounded analytical APIs.
+The CLI uses the bounded API, including joint-limit filtering and pose checks.
 
-For repeatable offline sampling and candidate selection, pass a seed:
+Compute a reachable target from seven URDF joint angles, then solve it:
+
+```sh
+python yaik.py marvin fk --side right \
+  --joints '[0.3, -0.5, 0.7, -1.0, 0.4, -0.2, 0.1]' \
+  --output build/target.json
+
+python yaik.py marvin ik --side right \
+  --target build/target.json --output build/solutions.json
+```
+
+The quoted joint array accepts negative and scientific-notation values.
+`fk` writes the target matrix, frame names, side, and `q5`. `ik` accepts that
+object or a raw 4×4 matrix in a JSON file. For a raw matrix, supply `--q5 0.4`.
+An explicit `--q5` overrides the FK object's recorded value. Without `--output`,
+results go to stdout; `--target -` reads stdin, so these commands also compose:
+
+```sh
+python yaik.py marvin fk --side left \
+  --joints '[0.3, -0.5, 0.7, -1.0, 0.4, -0.2, 0.1]' \
+  | python yaik.py marvin ik --side left --target -
+```
+
+Angles are in radians, lengths in metres, and joint order follows the URDF.
+**J5 is the fifth joint (`q[4]`, generated parameter `th_4`), held fixed during
+IK.** A target reachable with one J5 value may have no solution at another.
+Targets map `left_arm_base → left_ee` or `right_arm_base → right_ee`, including
+the original shoulder placement and fixed 95 mm EE transform. FK JSON metadata
+is checked against `--side` to catch accidental frame mixing.
+
+Both arms have identical internal geometry and joint limits. Their shoulder
+mounting transforms differ, so they share an analytical core while retaining
+separate base transforms. The same joint vector produces different left/right
+poses. No caller-side angle permutation or sign change is needed.
+
+For Python integration, use `gallery.marvin_m6.solver.Solver`; for standalone
+C++17, use `gallery/marvin_m6/solver.hpp`. See the guide for complete examples,
+input frames, measured singular coverage, and tolerance contracts.
+
+## Export or regenerate Marvin files
+
+The default Marvin export is fast and writes to `build/marvin_m6`:
+
+```sh
+python yaik.py marvin generate --output-dir build/marvin_m6
+python yaik.py marvin check --output-dir build/marvin_m6
+```
+
+For an export usable outside the checkout, add `--with-runtime`. It bundles the
+matching `python_run_import.py` and `yaik_cpp_common.h` and records their hashes:
+
+```sh
+python yaik.py marvin generate --with-runtime --output-dir build/marvin_m6
+python yaik.py marvin validate --solver-dir build/marvin_m6 \
+  --samples 1000 --stress-samples 2000 --output build/marvin_m6/validation.json
+```
+
+`--solver-dir` selects the generated kernels actually loaded and compiled by the
+validator. Bundled helpers take precedence over repository helpers. The bounded
+reference still comes from the gallery; both source locations and hashes appear
+in the report. `marvin check` also checks bundled helper bytes when provenance
+records them. Provenance also records actual generator and runtime source hashes;
+`marvin check` detects stale source records even when generated bytes happen to
+stay unchanged. A C++ consumer still needs Eigen3.
+
+It uses saved trees in the output directory when present, otherwise the gallery
+trees. `--tree-dir PATH` selects saved trees explicitly. Both tree models must
+match the input URDFs before output files are changed. Generation is staged
+before publication, and unrelated output files are preserved. Export records
+the verified source trees' seed, or `null` if no matching provenance is available;
+`--seed` controls a new search, not code export.
+Conflicting destination directories are rejected before replacement. If a write
+fails or Ctrl+C interrupts publication, previous artifacts are restored. This is
+not a multi-file transaction across a process kill or power loss; concurrent
+exports to one directory need external coordination.
+
+To repeat the symbolic search explicitly:
+
+```sh
+python yaik.py marvin generate --solve --seed 42 \
+  --output-dir build/marvin-regenerated
+```
+
+`--urdf-dir PATH` selects a directory containing `left_arm.urdf` and
+`right_arm.urdf`; `--models-only` exports just the modified-DH models. The Marvin
+converter follows this specific seven-joint arm topology. Its geometric bounded
+APIs describe the checked-in V4.0 geometry.
+
+## Generate for another robot
+
+Choose a built-in model, or provide a modified-DH model YAML:
+
+```sh
+python yaik.py generate --builtin puma --seed 42 \
+  --output-dir build/puma --language both
+
+python yaik.py generate --model path/to/robot.yaml --seed 42 \
+  --output-dir build/my_robot --language python
+```
+
+The [modified-DH documentation](./docs/modified_dh.md),
+[built-in models](./fk/robot_models.py), and
+[chain conversion examples](./fk/chain_models.py) describe the model format.
+A model YAML has `name`, `dh_params`, and `unknowns`; an `*_ik.yaml` solution
+tree has `robot` and `tree_nodes`. The CLI reports when these inputs are confused.
+
+A successful search produces the model, `*_numerical_test.yaml`, intermediate
+`*_main.yaml`, final `*_ik.yaml`, and requested generated files. `--test-cases`
+can reuse saved numerical samples. `--language` accepts `python`, `cpp`, or
+`both` (default). To export existing trees, use `codegen`; it loads a tree once
+for both languages. C++ code uses safe mathematical operators.
+
+Continue recovery from a saved tree while keeping its existing branches:
+
+```sh
+python yaik.py generate --resume-tree path/to/robot_ik.yaml --seed 42 \
+  --max-nodes 80 --with-runtime --output-dir build/recovered
+```
+
+This writes the resumed tree, model, generated code, and `ROBOT_resume.json`
+with the input tree hash, continuation seed, node counts, and artifact/source
+hashes. `--max-nodes` limits branch expansion; existing nodes are retained.
+`--test-cases` applies to a new search. The continuation seed describes this
+recovery operation. Completeness remains uncertified.
+
+Generated Python needs the repository's `python_run_import.py` on `PYTHONPATH`.
+Generated C++ needs the repository's `yaik_cpp_common.h` and Eigen3 on its include
+path. Runtime calls do not run symbolic search or require SymPy.
+Both `generate` and `codegen` accept `--with-runtime`; only helpers for the chosen
+`--language` are copied. Put the exported directory on `PYTHONPATH` or the C++
+include path. A model can use bounded runtime parameters in its base and tool
+transforms as well as in its DH chain; those parameters are passed through FK,
+Jacobian, target conversion, and checked IK. See the
+[frame parameter example](./docs/modified_dh.md#base-and-tool-transforms).
+
+New C++ exports keep large candidate buffers on the heap and share an index
+arena sized for each node. Index storage can grow up to the existing candidate
+limit; raw output storage grows with the results. Bundle the matching header
+with `--with-runtime`. For repeated calls, reuse a workspace and output vector:
+
+```cpp
+using Arm = marvin_m6_left_arm_ik;
+Arm::RawIKWorksace workspace;
+std::vector<std::array<double, Arm::robot_nq>> solutions;
+Arm::computeIK(target, fixed_q5, workspace, solutions);
+```
+
+The checked overload accepts the original target and fixed joint value. Give
+each thread its own workspace and output vector. Previously generated kernels
+continue to compile with the updated common header.
+
+The library APIs remain available:
 
 ```python
 from ik_solve import run_ik, RunIKOption
-
 run_ik(robot, run_ik_option=RunIKOption(random_seed=42))
 ```
 
-The seeded run restores the caller's Python and NumPy random states when it finishes.
-Use the same dependency versions when comparing generated output; process deadlines can
-still change which expensive candidates finish. Automatic special samples stay within
-joint bounds and include their endpoints; explicitly requested branch values are preserved.
-Timed unary searches include algebraic expansion and use one deadline per call; small
-single-variable searches batch rules into one isolated worker.
+Seeds are integers from 0 through `2**32 - 1`. A seeded library run restores the
+caller's Python and NumPy random states. Dependency versions and process deadlines
+can still affect which symbolic candidates finish. Automatic special samples stay
+within joint bounds and include endpoints; timed unary searches share one deadline
+including algebra. Compatibility scripts also accept explicit inputs:
+
+```sh
+python ik_solve.py --model path/to/robot.yaml --output-dir build/my_robot
+python py_codegen.py gallery/puma/puma_ik.yaml --output-dir build/puma
+python cpp_codegen.py gallery/puma/puma_ik.yaml --output-dir build/puma
+```
+
+## Results, errors, and limits
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | Success; IK returned at least one accepted representative |
+| `1` | IK found no accepted representative, or validation failed; inspect JSON/report |
+| `2` | Invalid arguments, input, dependency, or file access |
+| `130` | Interrupted by the user |
+
+FK/IK JSON output is kept separate from diagnostics. Output files replace the
+specified destination after a complete result is available. Input errors have
+short messages; `python yaik.py --debug ...` shows the traceback for diagnosis.
+
+The bounded Marvin APIs require position error ≤ `1e-7 m` and rotation error
+≤ `1e-6 rad`, preserve supplied J5, and reject invalid rigid transforms. Wrist-axis
+continua use analytical limit/chart cuts with 33 backup samples; an empty result does not prove
+infeasibility or workspace completeness. Collision and trajectory constraints
+need application-level handling.
+
+Standard generated wrappers keep their original contracts: Python checks maximum
+matrix-entry error against `1e-4`; C++ checks squared matrix error against `1e-6`
+(`1e-4` after refinement). They reject nonfinite input and verify FK, but do not
+enforce URDF limits. Fixed redundant joints retain their supplied angle
+representation; C++ normalizes other revolute joints before FK verification.
+Large revolute values are reduced by their sine/cosine phase before adding or
+removing a nonzero joint offset. FK and Jacobians therefore retain the offset
+even when ordinary floating-point addition would erase it. Fixed joints still
+return the exact supplied value; prismatic coordinates keep linear arithmetic.
+`yaik_cpp::removeDuplicate<N>` accepts an optional per-joint revolute mask for
+periodic comparison after normalization and limit filtering. Its default keeps
+distinct `-pi`/`+pi` representations, which can differ in limit feasibility.
+
+Generation now completes coefficient-zero branches as well as variable-value
+branches. It returns to the full FK equations to recover alternative formulas;
+larger singular systems also try 33 bounded representatives of one revolute
+joint. These candidates pass the generated wrapper's FK checks. This is finite
+coverage of continuous families, with no guarantee of full-workspace completeness.
+The stored Marvin trees and both generated languages include this recovery.
+
+The generic 6R matrix kernel retains its original eigenvalue candidates and adds
+one stable tangent-half-angle chart when the leading matrix is ill-conditioned.
+Regenerated C++ kernels reserve up to 48 candidates instead of truncating the
+24-eigenvalue problem into a 16-element buffer. Singular systems that remain
+unresolved return an empty candidate list; this does not prove infeasibility.
+
+## Validation
+
+```sh
+python -m pip install pytest
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
+  test_cli.py gallery/marvin_m6 solver/test_regressions.py \
+  solver/test_codegen_safety.py solver/test_equation_branches.py solver/test_family_critical.py \
+  solver/test_completeness.py solver/test_linear_circles.py solver/test_runtime_safety.py \
+  solver/test_argument_guards.py solver/test_guard_domains.py solver/test_rounded_frames.py \
+  solver/test_candidate_assignment.py solver/test_partial_branches.py \
+  solver/test_compact_workspace.py solver/test_fixed_joint_phases.py \
+  solver/test_gallery_regeneration.py \
+  solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
+
+python yaik.py marvin validate --samples 1000 --seed 20261103 \
+  --output build/marvin-validation.json
+```
+
+Use `--python-only` without a native toolchain, or `--eigen-dir PATH` for another
+Eigen installation. Validation uses independent XML FK, checks every returned
+candidate, and separates standard-kernel coverage from bounded-API results.
+Its exit status requires both generated and bounded APIs to retain a valid
+bounded solution for every reachable case, reject their negative-input cases,
+and pass all FK checks.
+Both bounded C++ arms reuse one compilation with a runtime side argument.
+The report records source hashes, seeds, failures, and error maxima. CI runs
+artifact checks, CLI/regression tests, and native validation.
+
+## Completeness and stress validation
+
+`python yaik.py audit TREE.yaml` reports unresolved branches, finite family
+representations, and proof obligations. Add `--require-complete` to audit or
+codegen to reject uncertified results; the project currently has no end-to-end
+completeness certificate. CLI IK distinguishes a verified witness from empty,
+undetermined output. See the [mathematical scope and certification requirements](gallery/marvin_m6/README.md#what-would-guarantee-completeness).
+
+Safe Python/C++ exports allow 64 double epsilons of roundoff at an `asin`/`acos`
+argument's ±1 boundary, then clamp that argument before evaluation. Other guards
+and the final FK acceptance thresholds retain their existing values. The offline
+numerical visitor also keeps polynomial sine/cosine roots at exactly ±1 and
+normalizes finite coefficients before solving.
+
+Generated predicates check denominators before evaluating dependent expressions
+and put simple coefficient checks before compound range checks. Stored base/tool
+matrices use their actual inverse, so rounded rotations still round-trip. For
+these approximate frames, checked IK also retains the legacy transpose-derived
+candidates and verifies both sets against the original target with the existing
+FK thresholds. Fixed C++ joints remain unchanged during numerical refinement.
+Approximate-frame paths share one C++ disturbance, preserving the legacy random
+stream; extra numerical refinement is skipped when legacy candidates exist.
+When numerical recovery is needed, C++ also checks two fixed disturbance axes
+without consuming extra random values. Every candidate uses the existing FK
+acceptance thresholds.
+
+The raw `*_ik_solve_raw` and C++ `computeRawIK` APIs accept modified-DH targets
+and fixed-joint values, and return modified-DH joint values. Use the checked APIs
+for original robot frames and joint offsets. C++ `computeIKUnChecked` applies the
+original-frame conversion and offsets but omits FK filtering.
+Raw outputs contain finite values for every physical joint. Incomplete paths
+produce no raw candidate; valid large joint values remain supported.
+Supported incomplete shoulders can be completed from the full rotation.
+An exact coaxial-axis check on the selected symbolic path permits one gauge
+value before reconstructing the shoulder. This does not enumerate every
+bounded representative of the continuous family.
+
+Supported shoulder branches can also recover the remaining first angles from
+the full rotation while keeping an assigned third shoulder angle. If ordinary
+checked IK finds no candidate, fixed revolute inputs may be retried at equivalent
+phases near implemented branch centers. This requires symbolic invariance under
+a `2*pi` shift, including base/tool frames. The returned fixed value stays
+exactly as supplied, every candidate uses the original FK gates, and phase
+retries consume no additional random values. Raw APIs use the supplied raw phase.
+
+The audit reports saved formula degeneration records that lack their own
+dispatcher as `source: undispatched_solution_record`, including records previously
+marked non-degenerate by finite sampling. New branches retain those dispatchers;
+exporting an older saved tree reports the missing coverage without rewriting it.
+Branch recovery carries selected angle values and affine prefix identities into
+formula checks, and treats deferred joints as a preference. The ABB IRB460 and
+Kawasaki CP130L snapshots have been regenerated with seed `20261125`; regressions
+verify 1,000 targets per model using independent modified-DH FK in both languages.
+
+```sh
+python yaik.py marvin validate --samples 1000 --stress-samples 2000 \
+  --seed 20261103 --output build/marvin-validation.json
+```
+
+The audit separately lists locally certified unreachable branches. For Marvin,
+an exact rational reach bound excludes the last absent branch, but full IK
+coverage and floating-point decisions remain uncertified. Generated C++ retains
+strict-pose witnesses during deduplication. Coupled-circle numerical nodes can
+now retain four isolated rank-two roots plus the legacy tolerance fallback.
 
 ### Acknowledgement
 
@@ -73,4 +366,5 @@ This work was done during the author's employment at Mech-Mind Robotics. We have
 
 ### Contact
 
-If you have a new challenging robot that cannot be solved, please email me.
+For an unsupported model or a failing command, include the model/URDF, exact CLI
+invocation, dependency versions, and a `--debug` traceback in a repository issue.

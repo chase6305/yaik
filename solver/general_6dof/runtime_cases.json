@@ -1,0 +1,132 @@
+[
+  {
+    "tree": "gallery/abb_crb_15000/abb_crb_15000_ik.yaml",
+    "robot": "abb_crb_15000",
+    "q": [
+      -3.141592653589793,
+      4.696717746037739,
+      3.141592653589793,
+      -6.283185307179586,
+      0.0,
+      -0.8810028794638569
+    ],
+    "kind": "ill_conditioned_chart"
+  },
+  {
+    "tree": "gallery/denso_cvr_038/denso_cvr_038_ik.yaml",
+    "robot": "dense_cvr_038",
+    "q": [
+      3.141592653589793,
+      0.0,
+      2.1514454399815133,
+      -2.0228152614824975,
+      0.0,
+      -2.933482584797895
+    ],
+    "kind": "ill_conditioned_chart"
+  },
+  {
+    "tree": "gallery/denso_cvr_038/denso_cvr_038_ik.yaml",
+    "robot": "dense_cvr_038",
+    "q": [
+      3.141592653589793,
+      2.028680645972294,
+      -1.7423829802477622,
+      -6.283185307179586,
+      -2.739398700769371,
+      -1.7861557197941473
+    ],
+    "kind": "ill_conditioned_chart"
+  },
+  {
+    "tree": "gallery/yaskawa_HC10/yaskawa_HC10_ik.yaml",
+    "robot": "yaskawa_HC10",
+    "q": [
+      -3.141592653589793,
+      0.2131059434396223,
+      0.0,
+      0.0,
+      -0.4857768106326885,
+      -6.283185307179586
+    ],
+    "kind": "ill_conditioned_chart"
+  },
+  {
+    "tree": "gallery/yaskawa_HC10/yaskawa_HC10_ik.yaml",
+    "robot": "yaskawa_HC10",
+    "q": [
+      0.41318757862469413,
+      1.6858151201440004,
+      0.0,
+      0.0,
+      -0.4274725531641872,
+      0.0
+    ],
+    "kind": "ill_conditioned_chart"
+  },
+  {
+    "tree": "gallery/yaskawa_mpx3500/yaskawa_mpx3500_ik.yaml",
+    "robot": "yaskawa_mpx3500",
+    "q": [
+      -2.3061633644451875,
+      4.654176023229304,
+      3.141592653589793,
+      4.71238898038469,
+      0.0,
+      -1.5707963267948966
+    ],
+    "kind": "ill_conditioned_chart"
+  },
+  {
+    "tree": "gallery/yaskawa_mpx3500/yaskawa_mpx3500_ik.yaml",
+    "robot": "yaskawa_mpx3500",
+    "q": [
+      3.141592653589793,
+      1.0371071973864416,
+      3.141592653589793,
+      -1.5707963267948966,
+      -6.283185307179586,
+      4.073740126675655
+    ],
+    "kind": "ill_conditioned_chart"
+  },
+  {
+    "tree": "gallery/denso_cvrb/denso_cvrb_ik.yaml",
+    "robot": "denso_cvrb",
+    "q": [
+      0.0,
+      -1.5707963267948966,
+      3.141592653589793,
+      -4.221805319938835,
+      0.0,
+      0.7955509104383358
+    ],
+    "kind": "preserve_legacy"
+  },
+  {
+    "tree": "gallery/yaskawa_HC10/yaskawa_HC10_ik.yaml",
+    "robot": "yaskawa_HC10",
+    "q": [
+      0.0,
+      -1.5707963267948966,
+      3.141592653589793,
+      -4.221805319938835,
+      0.0,
+      -2.3460417431514573
+    ],
+    "kind": "preserve_legacy"
+  },
+  {
+    "tree": "gallery/yaskawa_mpx3500/yaskawa_mpx3500_ik.yaml",
+    "robot": "yaskawa_mpx3500",
+    "q": [
+      0.0,
+      -1.5707963267948966,
+      3.141592653589793,
+      0.49058366044585444,
+      0.0,
+      2.3663472372332324
+    ],
+    "kind": "preserve_legacy"
+  }
+]

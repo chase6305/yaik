@@ -13,6 +13,8 @@ import sympy as sp
 import numpy as np
 import multiprocessing
 import copy
+from solver.argument_guards import runtime_argument_guards, evaluate_inverse_trig_boundary
+from python_run_import import compute_polynomial_real_roots
 import attr
 
 # A magic number as hte invalid solution
@@ -20,13 +22,8 @@ INVALID_SOLUTION_VALUE = 1e6
 
 
 def is_valid_solution_number(solution_number: float) -> bool:
-    """
-    A better solution is to construct another binary list to determine whether
-    a number is valid or not, initialized to all false.
-    But this somehow work as a hacky solution
-    """
-    abs_diff = abs(solution_number - INVALID_SOLUTION_VALUE)
-    return abs_diff > 1e-10
+    """Check numeric validity; assignment state is carried by solution indices."""
+    return bool(np.isfinite(solution_number))
 
 
 @attr.s
@@ -62,7 +59,19 @@ def step_from_explicit_solution(
     """
     assert next_solution.is_explicit_solution
     solutions = next_solution.explicit_solutions
-    argument_checkers = next_solution.argument_validity_checkers
+    argument_checkers = runtime_argument_guards(solutions, next_solution.argument_validity_checkers)
+    if next_solution.family_critical_equations is not None:
+        from python_run_import import trig_family_representatives
+        values = {**parameter_values, **value_subst_map}
+        if next_solution.family_critical_condition.subs(values) == sp.S.true:
+            coefficients = [[float(value.subs(values)) for value in row]
+                            for row in next_solution.family_critical_equations]
+            solutions = [sp.Float(value) for value in trig_family_representatives(
+                coefficients, *next_solution.family_bounds,
+                [float(evaluate_inverse_trig_boundary(value, values))
+                 for value, checker in zip(solutions, argument_checkers)
+                 if checker.subs(values) == sp.S.true])]
+            argument_checkers = [sp.S.true]*len(solutions)
     assert len(solutions) == len(argument_checkers)
     variable_subst_map = value_subst_map
     next_variable_values: List[SkeletonNumericalSolution] = list()
@@ -71,14 +80,14 @@ def step_from_explicit_solution(
         checker_i = argument_checkers[i]
         checker_i = checker_i.subs(parameter_values)
         checker_i = checker_i.subs(variable_subst_map)
-        if checker_i == sp.S.BooleanFalse:
+        if checker_i != sp.S.true:
             continue
 
         solution_i = solutions[i]
-        solution_i = solution_i.subs(parameter_values)
-        solution_i = solution_i.subs(variable_subst_map)
+        solution_i = evaluate_inverse_trig_boundary(solution_i, {**parameter_values, **variable_subst_map})
         solution_i = cast_expr_to_float(solution_i)
-        assert solution_i is not None
+        if solution_i is None or not np.isfinite(solution_i):
+            continue
         next_value_i = copy.deepcopy(current_value)
         next_value_i.variable_values[next_solution_index_in_value] = solution_i
         next_value_i.variable_value_in_solution_idx[next_solution_index_in_value] = i
@@ -93,22 +102,20 @@ def step_from_linear_type2_solution(
         next_solution_index_in_value: int,
         parameter_values: Dict[sp.Symbol, float]) -> List[SkeletonNumericalSolution]:
     # The internal solution
-    from solver.linear_solver.linear_sin_cos_type2_numerical_solve import try_solve_linear_type2_combined
+    from python_run_import import solve_linear_type2_candidates
     solution_impl = next_solution.internal_solution
     assert solution_impl.class_key() == VariableSolutionClassKey.LinearSinCosType_2.name
 
     # Extract the value
     linear_solution: LinearSinCosType_2_SolutionImpl = solution_impl
     A_symbolic = linear_solution.A_matrix
-    rows_to_try = linear_solution.rows_to_try
-    solved_var = solution_impl.solved_variable
 
     # To numerical
     A_subst = A_symbolic.subs(value_subst_map)
     A_subst = A_subst.subs(parameter_values)
     A_np = np.array(A_subst).astype(np.float64)
-    solutions = try_solve_linear_type2_combined(A_np, rows_to_try)
-    if solutions is None:
+    solutions = solve_linear_type2_candidates(A_np, linear_solution.rows_to_try)
+    if not solutions:
         return list()
 
     # Assign the next value
@@ -142,7 +149,7 @@ def step_from_polynomial_solution(
     assert next_solution.is_polynomial
     variable_subst_map = value_subst_map
     poly_dict_input = next_solution.polynomial_to_solve
-    poly_dict: Dict[int, float] = dict()
+    poly_dict: Dict[int, sp.Expr] = dict()
     poly_order = -1
     for order in poly_dict_input:
         # Get the coefficient
@@ -151,11 +158,10 @@ def step_from_polynomial_solution(
         numerator = numerator.subs(variable_subst_map)
         denominator = denominator.subs(parameter_values)
         denominator = denominator.subs(variable_subst_map)
-        denominator = cast_expr_to_float(denominator)
-        assert denominator is not None
-        if abs(denominator) < 1e-6:
+        if (denominator.is_zero is not False or denominator.is_real is not True or denominator.is_finite is not True
+                or numerator.is_real is not True or numerator.is_finite is not True):
             return list()
-        poly_dict[order] = float(numerator / denominator)
+        poly_dict[order] = numerator/denominator
 
         # Update the order
         if order >= poly_order:
@@ -163,10 +169,13 @@ def step_from_polynomial_solution(
 
     # Solve the equations
     assert poly_order >= 1
+    scale = max(abs(value.evalf(50)) for value in poly_dict.values())
+    if scale.is_zero:
+        return []
     p_coefficients = np.zeros(shape=(poly_order + 1,))
     for order in poly_dict:
-        p_coefficients[poly_order - order] = poly_dict[order]
-    poly_roots = np.roots(p_coefficients)
+        p_coefficients[poly_order - order] = float(poly_dict[order]/scale)
+    poly_roots = compute_polynomial_real_roots(p_coefficients)
 
     # Collect the results
     solved_symbol = next_solution.solved_variable
@@ -174,8 +183,6 @@ def step_from_polynomial_solution(
     next_variable_values: List[SkeletonNumericalSolution] = list()
     for root_idx in range(len(poly_roots)):
         this_root = poly_roots[root_idx]
-        if not np.isreal(this_root):
-            continue
         if solution_method == SolutionMethod.PolynomialDirect.name:
             next_value = copy.deepcopy(current_value)
             next_value.variable_values[next_solution_index_in_value] = this_root
@@ -186,10 +193,13 @@ def step_from_polynomial_solution(
         # Now we do with sin/cos intermediate
         first_angle: Optional[float] = None
         second_angle: Optional[float] = None
-        if solution_method == SolutionMethod.PolynomialSin.name and abs(this_root) < 1:
+        if abs(this_root) > 1+1e-6:
+            continue
+        this_root = min(1., max(-1., this_root))
+        if solution_method == SolutionMethod.PolynomialSin.name:
             first_angle = np.arcsin(this_root)
             second_angle = np.pi - first_angle
-        elif solution_method == SolutionMethod.PolynomialCos.name and abs(this_root) < 1:
+        elif solution_method == SolutionMethod.PolynomialCos.name:
             first_angle = np.arccos(this_root)
             second_angle = - first_angle
 
@@ -314,7 +324,7 @@ class VisitorNumericalSolution(SkeletonNodeVisitor):
         for index_i in self._index_to_symbol:
             symbol_i = self._index_to_symbol[index_i]
             value_i = value.variable_values[index_i]
-            if is_valid_solution_number(value_i):
+            if value.variable_value_in_solution_idx[index_i] >= 0 and is_valid_solution_number(value_i):
                 subst_dict[symbol_i] = value_i
         return subst_dict
 
@@ -346,11 +356,12 @@ class VisitorNumericalSolution(SkeletonNodeVisitor):
         """
         In root, invalid is different from input empty. This dispatcher can only have one validity
         """
-        assert dispatcher.is_root
+        assert not dispatcher.has_solution_ancestor
         flatten_dix = dispatcher.flatten_idx
-        assert flatten_dix == 0
         assert len(self._node_inputs[flatten_dix]) == 0
-        assert self._input_validity[flatten_dix]
+        if not self._input_validity[flatten_dix]:
+            self.assign_invalid_to_children(dispatcher)
+            return
         checker = dispatcher.degenerate_checker
         checker_with_parameter = checker.subs(self._parameter_values)
         if checker_with_parameter == sp.S.BooleanTrue:
@@ -410,7 +421,7 @@ class VisitorNumericalSolution(SkeletonNodeVisitor):
         Just according to whether dispatcher is root
         """
         assert len(dispatcher.children) == 2
-        if dispatcher.is_root:
+        if not dispatcher.has_solution_ancestor:
             self.visit_equation_all_zero_dispatcher_root(dispatcher)
         else:
             self.visit_equation_all_zero_dispatcher_non_root(dispatcher)
@@ -420,19 +431,20 @@ class VisitorNumericalSolution(SkeletonNodeVisitor):
         In this case, the variable solution degenerate record means a PARAMETER (not unknown)
         equals a given value. Only one child can be valid.
         """
-        assert dispatcher.is_root
-        assert dispatcher.flatten_idx == 0
+        assert not dispatcher.has_solution_ancestor
+        if not self._input_validity[dispatcher.flatten_idx]:
+            self.assign_invalid_to_children(dispatcher)
+            return
         taken_by_degenerate = False
         for i in range(len(dispatcher.branch_conditions)):
             condition_i = dispatcher.branch_conditions[i]
             condition_i = condition_i.subs(self._parameter_values)
             if condition_i == sp.S.BooleanTrue:
+                taken_by_degenerate = True
                 # Here the condition for a degenerate child is invoked
                 if dispatcher.degenerate_branch_child(i) is not None:
                     degenerate_child_idx = dispatcher.degenerate_branch_child(i).flatten_idx
                     self._input_validity[degenerate_child_idx] = True
-                    taken_by_degenerate = True
-                    break
 
         # Goes to non-degenerate
         if not taken_by_degenerate:
@@ -495,7 +507,7 @@ class VisitorNumericalSolution(SkeletonNodeVisitor):
         Just according to whether dispatcher is root
         """
         assert len(dispatcher.children) == len(dispatcher.branch_conditions) + 1
-        if dispatcher.is_root:
+        if not dispatcher.has_solution_ancestor:
             self.visit_solved_variable_dispatcher_root(dispatcher)
         else:
             self.visit_solved_variable_dispatcher_non_root(dispatcher)
