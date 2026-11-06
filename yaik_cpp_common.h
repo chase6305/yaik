@@ -54,6 +54,102 @@ std::vector<std::array<double,N>> fixedJointPhaseAliases(
   return aliases;
 }
 
+template <std::size_t N>
+struct IkRefinementSeeds : std::vector<std::pair<double,std::array<double,N>>> {
+  bool strict_witness=false;
+};
+
+inline std::array<Eigen::Matrix4d,6> nearbyIkTargets(const Eigen::Matrix4d& target) {
+  const std::array<std::array<double,3>,3> directions{{{{1.,2.,3.}},{{3.,1.,-2.}},{{-2.,3.,1.}}}};
+  std::array<Eigen::Matrix4d,6> targets;
+  std::size_t index=0;
+  for(const auto& direction : directions) {
+    const Eigen::Vector3d axis=Eigen::Vector3d(direction[0],direction[1],direction[2])/std::sqrt(14.);
+    for(double sign : {-1.,1.}) {
+      Eigen::Matrix4d shift=Eigen::Matrix4d::Identity();
+      shift.block<3,3>(0,0)=Eigen::AngleAxisd(sign*1e-4,axis).toRotationMatrix();
+      shift.block<3,1>(0,3)=sign*1e-4*axis;
+      targets[index++]=shift*target;
+    }
+  }
+  return targets;
+}
+
+template <std::size_t N>
+void retainRefinementSeed(std::vector<std::pair<double,std::array<double,N>>>& seeds,
+                          const std::array<double,N>& candidate, double error) {
+  if (!std::isfinite(error)) return;
+  for (double value : candidate) if (!std::isfinite(value)) return;
+  for (const auto& entry : seeds) if (entry.second==candidate) return;
+  if (seeds.size()<4 || error<seeds.back().first) {
+    seeds.emplace_back(error,candidate);
+    std::stable_sort(seeds.begin(),seeds.end(),[](const std::pair<double,std::array<double,N>>& first,
+                                                const std::pair<double,std::array<double,N>>& second) {
+      return first.first<second.first;
+    });
+    if (seeds.size()>4) seeds.pop_back();
+  }
+}
+
+// Only successful, strictly checked local refinements update the caller's seed.
+// The bounded iteration count is not a completeness or hard runtime guarantee.
+template <int N, typename FK>
+bool refineIkSeed(const FK& fk, const Eigen::Matrix4d& target, std::array<double,N>& seed,
+                  const std::array<bool,N>& fixed={}) {
+  if (!target.allFinite()) return false;
+  for (double value : seed) if (!std::isfinite(value)) return false;
+  auto q=seed;
+  using Residual=Eigen::Matrix<double,16,1>;
+  auto residual=[&](const std::array<double,N>& values,Residual& error) {
+    const Eigen::Matrix4d difference=fk(values)-target;
+    if (!difference.allFinite()) return false;
+    for(int row=0;row<4;++row)for(int column=0;column<4;++column)error[4*row+column]=difference(row,column);
+    return true;
+  };
+  Residual error;
+  if (!residual(q,error)) return false;
+  for(int iteration=0;iteration<40;++iteration) {
+    if (error.cwiseAbs().maxCoeff()<1e-8) { seed=q;return true; }
+    Eigen::Matrix<double,16,N> jacobian=Eigen::Matrix<double,16,N>::Zero();
+    bool active=false;
+    for(int joint=0;joint<N;++joint) {
+      if(fixed[joint])continue;
+      active=true;
+      auto plus=q,minus=q;
+      plus[joint]+=1e-6;minus[joint]-=1e-6;
+      Residual upper,lower;
+      if(!residual(plus,upper) || !residual(minus,lower))return false;
+      jacobian.col(joint)=(upper-lower)/(2e-6);
+    }
+    const double previous_norm=error.squaredNorm();
+    if(!active || !jacobian.allFinite() || !std::isfinite(previous_norm))return false;
+    bool improved=false;
+    for(double damping : {1e-10,1e-8,1e-6,1e-4,.01}) {
+      Eigen::Matrix<double,16+N,N> augmented;
+      augmented.template topRows<16>()=jacobian;
+      augmented.template bottomRows<N>().setIdentity();
+      augmented.template bottomRows<N>()*=std::sqrt(damping);
+      Eigen::Matrix<double,16+N,1> rhs=Eigen::Matrix<double,16+N,1>::Zero();
+      rhs.template head<16>()=-error;
+      Eigen::Matrix<double,N,1> step=augmented.colPivHouseholderQr().solve(rhs);
+      if(!step.allFinite())continue;
+      step*=std::min(1.,.35/std::max(1e-30,step.cwiseAbs().maxCoeff()));
+      for(double scale : {1.,.5,.25,.125}) {
+        auto trial=q;
+        for(int joint=0;joint<N;++joint)if(!fixed[joint])trial[joint]+=scale*step[joint];
+        Residual next_error;
+        if(residual(trial,next_error) && next_error.squaredNorm()<previous_norm) {
+          q=trial;error=next_error;improved=true;break;
+        }
+      }
+      if(improved)break;
+    }
+    if(!improved)break;
+  }
+  if(error.cwiseAbs().maxCoeff()<1e-7) { seed=q;return true; }
+  return false;
+}
+
 template <int N>
 bool snapNearJointLimits(const std::array<double, N>& source, std::array<double, N>& result,
                         const std::array<double, N>& lower, const std::array<double, N>& upper,

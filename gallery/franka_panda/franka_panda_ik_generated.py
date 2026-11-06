@@ -3239,7 +3239,7 @@ def franka_panda_ik_solve_raw(T_ee: np.ndarray, th_3):
     return ik_out
 
 
-def franka_panda_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarray, th_3, _yaik_phase_parameters=None):
+def franka_panda_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarray, th_3, _yaik_phase_parameters=None, _yaik_seed_candidates=None):
     if not np.all(np.isfinite(T_ee)):
         return []
     if not (math.isfinite(th_3)):
@@ -3259,6 +3259,12 @@ def franka_panda_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarr
         ik_out_i[6] = ik_out_i[6] - th_6_offset_original2raw
         ee_pose_i = franka_panda_fk(ik_out_i)
         ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
+        if _yaik_seed_candidates is not None:
+            if ee_pose_diff < 1e-7:
+                _yaik_seed_candidates.strict_witness = True
+                _yaik_seed_candidates.clear()
+            elif not _yaik_seed_candidates.strict_witness:
+                retain_refinement_seed(_yaik_seed_candidates, ik_out_i, ee_pose_diff)
         if ee_pose_diff < pose_tolerance:
             ik_output.append(ik_out_i)
         snapped = snap_near_joint_limits(ik_out_i, [-3.141592653589793, -6.283185307179586, -6.283185307179586, -6.283185307179586, -3.141592653589793, -6.283185307179586, -3.141592653589793], [3.141592653589793, 0.0, 0.0, 0.0, 3.141592653589793, 0.0, 3.141592653589793], [True, True, True, True, True, True, True], [False, False, False, True, False, False, False])
@@ -3267,6 +3273,9 @@ def franka_panda_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarr
             snapped_pose = franka_panda_fk(snapped)
             if (np.linalg.norm(snapped_pose[:3, 3]-T_ee[:3, 3]) <= 1e-7 and np.max(np.abs(snapped_pose[:3, :3]-T_ee[:3, :3])) <= 1e-7):
                 ik_output.append(snapped)
+                if _yaik_seed_candidates is not None and np.max(np.abs(snapped_pose-T_ee)) < 1e-7:
+                    _yaik_seed_candidates.strict_witness = True
+                    _yaik_seed_candidates.clear()
     return ik_output
 
 
@@ -3276,9 +3285,10 @@ def franka_panda_ik_solve(T_ee: np.ndarray, th_3):
     if not (math.isfinite(th_3)):
         return []
     result, seen = [], set()
+    refinement_seeds = RefinementSeeds()
     for transform in (franka_panda_ik_target_original_to_raw_legacy_frame, franka_panda_ik_target_original_to_raw):
         raw_target = transform(T_ee)
-        for candidate in franka_panda_ik_solve_for_raw_target(T_ee, raw_target, th_3):
+        for candidate in franka_panda_ik_solve_for_raw_target(T_ee, raw_target, th_3, _yaik_seed_candidates=refinement_seeds):
             key = tuple(float(value) for value in candidate.ravel())
             if key not in seen:
                 seen.add(key)
@@ -3288,11 +3298,43 @@ def franka_panda_ik_solve(T_ee: np.ndarray, th_3):
         for alias in fixed_joint_phase_aliases(phase_parameters, [(0, -0.0522033313182534), (0, 3.141592653589793)], zero_tolerance):
             for transform in (franka_panda_ik_target_original_to_raw_legacy_frame, franka_panda_ik_target_original_to_raw):
                 raw_target = transform(T_ee)
-                for candidate in franka_panda_ik_solve_for_raw_target(T_ee, raw_target, th_3, _yaik_phase_parameters=alias):
+                for candidate in franka_panda_ik_solve_for_raw_target(T_ee, raw_target, th_3, _yaik_phase_parameters=alias, _yaik_seed_candidates=refinement_seeds):
                     key = tuple(float(value) for value in candidate.ravel())
                     if key not in seen:
                         seen.add(key)
                         result.append(candidate)
+    refinement_fk = lambda q: franka_panda_fk(q)
+    if refinement_seeds and not refinement_seeds.strict_witness:
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, True, False, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
+    if not refinement_seeds.strict_witness:
+        refinement_seeds.clear()
+        seed_parameters = (add_revolute_offset(th_3, th_3_offset_original2raw),)
+        seed_aliases = fixed_joint_phase_aliases(seed_parameters, [(0, -0.0522033313182534), (0, 3.141592653589793)], zero_tolerance)
+        if seed_aliases: seed_parameters = seed_aliases[-1]
+        for shifted in nearby_ik_targets(T_ee):
+            for transform in (franka_panda_ik_target_original_to_raw_legacy_frame, franka_panda_ik_target_original_to_raw):
+                raw_target = transform(shifted)
+                for raw_candidate in franka_panda_ik_solve_raw(raw_target, *seed_parameters):
+                    seed = raw_candidate.reshape(-1).copy()
+                    seed[0] = seed[0] - th_0_offset_original2raw
+                    seed[1] = add_revolute_offset(seed[1], -th_1_offset_original2raw)
+                    seed[2] = add_revolute_offset(seed[2], -th_2_offset_original2raw)
+                    seed[3] = th_3
+                    seed[4] = seed[4] - th_4_offset_original2raw
+                    seed[5] = add_revolute_offset(seed[5], -th_5_offset_original2raw)
+                    seed[6] = seed[6] - th_6_offset_original2raw
+                    retain_ik_refinement_seed(refinement_seeds, refinement_fk, T_ee, seed)
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, True, False, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
     return result
 
 

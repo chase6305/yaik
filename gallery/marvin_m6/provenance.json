@@ -6,23 +6,24 @@
   "generator_sources_sha256": {
     "codegen/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "codegen/cpp_codegen/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "codegen/cpp_codegen/codegen_cpp.py": "6983e539dcd14d0a4c2188ed3a77ee8cbd021edfc238a3a089ef7c698b6e788a",
+    "codegen/cpp_codegen/codegen_cpp.py": "65636a4a9a889755385913ed314fb11c790e12aed7751db3ddfd8507a9599ffa",
     "codegen/cpp_codegen/cpp_codegen_visitor.py": "fb63d8cfab29828ff02cff32a0c3d105d6ef4095b6c76cdc680ba64c0e79ce6f",
     "codegen/cpp_codegen/scope_manager.py": "423e64593b16b3bb8324bb309a07acf170ca66e8b9ab913b91d41336b795abc9",
     "codegen/py_codegen/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "codegen/py_codegen/codegen_py.py": "5616882f444ec659038becc09a6ef32ea0df04ff8c1f4db92e0a6de76c3a1fb8",
+    "codegen/py_codegen/codegen_py.py": "e0ce851c18525533349299e550d31808843d5476141a122871255e6a714a2cf4",
     "codegen/py_codegen/py_codegen_visitor_base.py": "7146493b1c853a4f0dbd3429441e0c1aaab6e9ff5fbcfc25fd0febc8a9875501",
     "codegen/py_codegen/py_codegen_visitor_v2.py": "93a01aeacf7070a587cbb40c297cb42f6c3f70eb6a37c4d6e2d1d8417de98bcc",
     "codegen/skeleton/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "codegen/skeleton/branch_certificates.py": "da94e0c2f193e39f55bd03bbda53da0e1ba3cbedc69dc6c5fd6e1b7c14f9117a",
     "codegen/skeleton/build_equation_branch.py": "8790a2bc0b20249fd0dd1069c39c4f8cea5eea65ead0463efae00410e686a21f",
-    "codegen/skeleton/build_variable_branch.py": "ba7c68f8b45f5118f9c7ea65deadf3215678967aca4867680dc31a6ca56a86cc",
+    "codegen/skeleton/build_variable_branch.py": "affce8af4c7bffe00a76198561e72c947a2b02f32e8398b25ad9971ae099bcbd",
     "codegen/skeleton/codegen_base.py": "c9d47fb1905422bf949b32821ab3a65d53d3c84c60f06b697fe51d4f4fb8515d",
     "codegen/skeleton/complete_partial_branches.py": "fc6377aa90f1df67f3826c50e2880df53bff6edf7dc0145aa0e415607a2253d2",
     "codegen/skeleton/completeness.py": "ad191623749278254be2e3a787baaf4ff8752a413517960de0f6626d0cce6400",
     "codegen/skeleton/family_critical.py": "3a1cd353557ccac72ece32de2ed7b64d4e55715a0f60d463c45357913a79b29b",
     "codegen/skeleton/fixed_joint_phases.py": "6abeede6dd3eb54e645c6d24ebb2009d5de9895b901beb357561a69107d36686",
     "codegen/skeleton/guard_codegen.py": "66453cdc2fa662dba4a3048cca2a5de5be30b6f0975f0b10ff5987fc290e1d1d",
+    "codegen/skeleton/parallel_wrist.py": "2b50f39bc7587276fc8a8fc9b12d8011f247f79cb1c3ce47030b4bdd6234d620",
     "codegen/skeleton/skeleton_tree.py": "8aff99153da797118db0a101a56110f7e493c5a89fa711ad3e3d05283906a7f5",
     "codegen/skeleton/tree_node.py": "624192f5e35d02ff62d7af2345af8b98d260ef7c3169024d3ccf42e046cd6eb2",
     "codegen/skeleton/tree_serialize.py": "52fb24e24a6caeee0ddd3fdeeee80c2078d049983b34c13aeb9f275085650548",
@@ -98,11 +99,11 @@
     "utility/rotation_utils.py": "266baf0421529070107254f54d3822d32cb08d24d62168e984c3047a59855942",
     "utility/symbolic_utils.py": "c15cbb9ad2187feb750c56542aaf49b1bcf98bd69db23fe3a98123c044a6e616",
     "utility/transformations.py": "37945d0c6be26182f5fdad89422bf99c353256f2a87b2f111f2fce47c3cb408e",
-    "yaik.py": "97b5ef760ed3705f8498e1cce7bcc5bd309eb4db277aba7300bc5d49c5434ca5"
+    "yaik.py": "d15bfb4d74cea66c11bc094b2c2aae27eef49ae68182dda3094c8eb12ce01938"
   },
   "runtime_sha256": {
-    "python_run_import.py": "4d31b8b2ef4651ba05bb8b978386f740cbc763e9f7115b1bc0ecc489ce98aea0",
-    "yaik_cpp_common.h": "7d798ab3d191a31d9c80a176b04fbbef47e58871e9dfb5f413026af8043cec64"
+    "python_run_import.py": "085a32131e3867deab6bc16de2d77a897ada229d06cd6089dd30caba48b7d392",
+    "yaik_cpp_common.h": "2d025448b631622acbd3ba94be57a2ea1b15acdd990d4bbf57cb521ff97097f9"
   },
   "dependencies": {
     "numpy": "2.2.6",
@@ -119,11 +120,11 @@
   "artifact_sha256": {
     "marvin_m6_left_arm.yaml": "b9bd723675379af83351cc8128604a415a9fc79c3e4697c7e68f51929076b631",
     "marvin_m6_left_arm_ik.yaml": "6ded65e3745c1b00f31a55b76afb3b0899f46fd0b196de8564760f9cbfad6bf3",
-    "marvin_m6_left_arm_ik_generated.cpp": "6d1d8ed03ed222a9a66b074a262abb171e73e1f5840385a76655579d44d115d1",
-    "marvin_m6_left_arm_ik_generated.py": "dbfda742d0ec0796e6084d2feeb6bc0af336e024ebf0098189c6448bd644da35",
+    "marvin_m6_left_arm_ik_generated.cpp": "1eb4f16c0acee5b99272d0653b2369ef230aff20ca76b9174242601d1a9e2fe5",
+    "marvin_m6_left_arm_ik_generated.py": "61e83956fecc60dec1b52465ee24925cc7d6348aa1e10976c6a6dd3e34148ea0",
     "marvin_m6_right_arm.yaml": "2eade0da01804ba3f770059c04bfe1cbf13f66684ea9c543305699fa7c89de6b",
     "marvin_m6_right_arm_ik.yaml": "bd6a0073874d273f48623f0931e84a795fb43d8d1bce7551b7b478bc2bdd9224",
-    "marvin_m6_right_arm_ik_generated.cpp": "abe7b3ed18efb53143c4bf78f869b4a203c5d86e9ef2e00b121b7d82ffa691c0",
-    "marvin_m6_right_arm_ik_generated.py": "af93d8100e7f5354a408f6186f9fc31e063d648763b82328d927008cbe2fba04"
+    "marvin_m6_right_arm_ik_generated.cpp": "937a224671e2309091b996609d1f0928c26fb22b9ef7096f3dde9bc0722933cc",
+    "marvin_m6_right_arm_ik_generated.py": "122ce08882626a5005e633cbf1373dc1720f1a73efb505dbb753570ca2bbf339"
   }
 }

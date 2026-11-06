@@ -184,7 +184,7 @@ Arm::computeIK(target, fixed_q5, workspace, solutions);
 条件守卫先检查分母，再计算依赖它的表达式；简单的系数检查也会先于复杂范围检查。
 基座和工具矩阵使用实际矩阵逆，避免舍入旋转的转置误差。此类近似模型保留旧路径的候选，
 两条路径都按原始目标和原有 FK 阈值检查。C++ 数值细化显式跳过固定关节的更新。
-两条近似坐标路径共用一次 C++ 扰动，保留旧路径的随机序列；已有旧候选时跳过额外数值回退。
+两条近似坐标路径共用一次 C++ 扰动，保留旧路径的随机序列；已有旧候选时跳过额外扰动路径。
 需要数值恢复时，C++ 再检查两个固定方向，不额外消耗随机数，仍按原有 FK 阈值接受候选。
 
 `*_ik_solve_raw` 和 C++ `computeRawIK` 的目标、固定关节参数及返回关节值都采用改进 DH 约定。
@@ -208,6 +208,15 @@ raw 接口直接使用传入的原始相位。
 重新生成的 C++ 内核预留最多 48 个候选，避免原先 16 个槽位截断 24 阶特征值结果。
 仍未解决的奇异系统返回空候选列表；空列表不代表已证明不可达。
 
+checked 导出在原有路径之后，先对至多 4 个不同的有限 raw 候选做局部细化。
+如果仍没有严格见证，再通过 6 个固定方向的小目标变换构造另一组至多 4 个种子。
+每个种子最多 40 轮阻尼有限差分迭代，限制单步大小，只追加与原始目标最大矩阵元素误差
+小于 `1e-7` 的结果。原有候选仍保留，固定关节不参与更新，新增恢复不消耗随机数。
+种子变换的转角为 `1e-4` 弧度，平移向量长度为 `1e-4` 个模型长度单位，仅用于构造起点。
+局部恢复仍可能失败，不保证完备性或调用时延。重新导出时使用 `--with-runtime` 配套运行库；
+通用 `codegen`、`generate` 加 `--no-extra-recovery` 可导出原有 checked 路径，
+库生成器也支持 `refine_seeds=False`。
+
 ## 验证
 
 ```sh
@@ -219,6 +228,8 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   solver/test_argument_guards.py solver/test_guard_domains.py solver/test_rounded_frames.py \
   solver/test_candidate_assignment.py solver/test_partial_branches.py \
   solver/test_compact_workspace.py solver/test_fixed_joint_phases.py \
+  solver/test_seed_refinement.py \
+  solver/test_empty_recovery.py \
   solver/test_gallery_regeneration.py \
   solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 

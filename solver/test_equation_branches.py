@@ -38,9 +38,9 @@ def coaxial_tree():
         explicit(y, [sp.S.Zero]), explicit(z, [sp.atan2(r21, r11)-x-y])], model)
 
 
-def scope_for(tree):
+def scope_for(tree, refine_seeds=True):
     scope = {}
-    exec('\n'.join(CodeGenerationPython(tree).generate_code()), scope)
+    exec('\n'.join(CodeGenerationPython(tree, refine_seeds=refine_seeds).generate_code()), scope)
     return scope
 
 
@@ -112,12 +112,16 @@ class TestEquationBranches(TestCase):
         bad = explicit(x, [sp.atan2(Py, Px)-sp.atan2(sp.sin(y), 1+sp.cos(y))],
                        SolutionDegenerateRecord.record_all_equations([Px, Py, 1+sp.cos(y), sp.sin(y)]))
         tree = SkeletonTree([explicit(y, [sp.pi]), bad], model)
-        before = scope_for(tree)
+        # Check the symbolic branch itself without the optional runtime recovery.
+        before = scope_for(tree, refine_seeds=False)
         target = before['folded_planar_fk'](np.array([0.7, np.pi, 0.0]))
         self.assertEqual(before['folded_planar_ik_solve'](target, 0.0), [])
+        numerical = scope_for(tree)
+        self.assertTrue(any(np.max(np.abs(numerical['folded_planar_fk'](q)-target)) < 1e-7
+                            for q in numerical['folded_planar_ik_solve'](target, 0.0)))
         with redirect_stdout(StringIO()):
             build_equation_zero_branches(tree, representative_count=0)
-        recovered = scope_for(tree)
+        recovered = scope_for(tree, refine_seeds=False)
         for angle in (0.0, 0.7, -1.2, np.pi/2):
             target = recovered['folded_planar_fk'](np.array([angle, np.pi, 0.0]))
             output = recovered['folded_planar_ik_solve'](target, 0.0)

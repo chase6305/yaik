@@ -96,10 +96,10 @@ def rokae_SR3_ik_target_raw_to_original(T_ee: np.ndarray):
 def rokae_SR3_fk(theta_input: np.ndarray):
     theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
     th_5 = theta_input[5] + th_5_offset_original2raw
 
     # Temp variable for efficiency
@@ -161,11 +161,12 @@ def rokae_SR3_fk(theta_input: np.ndarray):
 
 
 def rokae_SR3_twist_jacobian(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
     th_5 = theta_input[5] + th_5_offset_original2raw
 
     # Temp variable for efficiency
@@ -247,11 +248,12 @@ def rokae_SR3_twist_jacobian(theta_input: np.ndarray):
 
 
 def rokae_SR3_angular_velocity_jacobian(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
     th_5 = theta_input[5] + th_5_offset_original2raw
 
     # Temp variable for efficiency
@@ -298,11 +300,12 @@ def rokae_SR3_angular_velocity_jacobian(theta_input: np.ndarray):
 
 
 def rokae_SR3_transform_point_jacobian(theta_input: np.ndarray, point_on_ee: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
     th_5 = theta_input[5] + th_5_offset_original2raw
     p_on_ee_x: float = point_on_ee[0]
     p_on_ee_y: float = point_on_ee[1]
@@ -398,15 +401,12 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
     inv_Px = inv_ee_translation[0]
     inv_Py = inv_ee_translation[1]
     inv_Pz = inv_ee_translation[2]
-    
+
     # A new ik type. Should be a fixed array in C++
     IkSolution = NewType("IkSolution", List[float])
     def make_ik_solution():
-        tmp_sol = IkSolution(list())
-        for tmp_sol_idx in range(8):
-            tmp_sol.append(100000.0)
-        return tmp_sol
-    
+        return IkSolution([math.nan] * 8)
+
     solution_queue: List[IkSolution] = list()
     queue_element_validity: List[bool] = list()
     def append_solution_to_queue(solution_2_add: IkSolution):
@@ -414,7 +414,7 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
         solution_queue.append(solution_2_add)
         queue_element_validity.append(True)
         return index_4_appended
-    
+
     # Init for workspace as empty list. A list of fixed size array for each node
     max_n_solutions: int = 16
     node_input_index: List[List[int]] = list()
@@ -426,17 +426,17 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
         node_input_index[node_idx].append(solution_idx)
         node_input_validity[node_idx] = True
     node_input_validity[0] = True
-    
+
     # Code for non-branch dispatcher node 0
     # Actually, there is no code
-    
+
     # Code for explicit solution node 1, solved variable is th_0
     def General6DoFNumericalReduceSolutionNode_node_1_solve_th_0_processor():
         this_node_input_index: List[int] = node_input_index[0]
         this_input_valid: bool = node_input_validity[0]
         if not this_input_valid:
             return
-        
+
         # The general 6-dof solution of root node with semi-symbolic reduce
         R_l = np.zeros(shape=(8, 8))
         R_l[0, 3] = -a_0
@@ -517,7 +517,7 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
         R_l_inv_75 = R_l_mat_inv[7, 5]
         R_l_inv_76 = R_l_mat_inv[7, 6]
         R_l_inv_77 = R_l_mat_inv[7, 7]
-        
+
         # Temp variable for efficiency
         x0 = -r_23
         x1 = 2*r_21
@@ -1681,17 +1681,17 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
     # Invoke the processor
     General6DoFNumericalReduceSolutionNode_node_1_solve_th_0_processor()
     # Finish code for explicit solution node 0
-    
+
     # Code for non-branch dispatcher node 2
     # Actually, there is no code
-    
+
     # Code for explicit solution node 3, solved variable is th_3
     def ExplicitSolutionNode_node_3_solve_th_3_processor():
         this_node_input_index: List[int] = node_input_index[2]
         this_input_valid: bool = node_input_validity[2]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 3
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -1699,45 +1699,34 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (abs((-Px*math.sin(th_0) + Py*math.cos(th_0) + d_4*(r_13*math.sin(th_0) - r_23*math.cos(th_0)))/d_3) <= 1)
+            condition_0: bool = (((d_3 != 0)) and ((abs((-Px*math.sin(th_0) + Py*math.cos(th_0) + d_4*(r_13*math.sin(th_0) - r_23*math.cos(th_0)))/d_3) <= 70368744177665/70368744177664)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_0)
                 x1 = math.sin(th_0)
                 x2 = safe_acos((Px*x1 - Py*x0 - d_4*(r_13*x1 - r_23*x0))/d_3)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[5] = x2
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(4, appended_idx)
-                
-            condition_1: bool = (abs((-Px*math.sin(th_0) + Py*math.cos(th_0) + d_4*(r_13*math.sin(th_0) - r_23*math.cos(th_0)))/d_3) <= 1)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = math.cos(th_0)
-                x1 = math.sin(th_0)
-                x2 = safe_acos((Px*x1 - Py*x0 - d_4*(r_13*x1 - r_23*x0))/d_3)
-                # End of temp variables
                 this_solution[5] = -x2
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(4, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_3_solve_th_3_processor()
     # Finish code for explicit solution node 2
-    
+
     # Code for non-branch dispatcher node 4
     # Actually, there is no code
-    
+
     # Code for explicit solution node 5, solved variable is th_2
     def ExplicitSolutionNode_node_5_solve_th_2_processor():
         this_node_input_index: List[int] = node_input_index[4]
         this_input_valid: bool = node_input_validity[4]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 5
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -1745,9 +1734,8 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_3 = this_solution[5]
-            condition_0: bool = (2*abs(a_0*d_2) >= zero_tolerance) or (abs(2*a_0*a_1 - 2*a_0*d_3*math.sin(th_3)) >= zero_tolerance) or (abs(-a_0**2 - a_1**2 + 2*a_1*d_3*math.sin(th_3) - d_2**2 - d_3**2 + d_4**2 + 2*d_4*inv_Pz + inv_Px**2 + inv_Py**2 + inv_Pz**2) >= zero_tolerance)
+            condition_0: bool = (((2*abs(a_0*d_2) >= zero_tolerance)) or ((abs(2*a_0*a_1 - 2*a_0*d_3*math.sin(th_3)) >= zero_tolerance)) or ((abs(-a_0**2 - a_1**2 + 2*a_1*d_3*math.sin(th_3) - d_2**2 - d_3**2 + d_4**2 + 2*d_4*inv_Pz + inv_Px**2 + inv_Py**2 + inv_Pz**2) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = 2*a_0
                 x1 = d_3*math.sin(th_3)
                 x2 = a_1*x0 - x0*x1
@@ -1756,41 +1744,26 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 x5 = d_2**2
                 x6 = -a_1**2 + 2*a_1*x1 - d_3**2 + d_4**2 + 2*d_4*inv_Pz + inv_Px**2 + inv_Py**2 + inv_Pz**2 - x4 - x5
                 x7 = safe_sqrt(x2**2 + 4*x4*x5 - x6**2)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[4] = x3 + math.atan2(x7, x6)
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(6, appended_idx)
-                
-            condition_1: bool = (2*abs(a_0*d_2) >= zero_tolerance) or (abs(2*a_0*a_1 - 2*a_0*d_3*math.sin(th_3)) >= zero_tolerance) or (abs(-a_0**2 - a_1**2 + 2*a_1*d_3*math.sin(th_3) - d_2**2 - d_3**2 + d_4**2 + 2*d_4*inv_Pz + inv_Px**2 + inv_Py**2 + inv_Pz**2) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = 2*a_0
-                x1 = d_3*math.sin(th_3)
-                x2 = a_1*x0 - x0*x1
-                x3 = math.atan2(-d_2*x0, x2)
-                x4 = a_0**2
-                x5 = d_2**2
-                x6 = -a_1**2 + 2*a_1*x1 - d_3**2 + d_4**2 + 2*d_4*inv_Pz + inv_Px**2 + inv_Py**2 + inv_Pz**2 - x4 - x5
-                x7 = safe_sqrt(x2**2 + 4*x4*x5 - x6**2)
-                # End of temp variables
                 this_solution[4] = x3 + math.atan2(-x7, x6)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(6, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_5_solve_th_2_processor()
     # Finish code for explicit solution node 4
-    
+
     # Code for solved_variable dispatcher node 6
     def SolvedVariableDispatcherNode_node_6_processor():
         this_node_input_index: List[int] = node_input_index[6]
         this_input_valid: bool = node_input_validity[6]
         if not this_input_valid:
             return
-        
+
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
             if not queue_element_validity[node_input_i_idx_in_queue]:
@@ -1807,7 +1780,7 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(14, branch_input_index)
-            
+
             th_3 = this_solution[5]
             degenerate_valid_1 = (abs(th_3 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
@@ -1817,21 +1790,21 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(19, branch_input_index)
-            
+
             if not taken_by_degenerate:
                 add_input_index_to(7, node_input_i_idx_in_queue)
-    
+
     # Invoke the processor
     SolvedVariableDispatcherNode_node_6_processor()
     # Finish code for solved_variable dispatcher node 6
-    
+
     # Code for explicit solution node 19, solved variable is th_1th_2th_4_soa
     def ExplicitSolutionNode_node_19_solve_th_1th_2th_4_soa_processor():
         this_node_input_index: List[int] = node_input_index[19]
         this_input_valid: bool = node_input_validity[19]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 19
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -1839,30 +1812,27 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_33) >= zero_tolerance) or (abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_33) >= zero_tolerance)) or ((abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[3] = math.atan2(r_13*math.cos(th_0) + r_23*math.sin(th_0), r_33)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(20, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_19_solve_th_1th_2th_4_soa_processor()
     # Finish code for explicit solution node 19
-    
+
     # Code for non-branch dispatcher node 20
     # Actually, there is no code
-    
+
     # Code for explicit solution node 21, solved variable is th_5
     def ExplicitSolutionNode_node_21_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[20]
         this_input_valid: bool = node_input_validity[20]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 21
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -1870,29 +1840,26 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
-                # End of temp variables
                 this_solution[7] = math.atan2(r_11*x0 - r_21*x1, r_12*x0 - r_22*x1)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(22, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_21_solve_th_5_processor()
     # Finish code for explicit solution node 20
-    
+
     # Code for solved_variable dispatcher node 22
     def SolvedVariableDispatcherNode_node_22_processor():
         this_node_input_index: List[int] = node_input_index[22]
         this_input_valid: bool = node_input_validity[22]
         if not this_input_valid:
             return
-        
+
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
             if not queue_element_validity[node_input_i_idx_in_queue]:
@@ -1909,7 +1876,7 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(32, branch_input_index)
-            
+
             th_2 = this_solution[4]
             degenerate_valid_1 = (abs(th_2 - 2*math.pi + 1.40006111531961) <= 1.0e-6)
             if degenerate_valid_1:
@@ -1919,21 +1886,21 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(35, branch_input_index)
-            
+
             if not taken_by_degenerate:
                 add_input_index_to(23, node_input_i_idx_in_queue)
-    
+
     # Invoke the processor
     SolvedVariableDispatcherNode_node_22_processor()
     # Finish code for solved_variable dispatcher node 22
-    
+
     # Code for explicit solution node 35, solved variable is th_4
     def ExplicitSolutionNode_node_35_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[35]
         this_input_valid: bool = node_input_validity[35]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 35
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -1941,49 +1908,36 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(0.985460115744348*a_0 + d_2) >= zero_tolerance) or (abs(d_4 + inv_Pz) >= zero_tolerance) or (abs(inv_Px*math.cos(th_5) - inv_Py*math.sin(th_5)) >= zero_tolerance)
+            condition_0: bool = (((abs(d_4 + inv_Pz) >= zero_tolerance)) or ((abs(0.985460115744348*a_0 + d_2) >= zero_tolerance)) or ((abs(inv_Px*math.cos(th_5) - inv_Py*math.sin(th_5)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = inv_Px*math.cos(th_5) - inv_Py*math.sin(th_5)
                 x1 = d_4 + inv_Pz
                 x2 = math.atan2(x0, x1)
                 x3 = 0.985460115744348*a_0 + d_2
                 x4 = safe_sqrt(x0**2 + x1**2 - x3**2)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[6] = x2 + math.atan2(x4, x3)
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(36, appended_idx)
-                
-            condition_1: bool = (abs(0.985460115744348*a_0 + d_2) >= zero_tolerance) or (abs(d_4 + inv_Pz) >= zero_tolerance) or (abs(inv_Px*math.cos(th_5) - inv_Py*math.sin(th_5)) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = inv_Px*math.cos(th_5) - inv_Py*math.sin(th_5)
-                x1 = d_4 + inv_Pz
-                x2 = math.atan2(x0, x1)
-                x3 = 0.985460115744348*a_0 + d_2
-                x4 = safe_sqrt(x0**2 + x1**2 - x3**2)
-                # End of temp variables
                 this_solution[6] = x2 + math.atan2(-x4, x3)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(36, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_35_solve_th_4_processor()
     # Finish code for explicit solution node 35
-    
+
     # Code for non-branch dispatcher node 36
     # Actually, there is no code
-    
+
     # Code for explicit solution node 37, solved variable is th_1
     def ExplicitSolutionNode_node_37_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[36]
         this_input_valid: bool = node_input_validity[36]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 37
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -1991,42 +1945,30 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(0.985460115744348*a_1 - 0.169906916507646*d_2) >= zero_tolerance) or (abs(a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2) >= zero_tolerance) or (abs(Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33) >= zero_tolerance)
+            condition_0: bool = (((abs(0.985460115744348*a_1 - 0.169906916507646*d_2) >= zero_tolerance)) or ((abs(a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2) >= zero_tolerance)) or ((abs(Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2
                 x1 = math.atan2(x0, -0.985460115744348*a_1 + 0.169906916507646*d_2)
                 x2 = -Pz - d_3*r_31*math.sin(th_5) - d_3*r_32*math.cos(th_5) + d_4*r_33
                 x3 = safe_sqrt(x0**2 - x2**2 + 0.971131639722864*(-a_1 + 0.172413793103448*d_2)**2)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[1] = x1 + math.atan2(x3, x2)
                 appended_idx = append_solution_to_queue(solution_0)
-                
-            condition_1: bool = (abs(0.985460115744348*a_1 - 0.169906916507646*d_2) >= zero_tolerance) or (abs(a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2) >= zero_tolerance) or (abs(Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2
-                x1 = math.atan2(x0, -0.985460115744348*a_1 + 0.169906916507646*d_2)
-                x2 = -Pz - d_3*r_31*math.sin(th_5) - d_3*r_32*math.cos(th_5) + d_4*r_33
-                x3 = safe_sqrt(x0**2 - x2**2 + 0.971131639722864*(-a_1 + 0.172413793103448*d_2)**2)
-                # End of temp variables
                 this_solution[1] = x1 + math.atan2(-x3, x2)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_37_solve_th_1_processor()
     # Finish code for explicit solution node 36
-    
+
     # Code for explicit solution node 32, solved variable is th_1
     def ExplicitSolutionNode_node_32_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[32]
         this_input_valid: bool = node_input_validity[32]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 32
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2034,47 +1976,35 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(0.985460115744348*a_1 - 0.169906916507646*d_2) >= zero_tolerance) or (abs(-a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2) >= zero_tolerance) or (abs(Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33) >= zero_tolerance)
+            condition_0: bool = (((abs(0.985460115744348*a_1 - 0.169906916507646*d_2) >= zero_tolerance)) or ((abs(-a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2) >= zero_tolerance)) or ((abs(Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = -a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2
                 x1 = math.atan2(x0, -0.985460115744348*a_1 + 0.169906916507646*d_2)
                 x2 = Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33
                 x3 = safe_sqrt(x0**2 - x2**2 + 0.971131639722864*(-a_1 + 0.172413793103448*d_2)**2)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[1] = x1 + math.atan2(x3, x2)
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(33, appended_idx)
-                
-            condition_1: bool = (abs(0.985460115744348*a_1 - 0.169906916507646*d_2) >= zero_tolerance) or (abs(-a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2) >= zero_tolerance) or (abs(Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = -a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2
-                x1 = math.atan2(x0, -0.985460115744348*a_1 + 0.169906916507646*d_2)
-                x2 = Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33
-                x3 = safe_sqrt(x0**2 - x2**2 + 0.971131639722864*(-a_1 + 0.172413793103448*d_2)**2)
-                # End of temp variables
                 this_solution[1] = x1 + math.atan2(-x3, x2)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(33, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_32_solve_th_1_processor()
     # Finish code for explicit solution node 32
-    
+
     # Code for non-branch dispatcher node 33
     # Actually, there is no code
-    
+
     # Code for explicit solution node 34, solved variable is th_4
     def ExplicitSolutionNode_node_34_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[33]
         this_input_valid: bool = node_input_validity[33]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 34
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2084,9 +2014,8 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
             th_0 = this_solution[0]
             th_1 = this_solution[1]
             th_3 = this_solution[5]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(-r_13*((-0.985460115744348*math.sin(th_1) - 0.169906916507646*math.cos(th_1))*math.cos(th_0)*math.cos(th_3) + math.sin(th_0)*math.sin(th_3)) - r_23*((-0.985460115744348*math.sin(th_1) - 0.169906916507646*math.cos(th_1))*math.sin(th_0)*math.cos(th_3) - math.sin(th_3)*math.cos(th_0)) - r_33*(0.169906916507646*math.sin(th_1) - 0.985460115744348*math.cos(th_1))*math.cos(th_3)) >= zero_tolerance) or (abs(-r_13*(-0.169906916507646*math.sin(th_1) + 0.985460115744348*math.cos(th_1))*math.cos(th_0) - r_23*(-0.169906916507646*math.sin(th_1) + 0.985460115744348*math.cos(th_1))*math.sin(th_0) + r_33*(0.985460115744348*math.sin(th_1) + 0.169906916507646*math.cos(th_1))) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(-r_13*(-0.169906916507646*math.sin(th_1) + 0.985460115744348*math.cos(th_1))*math.cos(th_0) - r_23*(-0.169906916507646*math.sin(th_1) + 0.985460115744348*math.cos(th_1))*math.sin(th_0) + r_33*(0.985460115744348*math.sin(th_1) + 0.169906916507646*math.cos(th_1))) >= zero_tolerance)) or ((abs(-r_13*((-0.985460115744348*math.sin(th_1) - 0.169906916507646*math.cos(th_1))*math.cos(th_0)*math.cos(th_3) + math.sin(th_0)*math.sin(th_3)) - r_23*((-0.985460115744348*math.sin(th_1) - 0.169906916507646*math.cos(th_1))*math.sin(th_0)*math.cos(th_3) - math.sin(th_3)*math.cos(th_0)) - r_33*(0.169906916507646*math.sin(th_1) - 0.985460115744348*math.cos(th_1))*math.cos(th_3)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_3)
                 x1 = math.sin(th_1)
                 x2 = math.cos(th_1)
@@ -2097,23 +2026,21 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 x7 = 0.985460115744348*x1 + 0.169906916507646*x2
                 x8 = -x0*x7
                 x9 = -x3
-                # End of temp variables
                 this_solution[6] = math.atan2(-r_13*(x4*x5 + x6*x8) - r_23*(x4*x8 - x5*x6) - r_33*x0*x3, r_13*x6*x9 + r_23*x4*x9 - r_33*x7)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_34_solve_th_4_processor()
     # Finish code for explicit solution node 33
-    
+
     # Code for explicit solution node 23, solved variable is th_1
     def ExplicitSolutionNode_node_23_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[23]
         this_input_valid: bool = node_input_validity[23]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 23
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2123,36 +2050,33 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
             th_0 = this_solution[0]
             th_1th_2th_4_soa = this_solution[3]
             th_2 = this_solution[4]
-            condition_0: bool = (abs(a_1*math.sin(th_2) + d_2*math.cos(th_2)) >= 1.0e-6) or (abs(a_0 + a_1*math.cos(th_2) - d_2*math.sin(th_2)) >= 1.0e-6)
+            condition_0: bool = (((abs(a_1*math.sin(th_2) + d_2*math.cos(th_2)) >= 1.0e-6)) or ((abs(a_0 + a_1*math.cos(th_2) - d_2*math.sin(th_2)) >= 1.0e-6)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = Pz - d_4*r_33
                 x1 = math.cos(th_2)
                 x2 = math.sin(th_2)
                 x3 = a_0 + a_1*x1 - d_2*x2
                 x4 = -a_1*x2 - d_2*x1
                 x5 = Px*math.cos(th_0) + Py*math.sin(th_0) - d_4*math.sin(th_1th_2th_4_soa)
-                # End of temp variables
                 this_solution[1] = math.atan2(-x0*x3 + x4*x5, x0*x4 + x3*x5)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(24, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_23_solve_th_1_processor()
     # Finish code for explicit solution node 23
-    
+
     # Code for non-branch dispatcher node 24
     # Actually, there is no code
-    
+
     # Code for explicit solution node 25, solved variable is th_4
     def ExplicitSolutionNode_node_25_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[24]
         this_input_valid: bool = node_input_validity[24]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 25
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2164,24 +2088,21 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
             th_2 = this_solution[4]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[6] = -th_1 + th_1th_2th_4_soa - th_2
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_25_solve_th_4_processor()
     # Finish code for explicit solution node 24
-    
+
     # Code for explicit solution node 14, solved variable is th_5
     def ExplicitSolutionNode_node_14_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[14]
         this_input_valid: bool = node_input_validity[14]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 14
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2189,29 +2110,26 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
-                # End of temp variables
                 this_solution[7] = math.atan2(-r_11*x0 + r_21*x1, -r_12*x0 + r_22*x1)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(15, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_14_solve_th_5_processor()
     # Finish code for explicit solution node 14
-    
+
     # Code for solved_variable dispatcher node 15
     def SolvedVariableDispatcherNode_node_15_processor():
         this_node_input_index: List[int] = node_input_index[15]
         this_input_valid: bool = node_input_validity[15]
         if not this_input_valid:
             return
-        
+
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
             if not queue_element_validity[node_input_i_idx_in_queue]:
@@ -2228,7 +2146,7 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(26, branch_input_index)
-            
+
             th_2 = this_solution[4]
             degenerate_valid_1 = (abs(th_2 - 2*math.pi + 1.40006111531961) <= 1.0e-6)
             if degenerate_valid_1:
@@ -2238,21 +2156,21 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(29, branch_input_index)
-            
+
             if not taken_by_degenerate:
                 add_input_index_to(16, node_input_i_idx_in_queue)
-    
+
     # Invoke the processor
     SolvedVariableDispatcherNode_node_15_processor()
     # Finish code for solved_variable dispatcher node 15
-    
+
     # Code for explicit solution node 29, solved variable is th_4
     def ExplicitSolutionNode_node_29_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[29]
         this_input_valid: bool = node_input_validity[29]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 29
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2260,49 +2178,36 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(0.985460115744348*a_0 + d_2) >= zero_tolerance) or (abs(d_4 + inv_Pz) >= zero_tolerance) or (abs(inv_Px*math.cos(th_5) - inv_Py*math.sin(th_5)) >= zero_tolerance)
+            condition_0: bool = (((abs(d_4 + inv_Pz) >= zero_tolerance)) or ((abs(0.985460115744348*a_0 + d_2) >= zero_tolerance)) or ((abs(inv_Px*math.cos(th_5) - inv_Py*math.sin(th_5)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = inv_Px*math.cos(th_5) - inv_Py*math.sin(th_5)
                 x1 = d_4 + inv_Pz
                 x2 = math.atan2(x0, x1)
                 x3 = 0.985460115744348*a_0 + d_2
                 x4 = safe_sqrt(x0**2 + x1**2 - x3**2)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[6] = x2 + math.atan2(x4, x3)
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(30, appended_idx)
-                
-            condition_1: bool = (abs(0.985460115744348*a_0 + d_2) >= zero_tolerance) or (abs(d_4 + inv_Pz) >= zero_tolerance) or (abs(inv_Px*math.cos(th_5) - inv_Py*math.sin(th_5)) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = inv_Px*math.cos(th_5) - inv_Py*math.sin(th_5)
-                x1 = d_4 + inv_Pz
-                x2 = math.atan2(x0, x1)
-                x3 = 0.985460115744348*a_0 + d_2
-                x4 = safe_sqrt(x0**2 + x1**2 - x3**2)
-                # End of temp variables
                 this_solution[6] = x2 + math.atan2(-x4, x3)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(30, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_29_solve_th_4_processor()
     # Finish code for explicit solution node 29
-    
+
     # Code for non-branch dispatcher node 30
     # Actually, there is no code
-    
+
     # Code for explicit solution node 31, solved variable is th_1
     def ExplicitSolutionNode_node_31_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[30]
         this_input_valid: bool = node_input_validity[30]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 31
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2310,42 +2215,30 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(0.985460115744348*a_1 - 0.169906916507646*d_2) >= zero_tolerance) or (abs(a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2) >= zero_tolerance) or (abs(Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33) >= zero_tolerance)
+            condition_0: bool = (((abs(0.985460115744348*a_1 - 0.169906916507646*d_2) >= zero_tolerance)) or ((abs(a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2) >= zero_tolerance)) or ((abs(Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2
                 x1 = math.atan2(x0, -0.985460115744348*a_1 + 0.169906916507646*d_2)
                 x2 = -Pz - d_3*r_31*math.sin(th_5) - d_3*r_32*math.cos(th_5) + d_4*r_33
                 x3 = safe_sqrt(x0**2 - x2**2 + 0.971131639722864*(-a_1 + 0.172413793103448*d_2)**2)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[1] = x1 + math.atan2(x3, x2)
                 appended_idx = append_solution_to_queue(solution_0)
-                
-            condition_1: bool = (abs(0.985460115744348*a_1 - 0.169906916507646*d_2) >= zero_tolerance) or (abs(a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2) >= zero_tolerance) or (abs(Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2
-                x1 = math.atan2(x0, -0.985460115744348*a_1 + 0.169906916507646*d_2)
-                x2 = -Pz - d_3*r_31*math.sin(th_5) - d_3*r_32*math.cos(th_5) + d_4*r_33
-                x3 = safe_sqrt(x0**2 - x2**2 + 0.971131639722864*(-a_1 + 0.172413793103448*d_2)**2)
-                # End of temp variables
                 this_solution[1] = x1 + math.atan2(-x3, x2)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_31_solve_th_1_processor()
     # Finish code for explicit solution node 30
-    
+
     # Code for explicit solution node 26, solved variable is th_1
     def ExplicitSolutionNode_node_26_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[26]
         this_input_valid: bool = node_input_validity[26]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 26
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2353,47 +2246,35 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(0.985460115744348*a_1 - 0.169906916507646*d_2) >= zero_tolerance) or (abs(-a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2) >= zero_tolerance) or (abs(Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33) >= zero_tolerance)
+            condition_0: bool = (((abs(0.985460115744348*a_1 - 0.169906916507646*d_2) >= zero_tolerance)) or ((abs(-a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2) >= zero_tolerance)) or ((abs(Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = -a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2
                 x1 = math.atan2(x0, -0.985460115744348*a_1 + 0.169906916507646*d_2)
                 x2 = Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33
                 x3 = safe_sqrt(x0**2 - x2**2 + 0.971131639722864*(-a_1 + 0.172413793103448*d_2)**2)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[1] = x1 + math.atan2(x3, x2)
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(27, appended_idx)
-                
-            condition_1: bool = (abs(0.985460115744348*a_1 - 0.169906916507646*d_2) >= zero_tolerance) or (abs(-a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2) >= zero_tolerance) or (abs(Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = -a_0 + 0.169906916507646*a_1 + 0.985460115744348*d_2
-                x1 = math.atan2(x0, -0.985460115744348*a_1 + 0.169906916507646*d_2)
-                x2 = Pz + d_3*r_31*math.sin(th_5) + d_3*r_32*math.cos(th_5) - d_4*r_33
-                x3 = safe_sqrt(x0**2 - x2**2 + 0.971131639722864*(-a_1 + 0.172413793103448*d_2)**2)
-                # End of temp variables
                 this_solution[1] = x1 + math.atan2(-x3, x2)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(27, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_26_solve_th_1_processor()
     # Finish code for explicit solution node 26
-    
+
     # Code for non-branch dispatcher node 27
     # Actually, there is no code
-    
+
     # Code for explicit solution node 28, solved variable is th_4
     def ExplicitSolutionNode_node_28_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[27]
         this_input_valid: bool = node_input_validity[27]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 28
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2403,9 +2284,8 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
             th_0 = this_solution[0]
             th_1 = this_solution[1]
             th_3 = this_solution[5]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(-r_13*((-0.985460115744348*math.sin(th_1) - 0.169906916507646*math.cos(th_1))*math.cos(th_0)*math.cos(th_3) + math.sin(th_0)*math.sin(th_3)) - r_23*((-0.985460115744348*math.sin(th_1) - 0.169906916507646*math.cos(th_1))*math.sin(th_0)*math.cos(th_3) - math.sin(th_3)*math.cos(th_0)) - r_33*(0.169906916507646*math.sin(th_1) - 0.985460115744348*math.cos(th_1))*math.cos(th_3)) >= zero_tolerance) or (abs(-r_13*(-0.169906916507646*math.sin(th_1) + 0.985460115744348*math.cos(th_1))*math.cos(th_0) - r_23*(-0.169906916507646*math.sin(th_1) + 0.985460115744348*math.cos(th_1))*math.sin(th_0) + r_33*(0.985460115744348*math.sin(th_1) + 0.169906916507646*math.cos(th_1))) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(-r_13*(-0.169906916507646*math.sin(th_1) + 0.985460115744348*math.cos(th_1))*math.cos(th_0) - r_23*(-0.169906916507646*math.sin(th_1) + 0.985460115744348*math.cos(th_1))*math.sin(th_0) + r_33*(0.985460115744348*math.sin(th_1) + 0.169906916507646*math.cos(th_1))) >= zero_tolerance)) or ((abs(-r_13*((-0.985460115744348*math.sin(th_1) - 0.169906916507646*math.cos(th_1))*math.cos(th_0)*math.cos(th_3) + math.sin(th_0)*math.sin(th_3)) - r_23*((-0.985460115744348*math.sin(th_1) - 0.169906916507646*math.cos(th_1))*math.sin(th_0)*math.cos(th_3) - math.sin(th_3)*math.cos(th_0)) - r_33*(0.169906916507646*math.sin(th_1) - 0.985460115744348*math.cos(th_1))*math.cos(th_3)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_3)
                 x1 = math.sin(th_1)
                 x2 = math.cos(th_1)
@@ -2416,23 +2296,21 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 x7 = 0.985460115744348*x1 + 0.169906916507646*x2
                 x8 = -x0*x7
                 x9 = -x3
-                # End of temp variables
                 this_solution[6] = math.atan2(-r_13*(x4*x5 + x6*x8) - r_23*(x4*x8 - x5*x6) - r_33*x0*x3, r_13*x6*x9 + r_23*x4*x9 - r_33*x7)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_28_solve_th_4_processor()
     # Finish code for explicit solution node 27
-    
+
     # Code for explicit solution node 16, solved variable is th_1
     def ExplicitSolutionNode_node_16_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[16]
         this_input_valid: bool = node_input_validity[16]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 16
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2441,9 +2319,8 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
             th_2 = this_solution[4]
-            condition_0: bool = (abs(a_1*math.sin(th_2) + d_2*math.cos(th_2)) >= 1.0e-6) or (abs(a_0 + a_1*math.cos(th_2) - d_2*math.sin(th_2)) >= 1.0e-6)
+            condition_0: bool = (((abs(a_1*math.sin(th_2) + d_2*math.cos(th_2)) >= 1.0e-6)) or ((abs(a_0 + a_1*math.cos(th_2) - d_2*math.sin(th_2)) >= 1.0e-6)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = Pz - d_4*r_33
                 x1 = math.cos(th_2)
                 x2 = math.sin(th_2)
@@ -2452,27 +2329,25 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 x5 = math.cos(th_0)
                 x6 = math.sin(th_0)
                 x7 = Px*x5 + Py*x6 - d_4*r_13*x5 - d_4*r_23*x6
-                # End of temp variables
                 this_solution[1] = math.atan2(-x0*x3 + x4*x7, x0*x4 + x3*x7)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(17, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_16_solve_th_1_processor()
     # Finish code for explicit solution node 16
-    
+
     # Code for non-branch dispatcher node 17
     # Actually, there is no code
-    
+
     # Code for explicit solution node 18, solved variable is th_4
     def ExplicitSolutionNode_node_18_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[17]
         this_input_valid: bool = node_input_validity[17]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 18
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2482,9 +2357,8 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
             th_0 = this_solution[0]
             th_1 = this_solution[1]
             th_2 = this_solution[4]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(-r_13*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))*math.cos(th_0) - r_23*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))*math.sin(th_0) + r_33*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))) >= zero_tolerance) or (abs(r_13*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.cos(th_0) + r_23*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.sin(th_0) + r_33*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_13*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.cos(th_0) + r_23*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.sin(th_0) + r_33*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))) >= zero_tolerance)) or ((abs(-r_13*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))*math.cos(th_0) - r_23*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))*math.sin(th_0) + r_33*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_1)
                 x1 = math.cos(th_2)
                 x2 = math.sin(th_2)
@@ -2493,23 +2367,21 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 x5 = -x0*x2 + x1*x3
                 x6 = r_13*math.cos(th_0)
                 x7 = r_23*math.sin(th_0)
-                # End of temp variables
                 this_solution[6] = math.atan2(r_33*x4 - x5*x6 - x5*x7, r_33*x5 + x4*x6 + x4*x7)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_18_solve_th_4_processor()
     # Finish code for explicit solution node 17
-    
+
     # Code for explicit solution node 7, solved variable is th_4
     def ExplicitSolutionNode_node_7_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[7]
         this_input_valid: bool = node_input_validity[7]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 7
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2518,31 +2390,22 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
             th_3 = this_solution[5]
-            condition_0: bool = (abs((r_13*math.sin(th_0) - r_23*math.cos(th_0))/math.sin(th_3)) <= 1)
+            condition_0: bool = (((math.sin(th_3) != 0)) and ((abs((r_13*math.sin(th_0) - r_23*math.cos(th_0))/math.sin(th_3)) <= 70368744177665/70368744177664)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = safe_asin((-r_13*math.sin(th_0) + r_23*math.cos(th_0))/math.sin(th_3))
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[6] = x0
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(8, appended_idx)
-                
-            condition_1: bool = (abs((r_13*math.sin(th_0) - r_23*math.cos(th_0))/math.sin(th_3)) <= 1)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = safe_asin((-r_13*math.sin(th_0) + r_23*math.cos(th_0))/math.sin(th_3))
-                # End of temp variables
                 this_solution[6] = math.pi - x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(8, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_7_solve_th_4_processor()
     # Finish code for explicit solution node 7
-    
+
     # Code for equation all-zero dispatcher node 8
     def EquationAllZeroDispatcherNode_node_8_processor():
         this_node_input_index: List[int] = node_input_index[8]
@@ -2555,23 +2418,23 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            checked_result: bool = (abs(Pz) <= 1.0e-6) and (abs(Px*math.cos(th_0) + Py*math.sin(th_0)) <= 1.0e-6)
+            checked_result: bool = (((abs(Pz) <= 1.0e-6)) and ((abs(Px*math.cos(th_0) + Py*math.sin(th_0)) <= 1.0e-6)))
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(9, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-    
+
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_8_processor()
     # Finish code for equation all-zero dispatcher node 8
-    
+
     # Code for explicit solution node 9, solved variable is th_1th_2_soa
     def ExplicitSolutionNode_node_9_solve_th_1th_2_soa_processor():
         this_node_input_index: List[int] = node_input_index[9]
         this_input_valid: bool = node_input_validity[9]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 9
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2582,33 +2445,30 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
             th_2 = this_solution[4]
             th_3 = this_solution[5]
             th_4 = this_solution[6]
-            condition_0: bool = (abs(Pz) >= 1.0e-6) or (abs(Px*math.cos(th_0) + Py*math.sin(th_0)) >= 1.0e-6)
+            condition_0: bool = (((abs(Pz) >= 1.0e-6)) or ((abs(Px*math.cos(th_0) + Py*math.sin(th_0)) >= 1.0e-6)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = -a_0*math.cos(th_2) - a_1 + d_3*math.sin(th_3) + d_4*math.sin(th_4)*math.cos(th_3)
                 x1 = -Px*math.cos(th_0) - Py*math.sin(th_0)
                 x2 = a_0*math.sin(th_2) - d_2 + d_4*math.cos(th_4)
-                # End of temp variables
                 this_solution[2] = math.atan2(Pz*x0 - x1*x2, Pz*x2 + x0*x1)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(10, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_9_solve_th_1th_2_soa_processor()
     # Finish code for explicit solution node 9
-    
+
     # Code for non-branch dispatcher node 10
     # Actually, there is no code
-    
+
     # Code for explicit solution node 11, solved variable is th_1
     def ExplicitSolutionNode_node_11_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[10]
         this_input_valid: bool = node_input_validity[10]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 11
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2619,28 +2479,25 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
             th_2 = this_solution[4]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[1] = th_1th_2_soa - th_2
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(12, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_11_solve_th_1_processor()
     # Finish code for explicit solution node 10
-    
+
     # Code for non-branch dispatcher node 12
     # Actually, there is no code
-    
+
     # Code for explicit solution node 13, solved variable is th_5
     def ExplicitSolutionNode_node_13_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[12]
         this_input_valid: bool = node_input_validity[12]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 13
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2650,9 +2507,8 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
             th_0 = this_solution[0]
             th_1th_2_soa = this_solution[2]
             th_3 = this_solution[5]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*(math.sin(th_0)*math.cos(th_3) - math.sin(th_3)*math.cos(th_0)*math.cos(th_1th_2_soa)) - r_21*(math.sin(th_0)*math.sin(th_3)*math.cos(th_1th_2_soa) + math.cos(th_0)*math.cos(th_3)) + r_31*math.sin(th_1th_2_soa)*math.sin(th_3)) >= zero_tolerance) or (abs(r_12*(math.sin(th_0)*math.cos(th_3) - math.sin(th_3)*math.cos(th_0)*math.cos(th_1th_2_soa)) - r_22*(math.sin(th_0)*math.sin(th_3)*math.cos(th_1th_2_soa) + math.cos(th_0)*math.cos(th_3)) + r_32*math.sin(th_1th_2_soa)*math.sin(th_3)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*(math.sin(th_0)*math.cos(th_3) - math.sin(th_3)*math.cos(th_0)*math.cos(th_1th_2_soa)) - r_21*(math.sin(th_0)*math.sin(th_3)*math.cos(th_1th_2_soa) + math.cos(th_0)*math.cos(th_3)) + r_31*math.sin(th_1th_2_soa)*math.sin(th_3)) >= zero_tolerance)) or ((abs(r_12*(math.sin(th_0)*math.cos(th_3) - math.sin(th_3)*math.cos(th_0)*math.cos(th_1th_2_soa)) - r_22*(math.sin(th_0)*math.sin(th_3)*math.cos(th_1th_2_soa) + math.cos(th_0)*math.cos(th_3)) + r_32*math.sin(th_1th_2_soa)*math.sin(th_3)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_3)
                 x1 = x0*math.sin(th_1th_2_soa)
                 x2 = math.sin(th_0)
@@ -2661,16 +2517,14 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
                 x5 = x0*math.cos(th_1th_2_soa)
                 x6 = x2*x3 - x4*x5
                 x7 = x2*x5 + x3*x4
-                # End of temp variables
                 this_solution[7] = math.atan2(-r_11*x6 + r_21*x7 - r_31*x1, -r_12*x6 + r_22*x7 - r_32*x1)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_13_solve_th_5_processor()
     # Finish code for explicit solution node 12
-    
+
     # Collect the output
     ik_out: List[np.ndarray] = list()
     for i in range(len(solution_queue)):
@@ -2690,29 +2544,87 @@ def rokae_SR3_ik_solve_raw(T_ee: np.ndarray):
         new_ik_i[4] = value_at_4
         value_at_5 = ik_out_i[7]  # th_5
         new_ik_i[5] = value_at_5
-        ik_out.append(new_ik_i)
+        if np.all(np.isfinite(new_ik_i)):
+            ik_out.append(new_ik_i)
     return ik_out
+
+
+def rokae_SR3_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarray, _yaik_seed_candidates=None):
+    if not np.all(np.isfinite(T_ee)):
+        return []
+    if not np.all(np.isfinite(T_ee_raw_in)):
+        return []
+    ik_output_raw = rokae_SR3_ik_solve_raw(T_ee_raw_in)
+    ik_output = list()
+    for i in range(len(ik_output_raw)):
+        ik_out_i = ik_output_raw[i]
+        ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw
+        ik_out_i[1] = add_revolute_offset(ik_out_i[1], -th_1_offset_original2raw)
+        ik_out_i[2] = add_revolute_offset(ik_out_i[2], -th_2_offset_original2raw)
+        ik_out_i[3] = add_revolute_offset(ik_out_i[3], -th_3_offset_original2raw)
+        ik_out_i[4] = add_revolute_offset(ik_out_i[4], -th_4_offset_original2raw)
+        ik_out_i[5] = ik_out_i[5] - th_5_offset_original2raw
+        ee_pose_i = rokae_SR3_fk(ik_out_i)
+        ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
+        if _yaik_seed_candidates is not None:
+            if ee_pose_diff < 1e-7:
+                _yaik_seed_candidates.strict_witness = True
+                _yaik_seed_candidates.clear()
+            elif not _yaik_seed_candidates.strict_witness:
+                retain_refinement_seed(_yaik_seed_candidates, ik_out_i, ee_pose_diff)
+        if ee_pose_diff < pose_tolerance:
+            ik_output.append(ik_out_i)
+        snapped = snap_near_joint_limits(ik_out_i, [-3.141592653589793, -1.7415315382701793, -2.9708574421145104, -6.283185307179586, -6.283185307179586, -3.141592653589793], [3.141592653589793, 4.541653768909407, 3.312327865065076, 0.0, 0.0, 3.141592653589793], [True, True, True, True, True, True], [False, False, False, False, False, False])
+        if snapped is not None:
+            snapped = snapped.reshape(ik_out_i.shape)
+            snapped_pose = rokae_SR3_fk(snapped)
+            if (np.linalg.norm(snapped_pose[:3, 3]-T_ee[:3, 3]) <= 1e-7 and np.max(np.abs(snapped_pose[:3, :3]-T_ee[:3, :3])) <= 1e-7):
+                ik_output.append(snapped)
+                if _yaik_seed_candidates is not None and np.max(np.abs(snapped_pose-T_ee)) < 1e-7:
+                    _yaik_seed_candidates.strict_witness = True
+                    _yaik_seed_candidates.clear()
+    return ik_output
 
 
 def rokae_SR3_ik_solve(T_ee: np.ndarray):
     if not np.all(np.isfinite(T_ee)):
         return []
-    T_ee_raw_in = rokae_SR3_ik_target_original_to_raw(T_ee)
-    ik_output_raw = rokae_SR3_ik_solve_raw(T_ee_raw_in)
-    ik_output = list()
-    for i in range(len(ik_output_raw)):
-        ik_out_i = ik_output_raw[i]
-        ik_out_i[0] -= th_0_offset_original2raw
-        ik_out_i[1] -= th_1_offset_original2raw
-        ik_out_i[2] -= th_2_offset_original2raw
-        ik_out_i[3] -= th_3_offset_original2raw
-        ik_out_i[4] -= th_4_offset_original2raw
-        ik_out_i[5] -= th_5_offset_original2raw
-        ee_pose_i = rokae_SR3_fk(ik_out_i)
-        ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
-        if ee_pose_diff < pose_tolerance:
-            ik_output.append(ik_out_i)
-    return ik_output
+    result, seen = [], set()
+    refinement_seeds = RefinementSeeds()
+    for transform in (rokae_SR3_ik_target_original_to_raw,):
+        raw_target = transform(T_ee)
+        for candidate in rokae_SR3_ik_solve_for_raw_target(T_ee, raw_target, _yaik_seed_candidates=refinement_seeds):
+            result.append(candidate)
+    refinement_fk = lambda q: rokae_SR3_fk(q)
+    if refinement_seeds and not refinement_seeds.strict_witness:
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, False, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
+    if not refinement_seeds.strict_witness:
+        refinement_seeds.clear()
+        seed_parameters = ()
+        for shifted in nearby_ik_targets(T_ee):
+            for transform in (rokae_SR3_ik_target_original_to_raw,):
+                raw_target = transform(shifted)
+                for raw_candidate in rokae_SR3_ik_solve_raw(raw_target, *seed_parameters):
+                    seed = raw_candidate.reshape(-1).copy()
+                    seed[0] = seed[0] - th_0_offset_original2raw
+                    seed[1] = add_revolute_offset(seed[1], -th_1_offset_original2raw)
+                    seed[2] = add_revolute_offset(seed[2], -th_2_offset_original2raw)
+                    seed[3] = add_revolute_offset(seed[3], -th_3_offset_original2raw)
+                    seed[4] = add_revolute_offset(seed[4], -th_4_offset_original2raw)
+                    seed[5] = seed[5] - th_5_offset_original2raw
+                    retain_ik_refinement_seed(refinement_seeds, refinement_fk, T_ee, seed)
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, False, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
+    return result
 
 
 def test_ik_solve_rokae_SR3():

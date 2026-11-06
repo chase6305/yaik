@@ -7,12 +7,18 @@ struct kawasaki_BX250L_ik {
 // Constants for solver
 static constexpr int robot_nq = 6;
 static constexpr int max_n_solutions = 32;
+static std::array<double, robot_nq> jointLower() { return {{-3.141592653589793, -2.1715101101058902, -0.6007137833109937, -6.283185307179586, -6.283185307179586, -4.71238898038469}}; }
+static std::array<double, robot_nq> jointUpper() { return {{3.141592653589793, 4.111675197073696, 5.6824715238685926, 0.0, 0.0, 1.5707963267948963}}; }
+static std::array<bool, robot_nq> periodicLimitJoints() { return {{true, true, true, true, true, true}}; }
+static std::array<bool, robot_nq> fixedJoints() { return {{false, false, false, false, false, false}}; }
 static constexpr int n_tree_nodes = 24;
 static constexpr int intermediate_solution_size = 9;
 static constexpr double pose_tolerance = 1e-6;
 static constexpr double pose_tolerance_degenerate = 1e-4;
 static constexpr double zero_tolerance = 1e-6;
-using RawIKWorksace = ::yaik_cpp::RawIkWorkspaceTemplate<intermediate_solution_size, max_n_solutions, robot_nq>;
+using SolutionQueueType = ::yaik_cpp::CompactSolutionQueue<intermediate_solution_size, max_n_solutions>;
+using NodeIndexWorkspaceType = ::yaik_cpp::CompactNodeIndexWorkspace;
+using RawIKWorksace = ::yaik_cpp::RawIkWorkspaceTemplate<intermediate_solution_size, max_n_solutions, robot_nq, SolutionQueueType, NodeIndexWorkspaceType>;
 
 // Robot parameters
 static constexpr double a_0 = 0.21;
@@ -53,18 +59,18 @@ static Eigen::Matrix4d endEffectorTargetOriginalToRaw(const Eigen::Matrix4d& T_e
     const double Pz = T_ee(2, 3);
     Eigen::Matrix4d ee_transformed;
     ee_transformed.setIdentity();
-    ee_transformed(0, 0) = 6.1232339957367599e-17*r_13 + 1.0*r_23 + 5.5511151231257802e-17*r_33;
-    ee_transformed(0, 1) = -6.1232339957367599e-17*r_12 - 1.0*r_22 - 5.5511151231257802e-17*r_32;
-    ee_transformed(0, 2) = 6.1232339957367599e-17*r_11 + 1.0*r_21 + 5.5511151231257802e-17*r_31;
-    ee_transformed(0, 3) = 6.1232339957367599e-17*Px + 1.0*Py + 5.5511151231257802e-17*Pz - 5.5511151231257802e-17*pre_transform_special_symbol_23;
-    ee_transformed(1, 0) = 1.0*r_13 - 6.1232339957367697e-17*r_23;
-    ee_transformed(1, 1) = -1.0*r_12 + 6.1232339957367697e-17*r_22;
-    ee_transformed(1, 2) = 1.0*r_11 - 6.1232339957367697e-17*r_21;
-    ee_transformed(1, 3) = 1.0*Px - 6.1232339957367697e-17*Py;
-    ee_transformed(2, 0) = -3.3990776836172297e-33*r_13 - 5.5511151231257802e-17*r_23 - 1.0*r_33;
-    ee_transformed(2, 1) = 3.3990776836172297e-33*r_12 + 5.5511151231257802e-17*r_22 + 1.0*r_32;
-    ee_transformed(2, 2) = -3.3990776836172297e-33*r_11 - 5.5511151231257802e-17*r_21 - 1.0*r_31;
-    ee_transformed(2, 3) = -3.3990776836172297e-33*Px - 5.5511151231257802e-17*Py - 1.0*Pz + 1.0*pre_transform_special_symbol_23;
+    ee_transformed(0, 0) = 6.1232339957367697e-17*r_13 + 1.0*r_23 - 5.5511151231257802e-17*r_33;
+    ee_transformed(0, 1) = -6.1232339957367697e-17*r_12 - 1.0*r_22 + 5.5511151231257802e-17*r_32;
+    ee_transformed(0, 2) = 6.1232339957367697e-17*r_11 + 1.0*r_21 - 5.5511151231257802e-17*r_31;
+    ee_transformed(0, 3) = 6.1232339957367697e-17*Px + 1.0*Py - 5.5511151231257802e-17*Pz + 5.5511151231257802e-17*pre_transform_special_symbol_23;
+    ee_transformed(1, 0) = 1.0*r_13 - 6.1232339957367599e-17*r_23 - 6.8422776578360209e-48*r_33;
+    ee_transformed(1, 1) = -1.0*r_12 + 6.1232339957367599e-17*r_22 + 6.8422776578360209e-48*r_32;
+    ee_transformed(1, 2) = 1.0*r_11 - 6.1232339957367599e-17*r_21 - 6.8422776578360209e-48*r_31;
+    ee_transformed(1, 3) = 1.0*Px - 6.1232339957367599e-17*Py - 6.8422776578360209e-48*Pz + 6.8422776578360209e-48*pre_transform_special_symbol_23;
+    ee_transformed(2, 0) = 3.3990776836172283e-33*r_13 + 5.5511151231257802e-17*r_23 - 1.0*r_33;
+    ee_transformed(2, 1) = -3.3990776836172283e-33*r_12 - 5.5511151231257802e-17*r_22 + 1.0*r_32;
+    ee_transformed(2, 2) = 3.3990776836172283e-33*r_11 + 5.5511151231257802e-17*r_21 - 1.0*r_31;
+    ee_transformed(2, 3) = 3.3990776836172283e-33*Px + 5.5511151231257802e-17*Py - 1.0*Pz + 1.0*pre_transform_special_symbol_23;
     return ee_transformed;
 }
 
@@ -99,17 +105,48 @@ static Eigen::Matrix4d endEffectorTargetRawToOriginal(const Eigen::Matrix4d& T_e
     return ee_transformed;
 }
 
+static Eigen::Matrix4d endEffectorTargetOriginalToRawLegacyFrame(const Eigen::Matrix4d& T_ee)
+{
+    const double r_11 = T_ee(0, 0);
+    const double r_12 = T_ee(0, 1);
+    const double r_13 = T_ee(0, 2);
+    const double Px = T_ee(0, 3);
+    const double r_21 = T_ee(1, 0);
+    const double r_22 = T_ee(1, 1);
+    const double r_23 = T_ee(1, 2);
+    const double Py = T_ee(1, 3);
+    const double r_31 = T_ee(2, 0);
+    const double r_32 = T_ee(2, 1);
+    const double r_33 = T_ee(2, 2);
+    const double Pz = T_ee(2, 3);
+    Eigen::Matrix4d ee_transformed;
+    ee_transformed.setIdentity();
+    ee_transformed(0, 0) = 6.1232339957367599e-17*r_13 + 1.0*r_23 + 5.5511151231257802e-17*r_33;
+    ee_transformed(0, 1) = -6.1232339957367599e-17*r_12 - 1.0*r_22 - 5.5511151231257802e-17*r_32;
+    ee_transformed(0, 2) = 6.1232339957367599e-17*r_11 + 1.0*r_21 + 5.5511151231257802e-17*r_31;
+    ee_transformed(0, 3) = 6.1232339957367599e-17*Px + 1.0*Py + 5.5511151231257802e-17*Pz - 5.5511151231257802e-17*pre_transform_special_symbol_23;
+    ee_transformed(1, 0) = 1.0*r_13 - 6.1232339957367697e-17*r_23;
+    ee_transformed(1, 1) = -1.0*r_12 + 6.1232339957367697e-17*r_22;
+    ee_transformed(1, 2) = 1.0*r_11 - 6.1232339957367697e-17*r_21;
+    ee_transformed(1, 3) = 1.0*Px - 6.1232339957367697e-17*Py;
+    ee_transformed(2, 0) = -3.3990776836172297e-33*r_13 - 5.5511151231257802e-17*r_23 - 1.0*r_33;
+    ee_transformed(2, 1) = 3.3990776836172297e-33*r_12 + 5.5511151231257802e-17*r_22 + 1.0*r_32;
+    ee_transformed(2, 2) = -3.3990776836172297e-33*r_11 - 5.5511151231257802e-17*r_21 - 1.0*r_31;
+    ee_transformed(2, 3) = -3.3990776836172297e-33*Px - 5.5511151231257802e-17*Py - 1.0*Pz + 1.0*pre_transform_special_symbol_23;
+    return ee_transformed;
+}
+
 ///************* Below are the actual FK and IK implementations *******************
 static Eigen::Matrix4d computeFK(const std::array<double, robot_nq>& theta_input_original)
 {
     // Extract the variables
     const double th_0 = theta_input_original[0] + th_0_offset_original2raw;
-    const double th_1 = theta_input_original[1] + th_1_offset_original2raw;
-    const double th_2 = theta_input_original[2] + th_2_offset_original2raw;
-    const double th_3 = theta_input_original[3] + th_3_offset_original2raw;
-    const double th_4 = theta_input_original[4] + th_4_offset_original2raw;
-    const double th_5 = theta_input_original[5] + th_5_offset_original2raw;
-    
+    const double th_1 = addRevoluteOffset(theta_input_original[1], th_1_offset_original2raw);
+    const double th_2 = addRevoluteOffset(theta_input_original[2], th_2_offset_original2raw);
+    const double th_3 = addRevoluteOffset(theta_input_original[3], th_3_offset_original2raw);
+    const double th_4 = addRevoluteOffset(theta_input_original[4], th_4_offset_original2raw);
+    const double th_5 = addRevoluteOffset(theta_input_original[5], th_5_offset_original2raw);
+
     // Temp variable for efficiency
     const double x0 = std::sin(th_5);
     const double x1 = std::sin(th_0);
@@ -162,16 +199,16 @@ static Eigen::Matrix4d computeFK(const std::array<double, robot_nq>& theta_input
     return endEffectorTargetRawToOriginal(ee_pose_raw);
 }
 
-static void computeTwistJacobian(const std::array<double, robot_nq>& theta_input_original, Eigen::Matrix<double, 6, 6>& jacobian)
+static void computeTwistJacobian(const std::array<double, robot_nq>& theta_input_original, Eigen::Matrix<double, 6, robot_nq>& jacobian)
 {
     // Extract the variables
     const double th_0 = theta_input_original[0] + th_0_offset_original2raw;
-    const double th_1 = theta_input_original[1] + th_1_offset_original2raw;
-    const double th_2 = theta_input_original[2] + th_2_offset_original2raw;
-    const double th_3 = theta_input_original[3] + th_3_offset_original2raw;
-    const double th_4 = theta_input_original[4] + th_4_offset_original2raw;
-    const double th_5 = theta_input_original[5] + th_5_offset_original2raw;
-    
+    const double th_1 = addRevoluteOffset(theta_input_original[1], th_1_offset_original2raw);
+    const double th_2 = addRevoluteOffset(theta_input_original[2], th_2_offset_original2raw);
+    const double th_3 = addRevoluteOffset(theta_input_original[3], th_3_offset_original2raw);
+    const double th_4 = addRevoluteOffset(theta_input_original[4], th_4_offset_original2raw);
+    const double th_5 = addRevoluteOffset(theta_input_original[5], th_5_offset_original2raw);
+
     // Temp variable for efficiency
     const double x0 = std::sin(th_0);
     const double x1 = std::cos(th_0);
@@ -224,7 +261,7 @@ static void computeTwistJacobian(const std::array<double, robot_nq>& theta_input
     const double x48 = d_2*x13 + x47;
     const double x49 = d_3*x20 + x48;
     // End of temp variables
-    
+
     jacobian.setZero();
     jacobian(0, 0) = -3.3990776836172297e-33;
     jacobian(0, 1) = x3;
@@ -264,16 +301,16 @@ static void computeTwistJacobian(const std::array<double, robot_nq>& theta_input
     return;
 }
 
-static void computeAngularVelocityJacobian(const std::array<double, robot_nq>& theta_input_original, Eigen::Matrix<double, 6, 6>& jacobian)
+static void computeAngularVelocityJacobian(const std::array<double, robot_nq>& theta_input_original, Eigen::Matrix<double, 3, robot_nq>& jacobian)
 {
     // Extract the variables
     const double th_0 = theta_input_original[0] + th_0_offset_original2raw;
-    const double th_1 = theta_input_original[1] + th_1_offset_original2raw;
-    const double th_2 = theta_input_original[2] + th_2_offset_original2raw;
-    const double th_3 = theta_input_original[3] + th_3_offset_original2raw;
-    const double th_4 = theta_input_original[4] + th_4_offset_original2raw;
-    const double th_5 = theta_input_original[5] + th_5_offset_original2raw;
-    
+    const double th_1 = addRevoluteOffset(theta_input_original[1], th_1_offset_original2raw);
+    const double th_2 = addRevoluteOffset(theta_input_original[2], th_2_offset_original2raw);
+    const double th_3 = addRevoluteOffset(theta_input_original[3], th_3_offset_original2raw);
+    const double th_4 = addRevoluteOffset(theta_input_original[4], th_4_offset_original2raw);
+    const double th_5 = addRevoluteOffset(theta_input_original[5], th_5_offset_original2raw);
+
     // Temp variable for efficiency
     const double x0 = std::sin(th_0);
     const double x1 = std::cos(th_0);
@@ -308,7 +345,7 @@ static void computeAngularVelocityJacobian(const std::array<double, robot_nq>& t
     const double x30 = -x11*x28 - x29*x5;
     const double x31 = x11*x29 - x28*x5;
     // End of temp variables
-    
+
     jacobian.setZero();
     jacobian(0, 0) = -3.3990776836172297e-33;
     jacobian(0, 1) = x3;
@@ -331,19 +368,19 @@ static void computeAngularVelocityJacobian(const std::array<double, robot_nq>& t
     return;
 }
 
-static void computeTransformPointJacobian(const std::array<double, robot_nq>& theta_input_original, Eigen::Vector3d& point_on_ee, Eigen::Matrix<double, 6, 6>& jacobian)
+static void computeTransformPointJacobian(const std::array<double, robot_nq>& theta_input_original, Eigen::Vector3d& point_on_ee, Eigen::Matrix<double, 3, robot_nq>& jacobian)
 {
     // Extract the variables
     const double th_0 = theta_input_original[0] + th_0_offset_original2raw;
-    const double th_1 = theta_input_original[1] + th_1_offset_original2raw;
-    const double th_2 = theta_input_original[2] + th_2_offset_original2raw;
-    const double th_3 = theta_input_original[3] + th_3_offset_original2raw;
-    const double th_4 = theta_input_original[4] + th_4_offset_original2raw;
-    const double th_5 = theta_input_original[5] + th_5_offset_original2raw;
+    const double th_1 = addRevoluteOffset(theta_input_original[1], th_1_offset_original2raw);
+    const double th_2 = addRevoluteOffset(theta_input_original[2], th_2_offset_original2raw);
+    const double th_3 = addRevoluteOffset(theta_input_original[3], th_3_offset_original2raw);
+    const double th_4 = addRevoluteOffset(theta_input_original[4], th_4_offset_original2raw);
+    const double th_5 = addRevoluteOffset(theta_input_original[5], th_5_offset_original2raw);
     const double p_on_ee_x = point_on_ee[0];
     const double p_on_ee_y = point_on_ee[1];
     const double p_on_ee_z = point_on_ee[2];
-    
+
     // Temp variable for efficiency
     const double x0 = std::sin(th_0);
     const double x1 = 5.5511151231257802e-17*x0;
@@ -399,7 +436,7 @@ static void computeTransformPointJacobian(const std::array<double, robot_nq>& th
     const double x51 = -x32*x47 - x33*(x26*x49 - x27*x43);
     const double x52 = d_3*x51 + x48;
     // End of temp variables
-    
+
     jacobian.setZero();
     jacobian(0, 0) = 1.0*p_on_ee_y - 5.5511151231257802e-17*p_on_ee_z + 5.5511151231257802e-17*pre_transform_special_symbol_23;
     jacobian(0, 1) = p_on_ee_z*x5 + x1*x8 - x2 - x5*x9;
@@ -422,7 +459,7 @@ static void computeTransformPointJacobian(const std::array<double, robot_nq>& th
     return;
 }
 
-static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate_solution_size, max_n_solutions>& solution_queue, NodeIndexWorkspace<max_n_solutions>& node_index_workspace, std::vector<std::array<double, robot_nq>>& ik_output)
+static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueueType& solution_queue, NodeIndexWorkspaceType& node_index_workspace, std::vector<std::array<double, robot_nq>>& ik_output)
 {
     // Extracting the ik target symbols
     const double r_11 = T_ee(0, 0);
@@ -443,34 +480,37 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     const double inv_Px = inv_ee_translation(0);
     const double inv_Py = inv_ee_translation(1);
     const double inv_Pz = inv_ee_translation(2);
-    
+
     solution_queue.reset();
-    node_index_workspace.reset(n_tree_nodes);
-    
+    static constexpr std::array<std::size_t, n_tree_nodes> node_input_capacities = {{1, 1, 2, 2, 4, 4, 4, 4, 4, 4, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8}};
+    node_index_workspace.reset(node_input_capacities, max_n_solutions);
+
     using RawSolution = IntermediateSolution<intermediate_solution_size>;
-    auto make_raw_solution = []() -> RawSolution { return {}; };
-    
+    auto make_raw_solution = []() -> RawSolution { RawSolution result; result.fill(std::numeric_limits<double>::quiet_NaN()); return result; };
+
     auto append_solution_to_queue = [&solution_queue](RawSolution solution_2_add) -> int {
         return solution_queue.push_solution(solution_2_add);
     };
-    
+
     auto add_input_index_to = [&node_index_workspace](int node_idx, int solution_idx) -> void {
         if (solution_idx < 0) return;
         node_index_workspace.append_index_to_node(node_idx, solution_idx);
     };
-    
+
     // Code for equation all-zero dispatcher node 0
     auto EquationAllZeroDispatcherNode_node_0_processor= [&]()
     {
-        const bool checked_result = std::fabs(Px - d_3*r_13) <= 9.9999999999999995e-7 && std::fabs(Py - d_3*r_23) <= 9.9999999999999995e-7;
+        if (!node_index_workspace.node_input_validity_vector[0])
+            return;
+        const bool checked_result = ((std::fabs(Px - d_3*r_13) <= 9.9999999999999995e-7) && (std::fabs(Py - d_3*r_23) <= 9.9999999999999995e-7));
         if (!checked_result)  // To non-degenerate node
             node_index_workspace.node_input_validity_vector[1] = true;
     };
-    
+
     // Invoke the processor
     EquationAllZeroDispatcherNode_node_0_processor();
     // Finish code for equation all-zero dispatcher node 0
-    
+
     // Code for explicit solution node 1, solved variable is th_0
     auto ExplicitSolutionNode_node_1_solve_th_0_processor = [&]() -> void
     {
@@ -478,42 +518,31 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(1);
         if (!this_input_valid)
             return;
-        
+
         // The explicit solution of root node
-        const bool condition_0 = std::fabs(Px - d_3*r_13) >= zero_tolerance || std::fabs(Py - d_3*r_23) >= zero_tolerance;
+        const bool condition_0 = ((std::fabs(Px - d_3*r_13) >= zero_tolerance) || (std::fabs(Py - d_3*r_23) >= zero_tolerance));
         if (condition_0)
         {
-            // Temp variable for efficiency
             const double x0 = std::atan2(Py - d_3*r_23, Px - d_3*r_13);
-            // End of temp variables
-            
             auto solution_0 = make_raw_solution();
             solution_0[2] = x0;
-            int appended_idx = append_solution_to_queue(solution_0);
-            add_input_index_to(2, appended_idx);
-        }
-        
-        const bool condition_1 = std::fabs(Px - d_3*r_13) >= zero_tolerance || std::fabs(Py - d_3*r_23) >= zero_tolerance;
-        if (condition_1)
-        {
-            // Temp variable for efficiency
-            const double x0 = std::atan2(Py - d_3*r_23, Px - d_3*r_13);
-            // End of temp variables
-            
+            int appended_idx_0 = append_solution_to_queue(solution_0);
+            add_input_index_to(2, appended_idx_0);
+
             auto solution_1 = make_raw_solution();
             solution_1[2] = x0 + M_PI;
-            int appended_idx = append_solution_to_queue(solution_1);
-            add_input_index_to(2, appended_idx);
+            int appended_idx_1 = append_solution_to_queue(solution_1);
+            add_input_index_to(2, appended_idx_1);
+
         }
-        
     };
     // Invoke the processor
     ExplicitSolutionNode_node_1_solve_th_0_processor();
     // Finish code for explicit solution node 1
-    
+
     // Code for non-branch dispatcher node 2
     // Actually, there is no code
-    
+
     // Code for explicit solution node 3, solved variable is th_2
     auto ExplicitSolutionNode_node_3_solve_th_2_processor = [&]() -> void
     {
@@ -521,7 +550,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(2);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 3
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -530,11 +559,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[2];
-            
-            const bool condition_0 = (1.0/2.0)*std::fabs((std::pow(Px, 2) - 2*Px*a_0*std::cos(th_0) - 2*Px*d_3*r_13 + std::pow(Py, 2) - 2*Py*a_0*std::sin(th_0) - 2*Py*d_3*r_23 + std::pow(Pz, 2) - 2*Pz*d_3*r_33 + std::pow(a_0, 2) + 2*a_0*d_3*r_13*std::cos(th_0) + 2*a_0*d_3*r_23*std::sin(th_0) - std::pow(a_1, 2) - std::pow(d_2, 2) + std::pow(d_3, 2)*std::pow(r_13, 2) + std::pow(d_3, 2)*std::pow(r_23, 2) + std::pow(d_3, 2)*std::pow(r_33, 2))/(a_1*d_2)) <= 1;
+            const bool condition_0 = ((a_1 != 0) && (d_2 != 0) && ((1.0/2.0)*std::fabs((std::pow(Px, 2) - 2*Px*a_0*std::cos(th_0) - 2*Px*d_3*r_13 + std::pow(Py, 2) - 2*Py*a_0*std::sin(th_0) - 2*Py*d_3*r_23 + std::pow(Pz, 2) - 2*Pz*d_3*r_33 + std::pow(a_0, 2) + 2*a_0*d_3*r_13*std::cos(th_0) + 2*a_0*d_3*r_23*std::sin(th_0) - std::pow(a_1, 2) - std::pow(d_2, 2) + std::pow(d_3, 2)*std::pow(r_13, 2) + std::pow(d_3, 2)*std::pow(r_23, 2) + std::pow(d_3, 2)*std::pow(r_33, 2))/(a_1*d_2)) <= 70368744177665.0/70368744177664.0));
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = 2*Px;
                 const double x1 = d_3*r_13;
                 const double x2 = 2*Py;
@@ -543,26 +570,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 const double x5 = a_0*std::sin(th_0);
                 const double x6 = std::pow(d_3, 2);
                 const double x7 = safe_asin((1.0/2.0)*(std::pow(Px, 2) + std::pow(Py, 2) + std::pow(Pz, 2) - 2*Pz*d_3*r_33 + std::pow(a_0, 2) - std::pow(a_1, 2) - std::pow(d_2, 2) + std::pow(r_13, 2)*x6 + std::pow(r_23, 2)*x6 + std::pow(r_33, 2)*x6 - x0*x1 - x0*x4 + 2*x1*x4 - x2*x3 - x2*x5 + 2*x3*x5)/(a_1*d_2));
-                // End of temp variables
                 RawSolution solution_0(this_solution);
                 solution_0[4] = -x7;
-                int appended_idx = append_solution_to_queue(solution_0);
-                add_input_index_to(4, appended_idx);
-            }
-            
-            const bool condition_1 = (1.0/2.0)*std::fabs((std::pow(Px, 2) - 2*Px*a_0*std::cos(th_0) - 2*Px*d_3*r_13 + std::pow(Py, 2) - 2*Py*a_0*std::sin(th_0) - 2*Py*d_3*r_23 + std::pow(Pz, 2) - 2*Pz*d_3*r_33 + std::pow(a_0, 2) + 2*a_0*d_3*r_13*std::cos(th_0) + 2*a_0*d_3*r_23*std::sin(th_0) - std::pow(a_1, 2) - std::pow(d_2, 2) + std::pow(d_3, 2)*std::pow(r_13, 2) + std::pow(d_3, 2)*std::pow(r_23, 2) + std::pow(d_3, 2)*std::pow(r_33, 2))/(a_1*d_2)) <= 1;
-            if (condition_1)
-            {
-                // Temp variable for efficiency
-                const double x0 = 2*Px;
-                const double x1 = d_3*r_13;
-                const double x2 = 2*Py;
-                const double x3 = d_3*r_23;
-                const double x4 = a_0*std::cos(th_0);
-                const double x5 = a_0*std::sin(th_0);
-                const double x6 = std::pow(d_3, 2);
-                const double x7 = safe_asin((1.0/2.0)*(std::pow(Px, 2) + std::pow(Py, 2) + std::pow(Pz, 2) - 2*Pz*d_3*r_33 + std::pow(a_0, 2) - std::pow(a_1, 2) - std::pow(d_2, 2) + std::pow(r_13, 2)*x6 + std::pow(r_23, 2)*x6 + std::pow(r_33, 2)*x6 - x0*x1 - x0*x4 + 2*x1*x4 - x2*x3 - x2*x5 + 2*x3*x5)/(a_1*d_2));
-                // End of temp variables
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(4, appended_idx_0);
                 const double tmp_sol_value = x7 + M_PI;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[4] = tmp_sol_value;
                 add_input_index_to(4, node_input_i_idx_in_queue);
@@ -576,7 +587,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     // Invoke the processor
     ExplicitSolutionNode_node_3_solve_th_2_processor();
     // Finish code for explicit solution node 2
-    
+
     // Code for equation all-zero dispatcher node 4
     auto EquationAllZeroDispatcherNode_node_4_processor = [&]() -> void
     {
@@ -591,18 +602,18 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[2];
-            const bool checked_result = std::fabs(Pz - d_3*r_33) <= 9.9999999999999995e-7 && std::fabs(-Px*std::cos(th_0) - Py*std::sin(th_0) + a_0 + d_3*r_13*std::cos(th_0) + d_3*r_23*std::sin(th_0)) <= 9.9999999999999995e-7;
+            const bool checked_result = ((std::fabs(Pz - d_3*r_33) <= 9.9999999999999995e-7) && (std::fabs(-Px*std::cos(th_0) - Py*std::sin(th_0) + a_0 + d_3*r_13*std::cos(th_0) + d_3*r_23*std::sin(th_0)) <= 9.9999999999999995e-7));
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue);
             else
                 solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
-    
+
     // Invoke the processor
     EquationAllZeroDispatcherNode_node_4_processor();
     // Finish code for equation all-zero dispatcher node 4
-    
+
     // Code for explicit solution node 5, solved variable is th_1
     auto ExplicitSolutionNode_node_5_solve_th_1_processor = [&]() -> void
     {
@@ -610,7 +621,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(5);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 5
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -620,18 +631,15 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[2];
             const double th_2 = this_solution[4];
-            
-            const bool condition_0 = std::fabs(Pz - d_3*r_33) >= 9.9999999999999995e-7 || std::fabs(-Px*std::cos(th_0) - Py*std::sin(th_0) + a_0 + d_3*r_13*std::cos(th_0) + d_3*r_23*std::sin(th_0)) >= 9.9999999999999995e-7;
+            const bool condition_0 = ((std::fabs(Pz - d_3*r_33) >= 9.9999999999999995e-7) || (std::fabs(-Px*std::cos(th_0) - Py*std::sin(th_0) + a_0 + d_3*r_13*std::cos(th_0) + d_3*r_23*std::sin(th_0)) >= 9.9999999999999995e-7));
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = -Pz + d_3*r_33;
                 const double x1 = -a_1 + d_2*std::sin(th_2);
                 const double x2 = std::cos(th_0);
                 const double x3 = std::sin(th_0);
                 const double x4 = -Px*x2 - Py*x3 + a_0 + d_3*r_13*x2 + d_3*r_23*x3;
                 const double x5 = d_2*std::cos(th_2);
-                // End of temp variables
                 const double tmp_sol_value = std::atan2(x0*x1 - x4*x5, x0*x5 + x1*x4);
                 solution_queue.get_solution(node_input_i_idx_in_queue)[3] = tmp_sol_value;
                 add_input_index_to(6, node_input_i_idx_in_queue);
@@ -645,10 +653,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     // Invoke the processor
     ExplicitSolutionNode_node_5_solve_th_1_processor();
     // Finish code for explicit solution node 5
-    
+
     // Code for non-branch dispatcher node 6
     // Actually, there is no code
-    
+
     // Code for explicit solution node 7, solved variable is negative_th_2_positive_th_1__soa
     auto ExplicitSolutionNode_node_7_solve_negative_th_2_positive_th_1__soa_processor = [&]() -> void
     {
@@ -656,7 +664,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(6);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 7
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -666,12 +674,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[3];
             const double th_2 = this_solution[4];
-            
             const bool condition_0 = 1 >= zero_tolerance;
             if (condition_0)
             {
-                // Temp variable for efficiency
-                // End of temp variables
                 const double tmp_sol_value = th_1 - th_2;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
                 add_input_index_to(8, node_input_i_idx_in_queue);
@@ -685,10 +690,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     // Invoke the processor
     ExplicitSolutionNode_node_7_solve_negative_th_2_positive_th_1__soa_processor();
     // Finish code for explicit solution node 6
-    
+
     // Code for non-branch dispatcher node 8
     // Actually, there is no code
-    
+
     // Code for explicit solution node 9, solved variable is th_4
     auto ExplicitSolutionNode_node_9_solve_th_4_processor = [&]() -> void
     {
@@ -696,7 +701,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(8);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 9
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -707,35 +712,19 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const double th_0 = this_solution[2];
             const double th_1 = this_solution[3];
             const double th_2 = this_solution[4];
-            
-            const bool condition_0 = std::fabs(r_13*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::cos(th_0) + r_23*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::sin(th_0) - r_33*(std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2))) <= 1;
+            const bool condition_0 = std::fabs(r_13*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::cos(th_0) + r_23*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::sin(th_0) - r_33*(std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2))) <= 70368744177665.0/70368744177664.0;
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = std::sin(th_1);
                 const double x1 = std::sin(th_2);
                 const double x2 = std::cos(th_1);
                 const double x3 = std::cos(th_2);
                 const double x4 = x0*x3 - x1*x2;
                 const double x5 = safe_acos(-r_13*x4*std::cos(th_0) - r_23*x4*std::sin(th_0) + r_33*(x0*x1 + x2*x3));
-                // End of temp variables
                 RawSolution solution_0(this_solution);
                 solution_0[7] = x5;
-                int appended_idx = append_solution_to_queue(solution_0);
-                add_input_index_to(10, appended_idx);
-            }
-            
-            const bool condition_1 = std::fabs(r_13*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::cos(th_0) + r_23*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::sin(th_0) - r_33*(std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2))) <= 1;
-            if (condition_1)
-            {
-                // Temp variable for efficiency
-                const double x0 = std::sin(th_1);
-                const double x1 = std::sin(th_2);
-                const double x2 = std::cos(th_1);
-                const double x3 = std::cos(th_2);
-                const double x4 = x0*x3 - x1*x2;
-                const double x5 = safe_acos(-r_13*x4*std::cos(th_0) - r_23*x4*std::sin(th_0) + r_33*(x0*x1 + x2*x3));
-                // End of temp variables
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(10, appended_idx_0);
                 const double tmp_sol_value = -x5;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[7] = tmp_sol_value;
                 add_input_index_to(10, node_input_i_idx_in_queue);
@@ -749,7 +738,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     // Invoke the processor
     ExplicitSolutionNode_node_9_solve_th_4_processor();
     // Finish code for explicit solution node 8
-    
+
     // Code for solved_variable dispatcher node 10
     auto SolvedVariableDispatcherNode_node_10_processor = [&]() -> void
     {
@@ -757,7 +746,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(10);
         if (!this_input_valid)
             return;
-        
+
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
             int node_input_i_idx_in_queue = this_node_input_index[i];
@@ -767,7 +756,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             bool taken_by_degenerate = false;
             bool forwarded_to_child = false;
             const double th_4 = this_solution[7];
-            
+
             const bool degenerate_valid_0 = std::fabs(th_4) <= 9.9999999999999995e-7;
             if (degenerate_valid_0)
             {
@@ -778,7 +767,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 forwarded_to_child = true;
                 add_input_index_to(14, branch_input_index);
             }
-            
+
             const bool degenerate_valid_1 = std::fabs(th_4 - M_PI) <= 9.9999999999999995e-7;
             if (degenerate_valid_1)
             {
@@ -789,16 +778,16 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 forwarded_to_child = true;
                 add_input_index_to(19, branch_input_index);
             }
-            
+
             if (!taken_by_degenerate)
                 add_input_index_to(11, node_input_i_idx_in_queue);
         }
     };
-    
+
     // Invoke the processor
     SolvedVariableDispatcherNode_node_10_processor();
     // Finish code for solved_variable dispatcher node 10
-    
+
     // Code for explicit solution node 19, solved variable is th_3th_5_soa
     auto ExplicitSolutionNode_node_19_solve_th_3th_5_soa_processor = [&]() -> void
     {
@@ -806,7 +795,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(19);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 19
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -815,14 +804,11 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[2];
-            
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance || std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance));
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = std::sin(th_0);
                 const double x1 = std::cos(th_0);
-                // End of temp variables
                 const double tmp_sol_value = std::atan2(-r_11*x0 + r_21*x1, -r_12*x0 + r_22*x1);
                 solution_queue.get_solution(node_input_i_idx_in_queue)[6] = tmp_sol_value;
                 add_input_index_to(20, node_input_i_idx_in_queue);
@@ -836,10 +822,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     // Invoke the processor
     ExplicitSolutionNode_node_19_solve_th_3th_5_soa_processor();
     // Finish code for explicit solution node 19
-    
+
     // Code for non-branch dispatcher node 20
     // Actually, there is no code
-    
+
     // Code for explicit solution node 21, solved variable is th_3
     auto ExplicitSolutionNode_node_21_solve_th_3_processor = [&]() -> void
     {
@@ -847,7 +833,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(20);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 21
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -855,12 +841,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            
             const bool condition_0 = true;
             if (condition_0)
             {
-                // Temp variable for efficiency
-                // End of temp variables
                 const double tmp_sol_value = 0;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[5] = tmp_sol_value;
                 add_input_index_to(22, node_input_i_idx_in_queue);
@@ -874,10 +857,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     // Invoke the processor
     ExplicitSolutionNode_node_21_solve_th_3_processor();
     // Finish code for explicit solution node 20
-    
+
     // Code for non-branch dispatcher node 22
     // Actually, there is no code
-    
+
     // Code for explicit solution node 23, solved variable is th_5
     auto ExplicitSolutionNode_node_23_solve_th_5_processor = [&]() -> void
     {
@@ -885,7 +868,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(22);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 23
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -895,12 +878,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_3 = this_solution[5];
             const double th_3th_5_soa = this_solution[6];
-            
             const bool condition_0 = 1 >= zero_tolerance;
             if (condition_0)
             {
-                // Temp variable for efficiency
-                // End of temp variables
                 const double tmp_sol_value = -th_3 + th_3th_5_soa;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[8] = tmp_sol_value;
             }
@@ -913,7 +893,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     // Invoke the processor
     ExplicitSolutionNode_node_23_solve_th_5_processor();
     // Finish code for explicit solution node 22
-    
+
     // Code for explicit solution node 14, solved variable is negative_th_5_positive_th_3__soa
     auto ExplicitSolutionNode_node_14_solve_negative_th_5_positive_th_3__soa_processor = [&]() -> void
     {
@@ -921,7 +901,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(14);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 14
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -930,14 +910,11 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_0 = this_solution[2];
-            
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance || std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*std::sin(th_0) - r_21*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_12*std::sin(th_0) - r_22*std::cos(th_0)) >= zero_tolerance));
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = std::sin(th_0);
                 const double x1 = std::cos(th_0);
-                // End of temp variables
                 const double tmp_sol_value = std::atan2(r_11*x0 - r_21*x1, -r_12*x0 + r_22*x1);
                 solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
                 add_input_index_to(15, node_input_i_idx_in_queue);
@@ -951,10 +928,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     // Invoke the processor
     ExplicitSolutionNode_node_14_solve_negative_th_5_positive_th_3__soa_processor();
     // Finish code for explicit solution node 14
-    
+
     // Code for non-branch dispatcher node 15
     // Actually, there is no code
-    
+
     // Code for explicit solution node 16, solved variable is th_3
     auto ExplicitSolutionNode_node_16_solve_th_3_processor = [&]() -> void
     {
@@ -962,7 +939,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(15);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 16
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -970,12 +947,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            
             const bool condition_0 = true;
             if (condition_0)
             {
-                // Temp variable for efficiency
-                // End of temp variables
                 const double tmp_sol_value = 0;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[5] = tmp_sol_value;
                 add_input_index_to(17, node_input_i_idx_in_queue);
@@ -989,10 +963,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     // Invoke the processor
     ExplicitSolutionNode_node_16_solve_th_3_processor();
     // Finish code for explicit solution node 15
-    
+
     // Code for non-branch dispatcher node 17
     // Actually, there is no code
-    
+
     // Code for explicit solution node 18, solved variable is th_5
     auto ExplicitSolutionNode_node_18_solve_th_5_processor = [&]() -> void
     {
@@ -1000,7 +974,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(17);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 18
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1010,12 +984,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double negative_th_5_positive_th_3__soa = this_solution[1];
             const double th_3 = this_solution[5];
-            
             const bool condition_0 = 1 >= zero_tolerance;
             if (condition_0)
             {
-                // Temp variable for efficiency
-                // End of temp variables
                 const double tmp_sol_value = -negative_th_5_positive_th_3__soa + th_3;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[8] = tmp_sol_value;
             }
@@ -1028,7 +999,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     // Invoke the processor
     ExplicitSolutionNode_node_18_solve_th_5_processor();
     // Finish code for explicit solution node 17
-    
+
     // Code for explicit solution node 11, solved variable is th_3
     auto ExplicitSolutionNode_node_11_solve_th_3_processor = [&]() -> void
     {
@@ -1036,7 +1007,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(11);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 11
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1048,11 +1019,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const double th_1 = this_solution[3];
             const double th_2 = this_solution[4];
             const double th_4 = this_solution[7];
-            
-            const bool condition_0 = std::fabs(r_13*std::sin(th_0) - r_23*std::cos(th_0)) >= zero_tolerance || std::fabs(r_13*(std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2))*std::cos(th_0) + r_23*(std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2))*std::sin(th_0) + r_33*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))) >= zero_tolerance || std::fabs(std::sin(th_4)) >= zero_tolerance;
+            const bool condition_0 = ((std::fabs(std::sin(th_4)) >= zero_tolerance) || (std::fabs(r_13*std::sin(th_0) - r_23*std::cos(th_0)) >= zero_tolerance) || (std::fabs(r_13*(std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2))*std::cos(th_0) + r_23*(std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2))*std::sin(th_0) + r_33*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))) >= zero_tolerance));
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = 1.0/std::sin(th_4);
                 const double x1 = std::sin(th_0);
                 const double x2 = std::cos(th_0);
@@ -1061,7 +1030,6 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 const double x5 = std::sin(th_2);
                 const double x6 = std::cos(th_1);
                 const double x7 = x3*x5 + x4*x6;
-                // End of temp variables
                 const double tmp_sol_value = std::atan2(x0*(-r_13*x1 + r_23*x2), x0*(-r_13*x2*x7 - r_23*x1*x7 - r_33*(x3*x4 - x5*x6)));
                 solution_queue.get_solution(node_input_i_idx_in_queue)[5] = tmp_sol_value;
                 add_input_index_to(12, node_input_i_idx_in_queue);
@@ -1075,10 +1043,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     // Invoke the processor
     ExplicitSolutionNode_node_11_solve_th_3_processor();
     // Finish code for explicit solution node 11
-    
+
     // Code for non-branch dispatcher node 12
     // Actually, there is no code
-    
+
     // Code for explicit solution node 13, solved variable is th_5
     auto ExplicitSolutionNode_node_13_solve_th_5_processor = [&]() -> void
     {
@@ -1086,7 +1054,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(12);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 13
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1098,11 +1066,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
             const double th_1 = this_solution[3];
             const double th_2 = this_solution[4];
             const double th_4 = this_solution[7];
-            
-            const bool condition_0 = std::fabs(r_11*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::cos(th_0) + r_21*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::sin(th_0) - r_31*(std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2))) >= zero_tolerance || std::fabs(r_12*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::cos(th_0) + r_22*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::sin(th_0) - r_32*(std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2))) >= zero_tolerance || std::fabs(std::sin(th_4)) >= zero_tolerance;
+            const bool condition_0 = ((std::fabs(std::sin(th_4)) >= zero_tolerance) || (std::fabs(r_11*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::cos(th_0) + r_21*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::sin(th_0) - r_31*(std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2))) >= zero_tolerance) || (std::fabs(r_12*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::cos(th_0) + r_22*(std::sin(th_1)*std::cos(th_2) - std::sin(th_2)*std::cos(th_1))*std::sin(th_0) - r_32*(std::sin(th_1)*std::sin(th_2) + std::cos(th_1)*std::cos(th_2))) >= zero_tolerance));
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = 1.0/std::sin(th_4);
                 const double x1 = std::sin(th_1);
                 const double x2 = std::sin(th_2);
@@ -1112,7 +1078,6 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
                 const double x6 = x1*x4 - x2*x3;
                 const double x7 = x6*std::cos(th_0);
                 const double x8 = x6*std::sin(th_0);
-                // End of temp variables
                 const double tmp_sol_value = std::atan2(x0*(r_12*x7 + r_22*x8 - r_32*x5), x0*(-r_11*x7 - r_21*x8 + r_31*x5));
                 solution_queue.get_solution(node_input_i_idx_in_queue)[8] = tmp_sol_value;
             }
@@ -1125,7 +1090,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
     // Invoke the processor
     ExplicitSolutionNode_node_13_solve_th_5_processor();
     // Finish code for explicit solution node 12
-    
+
     // Collect the output
     for(int i = 0; i < solution_queue.size(); i++)
     {
@@ -1145,14 +1110,14 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueue<intermediate
         new_ik_i[4] = value_at_4;
         const double value_at_5 = raw_ik_out_i[8];  // th_5
         new_ik_i[5] = value_at_5;
-        ik_output.push_back(new_ik_i);
+        if (std::all_of(new_ik_i.begin(), new_ik_i.end(), [](double value) { return std::isfinite(value); }))
+            ik_output.push_back(new_ik_i);
     }
 }
 
 static void computeRawIK(const Eigen::Matrix4d& T_ee_raw, RawIKWorksace& workspace)
 {
     workspace.raw_ik_out.clear();
-    workspace.raw_ik_out.reserve(max_n_solutions);
     computeRawIK(T_ee_raw, workspace.solution_queue, workspace.node_index_workspace, workspace.raw_ik_out);
 }
 
@@ -1165,64 +1130,201 @@ static void computeIKUnChecked(const Eigen::Matrix4d& T_ee, RawIKWorksace& works
     for(int i = 0; i < raw_ik_out.size(); i++)
     {
         auto ik_out_i = raw_ik_out[i];
-        ik_out_i[0] -= th_0_offset_original2raw;
-        ik_out_i[1] -= th_1_offset_original2raw;
-        ik_out_i[2] -= th_2_offset_original2raw;
-        ik_out_i[3] -= th_3_offset_original2raw;
-        ik_out_i[4] -= th_4_offset_original2raw;
-        ik_out_i[5] -= th_5_offset_original2raw;
+        ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw;
+        ik_out_i[1] = addRevoluteOffset(ik_out_i[1], -th_1_offset_original2raw);
+        ik_out_i[2] = addRevoluteOffset(ik_out_i[2], -th_2_offset_original2raw);
+        ik_out_i[3] = addRevoluteOffset(ik_out_i[3], -th_3_offset_original2raw);
+        ik_out_i[4] = addRevoluteOffset(ik_out_i[4], -th_4_offset_original2raw);
+        ik_out_i[5] = addRevoluteOffset(ik_out_i[5], -th_5_offset_original2raw);
         ik_output.push_back(ik_out_i);
     }
 }
 
-static void computeIK(const Eigen::Matrix4d& T_ee, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output)
+static void wrapAngleToPi(std::array<double, robot_nq>& solution_i)
+{
+    // Wrap angular value to [-pi, pi]
+    // Revolute unknown th_0
+    solution_i[0] = std::atan2(std::sin(solution_i[0]), std::cos(solution_i[0]));
+    // Revolute unknown th_1
+    solution_i[1] = std::atan2(std::sin(solution_i[1]), std::cos(solution_i[1]));
+    // Revolute unknown th_2
+    solution_i[2] = std::atan2(std::sin(solution_i[2]), std::cos(solution_i[2]));
+    // Revolute unknown th_3
+    solution_i[3] = std::atan2(std::sin(solution_i[3]), std::cos(solution_i[3]));
+    // Revolute unknown th_4
+    solution_i[4] = std::atan2(std::sin(solution_i[4]), std::cos(solution_i[4]));
+    // Revolute unknown th_5
+    solution_i[5] = std::atan2(std::sin(solution_i[5]), std::cos(solution_i[5]));
+}
+
+static void wrapAngleToPi(std::vector<std::array<double, robot_nq>>& ik_output)
+{
+    for (auto& solution_i : ik_output)
+        wrapAngleToPi(solution_i);
+}
+
+static void computeIKForRawTarget(const Eigen::Matrix4d& T_ee, const Eigen::Matrix4d& T_ee_raw, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output, Eigen::Matrix4d& frame_disturbance, bool& frame_disturbance_ready, bool allow_disturbance, IkRefinementSeeds<robot_nq>* refinement_seeds = nullptr)
 {
     if (!T_ee.allFinite()) { ik_output.clear(); return; }
-    const Eigen::Matrix4d& T_ee_raw = endEffectorTargetOriginalToRaw(T_ee);
+    if (!T_ee_raw.allFinite()) { ik_output.clear(); return; }
     computeRawIK(T_ee_raw, workspace);
     const auto& raw_ik_out = workspace.raw_ik_out;
     ik_output.clear();
     for(int i = 0; i < raw_ik_out.size(); i++)
     {
         auto ik_out_i = raw_ik_out[i];
-        ik_out_i[0] -= th_0_offset_original2raw;
-        ik_out_i[1] -= th_1_offset_original2raw;
-        ik_out_i[2] -= th_2_offset_original2raw;
-        ik_out_i[3] -= th_3_offset_original2raw;
-        ik_out_i[4] -= th_4_offset_original2raw;
-        ik_out_i[5] -= th_5_offset_original2raw;
+        ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw;
+        ik_out_i[1] = addRevoluteOffset(ik_out_i[1], -th_1_offset_original2raw);
+        ik_out_i[2] = addRevoluteOffset(ik_out_i[2], -th_2_offset_original2raw);
+        ik_out_i[3] = addRevoluteOffset(ik_out_i[3], -th_3_offset_original2raw);
+        ik_out_i[4] = addRevoluteOffset(ik_out_i[4], -th_4_offset_original2raw);
+        ik_out_i[5] = addRevoluteOffset(ik_out_i[5], -th_5_offset_original2raw);
+        wrapAngleToPi(ik_out_i);
         const Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
         double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
+        if (refinement_seeds)
+        {
+            const double refinement_error = (ee_pose_i-T_ee).cwiseAbs().maxCoeff();
+            if (refinement_error < 1e-7) { refinement_seeds->strict_witness=true;refinement_seeds->clear(); }
+            else if (!refinement_seeds->strict_witness) retainRefinementSeed<robot_nq>(*refinement_seeds, ik_out_i, refinement_error);
+        }
         if (ee_pose_diff < pose_tolerance)
             ik_output.push_back(ik_out_i);
+        std::array<double, robot_nq> snapped;
+        if (snapNearJointLimits<robot_nq>(ik_out_i, snapped, jointLower(), jointUpper(), periodicLimitJoints(), fixedJoints()))
+        {
+            const Eigen::Matrix4d snapped_pose = computeFK(snapped);
+            if ((snapped_pose.block<3, 1>(0, 3)-T_ee.block<3, 1>(0, 3)).norm() <= 1e-7 && (snapped_pose.block<3, 3>(0, 0)-T_ee.block<3, 3>(0, 0)).cwiseAbs().maxCoeff() <= 1e-7)
+            {
+                ik_output.push_back(snapped);
+                if (refinement_seeds && (snapped_pose-T_ee).cwiseAbs().maxCoeff()<1e-7)
+                    { refinement_seeds->strict_witness=true;refinement_seeds->clear(); }
+            }
+        }
     }
-    if (!ik_output.empty()) return;
-    
-    // Disturbing method for degenerate handling
-    Eigen::Matrix4d T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);
-    Eigen::Matrix4d T_ee_disturbed = endEffectorTargetRawToOriginal(T_ee_raw_disturbed);
-    computeRawIK(T_ee_raw_disturbed, workspace);
-    const auto& raw_ik_out_disturb = workspace.raw_ik_out;
-    for(int i = 0; i < raw_ik_out_disturb.size(); i++)
+
+    if (!ik_output.empty())
     {
-        auto ik_out_i = raw_ik_out_disturb[i];
-        ik_out_i[0] -= th_0_offset_original2raw;
-        ik_out_i[1] -= th_1_offset_original2raw;
-        ik_out_i[2] -= th_2_offset_original2raw;
-        ik_out_i[3] -= th_3_offset_original2raw;
-        ik_out_i[4] -= th_4_offset_original2raw;
-        ik_out_i[5] -= th_5_offset_original2raw;
-        Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
-        double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();
-        if (!std::isfinite(ee_pose_diff) || ee_pose_diff > pose_tolerance_degenerate)
-            continue;
-        
-        // Try numerical refinement
-        yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i);
-        ee_pose_i = computeFK(ik_out_i);
-        ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
-        if (ee_pose_diff < pose_tolerance_degenerate)
-            ik_output.push_back(ik_out_i);
+        removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, ikCandidateClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints(), [&](const std::array<double, robot_nq>& candidate) { return computeFK(candidate); }, T_ee));
+        return;
+    }
+
+    // Disturbing method for degenerate handling
+    if (!allow_disturbance) return;
+    for (int perturbation = 0; perturbation < 3; ++perturbation)
+    {
+        Eigen::Matrix4d T_ee_raw_disturbed;
+        if (perturbation != 0)
+            T_ee_raw_disturbed = yaik_cpp::disturbTransform<double>(T_ee_raw, 1e-2, 1e-2, nullptr, perturbation-1);
+        else
+        {
+            if (frame_disturbance_ready)
+                T_ee_raw_disturbed = frame_disturbance * T_ee_raw;
+            else
+            {
+                T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw, 1e-2, 1e-2, &frame_disturbance);
+                frame_disturbance_ready = true;
+            }
+        }
+        Eigen::Matrix4d T_ee_disturbed = endEffectorTargetRawToOriginal(T_ee_raw_disturbed);
+        computeRawIK(T_ee_raw_disturbed, workspace);
+        const auto& raw_ik_out_disturb = workspace.raw_ik_out;
+        for(int i = 0; i < raw_ik_out_disturb.size(); i++)
+        {
+            auto ik_out_i = raw_ik_out_disturb[i];
+            ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw;
+            ik_out_i[1] = addRevoluteOffset(ik_out_i[1], -th_1_offset_original2raw);
+            ik_out_i[2] = addRevoluteOffset(ik_out_i[2], -th_2_offset_original2raw);
+            ik_out_i[3] = addRevoluteOffset(ik_out_i[3], -th_3_offset_original2raw);
+            ik_out_i[4] = addRevoluteOffset(ik_out_i[4], -th_4_offset_original2raw);
+            ik_out_i[5] = addRevoluteOffset(ik_out_i[5], -th_5_offset_original2raw);
+            wrapAngleToPi(ik_out_i);
+            Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
+            double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();
+            if (!std::isfinite(ee_pose_diff) || ee_pose_diff > pose_tolerance_degenerate)
+                continue;
+
+            // Try numerical refinement
+            yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i);
+            wrapAngleToPi(ik_out_i);
+            ee_pose_i = computeFK(ik_out_i);
+            ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
+            if (ee_pose_diff < pose_tolerance_degenerate)
+            {
+                ik_output.push_back(ik_out_i);
+                if (refinement_seeds && (ee_pose_i-T_ee).cwiseAbs().maxCoeff()<1e-7)
+                    { refinement_seeds->strict_witness=true;refinement_seeds->clear(); }
+            }
+        }
+    }
+
+    removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, ikCandidateClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints(), [&](const std::array<double, robot_nq>& candidate) { return computeFK(candidate); }, T_ee));
+}
+
+static void computeIK(const Eigen::Matrix4d& T_ee, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output)
+{
+    ik_output.clear();
+    if (!T_ee.allFinite()) return;
+    Eigen::Matrix4d frame_disturbance;
+    bool frame_disturbance_ready = false;
+    IkRefinementSeeds<robot_nq> refinement_seeds;
+    for (bool legacy : {true, false})
+    {
+        const Eigen::Matrix4d raw_target = legacy ? endEffectorTargetOriginalToRawLegacyFrame(T_ee) : endEffectorTargetOriginalToRaw(T_ee);
+        std::vector<std::array<double, robot_nq>> candidates;
+        computeIKForRawTarget(T_ee, raw_target, workspace, candidates, frame_disturbance, frame_disturbance_ready, legacy || ik_output.empty(), &refinement_seeds);
+        for (const auto& candidate : candidates)
+        {
+            if (std::find(ik_output.begin(), ik_output.end(), candidate) == ik_output.end())
+                ik_output.push_back(candidate);
+        }
+    }
+    auto refinement_fk = [&](const std::array<double,robot_nq>& q) { return computeFK(q); };
+    if (!refinement_seeds.strict_witness)
+    {
+        for (const auto& entry : refinement_seeds)
+        {
+            auto candidate=entry.second;
+            if (refineIkSeed<robot_nq>(refinement_fk,T_ee,candidate,fixedJoints()))
+            {
+                ik_output.push_back(candidate);
+                refinement_seeds.strict_witness=true;
+                break;
+            }
+        }
+    }
+    if (!refinement_seeds.strict_witness)
+    {
+        refinement_seeds.clear();
+        std::array<double,0> seed_parameters = {{}};
+        for (const auto& shifted : nearbyIkTargets(T_ee))
+        {
+            if (!shifted.allFinite()) continue;
+            for (bool legacy : {true, false})
+            {
+                const Eigen::Matrix4d raw_target = legacy ? endEffectorTargetOriginalToRawLegacyFrame(shifted) : endEffectorTargetOriginalToRaw(shifted);
+                computeRawIK(raw_target, workspace);
+                for (auto candidate : workspace.raw_ik_out)
+                {
+                    candidate[0] = candidate[0] - th_0_offset_original2raw;
+                    candidate[1] = addRevoluteOffset(candidate[1], -th_1_offset_original2raw);
+                    candidate[2] = addRevoluteOffset(candidate[2], -th_2_offset_original2raw);
+                    candidate[3] = addRevoluteOffset(candidate[3], -th_3_offset_original2raw);
+                    candidate[4] = addRevoluteOffset(candidate[4], -th_4_offset_original2raw);
+                    candidate[5] = addRevoluteOffset(candidate[5], -th_5_offset_original2raw);
+                    wrapAngleToPi(candidate);
+                    retainRefinementSeed<robot_nq>(refinement_seeds,candidate,(refinement_fk(candidate)-T_ee).cwiseAbs().maxCoeff());
+                }
+            }
+        }
+        for (const auto& entry : refinement_seeds)
+        {
+            auto candidate=entry.second;
+            if (refineIkSeed<robot_nq>(refinement_fk,T_ee,candidate,fixedJoints()))
+            {
+                ik_output.push_back(candidate);refinement_seeds.strict_witness=true;break;
+            }
+        }
     }
 }
 
@@ -1257,4 +1359,5 @@ void test_ik_solve_kawasaki_BX250L()
 int main()
 {
     test_ik_solve_kawasaki_BX250L();
+    return 0;
 }

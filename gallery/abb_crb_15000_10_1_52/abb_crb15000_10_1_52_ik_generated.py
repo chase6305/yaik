@@ -97,10 +97,10 @@ def abb_crb15000_10_1_52_ik_target_raw_to_original(T_ee: np.ndarray):
 def abb_crb15000_10_1_52_fk(theta_input: np.ndarray):
     theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
     th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
     th_5 = theta_input[5] + th_5_offset_original2raw
 
     # Temp variable for efficiency
@@ -163,11 +163,12 @@ def abb_crb15000_10_1_52_fk(theta_input: np.ndarray):
 
 
 def abb_crb15000_10_1_52_twist_jacobian(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
     th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
     th_5 = theta_input[5] + th_5_offset_original2raw
 
     # Temp variable for efficiency
@@ -250,11 +251,12 @@ def abb_crb15000_10_1_52_twist_jacobian(theta_input: np.ndarray):
 
 
 def abb_crb15000_10_1_52_angular_velocity_jacobian(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
     th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
     th_5 = theta_input[5] + th_5_offset_original2raw
 
     # Temp variable for efficiency
@@ -301,11 +303,12 @@ def abb_crb15000_10_1_52_angular_velocity_jacobian(theta_input: np.ndarray):
 
 
 def abb_crb15000_10_1_52_transform_point_jacobian(theta_input: np.ndarray, point_on_ee: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
-    th_1 = theta_input[1] + th_1_offset_original2raw
+    th_1 = add_revolute_offset(theta_input[1], th_1_offset_original2raw)
     th_2 = theta_input[2] + th_2_offset_original2raw
-    th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
+    th_3 = add_revolute_offset(theta_input[3], th_3_offset_original2raw)
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
     th_5 = theta_input[5] + th_5_offset_original2raw
     p_on_ee_x: float = point_on_ee[0]
     p_on_ee_y: float = point_on_ee[1]
@@ -402,15 +405,12 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
     inv_Px = inv_ee_translation[0]
     inv_Py = inv_ee_translation[1]
     inv_Pz = inv_ee_translation[2]
-    
+
     # A new ik type. Should be a fixed array in C++
     IkSolution = NewType("IkSolution", List[float])
     def make_ik_solution():
-        tmp_sol = IkSolution(list())
-        for tmp_sol_idx in range(8):
-            tmp_sol.append(100000.0)
-        return tmp_sol
-    
+        return IkSolution([math.nan] * 8)
+
     solution_queue: List[IkSolution] = list()
     queue_element_validity: List[bool] = list()
     def append_solution_to_queue(solution_2_add: IkSolution):
@@ -418,7 +418,7 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
         solution_queue.append(solution_2_add)
         queue_element_validity.append(True)
         return index_4_appended
-    
+
     # Init for workspace as empty list. A list of fixed size array for each node
     max_n_solutions: int = 16
     node_input_index: List[List[int]] = list()
@@ -430,17 +430,17 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
         node_input_index[node_idx].append(solution_idx)
         node_input_validity[node_idx] = True
     node_input_validity[0] = True
-    
+
     # Code for non-branch dispatcher node 0
     # Actually, there is no code
-    
+
     # Code for explicit solution node 1, solved variable is th_5
     def General6DoFNumericalReduceSolutionNode_node_1_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[0]
         this_input_valid: bool = node_input_validity[0]
         if not this_input_valid:
             return
-        
+
         # The general 6-dof solution of root node with semi-symbolic reduce
         R_l = np.zeros(shape=(8, 8))
         R_l[0, 3] = -a_1
@@ -521,7 +521,7 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
         R_l_inv_75 = R_l_mat_inv[7, 5]
         R_l_inv_76 = R_l_mat_inv[7, 6]
         R_l_inv_77 = R_l_mat_inv[7, 7]
-        
+
         # Temp variable for efficiency
         x0 = -r_23
         x1 = 2*r_21
@@ -2161,7 +2161,7 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
     # Invoke the processor
     General6DoFNumericalReduceSolutionNode_node_1_solve_th_5_processor()
     # Finish code for explicit solution node 0
-    
+
     # Code for equation all-zero dispatcher node 2
     def EquationAllZeroDispatcherNode_node_2_processor():
         this_node_input_index: List[int] = node_input_index[2]
@@ -2174,23 +2174,23 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_5 = this_solution[7]
-            checked_result: bool = (abs(Px - a_4*r_11*math.cos(th_5) + a_4*r_12*math.sin(th_5) - d_5*r_13) <= 1.0e-6) and (abs(Py - a_4*r_21*math.cos(th_5) + a_4*r_22*math.sin(th_5) - d_5*r_23) <= 1.0e-6)
+            checked_result: bool = (((abs(Px - a_4*r_11*math.cos(th_5) + a_4*r_12*math.sin(th_5) - d_5*r_13) <= 1.0e-6)) and ((abs(Py - a_4*r_21*math.cos(th_5) + a_4*r_22*math.sin(th_5) - d_5*r_23) <= 1.0e-6)))
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(3, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-    
+
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_2_processor()
     # Finish code for equation all-zero dispatcher node 2
-    
+
     # Code for explicit solution node 3, solved variable is th_0
     def ExplicitSolutionNode_node_3_solve_th_0_processor():
         this_node_input_index: List[int] = node_input_index[3]
         this_input_valid: bool = node_input_validity[3]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 3
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2198,45 +2198,34 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(Px - a_4*r_11*math.cos(th_5) + a_4*r_12*math.sin(th_5) - d_5*r_13) >= zero_tolerance) or (abs(Py - a_4*r_21*math.cos(th_5) + a_4*r_22*math.sin(th_5) - d_5*r_23) >= zero_tolerance)
+            condition_0: bool = (((abs(Px - a_4*r_11*math.cos(th_5) + a_4*r_12*math.sin(th_5) - d_5*r_13) >= zero_tolerance)) or ((abs(Py - a_4*r_21*math.cos(th_5) + a_4*r_22*math.sin(th_5) - d_5*r_23) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = a_4*math.sin(th_5)
                 x1 = a_4*math.cos(th_5)
                 x2 = math.atan2(Py - d_5*r_23 - r_21*x1 + r_22*x0, Px - d_5*r_13 - r_11*x1 + r_12*x0)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[0] = x2
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(4, appended_idx)
-                
-            condition_1: bool = (abs(Px - a_4*r_11*math.cos(th_5) + a_4*r_12*math.sin(th_5) - d_5*r_13) >= zero_tolerance) or (abs(Py - a_4*r_21*math.cos(th_5) + a_4*r_22*math.sin(th_5) - d_5*r_23) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = a_4*math.sin(th_5)
-                x1 = a_4*math.cos(th_5)
-                x2 = math.atan2(Py - d_5*r_23 - r_21*x1 + r_22*x0, Px - d_5*r_13 - r_11*x1 + r_12*x0)
-                # End of temp variables
                 this_solution[0] = x2 + math.pi
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(4, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_3_solve_th_0_processor()
     # Finish code for explicit solution node 3
-    
+
     # Code for non-branch dispatcher node 4
     # Actually, there is no code
-    
+
     # Code for explicit solution node 5, solved variable is th_3
     def ExplicitSolutionNode_node_5_solve_th_3_processor():
         this_node_input_index: List[int] = node_input_index[4]
         this_input_valid: bool = node_input_validity[4]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 5
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2245,45 +2234,34 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
             th_5 = this_solution[7]
-            condition_0: bool = (abs((r_11*math.sin(th_0) - r_21*math.cos(th_0))*math.sin(th_5) + (r_12*math.sin(th_0) - r_22*math.cos(th_0))*math.cos(th_5)) <= 1)
+            condition_0: bool = (abs((r_11*math.sin(th_0) - r_21*math.cos(th_0))*math.sin(th_5) + (r_12*math.sin(th_0) - r_22*math.cos(th_0))*math.cos(th_5)) <= 70368744177665/70368744177664)
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
                 x2 = safe_acos((-r_11*x0 + r_21*x1)*math.sin(th_5) + (-r_12*x0 + r_22*x1)*math.cos(th_5))
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[5] = x2
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(6, appended_idx)
-                
-            condition_1: bool = (abs((r_11*math.sin(th_0) - r_21*math.cos(th_0))*math.sin(th_5) + (r_12*math.sin(th_0) - r_22*math.cos(th_0))*math.cos(th_5)) <= 1)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = math.sin(th_0)
-                x1 = math.cos(th_0)
-                x2 = safe_acos((-r_11*x0 + r_21*x1)*math.sin(th_5) + (-r_12*x0 + r_22*x1)*math.cos(th_5))
-                # End of temp variables
                 this_solution[5] = -x2
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(6, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_5_solve_th_3_processor()
     # Finish code for explicit solution node 4
-    
+
     # Code for non-branch dispatcher node 6
     # Actually, there is no code
-    
+
     # Code for explicit solution node 7, solved variable is th_2
     def ExplicitSolutionNode_node_7_solve_th_2_processor():
         this_node_input_index: List[int] = node_input_index[6]
         this_input_valid: bool = node_input_validity[6]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 7
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2292,9 +2270,8 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
             th_5 = this_solution[7]
-            condition_0: bool = (2*abs(a_1*a_2) >= zero_tolerance) or (2*abs(a_1*d_3) >= zero_tolerance) or (abs(Px**2 - 2*Px*a_0*math.cos(th_0) - 2*Px*a_4*r_11*math.cos(th_5) + 2*Px*a_4*r_12*math.sin(th_5) - 2*Px*d_5*r_13 + Py**2 - 2*Py*a_0*math.sin(th_0) - 2*Py*a_4*r_21*math.cos(th_5) + 2*Py*a_4*r_22*math.sin(th_5) - 2*Py*d_5*r_23 + Pz**2 - 2*Pz*a_4*r_31*math.cos(th_5) + 2*Pz*a_4*r_32*math.sin(th_5) - 2*Pz*d_5*r_33 + a_0**2 + a_0*a_4*r_11*math.cos(th_0 - th_5) + a_0*a_4*r_11*math.cos(th_0 + th_5) + a_0*a_4*r_12*math.sin(th_0 - th_5) - a_0*a_4*r_12*math.sin(th_0 + th_5) + a_0*a_4*r_21*math.sin(th_0 - th_5) + a_0*a_4*r_21*math.sin(th_0 + th_5) - a_0*a_4*r_22*math.cos(th_0 - th_5) + a_0*a_4*r_22*math.cos(th_0 + th_5) + 2*a_0*d_5*r_13*math.cos(th_0) + 2*a_0*d_5*r_23*math.sin(th_0) - a_1**2 - a_2**2 + (1/2)*a_4**2*r_11**2*math.cos(2*th_5) + (1/2)*a_4**2*r_11**2 - a_4**2*r_11*r_12*math.sin(2*th_5) - 1/2*a_4**2*r_12**2*math.cos(2*th_5) + (1/2)*a_4**2*r_12**2 + (1/2)*a_4**2*r_21**2*math.cos(2*th_5) + (1/2)*a_4**2*r_21**2 - a_4**2*r_21*r_22*math.sin(2*th_5) - 1/2*a_4**2*r_22**2*math.cos(2*th_5) + (1/2)*a_4**2*r_22**2 + (1/2)*a_4**2*r_31**2*math.cos(2*th_5) + (1/2)*a_4**2*r_31**2 - a_4**2*r_31*r_32*math.sin(2*th_5) - 1/2*a_4**2*r_32**2*math.cos(2*th_5) + (1/2)*a_4**2*r_32**2 + 2*a_4*d_5*r_11*r_13*math.cos(th_5) - 2*a_4*d_5*r_12*r_13*math.sin(th_5) + 2*a_4*d_5*r_21*r_23*math.cos(th_5) - 2*a_4*d_5*r_22*r_23*math.sin(th_5) + 2*a_4*d_5*r_31*r_33*math.cos(th_5) - 2*a_4*d_5*r_32*r_33*math.sin(th_5) - d_3**2 + d_5**2*r_13**2 + d_5**2*r_23**2 + d_5**2*r_33**2) >= zero_tolerance)
+            condition_0: bool = (((2*abs(a_1*a_2) >= zero_tolerance)) or ((2*abs(a_1*d_3) >= zero_tolerance)) or ((abs(Px**2 - 2*Px*a_0*math.cos(th_0) - 2*Px*a_4*r_11*math.cos(th_5) + 2*Px*a_4*r_12*math.sin(th_5) - 2*Px*d_5*r_13 + Py**2 - 2*Py*a_0*math.sin(th_0) - 2*Py*a_4*r_21*math.cos(th_5) + 2*Py*a_4*r_22*math.sin(th_5) - 2*Py*d_5*r_23 + Pz**2 - 2*Pz*a_4*r_31*math.cos(th_5) + 2*Pz*a_4*r_32*math.sin(th_5) - 2*Pz*d_5*r_33 + a_0**2 + a_0*a_4*r_11*math.cos(th_0 - th_5) + a_0*a_4*r_11*math.cos(th_0 + th_5) + a_0*a_4*r_12*math.sin(th_0 - th_5) - a_0*a_4*r_12*math.sin(th_0 + th_5) + a_0*a_4*r_21*math.sin(th_0 - th_5) + a_0*a_4*r_21*math.sin(th_0 + th_5) - a_0*a_4*r_22*math.cos(th_0 - th_5) + a_0*a_4*r_22*math.cos(th_0 + th_5) + 2*a_0*d_5*r_13*math.cos(th_0) + 2*a_0*d_5*r_23*math.sin(th_0) - a_1**2 - a_2**2 + (1/2)*a_4**2*r_11**2*math.cos(2*th_5) + (1/2)*a_4**2*r_11**2 - a_4**2*r_11*r_12*math.sin(2*th_5) - 1/2*a_4**2*r_12**2*math.cos(2*th_5) + (1/2)*a_4**2*r_12**2 + (1/2)*a_4**2*r_21**2*math.cos(2*th_5) + (1/2)*a_4**2*r_21**2 - a_4**2*r_21*r_22*math.sin(2*th_5) - 1/2*a_4**2*r_22**2*math.cos(2*th_5) + (1/2)*a_4**2*r_22**2 + (1/2)*a_4**2*r_31**2*math.cos(2*th_5) + (1/2)*a_4**2*r_31**2 - a_4**2*r_31*r_32*math.sin(2*th_5) - 1/2*a_4**2*r_32**2*math.cos(2*th_5) + (1/2)*a_4**2*r_32**2 + 2*a_4*d_5*r_11*r_13*math.cos(th_5) - 2*a_4*d_5*r_12*r_13*math.sin(th_5) + 2*a_4*d_5*r_21*r_23*math.cos(th_5) - 2*a_4*d_5*r_22*r_23*math.sin(th_5) + 2*a_4*d_5*r_31*r_33*math.cos(th_5) - 2*a_4*d_5*r_32*r_33*math.sin(th_5) - d_3**2 + d_5**2*r_13**2 + d_5**2*r_23**2 + d_5**2*r_33**2) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = 2*a_1
                 x1 = math.atan2(-d_3*x0, a_2*x0)
                 x2 = a_2**2
@@ -2343,81 +2320,26 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                 x45 = math.cos(x43)
                 x46 = Px**2 + Py**2 + Pz**2 + a_0**2 - r_11*r_12*x44 - r_12*x37 + r_12*x42 + r_13**2*x14 - r_21*r_22*x44 + r_21*x37 + r_21*x42 + r_23**2*x14 - r_31*r_32*x44 + r_33**2*x14 - x10*x11 - x10*x21 + x10*x22 + x12*x23 - x12*x6 + x13*x24 - x13*x8 + x16*x23 - x16*x6 - x18*x23 + x18*x6 + x19*x24 - x19*x8 - x2 - x20*x24 + x20*x8 + x21*x39 - x22*x39 + x27*x45 + x27 - x28*x45 + x28 + x29*x45 + x29 - x3 - x30*x45 + x30 + x31*x45 + x31 - x32*x45 + x32 + x34*x36 + x34*x38 + x36*x41 - x38*x41 - x5 - x6*x7 - x8*x9
                 x47 = safe_sqrt(x2*x4 + x4*x5 - x46**2)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[4] = x1 + math.atan2(x47, x46)
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(8, appended_idx)
-                
-            condition_1: bool = (2*abs(a_1*a_2) >= zero_tolerance) or (2*abs(a_1*d_3) >= zero_tolerance) or (abs(Px**2 - 2*Px*a_0*math.cos(th_0) - 2*Px*a_4*r_11*math.cos(th_5) + 2*Px*a_4*r_12*math.sin(th_5) - 2*Px*d_5*r_13 + Py**2 - 2*Py*a_0*math.sin(th_0) - 2*Py*a_4*r_21*math.cos(th_5) + 2*Py*a_4*r_22*math.sin(th_5) - 2*Py*d_5*r_23 + Pz**2 - 2*Pz*a_4*r_31*math.cos(th_5) + 2*Pz*a_4*r_32*math.sin(th_5) - 2*Pz*d_5*r_33 + a_0**2 + a_0*a_4*r_11*math.cos(th_0 - th_5) + a_0*a_4*r_11*math.cos(th_0 + th_5) + a_0*a_4*r_12*math.sin(th_0 - th_5) - a_0*a_4*r_12*math.sin(th_0 + th_5) + a_0*a_4*r_21*math.sin(th_0 - th_5) + a_0*a_4*r_21*math.sin(th_0 + th_5) - a_0*a_4*r_22*math.cos(th_0 - th_5) + a_0*a_4*r_22*math.cos(th_0 + th_5) + 2*a_0*d_5*r_13*math.cos(th_0) + 2*a_0*d_5*r_23*math.sin(th_0) - a_1**2 - a_2**2 + (1/2)*a_4**2*r_11**2*math.cos(2*th_5) + (1/2)*a_4**2*r_11**2 - a_4**2*r_11*r_12*math.sin(2*th_5) - 1/2*a_4**2*r_12**2*math.cos(2*th_5) + (1/2)*a_4**2*r_12**2 + (1/2)*a_4**2*r_21**2*math.cos(2*th_5) + (1/2)*a_4**2*r_21**2 - a_4**2*r_21*r_22*math.sin(2*th_5) - 1/2*a_4**2*r_22**2*math.cos(2*th_5) + (1/2)*a_4**2*r_22**2 + (1/2)*a_4**2*r_31**2*math.cos(2*th_5) + (1/2)*a_4**2*r_31**2 - a_4**2*r_31*r_32*math.sin(2*th_5) - 1/2*a_4**2*r_32**2*math.cos(2*th_5) + (1/2)*a_4**2*r_32**2 + 2*a_4*d_5*r_11*r_13*math.cos(th_5) - 2*a_4*d_5*r_12*r_13*math.sin(th_5) + 2*a_4*d_5*r_21*r_23*math.cos(th_5) - 2*a_4*d_5*r_22*r_23*math.sin(th_5) + 2*a_4*d_5*r_31*r_33*math.cos(th_5) - 2*a_4*d_5*r_32*r_33*math.sin(th_5) - d_3**2 + d_5**2*r_13**2 + d_5**2*r_23**2 + d_5**2*r_33**2) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = 2*a_1
-                x1 = math.atan2(-d_3*x0, a_2*x0)
-                x2 = a_2**2
-                x3 = a_1**2
-                x4 = 4*x3
-                x5 = d_3**2
-                x6 = 2*Px
-                x7 = d_5*r_13
-                x8 = 2*Py
-                x9 = d_5*r_23
-                x10 = 2*Pz
-                x11 = d_5*r_33
-                x12 = a_0*math.cos(th_0)
-                x13 = a_0*math.sin(th_0)
-                x14 = d_5**2
-                x15 = a_4*math.cos(th_5)
-                x16 = r_11*x15
-                x17 = a_4*math.sin(th_5)
-                x18 = r_12*x17
-                x19 = r_21*x15
-                x20 = r_22*x17
-                x21 = r_31*x15
-                x22 = r_32*x17
-                x23 = 2*x7
-                x24 = 2*x9
-                x25 = a_4**2
-                x26 = (1/2)*x25
-                x27 = r_11**2*x26
-                x28 = r_12**2*x26
-                x29 = r_21**2*x26
-                x30 = r_22**2*x26
-                x31 = r_31**2*x26
-                x32 = r_32**2*x26
-                x33 = th_0 + th_5
-                x34 = math.cos(x33)
-                x35 = a_0*a_4
-                x36 = r_11*x35
-                x37 = x35*math.sin(x33)
-                x38 = r_22*x35
-                x39 = 2*x11
-                x40 = th_0 - th_5
-                x41 = math.cos(x40)
-                x42 = x35*math.sin(x40)
-                x43 = 2*th_5
-                x44 = x25*math.sin(x43)
-                x45 = math.cos(x43)
-                x46 = Px**2 + Py**2 + Pz**2 + a_0**2 - r_11*r_12*x44 - r_12*x37 + r_12*x42 + r_13**2*x14 - r_21*r_22*x44 + r_21*x37 + r_21*x42 + r_23**2*x14 - r_31*r_32*x44 + r_33**2*x14 - x10*x11 - x10*x21 + x10*x22 + x12*x23 - x12*x6 + x13*x24 - x13*x8 + x16*x23 - x16*x6 - x18*x23 + x18*x6 + x19*x24 - x19*x8 - x2 - x20*x24 + x20*x8 + x21*x39 - x22*x39 + x27*x45 + x27 - x28*x45 + x28 + x29*x45 + x29 - x3 - x30*x45 + x30 + x31*x45 + x31 - x32*x45 + x32 + x34*x36 + x34*x38 + x36*x41 - x38*x41 - x5 - x6*x7 - x8*x9
-                x47 = safe_sqrt(x2*x4 + x4*x5 - x46**2)
-                # End of temp variables
                 this_solution[4] = x1 + math.atan2(-x47, x46)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(8, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_7_solve_th_2_processor()
     # Finish code for explicit solution node 6
-    
+
     # Code for solved_variable dispatcher node 8
     def SolvedVariableDispatcherNode_node_8_processor():
         this_node_input_index: List[int] = node_input_index[8]
         this_input_valid: bool = node_input_validity[8]
         if not this_input_valid:
             return
-        
+
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
             if not queue_element_validity[node_input_i_idx_in_queue]:
@@ -2434,7 +2356,7 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(14, branch_input_index)
-            
+
             th_3 = this_solution[5]
             degenerate_valid_1 = (abs(th_3 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
@@ -2444,21 +2366,21 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(17, branch_input_index)
-            
+
             if not taken_by_degenerate:
                 add_input_index_to(9, node_input_i_idx_in_queue)
-    
+
     # Invoke the processor
     SolvedVariableDispatcherNode_node_8_processor()
     # Finish code for solved_variable dispatcher node 8
-    
+
     # Code for explicit solution node 17, solved variable is th_1th_2th_4_soa
     def ExplicitSolutionNode_node_17_solve_th_1th_2th_4_soa_processor():
         this_node_input_index: List[int] = node_input_index[17]
         this_input_valid: bool = node_input_validity[17]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 17
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2466,27 +2388,24 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[0]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_33) >= zero_tolerance) or (abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_33) >= zero_tolerance)) or ((abs(r_13*math.cos(th_0) + r_23*math.sin(th_0)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[3] = math.atan2(r_13*math.cos(th_0) + r_23*math.sin(th_0), r_33)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(18, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_17_solve_th_1th_2th_4_soa_processor()
     # Finish code for explicit solution node 17
-    
+
     # Code for solved_variable dispatcher node 18
     def SolvedVariableDispatcherNode_node_18_processor():
         this_node_input_index: List[int] = node_input_index[18]
         this_input_valid: bool = node_input_validity[18]
         if not this_input_valid:
             return
-        
+
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
             if not queue_element_validity[node_input_i_idx_in_queue]:
@@ -2503,7 +2422,7 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(22, branch_input_index)
-            
+
             th_2 = this_solution[4]
             degenerate_valid_1 = (abs(th_2 - 2*math.pi + 1.39979827560533) <= 1.0e-6)
             if degenerate_valid_1:
@@ -2513,21 +2432,21 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(25, branch_input_index)
-            
+
             if not taken_by_degenerate:
                 add_input_index_to(19, node_input_i_idx_in_queue)
-    
+
     # Invoke the processor
     SolvedVariableDispatcherNode_node_18_processor()
     # Finish code for solved_variable dispatcher node 18
-    
+
     # Code for explicit solution node 25, solved variable is th_1
     def ExplicitSolutionNode_node_25_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[25]
         this_input_valid: bool = node_input_validity[25]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 25
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2535,47 +2454,35 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(0.985415423419357*a_2 - 0.170165928690941*d_3) >= zero_tolerance) or (abs(a_1 + 0.170165928690941*a_2 + 0.985415423419357*d_3) >= zero_tolerance) or (abs(Pz - a_4*r_31*math.cos(th_5) + a_4*r_32*math.sin(th_5) - d_5*r_33) >= zero_tolerance)
+            condition_0: bool = (((abs(0.985415423419357*a_2 - 0.170165928690941*d_3) >= zero_tolerance)) or ((abs(a_1 + 0.170165928690941*a_2 + 0.985415423419357*d_3) >= zero_tolerance)) or ((abs(Pz - a_4*r_31*math.cos(th_5) + a_4*r_32*math.sin(th_5) - d_5*r_33) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = a_1 + 0.170165928690941*a_2 + 0.985415423419357*d_3
                 x1 = math.atan2(x0, -0.985415423419357*a_2 + 0.170165928690941*d_3)
                 x2 = -Pz + a_4*r_31*math.cos(th_5) - a_4*r_32*math.sin(th_5) + d_5*r_33
                 x3 = safe_sqrt(x0**2 - x2**2 + 0.97104355671275*(-a_2 + 0.172684458398744*d_3)**2)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[1] = x1 + math.atan2(x3, x2)
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(26, appended_idx)
-                
-            condition_1: bool = (abs(0.985415423419357*a_2 - 0.170165928690941*d_3) >= zero_tolerance) or (abs(a_1 + 0.170165928690941*a_2 + 0.985415423419357*d_3) >= zero_tolerance) or (abs(Pz - a_4*r_31*math.cos(th_5) + a_4*r_32*math.sin(th_5) - d_5*r_33) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = a_1 + 0.170165928690941*a_2 + 0.985415423419357*d_3
-                x1 = math.atan2(x0, -0.985415423419357*a_2 + 0.170165928690941*d_3)
-                x2 = -Pz + a_4*r_31*math.cos(th_5) - a_4*r_32*math.sin(th_5) + d_5*r_33
-                x3 = safe_sqrt(x0**2 - x2**2 + 0.97104355671275*(-a_2 + 0.172684458398744*d_3)**2)
-                # End of temp variables
                 this_solution[1] = x1 + math.atan2(-x3, x2)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(26, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_25_solve_th_1_processor()
     # Finish code for explicit solution node 25
-    
+
     # Code for non-branch dispatcher node 26
     # Actually, there is no code
-    
+
     # Code for explicit solution node 27, solved variable is th_4
     def ExplicitSolutionNode_node_27_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[26]
         this_input_valid: bool = node_input_validity[26]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 27
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2585,9 +2492,8 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
             th_0 = this_solution[0]
             th_1 = this_solution[1]
             th_3 = this_solution[5]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_13*((0.985415423419357*math.sin(th_1) + 0.170165928690941*math.cos(th_1))*math.cos(th_0)*math.cos(th_3) + math.sin(th_0)*math.sin(th_3)) + r_23*((0.985415423419357*math.sin(th_1) + 0.170165928690941*math.cos(th_1))*math.sin(th_0)*math.cos(th_3) - math.sin(th_3)*math.cos(th_0)) - r_33*(0.170165928690941*math.sin(th_1) - 0.985415423419357*math.cos(th_1))*math.cos(th_3)) >= zero_tolerance) or (abs(-r_13*(-0.170165928690941*math.sin(th_1) + 0.985415423419357*math.cos(th_1))*math.cos(th_0) - r_23*(-0.170165928690941*math.sin(th_1) + 0.985415423419357*math.cos(th_1))*math.sin(th_0) + r_33*(0.985415423419357*math.sin(th_1) + 0.170165928690941*math.cos(th_1))) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(-r_13*(-0.170165928690941*math.sin(th_1) + 0.985415423419357*math.cos(th_1))*math.cos(th_0) - r_23*(-0.170165928690941*math.sin(th_1) + 0.985415423419357*math.cos(th_1))*math.sin(th_0) + r_33*(0.985415423419357*math.sin(th_1) + 0.170165928690941*math.cos(th_1))) >= zero_tolerance)) or ((abs(r_13*((0.985415423419357*math.sin(th_1) + 0.170165928690941*math.cos(th_1))*math.cos(th_0)*math.cos(th_3) + math.sin(th_0)*math.sin(th_3)) + r_23*((0.985415423419357*math.sin(th_1) + 0.170165928690941*math.cos(th_1))*math.sin(th_0)*math.cos(th_3) - math.sin(th_3)*math.cos(th_0)) - r_33*(0.170165928690941*math.sin(th_1) - 0.985415423419357*math.cos(th_1))*math.cos(th_3)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_3)
                 x1 = math.sin(th_1)
                 x2 = math.cos(th_1)
@@ -2597,23 +2503,21 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                 x6 = math.cos(th_0)
                 x7 = 0.985415423419357*x1 + 0.170165928690941*x2
                 x8 = x0*x7
-                # End of temp variables
                 this_solution[6] = math.atan2(-r_13*(x4*x5 + x6*x8) - r_23*(x4*x8 - x5*x6) - r_33*x0*x3, -r_13*x3*x6 - r_23*x3*x4 + r_33*x7)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_27_solve_th_4_processor()
     # Finish code for explicit solution node 26
-    
+
     # Code for explicit solution node 22, solved variable is th_1
     def ExplicitSolutionNode_node_22_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[22]
         this_input_valid: bool = node_input_validity[22]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 22
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2621,47 +2525,35 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(0.985415423419357*a_2 - 0.170165928690941*d_3) >= zero_tolerance) or (abs(-a_1 + 0.170165928690941*a_2 + 0.985415423419357*d_3) >= zero_tolerance) or (abs(Pz - a_4*r_31*math.cos(th_5) + a_4*r_32*math.sin(th_5) - d_5*r_33) >= zero_tolerance)
+            condition_0: bool = (((abs(0.985415423419357*a_2 - 0.170165928690941*d_3) >= zero_tolerance)) or ((abs(-a_1 + 0.170165928690941*a_2 + 0.985415423419357*d_3) >= zero_tolerance)) or ((abs(Pz - a_4*r_31*math.cos(th_5) + a_4*r_32*math.sin(th_5) - d_5*r_33) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = -a_1 + 0.170165928690941*a_2 + 0.985415423419357*d_3
                 x1 = math.atan2(x0, -0.985415423419357*a_2 + 0.170165928690941*d_3)
                 x2 = Pz - a_4*r_31*math.cos(th_5) + a_4*r_32*math.sin(th_5) - d_5*r_33
                 x3 = safe_sqrt(x0**2 - x2**2 + 0.97104355671275*(-a_2 + 0.172684458398744*d_3)**2)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[1] = x1 + math.atan2(x3, x2)
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(23, appended_idx)
-                
-            condition_1: bool = (abs(0.985415423419357*a_2 - 0.170165928690941*d_3) >= zero_tolerance) or (abs(-a_1 + 0.170165928690941*a_2 + 0.985415423419357*d_3) >= zero_tolerance) or (abs(Pz - a_4*r_31*math.cos(th_5) + a_4*r_32*math.sin(th_5) - d_5*r_33) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = -a_1 + 0.170165928690941*a_2 + 0.985415423419357*d_3
-                x1 = math.atan2(x0, -0.985415423419357*a_2 + 0.170165928690941*d_3)
-                x2 = Pz - a_4*r_31*math.cos(th_5) + a_4*r_32*math.sin(th_5) - d_5*r_33
-                x3 = safe_sqrt(x0**2 - x2**2 + 0.97104355671275*(-a_2 + 0.172684458398744*d_3)**2)
-                # End of temp variables
                 this_solution[1] = x1 + math.atan2(-x3, x2)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(23, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_22_solve_th_1_processor()
     # Finish code for explicit solution node 22
-    
+
     # Code for non-branch dispatcher node 23
     # Actually, there is no code
-    
+
     # Code for explicit solution node 24, solved variable is th_4
     def ExplicitSolutionNode_node_24_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[23]
         this_input_valid: bool = node_input_validity[23]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 24
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2671,9 +2563,8 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
             th_0 = this_solution[0]
             th_1 = this_solution[1]
             th_3 = this_solution[5]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(-r_13*((-0.985415423419357*math.sin(th_1) - 0.170165928690941*math.cos(th_1))*math.cos(th_0)*math.cos(th_3) + math.sin(th_0)*math.sin(th_3)) - r_23*((-0.985415423419357*math.sin(th_1) - 0.170165928690941*math.cos(th_1))*math.sin(th_0)*math.cos(th_3) - math.sin(th_3)*math.cos(th_0)) - r_33*(0.170165928690941*math.sin(th_1) - 0.985415423419357*math.cos(th_1))*math.cos(th_3)) >= zero_tolerance) or (abs(-r_13*(-0.170165928690941*math.sin(th_1) + 0.985415423419357*math.cos(th_1))*math.cos(th_0) - r_23*(-0.170165928690941*math.sin(th_1) + 0.985415423419357*math.cos(th_1))*math.sin(th_0) + r_33*(0.985415423419357*math.sin(th_1) + 0.170165928690941*math.cos(th_1))) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(-r_13*(-0.170165928690941*math.sin(th_1) + 0.985415423419357*math.cos(th_1))*math.cos(th_0) - r_23*(-0.170165928690941*math.sin(th_1) + 0.985415423419357*math.cos(th_1))*math.sin(th_0) + r_33*(0.985415423419357*math.sin(th_1) + 0.170165928690941*math.cos(th_1))) >= zero_tolerance)) or ((abs(-r_13*((-0.985415423419357*math.sin(th_1) - 0.170165928690941*math.cos(th_1))*math.cos(th_0)*math.cos(th_3) + math.sin(th_0)*math.sin(th_3)) - r_23*((-0.985415423419357*math.sin(th_1) - 0.170165928690941*math.cos(th_1))*math.sin(th_0)*math.cos(th_3) - math.sin(th_3)*math.cos(th_0)) - r_33*(0.170165928690941*math.sin(th_1) - 0.985415423419357*math.cos(th_1))*math.cos(th_3)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_3)
                 x1 = math.sin(th_1)
                 x2 = math.cos(th_1)
@@ -2684,23 +2575,21 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                 x7 = 0.985415423419357*x1 + 0.170165928690941*x2
                 x8 = -x0*x7
                 x9 = -x3
-                # End of temp variables
                 this_solution[6] = math.atan2(-r_13*(x4*x5 + x6*x8) - r_23*(x4*x8 - x5*x6) - r_33*x0*x3, r_13*x6*x9 + r_23*x4*x9 - r_33*x7)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_24_solve_th_4_processor()
     # Finish code for explicit solution node 23
-    
+
     # Code for explicit solution node 19, solved variable is th_1
     def ExplicitSolutionNode_node_19_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[19]
         this_input_valid: bool = node_input_validity[19]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 19
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2711,36 +2600,33 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
             th_1th_2th_4_soa = this_solution[3]
             th_2 = this_solution[4]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(a_2*math.sin(th_2) + d_3*math.cos(th_2)) >= 1.0e-6) or (abs(a_1 + a_2*math.cos(th_2) - d_3*math.sin(th_2)) >= 1.0e-6)
+            condition_0: bool = (((abs(a_2*math.sin(th_2) + d_3*math.cos(th_2)) >= 1.0e-6)) or ((abs(a_1 + a_2*math.cos(th_2) - d_3*math.sin(th_2)) >= 1.0e-6)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_2)
                 x1 = math.sin(th_2)
                 x2 = a_1 + a_2*x0 - d_3*x1
                 x3 = Pz - a_4*r_31*math.cos(th_5) + a_4*r_32*math.sin(th_5) - d_5*r_33
                 x4 = -a_2*x1 - d_3*x0
                 x5 = Px*math.cos(th_0) + Py*math.sin(th_0) - a_0 + a_4*math.cos(th_1th_2th_4_soa) - d_5*math.sin(th_1th_2th_4_soa)
-                # End of temp variables
                 this_solution[1] = math.atan2(-x2*x3 + x4*x5, x2*x5 + x3*x4)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(20, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_19_solve_th_1_processor()
     # Finish code for explicit solution node 19
-    
+
     # Code for non-branch dispatcher node 20
     # Actually, there is no code
-    
+
     # Code for explicit solution node 21, solved variable is th_4
     def ExplicitSolutionNode_node_21_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[20]
         this_input_valid: bool = node_input_validity[20]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 21
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2752,24 +2638,21 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
             th_2 = this_solution[4]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[6] = -th_1 + th_1th_2th_4_soa - th_2
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_21_solve_th_4_processor()
     # Finish code for explicit solution node 20
-    
+
     # Code for explicit solution node 14, solved variable is th_1
     def ExplicitSolutionNode_node_14_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[14]
         this_input_valid: bool = node_input_validity[14]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 14
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2779,9 +2662,8 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
             th_0 = this_solution[0]
             th_2 = this_solution[4]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(a_2*math.sin(th_2) + d_3*math.cos(th_2)) >= 1.0e-6) or (abs(a_1 + a_2*math.cos(th_2) - d_3*math.sin(th_2)) >= 1.0e-6)
+            condition_0: bool = (((abs(a_2*math.sin(th_2) + d_3*math.cos(th_2)) >= 1.0e-6)) or ((abs(a_1 + a_2*math.cos(th_2) - d_3*math.sin(th_2)) >= 1.0e-6)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_2)
                 x1 = math.sin(th_2)
                 x2 = a_1 + a_2*x0 - d_3*x1
@@ -2792,27 +2674,25 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                 x7 = math.cos(th_0)
                 x8 = math.sin(th_0)
                 x9 = Px*x7 + Py*x8 - a_0 + a_4*r_12*x3*x7 + a_4*r_22*x3*x8 - d_5*r_13*x7 - d_5*r_23*x8 - r_11*x4*x7 - r_21*x4*x8
-                # End of temp variables
                 this_solution[1] = math.atan2(-x2*x5 + x6*x9, x2*x9 + x5*x6)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(15, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_14_solve_th_1_processor()
     # Finish code for explicit solution node 14
-    
+
     # Code for non-branch dispatcher node 15
     # Actually, there is no code
-    
+
     # Code for explicit solution node 16, solved variable is th_4
     def ExplicitSolutionNode_node_16_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[15]
         this_input_valid: bool = node_input_validity[15]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 16
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2822,9 +2702,8 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
             th_0 = this_solution[0]
             th_1 = this_solution[1]
             th_2 = this_solution[4]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(-r_13*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))*math.cos(th_0) - r_23*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))*math.sin(th_0) + r_33*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))) >= zero_tolerance) or (abs(r_13*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.cos(th_0) + r_23*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.sin(th_0) + r_33*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_13*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.cos(th_0) + r_23*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.sin(th_0) + r_33*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))) >= zero_tolerance)) or ((abs(-r_13*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))*math.cos(th_0) - r_23*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))*math.sin(th_0) + r_33*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_1)
                 x1 = math.cos(th_2)
                 x2 = math.sin(th_2)
@@ -2833,23 +2712,21 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
                 x5 = -x0*x2 + x1*x3
                 x6 = r_13*math.cos(th_0)
                 x7 = r_23*math.sin(th_0)
-                # End of temp variables
                 this_solution[6] = math.atan2(r_33*x4 - x5*x6 - x5*x7, r_33*x5 + x4*x6 + x4*x7)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_16_solve_th_4_processor()
     # Finish code for explicit solution node 15
-    
+
     # Code for explicit solution node 9, solved variable is th_4
     def ExplicitSolutionNode_node_9_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[9]
         this_input_valid: bool = node_input_validity[9]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 9
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2859,33 +2736,30 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
             th_0 = this_solution[0]
             th_3 = this_solution[5]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(r_13*math.sin(th_0) - r_23*math.cos(th_0)) >= zero_tolerance) or (abs((r_11*math.sin(th_0) - r_21*math.cos(th_0))*math.cos(th_5) + (-r_12*math.sin(th_0) + r_22*math.cos(th_0))*math.sin(th_5)) >= zero_tolerance) or (abs(math.sin(th_3)) >= zero_tolerance)
+            condition_0: bool = (((abs(math.sin(th_3)) >= zero_tolerance)) or ((abs(r_13*math.sin(th_0) - r_23*math.cos(th_0)) >= zero_tolerance)) or ((abs((r_11*math.sin(th_0) - r_21*math.cos(th_0))*math.cos(th_5) + (-r_12*math.sin(th_0) + r_22*math.cos(th_0))*math.sin(th_5)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
-                x0 = math.sin(th_3)**(-1)
+                x0 = 1/math.sin(th_3)
                 x1 = math.sin(th_0)
                 x2 = math.cos(th_0)
-                # End of temp variables
                 this_solution[6] = math.atan2(x0*(-r_13*x1 + r_23*x2), x0*(-(-r_11*x1 + r_21*x2)*math.cos(th_5) + (-r_12*x1 + r_22*x2)*math.sin(th_5)))
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(10, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_9_solve_th_4_processor()
     # Finish code for explicit solution node 9
-    
+
     # Code for non-branch dispatcher node 10
     # Actually, there is no code
-    
+
     # Code for explicit solution node 11, solved variable is th_1th_2_soa
     def ExplicitSolutionNode_node_11_solve_th_1th_2_soa_processor():
         this_node_input_index: List[int] = node_input_index[10]
         this_input_valid: bool = node_input_validity[10]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 11
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2895,35 +2769,32 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
             th_0 = this_solution[0]
             th_3 = this_solution[5]
             th_5 = this_solution[7]
-            condition_0: bool = (abs(r_31*math.sin(th_5) + r_32*math.cos(th_5)) >= zero_tolerance) or (abs((r_11*math.cos(th_0) + r_21*math.sin(th_0))*math.sin(th_5) + (r_12*math.cos(th_0) + r_22*math.sin(th_0))*math.cos(th_5)) >= zero_tolerance) or (abs(math.sin(th_3)) >= zero_tolerance)
+            condition_0: bool = (((abs(math.sin(th_3)) >= zero_tolerance)) or ((abs(r_31*math.sin(th_5) + r_32*math.cos(th_5)) >= zero_tolerance)) or ((abs((r_11*math.cos(th_0) + r_21*math.sin(th_0))*math.sin(th_5) + (r_12*math.cos(th_0) + r_22*math.sin(th_0))*math.cos(th_5)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
-                x0 = math.sin(th_3)**(-1)
+                x0 = 1/math.sin(th_3)
                 x1 = math.sin(th_5)
                 x2 = math.cos(th_5)
                 x3 = math.cos(th_0)
                 x4 = math.sin(th_0)
-                # End of temp variables
                 this_solution[2] = math.atan2(x0*(-r_31*x1 - r_32*x2), x0*(-x1*(-r_11*x3 - r_21*x4) + x2*(r_12*x3 + r_22*x4)))
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(12, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_11_solve_th_1th_2_soa_processor()
     # Finish code for explicit solution node 10
-    
+
     # Code for non-branch dispatcher node 12
     # Actually, there is no code
-    
+
     # Code for explicit solution node 13, solved variable is th_1
     def ExplicitSolutionNode_node_13_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[12]
         this_input_valid: bool = node_input_validity[12]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 13
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -2934,17 +2805,14 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
             th_2 = this_solution[4]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[1] = th_1th_2_soa - th_2
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_13_solve_th_1_processor()
     # Finish code for explicit solution node 12
-    
+
     # Collect the output
     ik_out: List[np.ndarray] = list()
     for i in range(len(solution_queue)):
@@ -2964,29 +2832,87 @@ def abb_crb15000_10_1_52_ik_solve_raw(T_ee: np.ndarray):
         new_ik_i[4] = value_at_4
         value_at_5 = ik_out_i[7]  # th_5
         new_ik_i[5] = value_at_5
-        ik_out.append(new_ik_i)
+        if np.all(np.isfinite(new_ik_i)):
+            ik_out.append(new_ik_i)
     return ik_out
+
+
+def abb_crb15000_10_1_52_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarray, _yaik_seed_candidates=None):
+    if not np.all(np.isfinite(T_ee)):
+        return []
+    if not np.all(np.isfinite(T_ee_raw_in)):
+        return []
+    ik_output_raw = abb_crb15000_10_1_52_ik_solve_raw(T_ee_raw_in)
+    ik_output = list()
+    for i in range(len(ik_output_raw)):
+        ik_out_i = ik_output_raw[i]
+        ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw
+        ik_out_i[1] = add_revolute_offset(ik_out_i[1], -th_1_offset_original2raw)
+        ik_out_i[2] = ik_out_i[2] - th_2_offset_original2raw
+        ik_out_i[3] = add_revolute_offset(ik_out_i[3], -th_3_offset_original2raw)
+        ik_out_i[4] = add_revolute_offset(ik_out_i[4], -th_4_offset_original2raw)
+        ik_out_i[5] = ik_out_i[5] - th_5_offset_original2raw
+        ee_pose_i = abb_crb15000_10_1_52_fk(ik_out_i)
+        ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
+        if _yaik_seed_candidates is not None:
+            if ee_pose_diff < 1e-7:
+                _yaik_seed_candidates.strict_witness = True
+                _yaik_seed_candidates.clear()
+            elif not _yaik_seed_candidates.strict_witness:
+                retain_refinement_seed(_yaik_seed_candidates, ik_out_i, ee_pose_diff)
+        if ee_pose_diff < pose_tolerance:
+            ik_output.append(ik_out_i)
+        snapped = snap_near_joint_limits(ik_out_i, [-3.141592653589793, -1.5707963267948966, -3.141592653589793, -6.283185307179586, -6.283185307179586, -3.141592653589793], [3.141592653589793, 4.71238898038469, 3.141592653589793, 0.0, 0.0, 3.141592653589793], [True, True, True, True, True, True], [False, False, False, False, False, False])
+        if snapped is not None:
+            snapped = snapped.reshape(ik_out_i.shape)
+            snapped_pose = abb_crb15000_10_1_52_fk(snapped)
+            if (np.linalg.norm(snapped_pose[:3, 3]-T_ee[:3, 3]) <= 1e-7 and np.max(np.abs(snapped_pose[:3, :3]-T_ee[:3, :3])) <= 1e-7):
+                ik_output.append(snapped)
+                if _yaik_seed_candidates is not None and np.max(np.abs(snapped_pose-T_ee)) < 1e-7:
+                    _yaik_seed_candidates.strict_witness = True
+                    _yaik_seed_candidates.clear()
+    return ik_output
 
 
 def abb_crb15000_10_1_52_ik_solve(T_ee: np.ndarray):
     if not np.all(np.isfinite(T_ee)):
         return []
-    T_ee_raw_in = abb_crb15000_10_1_52_ik_target_original_to_raw(T_ee)
-    ik_output_raw = abb_crb15000_10_1_52_ik_solve_raw(T_ee_raw_in)
-    ik_output = list()
-    for i in range(len(ik_output_raw)):
-        ik_out_i = ik_output_raw[i]
-        ik_out_i[0] -= th_0_offset_original2raw
-        ik_out_i[1] -= th_1_offset_original2raw
-        ik_out_i[2] -= th_2_offset_original2raw
-        ik_out_i[3] -= th_3_offset_original2raw
-        ik_out_i[4] -= th_4_offset_original2raw
-        ik_out_i[5] -= th_5_offset_original2raw
-        ee_pose_i = abb_crb15000_10_1_52_fk(ik_out_i)
-        ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
-        if ee_pose_diff < pose_tolerance:
-            ik_output.append(ik_out_i)
-    return ik_output
+    result, seen = [], set()
+    refinement_seeds = RefinementSeeds()
+    for transform in (abb_crb15000_10_1_52_ik_target_original_to_raw,):
+        raw_target = transform(T_ee)
+        for candidate in abb_crb15000_10_1_52_ik_solve_for_raw_target(T_ee, raw_target, _yaik_seed_candidates=refinement_seeds):
+            result.append(candidate)
+    refinement_fk = lambda q: abb_crb15000_10_1_52_fk(q)
+    if refinement_seeds and not refinement_seeds.strict_witness:
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, False, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
+    if not refinement_seeds.strict_witness:
+        refinement_seeds.clear()
+        seed_parameters = ()
+        for shifted in nearby_ik_targets(T_ee):
+            for transform in (abb_crb15000_10_1_52_ik_target_original_to_raw,):
+                raw_target = transform(shifted)
+                for raw_candidate in abb_crb15000_10_1_52_ik_solve_raw(raw_target, *seed_parameters):
+                    seed = raw_candidate.reshape(-1).copy()
+                    seed[0] = seed[0] - th_0_offset_original2raw
+                    seed[1] = add_revolute_offset(seed[1], -th_1_offset_original2raw)
+                    seed[2] = seed[2] - th_2_offset_original2raw
+                    seed[3] = add_revolute_offset(seed[3], -th_3_offset_original2raw)
+                    seed[4] = add_revolute_offset(seed[4], -th_4_offset_original2raw)
+                    seed[5] = seed[5] - th_5_offset_original2raw
+                    retain_ik_refinement_seed(refinement_seeds, refinement_fk, T_ee, seed)
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, False, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
+    return result
 
 
 def test_ik_solve_abb_crb15000_10_1_52():

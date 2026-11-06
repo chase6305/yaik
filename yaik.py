@@ -98,7 +98,7 @@ def check_name(name):
         raise ValueError('robot name must be an ASCII identifier, such as my_robot')
 
 
-def export_code(tree, output_dir, language, with_runtime=False):
+def export_code(tree, output_dir, language, with_runtime=False, refine_seeds=True):
     check_name(tree.robot.name)
     paths = []
     for extension in (('py', 'cpp') if language == 'both' else
@@ -106,10 +106,10 @@ def export_code(tree, output_dir, language, with_runtime=False):
         path = Path(output_dir) / f'{tree.robot.name}_ik_generated.{extension}'
         if extension == 'py':
             from codegen.py_codegen.codegen_py import generate_code_python
-            generate_code_python(tree, str(path))
+            generate_code_python(tree, str(path), refine_seeds=refine_seeds)
         else:
             from codegen.cpp_codegen.codegen_cpp import generate_code_cpp
-            generate_code_cpp(tree, str(path), use_safe_operator=True)
+            generate_code_cpp(tree, str(path), use_safe_operator=True, refine_seeds=refine_seeds)
         path.write_text('\n'.join(line.rstrip() for line in path.read_text().splitlines()) + '\n')
         paths.append(path)
     if with_runtime:
@@ -145,12 +145,13 @@ def codegen(args):
         if incomplete_report is None:
             output.mkdir(parents=True, exist_ok=True)
             with tempfile.TemporaryDirectory(prefix='.yaik-', dir=output) as staging:
-                export_code(tree, staging, args.language, args.with_runtime)
+                export_code(tree, staging, args.language, args.with_runtime, not getattr(args, 'no_extra_recovery', False))
                 paths = publish(staging, output)
     if incomplete_report is not None:
         emit(incomplete_report)
         return 1
-    emit({'status': 'ok', 'robot': tree.robot.name, 'artifacts': paths})
+    emit({'status': 'ok', 'robot': tree.robot.name, 'artifacts': paths,
+          'extra_recovery': not getattr(args, 'no_extra_recovery', False)})
     return 0
 
 
@@ -219,16 +220,18 @@ def generate(args):
                 else:
                     run_ik(robot, test_cases, RunIKOption(random_seed=args.seed, max_num_nodes=max_nodes))
                     tree = read_skeleton_tree(str(staging / f'{robot.name}_ik.yaml'))
-                export_code(tree, staging, args.language, args.with_runtime)
+                export_code(tree, staging, args.language, args.with_runtime, not getattr(args, 'no_extra_recovery', False))
                 (staging / f'{robot.name}.yaml').write_text(yaml.safe_dump(robot.to_dict(), sort_keys=True))
                 if resume_record is not None:
                     from utility.artifacts import generator_source_hashes
                     resume_record.update(nodes_after=tree.num_nodes, generator_sources_sha256=generator_source_hashes(),
+                        extra_recovery=not getattr(args, 'no_extra_recovery', False),
                         artifact_sha256={path.name: hashlib.sha256(path.read_bytes()).hexdigest()
                                          for path in sorted(staging.iterdir()) if path.is_file()})
                     (staging/f'{robot.name}_resume.json').write_text(json.dumps(resume_record, indent=2)+'\n')
             paths = publish(staging, output)
-    result = {'status': 'ok', 'robot': robot.name, 'seed': args.seed, 'artifacts': paths}
+    result = {'status': 'ok', 'robot': robot.name, 'seed': args.seed, 'artifacts': paths,
+              'extra_recovery': not getattr(args, 'no_extra_recovery', False)}
     if resume_record is not None:
         result.update({key: resume_record[key] for key in
                        ('generation_mode', 'input_tree_sha256', 'nodes_before', 'nodes_after', 'branch_node_budget')})
@@ -329,6 +332,8 @@ def generation_arguments(command):
     command.add_argument('--with-runtime', action='store_true',
                          help='Copy matching runtime helper files into the output directory')
     command.set_defaults(handler=generate)
+    command.add_argument('--no-extra-recovery', action='store_true',
+                         help='Skip extra numerical refinement; keep analytic branches and existing checked fallbacks')
 
 
 def codegen_arguments(command):
@@ -340,6 +345,8 @@ def codegen_arguments(command):
     command.add_argument('--require-complete', action='store_true',
                          help='Reject export unless a verified completeness certificate is available')
     command.set_defaults(handler=codegen)
+    command.add_argument('--no-extra-recovery', action='store_true',
+                         help='Skip extra numerical refinement; keep analytic branches and existing checked fallbacks')
 
 
 def parser(command=None, language=None):

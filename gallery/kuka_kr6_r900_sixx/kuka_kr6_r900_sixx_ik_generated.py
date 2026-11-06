@@ -97,10 +97,10 @@ def kuka_kr6_r900_sixx_fk(theta_input: np.ndarray):
     theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
     th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
     th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
 
     # Temp variable for efficiency
     x0 = math.cos(th_4)
@@ -163,12 +163,13 @@ def kuka_kr6_r900_sixx_fk(theta_input: np.ndarray):
 
 
 def kuka_kr6_r900_sixx_twist_jacobian(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
     th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
     th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
 
     # Temp variable for efficiency
     x0 = math.sin(th_0)
@@ -251,12 +252,13 @@ def kuka_kr6_r900_sixx_twist_jacobian(theta_input: np.ndarray):
 
 
 def kuka_kr6_r900_sixx_angular_velocity_jacobian(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
     th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
     th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
 
     # Temp variable for efficiency
     x0 = math.sin(th_0)
@@ -301,12 +303,13 @@ def kuka_kr6_r900_sixx_angular_velocity_jacobian(theta_input: np.ndarray):
 
 
 def kuka_kr6_r900_sixx_transform_point_jacobian(theta_input: np.ndarray, point_on_ee: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     th_0 = theta_input[0] + th_0_offset_original2raw
     th_1 = theta_input[1] + th_1_offset_original2raw
-    th_2 = theta_input[2] + th_2_offset_original2raw
+    th_2 = add_revolute_offset(theta_input[2], th_2_offset_original2raw)
     th_3 = theta_input[3] + th_3_offset_original2raw
-    th_4 = theta_input[4] + th_4_offset_original2raw
-    th_5 = theta_input[5] + th_5_offset_original2raw
+    th_4 = add_revolute_offset(theta_input[4], th_4_offset_original2raw)
+    th_5 = add_revolute_offset(theta_input[5], th_5_offset_original2raw)
     p_on_ee_x: float = point_on_ee[0]
     p_on_ee_y: float = point_on_ee[1]
     p_on_ee_z: float = point_on_ee[2]
@@ -404,15 +407,12 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
     inv_Px = inv_ee_translation[0]
     inv_Py = inv_ee_translation[1]
     inv_Pz = inv_ee_translation[2]
-    
+
     # A new ik type. Should be a fixed array in C++
     IkSolution = NewType("IkSolution", List[float])
     def make_ik_solution():
-        tmp_sol = IkSolution(list())
-        for tmp_sol_idx in range(9):
-            tmp_sol.append(100000.0)
-        return tmp_sol
-    
+        return IkSolution([math.nan] * 9)
+
     solution_queue: List[IkSolution] = list()
     queue_element_validity: List[bool] = list()
     def append_solution_to_queue(solution_2_add: IkSolution):
@@ -420,7 +420,7 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
         solution_queue.append(solution_2_add)
         queue_element_validity.append(True)
         return index_4_appended
-    
+
     # Init for workspace as empty list. A list of fixed size array for each node
     max_n_solutions: int = 16
     node_input_index: List[List[int]] = list()
@@ -432,59 +432,54 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
         node_input_index[node_idx].append(solution_idx)
         node_input_validity[node_idx] = True
     node_input_validity[0] = True
-    
+
     # Code for equation all-zero dispatcher node 0
     def EquationAllZeroDispatcherNode_node_0_processor():
-        checked_result: bool = (abs(Px - d_4*r_13) <= 1.0e-6) and (abs(Py - d_4*r_23) <= 1.0e-6)
+        if not node_input_validity[0]:
+            return
+        checked_result: bool = (((abs(Px - d_4*r_13) <= 1.0e-6)) and ((abs(Py - d_4*r_23) <= 1.0e-6)))
         if not checked_result:  # To non-degenerate node
             node_input_validity[1] = True
-    
+
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_0_processor()
     # Finish code for equation all-zero dispatcher node 0
-    
+
     # Code for explicit solution node 1, solved variable is th_0
     def ExplicitSolutionNode_node_1_solve_th_0_processor():
         this_node_input_index: List[int] = node_input_index[1]
         this_input_valid: bool = node_input_validity[1]
         if not this_input_valid:
             return
-        
+
         # The explicit solution of root node
-        condition_0: bool = (abs(Px - d_4*r_13) >= zero_tolerance) or (abs(Py - d_4*r_23) >= zero_tolerance)
+        condition_0: bool = (((abs(Px - d_4*r_13) >= zero_tolerance)) or ((abs(Py - d_4*r_23) >= zero_tolerance)))
         if condition_0:
-            # Temp variable for efficiency
             x0 = math.atan2(Py - d_4*r_23, Px - d_4*r_13)
-            # End of temp variables
             solution_0: IkSolution = make_ik_solution()
             solution_0[1] = x0
             appended_idx = append_solution_to_queue(solution_0)
             add_input_index_to(2, appended_idx)
-            
-        condition_1: bool = (abs(Px - d_4*r_13) >= zero_tolerance) or (abs(Py - d_4*r_23) >= zero_tolerance)
-        if condition_1:
-            # Temp variable for efficiency
-            x0 = math.atan2(Py - d_4*r_23, Px - d_4*r_13)
-            # End of temp variables
+
             solution_1: IkSolution = make_ik_solution()
             solution_1[1] = x0 + math.pi
             appended_idx = append_solution_to_queue(solution_1)
             add_input_index_to(2, appended_idx)
-            
+
     # Invoke the processor
     ExplicitSolutionNode_node_1_solve_th_0_processor()
     # Finish code for explicit solution node 1
-    
+
     # Code for non-branch dispatcher node 2
     # Actually, there is no code
-    
+
     # Code for explicit solution node 3, solved variable is th_2
     def ExplicitSolutionNode_node_3_solve_th_2_processor():
         this_node_input_index: List[int] = node_input_index[2]
         this_input_valid: bool = node_input_validity[2]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 3
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -492,9 +487,8 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[1]
-            condition_0: bool = (2*abs(a_1*a_2) >= zero_tolerance) or (2*abs(a_1*d_3) >= zero_tolerance) or (abs(Px**2 - 2*Px*a_0*math.cos(th_0) - 2*Px*d_4*r_13 + Py**2 - 2*Py*a_0*math.sin(th_0) - 2*Py*d_4*r_23 + Pz**2 - 2*Pz*d_4*r_33 + a_0**2 + 2*a_0*d_4*r_13*math.cos(th_0) + 2*a_0*d_4*r_23*math.sin(th_0) - a_1**2 - a_2**2 - d_3**2 + d_4**2*r_13**2 + d_4**2*r_23**2 + d_4**2*r_33**2) >= zero_tolerance)
+            condition_0: bool = (((2*abs(a_1*a_2) >= zero_tolerance)) or ((2*abs(a_1*d_3) >= zero_tolerance)) or ((abs(Px**2 - 2*Px*a_0*math.cos(th_0) - 2*Px*d_4*r_13 + Py**2 - 2*Py*a_0*math.sin(th_0) - 2*Py*d_4*r_23 + Pz**2 - 2*Pz*d_4*r_33 + a_0**2 + 2*a_0*d_4*r_13*math.cos(th_0) + 2*a_0*d_4*r_23*math.sin(th_0) - a_1**2 - a_2**2 - d_3**2 + d_4**2*r_13**2 + d_4**2*r_23**2 + d_4**2*r_33**2) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = 2*a_1
                 x1 = math.atan2(d_3*x0, a_2*x0)
                 x2 = a_2**2
@@ -510,41 +504,19 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
                 x12 = d_4**2
                 x13 = Px**2 + Py**2 + Pz**2 - 2*Pz*d_4*r_33 + a_0**2 + r_13**2*x12 + r_23**2*x12 + r_33**2*x12 - x10*x6 + 2*x10*x7 - x11*x8 + 2*x11*x9 - x2 - x3 - x5 - x6*x7 - x8*x9
                 x14 = safe_sqrt(-x13**2 + x2*x4 + x4*x5)
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[4] = x1 + math.atan2(x14, x13)
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(4, appended_idx)
-                
-            condition_1: bool = (2*abs(a_1*a_2) >= zero_tolerance) or (2*abs(a_1*d_3) >= zero_tolerance) or (abs(Px**2 - 2*Px*a_0*math.cos(th_0) - 2*Px*d_4*r_13 + Py**2 - 2*Py*a_0*math.sin(th_0) - 2*Py*d_4*r_23 + Pz**2 - 2*Pz*d_4*r_33 + a_0**2 + 2*a_0*d_4*r_13*math.cos(th_0) + 2*a_0*d_4*r_23*math.sin(th_0) - a_1**2 - a_2**2 - d_3**2 + d_4**2*r_13**2 + d_4**2*r_23**2 + d_4**2*r_33**2) >= zero_tolerance)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = 2*a_1
-                x1 = math.atan2(d_3*x0, a_2*x0)
-                x2 = a_2**2
-                x3 = a_1**2
-                x4 = 4*x3
-                x5 = d_3**2
-                x6 = 2*Px
-                x7 = d_4*r_13
-                x8 = 2*Py
-                x9 = d_4*r_23
-                x10 = a_0*math.cos(th_0)
-                x11 = a_0*math.sin(th_0)
-                x12 = d_4**2
-                x13 = Px**2 + Py**2 + Pz**2 - 2*Pz*d_4*r_33 + a_0**2 + r_13**2*x12 + r_23**2*x12 + r_33**2*x12 - x10*x6 + 2*x10*x7 - x11*x8 + 2*x11*x9 - x2 - x3 - x5 - x6*x7 - x8*x9
-                x14 = safe_sqrt(-x13**2 + x2*x4 + x4*x5)
-                # End of temp variables
                 this_solution[4] = x1 + math.atan2(-x14, x13)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(4, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_3_solve_th_2_processor()
     # Finish code for explicit solution node 2
-    
+
     # Code for equation all-zero dispatcher node 4
     def EquationAllZeroDispatcherNode_node_4_processor():
         this_node_input_index: List[int] = node_input_index[4]
@@ -557,23 +529,23 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[1]
-            checked_result: bool = (abs(Pz - d_4*r_33) <= 1.0e-6) and (abs(-Px*math.cos(th_0) - Py*math.sin(th_0) + a_0 + d_4*r_13*math.cos(th_0) + d_4*r_23*math.sin(th_0)) <= 1.0e-6)
+            checked_result: bool = (((abs(Pz - d_4*r_33) <= 1.0e-6)) and ((abs(-Px*math.cos(th_0) - Py*math.sin(th_0) + a_0 + d_4*r_13*math.cos(th_0) + d_4*r_23*math.sin(th_0)) <= 1.0e-6)))
             if not checked_result:  # To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-    
+
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_4_processor()
     # Finish code for equation all-zero dispatcher node 4
-    
+
     # Code for explicit solution node 5, solved variable is th_1th_2_soa
     def ExplicitSolutionNode_node_5_solve_th_1th_2_soa_processor():
         this_node_input_index: List[int] = node_input_index[5]
         this_input_valid: bool = node_input_validity[5]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 5
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -582,36 +554,33 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[1]
             th_2 = this_solution[4]
-            condition_0: bool = (abs(Pz - d_4*r_33) >= 1.0e-6) or (abs(-Px*math.cos(th_0) - Py*math.sin(th_0) + a_0 + d_4*r_13*math.cos(th_0) + d_4*r_23*math.sin(th_0)) >= 1.0e-6)
+            condition_0: bool = (((abs(Pz - d_4*r_33) >= 1.0e-6)) or ((abs(-Px*math.cos(th_0) - Py*math.sin(th_0) + a_0 + d_4*r_13*math.cos(th_0) + d_4*r_23*math.sin(th_0)) >= 1.0e-6)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = -Pz + d_4*r_33
                 x1 = -a_1*math.cos(th_2) - a_2
                 x2 = a_1*math.sin(th_2) + d_3
                 x3 = math.cos(th_0)
                 x4 = math.sin(th_0)
                 x5 = -Px*x3 - Py*x4 + a_0 + d_4*r_13*x3 + d_4*r_23*x4
-                # End of temp variables
                 this_solution[3] = math.atan2(x0*x1 - x2*x5, x0*x2 + x1*x5)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(6, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_5_solve_th_1th_2_soa_processor()
     # Finish code for explicit solution node 5
-    
+
     # Code for non-branch dispatcher node 6
     # Actually, there is no code
-    
+
     # Code for explicit solution node 7, solved variable is th_1
     def ExplicitSolutionNode_node_7_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[6]
         this_input_valid: bool = node_input_validity[6]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 7
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -622,28 +591,25 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
             th_2 = this_solution[4]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[2] = th_1th_2_soa - th_2
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(8, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_7_solve_th_1_processor()
     # Finish code for explicit solution node 6
-    
+
     # Code for non-branch dispatcher node 8
     # Actually, there is no code
-    
+
     # Code for explicit solution node 9, solved variable is th_4
     def ExplicitSolutionNode_node_9_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[8]
         this_input_valid: bool = node_input_validity[8]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 9
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -653,48 +619,34 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
             th_0 = this_solution[1]
             th_1 = this_solution[2]
             th_2 = this_solution[4]
-            condition_0: bool = (abs(r_13*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.cos(th_0) + r_23*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.sin(th_0) + r_33*(math.sin(th_1)*math.sin(th_2) - math.cos(th_1)*math.cos(th_2))) <= 1)
+            condition_0: bool = (abs(r_13*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.cos(th_0) + r_23*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.sin(th_0) + r_33*(math.sin(th_1)*math.sin(th_2) - math.cos(th_1)*math.cos(th_2))) <= 70368744177665/70368744177664)
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_1)
                 x1 = math.sin(th_2)
                 x2 = math.cos(th_1)
                 x3 = math.cos(th_2)
                 x4 = x0*x3 + x1*x2
                 x5 = safe_acos(-r_13*x4*math.cos(th_0) - r_23*x4*math.sin(th_0) + r_33*(-x0*x1 + x2*x3))
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[7] = x5
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(10, appended_idx)
-                
-            condition_1: bool = (abs(r_13*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.cos(th_0) + r_23*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.sin(th_0) + r_33*(math.sin(th_1)*math.sin(th_2) - math.cos(th_1)*math.cos(th_2))) <= 1)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = math.sin(th_1)
-                x1 = math.sin(th_2)
-                x2 = math.cos(th_1)
-                x3 = math.cos(th_2)
-                x4 = x0*x3 + x1*x2
-                x5 = safe_acos(-r_13*x4*math.cos(th_0) - r_23*x4*math.sin(th_0) + r_33*(-x0*x1 + x2*x3))
-                # End of temp variables
                 this_solution[7] = -x5
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(10, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_9_solve_th_4_processor()
     # Finish code for explicit solution node 8
-    
+
     # Code for solved_variable dispatcher node 10
     def SolvedVariableDispatcherNode_node_10_processor():
         this_node_input_index: List[int] = node_input_index[10]
         this_input_valid: bool = node_input_validity[10]
         if not this_input_valid:
             return
-        
+
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
             if not queue_element_validity[node_input_i_idx_in_queue]:
@@ -711,7 +663,7 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(14, branch_input_index)
-            
+
             th_4 = this_solution[7]
             degenerate_valid_1 = (abs(th_4 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
@@ -721,21 +673,21 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
                     branch_input_index = append_solution_to_queue(copy.copy(this_solution))
                 forwarded_to_child = True
                 add_input_index_to(19, branch_input_index)
-            
+
             if not taken_by_degenerate:
                 add_input_index_to(11, node_input_i_idx_in_queue)
-    
+
     # Invoke the processor
     SolvedVariableDispatcherNode_node_10_processor()
     # Finish code for solved_variable dispatcher node 10
-    
+
     # Code for explicit solution node 19, solved variable is th_3th_5_soa
     def ExplicitSolutionNode_node_19_solve_th_3th_5_soa_processor():
         this_node_input_index: List[int] = node_input_index[19]
         this_input_valid: bool = node_input_validity[19]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 19
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -743,32 +695,29 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[1]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
-                # End of temp variables
                 this_solution[6] = math.atan2(-r_11*x0 + r_21*x1, -r_12*x0 + r_22*x1)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(20, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_19_solve_th_3th_5_soa_processor()
     # Finish code for explicit solution node 19
-    
+
     # Code for non-branch dispatcher node 20
     # Actually, there is no code
-    
+
     # Code for explicit solution node 21, solved variable is th_3
     def ExplicitSolutionNode_node_21_solve_th_3_processor():
         this_node_input_index: List[int] = node_input_index[20]
         this_input_valid: bool = node_input_validity[20]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 21
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -777,28 +726,25 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             condition_0: bool = True
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[5] = 0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(22, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_21_solve_th_3_processor()
     # Finish code for explicit solution node 20
-    
+
     # Code for non-branch dispatcher node 22
     # Actually, there is no code
-    
+
     # Code for explicit solution node 23, solved variable is th_5
     def ExplicitSolutionNode_node_23_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[22]
         this_input_valid: bool = node_input_validity[22]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 23
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -809,24 +755,21 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
             th_3th_5_soa = this_solution[6]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[8] = -th_3 + th_3th_5_soa
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_23_solve_th_5_processor()
     # Finish code for explicit solution node 22
-    
+
     # Code for explicit solution node 14, solved variable is negative_th_5_positive_th_3__soa
     def ExplicitSolutionNode_node_14_solve_negative_th_5_positive_th_3__soa_processor():
         this_node_input_index: List[int] = node_input_index[14]
         this_input_valid: bool = node_input_validity[14]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 14
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -834,32 +777,29 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_0 = this_solution[1]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance) or (abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_0) - r_21*math.cos(th_0)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_0) - r_22*math.cos(th_0)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_0)
                 x1 = math.cos(th_0)
-                # End of temp variables
                 this_solution[0] = math.atan2(r_11*x0 - r_21*x1, -r_12*x0 + r_22*x1)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(15, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_14_solve_negative_th_5_positive_th_3__soa_processor()
     # Finish code for explicit solution node 14
-    
+
     # Code for non-branch dispatcher node 15
     # Actually, there is no code
-    
+
     # Code for explicit solution node 16, solved variable is th_3
     def ExplicitSolutionNode_node_16_solve_th_3_processor():
         this_node_input_index: List[int] = node_input_index[15]
         this_input_valid: bool = node_input_validity[15]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 16
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -868,28 +808,25 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             condition_0: bool = True
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[5] = 0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(17, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_16_solve_th_3_processor()
     # Finish code for explicit solution node 15
-    
+
     # Code for non-branch dispatcher node 17
     # Actually, there is no code
-    
+
     # Code for explicit solution node 18, solved variable is th_5
     def ExplicitSolutionNode_node_18_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[17]
         this_input_valid: bool = node_input_validity[17]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 18
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -900,24 +837,21 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
             th_3 = this_solution[5]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
-                # End of temp variables
                 this_solution[8] = -negative_th_5_positive_th_3__soa + th_3
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_18_solve_th_5_processor()
     # Finish code for explicit solution node 17
-    
+
     # Code for explicit solution node 11, solved variable is th_3
     def ExplicitSolutionNode_node_11_solve_th_3_processor():
         this_node_input_index: List[int] = node_input_index[11]
         this_input_valid: bool = node_input_validity[11]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 11
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -928,10 +862,9 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
             th_1 = this_solution[2]
             th_2 = this_solution[4]
             th_4 = this_solution[7]
-            condition_0: bool = (abs(r_13*math.sin(th_0) - r_23*math.cos(th_0)) >= zero_tolerance) or (abs(-r_13*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))*math.cos(th_0) - r_23*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - r_33*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))) >= zero_tolerance) or (abs(math.sin(th_4)) >= zero_tolerance)
+            condition_0: bool = (((abs(math.sin(th_4)) >= zero_tolerance)) or ((abs(r_13*math.sin(th_0) - r_23*math.cos(th_0)) >= zero_tolerance)) or ((abs(-r_13*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))*math.cos(th_0) - r_23*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))*math.sin(th_0) - r_33*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
-                x0 = math.sin(th_4)**(-1)
+                x0 = 1/math.sin(th_4)
                 x1 = math.sin(th_0)
                 x2 = math.cos(th_0)
                 x3 = math.sin(th_1)
@@ -939,27 +872,25 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
                 x5 = math.sin(th_2)
                 x6 = math.cos(th_1)
                 x7 = -x3*x5 + x4*x6
-                # End of temp variables
                 this_solution[5] = math.atan2(x0*(-r_13*x1 + r_23*x2), x0*(-r_13*x2*x7 - r_23*x1*x7 - r_33*(x3*x4 + x5*x6)))
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(12, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_11_solve_th_3_processor()
     # Finish code for explicit solution node 11
-    
+
     # Code for non-branch dispatcher node 12
     # Actually, there is no code
-    
+
     # Code for explicit solution node 13, solved variable is th_5
     def ExplicitSolutionNode_node_13_solve_th_5_processor():
         this_node_input_index: List[int] = node_input_index[12]
         this_input_valid: bool = node_input_validity[12]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 13
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -970,10 +901,9 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
             th_1 = this_solution[2]
             th_2 = this_solution[4]
             th_4 = this_solution[7]
-            condition_0: bool = (abs(r_11*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.cos(th_0) + r_21*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.sin(th_0) - r_31*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))) >= zero_tolerance) or (abs(r_12*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.cos(th_0) + r_22*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.sin(th_0) + r_32*(math.sin(th_1)*math.sin(th_2) - math.cos(th_1)*math.cos(th_2))) >= zero_tolerance) or (abs(math.sin(th_4)) >= zero_tolerance)
+            condition_0: bool = (((abs(math.sin(th_4)) >= zero_tolerance)) or ((abs(r_12*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.cos(th_0) + r_22*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.sin(th_0) + r_32*(math.sin(th_1)*math.sin(th_2) - math.cos(th_1)*math.cos(th_2))) >= zero_tolerance)) or ((abs(r_11*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.cos(th_0) + r_21*(math.sin(th_1)*math.cos(th_2) + math.sin(th_2)*math.cos(th_1))*math.sin(th_0) - r_31*(-math.sin(th_1)*math.sin(th_2) + math.cos(th_1)*math.cos(th_2))) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
-                x0 = math.sin(th_4)**(-1)
+                x0 = 1/math.sin(th_4)
                 x1 = math.sin(th_1)
                 x2 = math.sin(th_2)
                 x3 = math.cos(th_1)
@@ -982,16 +912,14 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
                 x6 = x1*x4 + x2*x3
                 x7 = x6*math.cos(th_0)
                 x8 = x6*math.sin(th_0)
-                # End of temp variables
                 this_solution[8] = math.atan2(x0*(r_12*x7 + r_22*x8 - r_32*x5), x0*(-r_11*x7 - r_21*x8 + r_31*x5))
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_13_solve_th_5_processor()
     # Finish code for explicit solution node 12
-    
+
     # Collect the output
     ik_out: List[np.ndarray] = list()
     for i in range(len(solution_queue)):
@@ -1011,29 +939,87 @@ def kuka_kr6_r900_sixx_ik_solve_raw(T_ee: np.ndarray):
         new_ik_i[4] = value_at_4
         value_at_5 = ik_out_i[8]  # th_5
         new_ik_i[5] = value_at_5
-        ik_out.append(new_ik_i)
+        if np.all(np.isfinite(new_ik_i)):
+            ik_out.append(new_ik_i)
     return ik_out
+
+
+def kuka_kr6_r900_sixx_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarray, _yaik_seed_candidates=None):
+    if not np.all(np.isfinite(T_ee)):
+        return []
+    if not np.all(np.isfinite(T_ee_raw_in)):
+        return []
+    ik_output_raw = kuka_kr6_r900_sixx_ik_solve_raw(T_ee_raw_in)
+    ik_output = list()
+    for i in range(len(ik_output_raw)):
+        ik_out_i = ik_output_raw[i]
+        ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw
+        ik_out_i[1] = ik_out_i[1] - th_1_offset_original2raw
+        ik_out_i[2] = add_revolute_offset(ik_out_i[2], -th_2_offset_original2raw)
+        ik_out_i[3] = ik_out_i[3] - th_3_offset_original2raw
+        ik_out_i[4] = add_revolute_offset(ik_out_i[4], -th_4_offset_original2raw)
+        ik_out_i[5] = add_revolute_offset(ik_out_i[5], -th_5_offset_original2raw)
+        ee_pose_i = kuka_kr6_r900_sixx_fk(ik_out_i)
+        ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
+        if _yaik_seed_candidates is not None:
+            if ee_pose_diff < 1e-7:
+                _yaik_seed_candidates.strict_witness = True
+                _yaik_seed_candidates.clear()
+            elif not _yaik_seed_candidates.strict_witness:
+                retain_refinement_seed(_yaik_seed_candidates, ik_out_i, ee_pose_diff)
+        if ee_pose_diff < pose_tolerance:
+            ik_output.append(ik_out_i)
+        snapped = snap_near_joint_limits(ik_out_i, [-3.141592653589793, -3.141592653589793, -1.5707963267948966, -3.141592653589793, -6.283185307179586, -6.283185307179586], [3.141592653589793, 3.141592653589793, 4.71238898038469, 3.141592653589793, 0.0, 0.0], [True, True, True, True, True, True], [False, False, False, False, False, False])
+        if snapped is not None:
+            snapped = snapped.reshape(ik_out_i.shape)
+            snapped_pose = kuka_kr6_r900_sixx_fk(snapped)
+            if (np.linalg.norm(snapped_pose[:3, 3]-T_ee[:3, 3]) <= 1e-7 and np.max(np.abs(snapped_pose[:3, :3]-T_ee[:3, :3])) <= 1e-7):
+                ik_output.append(snapped)
+                if _yaik_seed_candidates is not None and np.max(np.abs(snapped_pose-T_ee)) < 1e-7:
+                    _yaik_seed_candidates.strict_witness = True
+                    _yaik_seed_candidates.clear()
+    return ik_output
 
 
 def kuka_kr6_r900_sixx_ik_solve(T_ee: np.ndarray):
     if not np.all(np.isfinite(T_ee)):
         return []
-    T_ee_raw_in = kuka_kr6_r900_sixx_ik_target_original_to_raw(T_ee)
-    ik_output_raw = kuka_kr6_r900_sixx_ik_solve_raw(T_ee_raw_in)
-    ik_output = list()
-    for i in range(len(ik_output_raw)):
-        ik_out_i = ik_output_raw[i]
-        ik_out_i[0] -= th_0_offset_original2raw
-        ik_out_i[1] -= th_1_offset_original2raw
-        ik_out_i[2] -= th_2_offset_original2raw
-        ik_out_i[3] -= th_3_offset_original2raw
-        ik_out_i[4] -= th_4_offset_original2raw
-        ik_out_i[5] -= th_5_offset_original2raw
-        ee_pose_i = kuka_kr6_r900_sixx_fk(ik_out_i)
-        ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
-        if ee_pose_diff < pose_tolerance:
-            ik_output.append(ik_out_i)
-    return ik_output
+    result, seen = [], set()
+    refinement_seeds = RefinementSeeds()
+    for transform in (kuka_kr6_r900_sixx_ik_target_original_to_raw,):
+        raw_target = transform(T_ee)
+        for candidate in kuka_kr6_r900_sixx_ik_solve_for_raw_target(T_ee, raw_target, _yaik_seed_candidates=refinement_seeds):
+            result.append(candidate)
+    refinement_fk = lambda q: kuka_kr6_r900_sixx_fk(q)
+    if refinement_seeds and not refinement_seeds.strict_witness:
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, False, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
+    if not refinement_seeds.strict_witness:
+        refinement_seeds.clear()
+        seed_parameters = ()
+        for shifted in nearby_ik_targets(T_ee):
+            for transform in (kuka_kr6_r900_sixx_ik_target_original_to_raw,):
+                raw_target = transform(shifted)
+                for raw_candidate in kuka_kr6_r900_sixx_ik_solve_raw(raw_target, *seed_parameters):
+                    seed = raw_candidate.reshape(-1).copy()
+                    seed[0] = seed[0] - th_0_offset_original2raw
+                    seed[1] = seed[1] - th_1_offset_original2raw
+                    seed[2] = add_revolute_offset(seed[2], -th_2_offset_original2raw)
+                    seed[3] = seed[3] - th_3_offset_original2raw
+                    seed[4] = add_revolute_offset(seed[4], -th_4_offset_original2raw)
+                    seed[5] = add_revolute_offset(seed[5], -th_5_offset_original2raw)
+                    retain_ik_refinement_seed(refinement_seeds, refinement_fk, T_ee, seed)
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, False, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
+    return result
 
 
 def test_ik_solve_kuka_kr6_r900_sixx():

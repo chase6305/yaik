@@ -45,6 +45,8 @@ def build_solved_variable_branches(
         complete_partial_shoulder_branches, complete_spherical_orientation_branches)
     complete_partial_shoulder_branches(tree, max_num_nodes)
     complete_spherical_orientation_branches(tree, max_num_nodes)
+    from codegen.skeleton.parallel_wrist import complete_parallel_wrist_branches
+    complete_parallel_wrist_branches(tree, max_num_nodes)
     # The shared solve option
     solve_option = SolveEquationOption()
     solve_option.on_main_branch = False
