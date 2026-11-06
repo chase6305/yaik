@@ -49,21 +49,34 @@ class TestEmptyRecovery(TestCase):
             if name not in cache:
                 tree=read_skeleton_tree(str(next((ROOT/'gallery').glob('**/'+name+'_ik.yaml'))))
                 scope={'__name__':'empty_recovery_regression'}
+                legacy={'__name__':'empty_recovery_legacy_reference'}
                 with redirect_stdout(StringIO()):
                     exec('\n'.join(CodeGenerationPython(tree).generate_code()),scope)
-                cache[name]=(tree,scope)
-            tree,scope=cache[name]
+                    exec('\n'.join(CodeGenerationPython(tree,refine_seeds=False).generate_code()),legacy)
+                cache[name]=(tree,scope,legacy)
+            tree,scope,legacy=cache[name]
             with self.subTest(robot=name,index=case['index']):
                 target=np.array(case['target'])
                 np.testing.assert_allclose(independent_fk(tree.robot,case['q'],case['parameters']),target,atol=2e-14,rtol=0)
                 arguments=[case['parameters'][str(symbol)] for symbol in tree.get_free_symbols()]
                 output=scope[name+'_ik_solve'](target,*arguments)
-                if case['recovery_expected']:self.assertTrue(output)
+                previous=legacy[name+'_ik_solve'](target,*arguments)
+                for old in previous:
+                    self.assertTrue(any(np.array_equal(old,q) for q in output))
+                errors=[]
                 for q in output:
-                    self.assertLess(np.max(np.abs(independent_fk(tree.robot,q,case['parameters'])-target)),1e-7)
+                    error=float(np.max(np.abs(independent_fk(tree.robot,q,case['parameters'])-target)))
+                    errors.append(error)
+                    # Existing checked candidates keep their original gate.
+                    # Only added numerical results have the stricter contract.
+                    old=any(np.array_equal(q,prior) for prior in previous)
+                    self.assertLess(error,1e-4 if old else 1e-7,
+                                    (name,case['index'],old,q.ravel().tolist()))
                     for index,joint in enumerate(tree.robot.unknowns):
                         if joint.symbol in tree.robot.unknown_as_parameter_more_dof:
                             self.assertEqual(float(q[index,0]),case['parameters'][str(joint.symbol)])
+                if case['recovery_expected']:
+                    self.assertLess(min(errors,default=math.inf),1e-7)
 
     def test_cli_can_export_legacy_paths_with_matching_runtimes(self):
         tree=ROOT/'gallery/arm_robo/arm_robo_ik.yaml'

@@ -62,6 +62,11 @@ jobs:
           python -m pip install -r requirements.txt pytest
       - name: Check generated artifacts
         run: python yaik.py marvin check
+      - name: Check numerical-recovery candidate contracts
+        run: >-
+          python -m pytest
+          solver/test_empty_recovery.py::TestEmptyRecovery::test_python_saved_empty_paths_retain_fixed_inputs_and_strict_original_fk
+          -q -W error
       - name: Run regression tests
         run: >-
           python -m pytest test_cli.py gallery/marvin_m6 utility/test_artifacts.py
