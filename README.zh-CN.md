@@ -208,11 +208,14 @@ raw 接口直接使用传入的原始相位。
 重新生成的 C++ 内核预留最多 48 个候选，避免原先 16 个槽位截断 24 阶特征值结果。
 仍未解决的奇异系统返回空候选列表；空列表不代表已证明不可达。
 
-包含通用 6R 数值节点的 checked 导出会保留至多 4 个不同的有限 raw 候选。
-原有路径运行结束后，如果仍没有最大矩阵元素误差小于 `1e-7` 的见证，再尝试阻尼有限差分细化：
-每个种子最多 40 轮，限制单步大小，只追加通过严格 FK 检查的结果。原有候选仍保留，
-固定关节不参与更新，新增细化不消耗随机数。这能补救部分不准确的根，无法补救完全没有 raw
-候选的路径，也不保证完备性或调用时延。重新导出保存树时使用 `--with-runtime` 配套运行库。
+checked 导出在原有路径之后，先对至多 4 个不同的有限 raw 候选做局部细化。
+如果仍没有严格见证，再通过 6 个固定方向的小目标变换构造另一组至多 4 个种子。
+每个种子最多 40 轮阻尼有限差分迭代，限制单步大小，只追加与原始目标最大矩阵元素误差
+小于 `1e-7` 的结果。原有候选仍保留，固定关节不参与更新，新增恢复不消耗随机数。
+种子变换的转角为 `1e-4` 弧度，平移向量长度为 `1e-4` 个模型长度单位，仅用于构造起点。
+局部恢复仍可能失败，不保证完备性或调用时延。重新导出时使用 `--with-runtime` 配套运行库；
+通用 `codegen`、`generate` 加 `--no-extra-recovery` 可导出原有 checked 路径，
+库生成器也支持 `refine_seeds=False`。
 
 ## 验证
 
@@ -226,6 +229,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   solver/test_candidate_assignment.py solver/test_partial_branches.py \
   solver/test_compact_workspace.py solver/test_fixed_joint_phases.py \
   solver/test_seed_refinement.py \
+  solver/test_empty_recovery.py \
   solver/test_gallery_regeneration.py \
   solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 

@@ -55,6 +55,27 @@ std::vector<std::array<double,N>> fixedJointPhaseAliases(
 }
 
 template <std::size_t N>
+struct IkRefinementSeeds : std::vector<std::pair<double,std::array<double,N>>> {
+  bool strict_witness=false;
+};
+
+inline std::array<Eigen::Matrix4d,6> nearbyIkTargets(const Eigen::Matrix4d& target) {
+  const std::array<std::array<double,3>,3> directions{{{{1.,2.,3.}},{{3.,1.,-2.}},{{-2.,3.,1.}}}};
+  std::array<Eigen::Matrix4d,6> targets;
+  std::size_t index=0;
+  for(const auto& direction : directions) {
+    const Eigen::Vector3d axis=Eigen::Vector3d(direction[0],direction[1],direction[2])/std::sqrt(14.);
+    for(double sign : {-1.,1.}) {
+      Eigen::Matrix4d shift=Eigen::Matrix4d::Identity();
+      shift.block<3,3>(0,0)=Eigen::AngleAxisd(sign*1e-4,axis).toRotationMatrix();
+      shift.block<3,1>(0,3)=sign*1e-4*axis;
+      targets[index++]=shift*target;
+    }
+  }
+  return targets;
+}
+
+template <std::size_t N>
 void retainRefinementSeed(std::vector<std::pair<double,std::array<double,N>>>& seeds,
                           const std::array<double,N>& candidate, double error) {
   if (!std::isfinite(error)) return;

@@ -69,14 +69,12 @@ class TestSeedRefinement(TestCase):
         from utility.artifacts import generator_source_hashes
         checked=[]
         sources=generator_source_hashes()
-        for provenance in sorted((ROOT/'gallery').glob('*/provenance.json')):
+        for path in sorted((ROOT/'gallery').glob('**/*_ik.yaml')):
+            provenance=path.parent/'provenance.json'
             report=json.loads(provenance.read_text())
-            if report.get('generation_mode')!='codegen_saved_tree':
-                continue
             folder=provenance.parent
-            tree=read_skeleton_tree(str(ROOT/report['source_tree']))
-            self.assertTrue(tree.has_general_6dof_solution_node())
-            self.assertEqual(report['generator_sources_sha256'],sources)
+            tree=read_skeleton_tree(str(path))
+            self.assertEqual(report.get('generator_sources_sha256',report.get('generator_overrides_sha256')),sources)
             for name,expected in report['runtime_sha256'].items():
                 self.assertEqual(hashlib.sha256((ROOT/name).read_bytes()).hexdigest(),expected)
             for name,expected in report['artifact_sha256'].items():
@@ -106,7 +104,7 @@ class TestSeedRefinement(TestCase):
         with redirect_stdout(StringIO()):
             exec('\n'.join(CodeGenerationPython(parameterized_tree(self.tree)).generate_code()),scope)
         frame=parameter_frame()
-        for case in self.cases[:3]:
+        for case in self.cases:
             with self.subTest(index=case['index']):
                 target=frame@np.array(case['target'])
                 output=scope['mpx_parameterized_refinement_ik_solve'](target,.3,-.2)

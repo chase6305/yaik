@@ -267,15 +267,18 @@ Regenerated C++ kernels reserve up to 48 candidates instead of truncating the
 24-eigenvalue problem into a 16-element buffer. Singular systems that remain
 unresolved return an empty candidate list; this does not prove infeasibility.
 
-Checked exports containing a general 6R numerical node also retain up to four
-distinct finite raw candidates. After the existing checked paths finish, if no
-candidate has maximum matrix-entry error below `1e-7`, they try local refinement
-with damped finite differences, bounded steps and at most 40 iterations per seed.
-Only a strictly verified result is added; existing candidates and supplied fixed
-coordinates are retained, and the refinement draws no random numbers. This can
-recover inaccurate roots but cannot recover an empty raw candidate set or certify
-completeness. Exceptional inputs can take longer. Re-export the saved tree with
-`--with-runtime` to bundle the matching helpers.
+Checked exports retain up to four distinct finite raw candidates for local
+refinement after the existing paths finish. If no strict witness is found, six
+fixed small target transforms supply another set of up to four seeds. Each seed
+gets at most 40 damped finite-difference iterations with bounded steps; a new
+result must match the original target within `1e-7` maximum matrix-entry error.
+Existing candidates and supplied fixed coordinates are retained, and this recovery
+draws no random numbers. The seed transforms use `1e-4` radians and a translation
+of length `1e-4` in the model's length units. They only construct starting points.
+Local recovery can still fail and does not certify completeness or call latency.
+Re-export with `--with-runtime` to bundle the matching helpers. Generic `codegen`
+and `generate` accept `--no-extra-recovery` to export the legacy checked paths;
+library generators accept `refine_seeds=False` for the same choice.
 
 ## Validation
 
@@ -289,6 +292,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   solver/test_candidate_assignment.py solver/test_partial_branches.py \
   solver/test_compact_workspace.py solver/test_fixed_joint_phases.py \
   solver/test_seed_refinement.py \
+  solver/test_empty_recovery.py \
   solver/test_gallery_regeneration.py \
   solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 

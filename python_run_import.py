@@ -44,6 +44,30 @@ def fixed_joint_phase_aliases(arguments, centers, tolerance=1e-6):
     return aliases
 
 
+class RefinementSeeds(list):
+    def __init__(self):
+        super().__init__()
+        self.strict_witness = False
+
+
+def nearby_ik_targets(target):
+    """Six deterministic small target shifts, used only to construct seeds."""
+    targets = []
+    for direction in ((1., 2., 3.), (3., 1., -2.), (-2., 3., 1.)):
+        axis = np.array(direction)/math.sqrt(14.)
+        cross = np.array([[0., -axis[2], axis[1]], [axis[2], 0., -axis[0]], [-axis[1], axis[0], 0.]])
+        for sign in (-1., 1.):
+            angle = sign*1e-4
+            perturb = np.eye(4)
+            perturb[:3, :3] += math.sin(angle)*cross+(1-math.cos(angle))*(cross@cross)
+            perturb[:3, 3] = sign*1e-4*axis
+            with np.errstate(over='ignore', invalid='ignore'):
+                shifted = perturb@target
+            if np.isfinite(shifted).all():
+                targets.append(shifted)
+    return targets
+
+
 def retain_refinement_seed(seeds, candidate, error):
     """Keep a few distinct finite raw candidates, ordered by original FK error."""
     if not math.isfinite(error) or (len(seeds) >= 4 and error >= seeds[-1][0]):
@@ -57,6 +81,15 @@ def retain_refinement_seed(seeds, candidate, error):
         seeds.append((float(error), candidate.copy()))
         seeds.sort(key=lambda entry: entry[0])
         del seeds[4:]
+
+
+def retain_ik_refinement_seed(seeds, fk, target, candidate):
+    try:
+        with np.errstate(over='ignore', invalid='ignore', divide='ignore'):
+            error = float(np.max(np.abs(fk(candidate)-target)))
+    except (ArithmeticError, ValueError):
+        return
+    retain_refinement_seed(seeds, candidate, error)
 
 
 def refine_ik_seed(fk, target, seed, fixed_joints=()):
