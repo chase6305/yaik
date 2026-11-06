@@ -55,28 +55,28 @@ def mini_dd_fk(theta_input: np.ndarray):
     x10 = x1*x9
     x11 = x10*x8 + x7
     x12 = x5*x9
-    x13 = x1*x6
-    x14 = x2*x9
-    x15 = x2*x5
-    x16 = -x12*x8 + x13
+    x13 = x2*x9
+    x14 = x2*x5
+    x15 = x1*x6 - x12*x8
     # End of temp variables
     ee_pose = np.eye(4)
     ee_pose[0, 0] = x0*x3 + x11*x4
-    ee_pose[0, 1] = -x0*x11 + x3*x4
-    ee_pose[0, 2] = x12 - x13*x8
+    ee_pose[0, 1] = -x0*x11 + x1*x2*x4
+    ee_pose[0, 2] = -x1*x6*x8 + x12
     ee_pose[0, 3] = l_3*x1 - l_4*x3
-    ee_pose[1, 0] = x0*x8 - x14*x4
-    ee_pose[1, 1] = x0*x14 + x4*x8
+    ee_pose[1, 0] = x0*x8 - x13*x4
+    ee_pose[1, 1] = x0*x13 + x4*x8
     ee_pose[1, 2] = x2*x6
     ee_pose[1, 3] = -l_4*x8
-    ee_pose[2, 0] = -x0*x15 + x16*x4
-    ee_pose[2, 1] = -x0*x16 - x15*x4
+    ee_pose[2, 0] = -x0*x14 + x15*x4
+    ee_pose[2, 1] = -x0*x15 - x14*x4
     ee_pose[2, 2] = x10 + x7*x8
-    ee_pose[2, 3] = d_0 - l_3*x5 + l_4*x15
+    ee_pose[2, 3] = d_0 - l_3*x5 + l_4*x14
     return ee_pose
 
 
 def mini_dd_twist_jacobian(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     d_0 = theta_input[0]
     th_1 = theta_input[1]
     th_2 = theta_input[2]
@@ -125,6 +125,7 @@ def mini_dd_twist_jacobian(theta_input: np.ndarray):
 
 
 def mini_dd_angular_velocity_jacobian(theta_input: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     d_0 = theta_input[0]
     th_1 = theta_input[1]
     th_2 = theta_input[2]
@@ -154,6 +155,7 @@ def mini_dd_angular_velocity_jacobian(theta_input: np.ndarray):
 
 
 def mini_dd_transform_point_jacobian(theta_input: np.ndarray, point_on_ee: np.ndarray):
+    theta_input = np.asarray(theta_input).reshape(-1)
     d_0 = theta_input[0]
     th_1 = theta_input[1]
     th_2 = theta_input[2]
@@ -175,28 +177,28 @@ def mini_dd_transform_point_jacobian(theta_input: np.ndarray, point_on_ee: np.nd
     x8 = d_0 - l_3*x4
     x9 = x7 + x8
     x10 = math.sin(th_3)
-    x11 = x10*x3
-    x12 = math.cos(th_3)
-    x13 = x10*x2
-    x14 = x0*x12 + x13*x4
-    x15 = l_4*x2
+    x11 = math.cos(th_3)
+    x12 = x10*x2
+    x13 = x0*x11 + x12*x4
+    x14 = l_4*x2
+    x15 = x10*x3
     x16 = x0*x3
     x17 = l_3*x0 - l_4*x16
-    x18 = -x0*x13 + x12*x4
+    x18 = -x0*x12 + x11*x4
     # End of temp variables
     jacobian_output = np.zeros(shape=(3, 5))
     jacobian_output[0, 1] = -d_0 + p_on_ee_z
     jacobian_output[0, 2] = x1
     jacobian_output[0, 3] = -p_on_ee_z*x2 - x2*x7 + x2*x9 - x3*x5
-    jacobian_output[0, 4] = -p_on_ee_y*x14 + p_on_ee_z*x11 - x11*x9 - x14*x15
+    jacobian_output[0, 4] = -p_on_ee_y*x13 + p_on_ee_z*x10*x3 - x13*x14 - x15*x9
     jacobian_output[1, 2] = l_3*x0**2 - p_on_ee_x*x0 + p_on_ee_z*x4 - x4*x8
     jacobian_output[1, 3] = p_on_ee_x*x6 + p_on_ee_z*x16 - x16*x9 - x17*x6
-    jacobian_output[1, 4] = p_on_ee_x*x14 - p_on_ee_z*x18 - x14*x17 + x18*x9
+    jacobian_output[1, 4] = p_on_ee_x*x13 - p_on_ee_z*x18 - x13*x17 + x18*x9
     jacobian_output[2, 0] = 1
     jacobian_output[2, 1] = -p_on_ee_x
     jacobian_output[2, 2] = -x5
-    jacobian_output[2, 3] = p_on_ee_x*x2 - x1*x3 - x15*x16 - x17*x2
-    jacobian_output[2, 4] = -p_on_ee_x*x11 + p_on_ee_y*x18 + x11*x17 + x15*x18
+    jacobian_output[2, 3] = p_on_ee_x*x2 - x1*x3 - x14*x16 - x17*x2
+    jacobian_output[2, 4] = -p_on_ee_x*x15 + p_on_ee_y*x18 + x14*x18 + x15*x17
     return jacobian_output
 
 
@@ -218,15 +220,12 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
     inv_Px = inv_ee_translation[0]
     inv_Py = inv_ee_translation[1]
     inv_Pz = inv_ee_translation[2]
-    
+
     # A new ik type. Should be a fixed array in C++
     IkSolution = NewType("IkSolution", List[float])
     def make_ik_solution():
-        tmp_sol = IkSolution(list())
-        for tmp_sol_idx in range(5):
-            tmp_sol.append(100000.0)
-        return tmp_sol
-    
+        return IkSolution([math.nan] * 5)
+
     solution_queue: List[IkSolution] = list()
     queue_element_validity: List[bool] = list()
     def append_solution_to_queue(solution_2_add: IkSolution):
@@ -234,7 +233,7 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
         solution_queue.append(solution_2_add)
         queue_element_validity.append(True)
         return index_4_appended
-    
+
     # Init for workspace as empty list. A list of fixed size array for each node
     max_n_solutions: int = 16
     node_input_index: List[List[int]] = list()
@@ -246,42 +245,35 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
         node_input_index[node_idx].append(solution_idx)
         node_input_validity[node_idx] = True
     node_input_validity[0] = True
-    
+
     # Code for non-branch dispatcher node 0
     # Actually, there is no code
-    
+
     # Code for explicit solution node 1, solved variable is th_2
     def ExplicitSolutionNode_node_1_solve_th_2_processor():
         this_node_input_index: List[int] = node_input_index[0]
         this_input_valid: bool = node_input_validity[0]
         if not this_input_valid:
             return
-        
+
         # The explicit solution of root node
-        condition_0: bool = (abs(Py/l_4) <= 1)
+        condition_0: bool = (((l_4 != 0)) and ((abs(Py/l_4) <= 70368744177665/70368744177664)))
         if condition_0:
-            # Temp variable for efficiency
             x0 = safe_acos(-Py/l_4)
-            # End of temp variables
             solution_0: IkSolution = make_ik_solution()
             solution_0[2] = x0
             appended_idx = append_solution_to_queue(solution_0)
             add_input_index_to(2, appended_idx)
-            
-        condition_1: bool = (abs(Py/l_4) <= 1)
-        if condition_1:
-            # Temp variable for efficiency
-            x0 = safe_acos(-Py/l_4)
-            # End of temp variables
+
             solution_1: IkSolution = make_ik_solution()
             solution_1[2] = -x0
             appended_idx = append_solution_to_queue(solution_1)
             add_input_index_to(2, appended_idx)
-            
+
     # Invoke the processor
     ExplicitSolutionNode_node_1_solve_th_2_processor()
     # Finish code for explicit solution node 0
-    
+
     # Code for equation all-zero dispatcher node 2
     def EquationAllZeroDispatcherNode_node_2_processor():
         this_node_input_index: List[int] = node_input_index[2]
@@ -299,18 +291,18 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
                 add_input_index_to(3, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-    
+
     # Invoke the processor
     EquationAllZeroDispatcherNode_node_2_processor()
     # Finish code for equation all-zero dispatcher node 2
-    
+
     # Code for explicit solution node 3, solved variable is th_1
     def ExplicitSolutionNode_node_3_solve_th_1_processor():
         this_node_input_index: List[int] = node_input_index[3]
         this_input_valid: bool = node_input_validity[3]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 3
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -318,41 +310,32 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_2 = this_solution[2]
-            condition_0: bool = (abs(Px/(l_3 - l_4*math.sin(th_2))) <= 1)
+            condition_0: bool = (((l_3 - l_4*math.sin(th_2) != 0)) and ((abs(Px/(l_3 - l_4*math.sin(th_2))) <= 70368744177665/70368744177664)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = safe_acos(Px/(l_3 - l_4*math.sin(th_2)))
-                # End of temp variables
                 solution_0: IkSolution = copy.copy(this_solution)
                 solution_0[1] = x0
                 appended_idx = append_solution_to_queue(solution_0)
                 add_input_index_to(4, appended_idx)
-                
-            condition_1: bool = (abs(Px/(l_3 - l_4*math.sin(th_2))) <= 1)
-            if condition_1:
-                # Temp variable for efficiency
-                x0 = safe_acos(Px/(l_3 - l_4*math.sin(th_2)))
-                # End of temp variables
                 this_solution[1] = -x0
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(4, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_3_solve_th_1_processor()
     # Finish code for explicit solution node 3
-    
+
     # Code for non-branch dispatcher node 4
     # Actually, there is no code
-    
+
     # Code for explicit solution node 5, solved variable is d_0
     def ExplicitSolutionNode_node_5_solve_d_0_processor():
         this_node_input_index: List[int] = node_input_index[4]
         this_input_valid: bool = node_input_validity[4]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 5
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -363,29 +346,26 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
             th_2 = this_solution[2]
             condition_0: bool = (1 >= zero_tolerance)
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_1)
-                # End of temp variables
                 this_solution[0] = Pz + l_3*x0 - l_4*x0*math.sin(th_2)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(6, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_5_solve_d_0_processor()
     # Finish code for explicit solution node 4
-    
+
     # Code for non-branch dispatcher node 6
     # Actually, there is no code
-    
+
     # Code for explicit solution node 7, solved variable is th_3
     def ExplicitSolutionNode_node_7_solve_th_3_processor():
         this_node_input_index: List[int] = node_input_index[6]
         this_input_valid: bool = node_input_validity[6]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 7
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -394,33 +374,30 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[2]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_13*math.sin(th_1) + r_33*math.cos(th_1)) >= zero_tolerance) or (abs(-r_13*math.cos(th_1)*math.cos(th_2) + r_23*math.sin(th_2) + r_33*math.sin(th_1)*math.cos(th_2)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_13*math.sin(th_1) + r_33*math.cos(th_1)) >= zero_tolerance)) or ((abs(-r_13*math.cos(th_1)*math.cos(th_2) + r_23*math.sin(th_2) + r_33*math.sin(th_1)*math.cos(th_2)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.sin(th_1)
                 x1 = math.cos(th_2)
                 x2 = math.cos(th_1)
-                # End of temp variables
                 this_solution[3] = math.atan2(-r_13*x1*x2 + r_23*math.sin(th_2) + r_33*x0*x1, r_13*x0 + r_33*x2)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
                 add_input_index_to(8, node_input_i_idx_in_queue)
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_7_solve_th_3_processor()
     # Finish code for explicit solution node 6
-    
+
     # Code for non-branch dispatcher node 8
     # Actually, there is no code
-    
+
     # Code for explicit solution node 9, solved variable is th_4
     def ExplicitSolutionNode_node_9_solve_th_4_processor():
         this_node_input_index: List[int] = node_input_index[8]
         this_input_valid: bool = node_input_validity[8]
         if not this_input_valid:
             return
-        
+
         # The solution of non-root node 9
         for i in range(len(this_node_input_index)):
             node_input_i_idx_in_queue = this_node_input_index[i]
@@ -429,23 +406,20 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
             this_solution = solution_queue[node_input_i_idx_in_queue]
             th_1 = this_solution[1]
             th_2 = this_solution[2]
-            condition_0: bool = (1 >= zero_tolerance) or (abs(r_11*math.sin(th_2)*math.cos(th_1) + r_21*math.cos(th_2) - r_31*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance) or (abs(r_12*math.sin(th_2)*math.cos(th_1) + r_22*math.cos(th_2) - r_32*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance)
+            condition_0: bool = (((1 >= zero_tolerance)) or ((abs(r_11*math.sin(th_2)*math.cos(th_1) + r_21*math.cos(th_2) - r_31*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance)) or ((abs(r_12*math.sin(th_2)*math.cos(th_1) + r_22*math.cos(th_2) - r_32*math.sin(th_1)*math.sin(th_2)) >= zero_tolerance)))
             if condition_0:
-                # Temp variable for efficiency
                 x0 = math.cos(th_2)
                 x1 = math.sin(th_2)
                 x2 = x1*math.cos(th_1)
                 x3 = x1*math.sin(th_1)
-                # End of temp variables
                 this_solution[4] = math.atan2(r_11*x2 + r_21*x0 - r_31*x3, r_12*x2 + r_22*x0 - r_32*x3)
                 solution_queue[node_input_i_idx_in_queue] = this_solution
             else:
                 queue_element_validity[node_input_i_idx_in_queue] = False
-            
     # Invoke the processor
     ExplicitSolutionNode_node_9_solve_th_4_processor()
     # Finish code for explicit solution node 8
-    
+
     # Collect the output
     ik_out: List[np.ndarray] = list()
     for i in range(len(solution_queue)):
@@ -463,23 +437,75 @@ def mini_dd_ik_solve_raw(T_ee: np.ndarray):
         new_ik_i[3] = value_at_3
         value_at_4 = ik_out_i[4]  # th_4
         new_ik_i[4] = value_at_4
-        ik_out.append(new_ik_i)
+        if np.all(np.isfinite(new_ik_i)):
+            ik_out.append(new_ik_i)
     return ik_out
 
 
-def mini_dd_ik_solve(T_ee: np.ndarray):
+def mini_dd_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarray, _yaik_seed_candidates=None):
     if not np.all(np.isfinite(T_ee)):
         return []
-    T_ee_raw_in = T_ee
+    if not np.all(np.isfinite(T_ee_raw_in)):
+        return []
     ik_output_raw = mini_dd_ik_solve_raw(T_ee_raw_in)
     ik_output = list()
     for i in range(len(ik_output_raw)):
         ik_out_i = ik_output_raw[i]
         ee_pose_i = mini_dd_fk(ik_out_i)
         ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
+        if _yaik_seed_candidates is not None:
+            if ee_pose_diff < 1e-7:
+                _yaik_seed_candidates.strict_witness = True
+                _yaik_seed_candidates.clear()
+            elif not _yaik_seed_candidates.strict_witness:
+                retain_refinement_seed(_yaik_seed_candidates, ik_out_i, ee_pose_diff)
         if ee_pose_diff < pose_tolerance:
             ik_output.append(ik_out_i)
+        snapped = snap_near_joint_limits(ik_out_i, [-1.0, -3.141592653589793, -3.141592653589793, -3.141592653589793, -3.141592653589793], [1.0, 3.141592653589793, 3.141592653589793, 3.141592653589793, 3.141592653589793], [False, True, True, True, True], [False, False, False, False, False])
+        if snapped is not None:
+            snapped = snapped.reshape(ik_out_i.shape)
+            snapped_pose = mini_dd_fk(snapped)
+            if (np.linalg.norm(snapped_pose[:3, 3]-T_ee[:3, 3]) <= 1e-7 and np.max(np.abs(snapped_pose[:3, :3]-T_ee[:3, :3])) <= 1e-7):
+                ik_output.append(snapped)
+                if _yaik_seed_candidates is not None and np.max(np.abs(snapped_pose-T_ee)) < 1e-7:
+                    _yaik_seed_candidates.strict_witness = True
+                    _yaik_seed_candidates.clear()
     return ik_output
+
+
+def mini_dd_ik_solve(T_ee: np.ndarray):
+    if not np.all(np.isfinite(T_ee)):
+        return []
+    result, seen = [], set()
+    refinement_seeds = RefinementSeeds()
+    for transform in (mini_dd_ik_target_original_to_raw,):
+        raw_target = transform(T_ee)
+        for candidate in mini_dd_ik_solve_for_raw_target(T_ee, raw_target, _yaik_seed_candidates=refinement_seeds):
+            result.append(candidate)
+    refinement_fk = lambda q: mini_dd_fk(q)
+    if refinement_seeds and not refinement_seeds.strict_witness:
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
+    if not refinement_seeds.strict_witness:
+        refinement_seeds.clear()
+        seed_parameters = ()
+        for shifted in nearby_ik_targets(T_ee):
+            for transform in (mini_dd_ik_target_original_to_raw,):
+                raw_target = transform(shifted)
+                for raw_candidate in mini_dd_ik_solve_raw(raw_target, *seed_parameters):
+                    seed = raw_candidate.reshape(-1).copy()
+                    retain_ik_refinement_seed(refinement_seeds, refinement_fk, T_ee, seed)
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
+    return result
 
 
 def test_ik_solve_mini_dd():

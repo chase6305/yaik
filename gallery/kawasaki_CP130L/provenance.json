@@ -4,15 +4,15 @@
   "generation_mode": "codegen_from_saved_tree",
   "source_model": "gallery/kawasaki_CP130L/kawasaki_CP130L.yaml",
   "source_tree_sha256": "b166e6df5f9dd9ba8e522a550d5f0077135aae587ee7ba27e744b8817ae6a212",
-  "generator_base_revision": "4bcb030b5ba149cfd74060c083ccc796f5740f3e",
+  "generator_base_revision": "4c4389217bf8fbfe89436047b5792fbe403ebcc0",
   "generator_overrides_sha256": {
     "codegen/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "codegen/cpp_codegen/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "codegen/cpp_codegen/codegen_cpp.py": "c7d3a68c3a6656c4b170fec0684d7793c221396812caedd22cde1d84c305ea40",
+    "codegen/cpp_codegen/codegen_cpp.py": "65636a4a9a889755385913ed314fb11c790e12aed7751db3ddfd8507a9599ffa",
     "codegen/cpp_codegen/cpp_codegen_visitor.py": "fb63d8cfab29828ff02cff32a0c3d105d6ef4095b6c76cdc680ba64c0e79ce6f",
     "codegen/cpp_codegen/scope_manager.py": "423e64593b16b3bb8324bb309a07acf170ca66e8b9ab913b91d41336b795abc9",
     "codegen/py_codegen/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "codegen/py_codegen/codegen_py.py": "292d89464782e3bb302875466994c43b9220ba9b86f452497ac5841b78b202c7",
+    "codegen/py_codegen/codegen_py.py": "e0ce851c18525533349299e550d31808843d5476141a122871255e6a714a2cf4",
     "codegen/py_codegen/py_codegen_visitor_base.py": "7146493b1c853a4f0dbd3429441e0c1aaab6e9ff5fbcfc25fd0febc8a9875501",
     "codegen/py_codegen/py_codegen_visitor_v2.py": "93a01aeacf7070a587cbb40c297cb42f6c3f70eb6a37c4d6e2d1d8417de98bcc",
     "codegen/skeleton/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -100,18 +100,19 @@
     "utility/rotation_utils.py": "266baf0421529070107254f54d3822d32cb08d24d62168e984c3047a59855942",
     "utility/symbolic_utils.py": "c15cbb9ad2187feb750c56542aaf49b1bcf98bd69db23fe3a98123c044a6e616",
     "utility/transformations.py": "37945d0c6be26182f5fdad89422bf99c353256f2a87b2f111f2fce47c3cb408e",
-    "yaik.py": "97b5ef760ed3705f8498e1cce7bcc5bd309eb4db277aba7300bc5d49c5434ca5"
+    "yaik.py": "c10fdb4e17094d0cdbf5197f097e98271cd541b68b66fc6aff381a37c1f331af"
   },
   "runtime_sha256": {
-    "python_run_import.py": "eaf0ff02a5b5106c3128188a644cd6bf6cecbab06e5eaff00ace0149f3a59651",
-    "yaik_cpp_common.h": "768cc8839c8f8f38cbaa3b151b5683fd73b477e3e64a451e9ef4d3c92046aba2"
+    "python_run_import.py": "085a32131e3867deab6bc16de2d77a897ada229d06cd6089dd30caba48b7d392",
+    "yaik_cpp_common.h": "2d025448b631622acbd3ba94be57a2ea1b15acdd990d4bbf57cb521ff97097f9"
   },
   "artifact_sha256": {
     "kawasaki_CP130L.yaml": "f9299c8742789625e64657bf08df2742cb2bee6b21e9ea7aeb429aa5334567ad",
     "kawasaki_CP130L_ik.yaml": "b166e6df5f9dd9ba8e522a550d5f0077135aae587ee7ba27e744b8817ae6a212",
-    "kawasaki_CP130L_ik_generated.py": "41fb8923b69969e2ee70383917b74cc29181e25af488890329bd5d64c4490442",
-    "kawasaki_CP130L_ik_generated.cpp": "e101070899f4fca703a24cb4d39c635b3fe64081b8a8e85826979bcb53406d04"
+    "kawasaki_CP130L_ik_generated.py": "84e0649300aa9e22098ecac9cd1f0596fe8330289731a02d31a4055d23b34033",
+    "kawasaki_CP130L_ik_generated.cpp": "76109ec39ebcf560d02b3696e7da65a5638989e971e36eb849bb0e2d7fc6ed6f"
   },
   "coverage_status": "not_certified",
-  "command": "python yaik.py codegen gallery/kawasaki_CP130L/kawasaki_CP130L_ik.yaml --output-dir build/kawasaki_CP130L --with-runtime"
+  "command": "python yaik.py codegen gallery/kawasaki_CP130L/kawasaki_CP130L_ik.yaml --output-dir build/kawasaki_CP130L --with-runtime",
+  "extra_recovery": true
 }

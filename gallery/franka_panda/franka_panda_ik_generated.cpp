@@ -3693,7 +3693,7 @@ static void wrapAngleToPi(std::vector<std::array<double, robot_nq>>& ik_output)
         wrapAngleToPi(solution_i);
 }
 
-static void computeIKForRawTarget(const Eigen::Matrix4d& T_ee, const Eigen::Matrix4d& T_ee_raw, double th_3, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output, Eigen::Matrix4d& frame_disturbance, bool& frame_disturbance_ready, bool allow_disturbance, const std::array<double, 1>* _yaik_phase_parameters = nullptr)
+static void computeIKForRawTarget(const Eigen::Matrix4d& T_ee, const Eigen::Matrix4d& T_ee_raw, double th_3, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output, Eigen::Matrix4d& frame_disturbance, bool& frame_disturbance_ready, bool allow_disturbance, const std::array<double, 1>* _yaik_phase_parameters = nullptr, IkRefinementSeeds<robot_nq>* refinement_seeds = nullptr)
 {
     if (!T_ee.allFinite()) { ik_output.clear(); return; }
     if (!std::isfinite(th_3)) { ik_output.clear(); return; }
@@ -3714,6 +3714,12 @@ static void computeIKForRawTarget(const Eigen::Matrix4d& T_ee, const Eigen::Matr
         wrapAngleToPi(ik_out_i);
         const Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
         double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
+        if (refinement_seeds)
+        {
+            const double refinement_error = (ee_pose_i-T_ee).cwiseAbs().maxCoeff();
+            if (refinement_error < 1e-7) { refinement_seeds->strict_witness=true;refinement_seeds->clear(); }
+            else if (!refinement_seeds->strict_witness) retainRefinementSeed<robot_nq>(*refinement_seeds, ik_out_i, refinement_error);
+        }
         if (ee_pose_diff < pose_tolerance)
             ik_output.push_back(ik_out_i);
         std::array<double, robot_nq> snapped;
@@ -3721,7 +3727,11 @@ static void computeIKForRawTarget(const Eigen::Matrix4d& T_ee, const Eigen::Matr
         {
             const Eigen::Matrix4d snapped_pose = computeFK(snapped);
             if ((snapped_pose.block<3, 1>(0, 3)-T_ee.block<3, 1>(0, 3)).norm() <= 1e-7 && (snapped_pose.block<3, 3>(0, 0)-T_ee.block<3, 3>(0, 0)).cwiseAbs().maxCoeff() <= 1e-7)
+            {
                 ik_output.push_back(snapped);
+                if (refinement_seeds && (snapped_pose-T_ee).cwiseAbs().maxCoeff()<1e-7)
+                    { refinement_seeds->strict_witness=true;refinement_seeds->clear(); }
+            }
         }
     }
 
@@ -3773,7 +3783,11 @@ static void computeIKForRawTarget(const Eigen::Matrix4d& T_ee, const Eigen::Matr
             ee_pose_i = computeFK(ik_out_i);
             ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
             if (ee_pose_diff < pose_tolerance_degenerate)
+            {
                 ik_output.push_back(ik_out_i);
+                if (refinement_seeds && (ee_pose_i-T_ee).cwiseAbs().maxCoeff()<1e-7)
+                    { refinement_seeds->strict_witness=true;refinement_seeds->clear(); }
+            }
         }
     }
 
@@ -3787,11 +3801,12 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_3, RawIKWorksace& w
     if (!std::isfinite(th_3)) return;
     Eigen::Matrix4d frame_disturbance;
     bool frame_disturbance_ready = false;
+    IkRefinementSeeds<robot_nq> refinement_seeds;
     for (bool legacy : {true, false})
     {
         const Eigen::Matrix4d raw_target = legacy ? endEffectorTargetOriginalToRawLegacyFrame(T_ee) : endEffectorTargetOriginalToRaw(T_ee);
         std::vector<std::array<double, robot_nq>> candidates;
-        computeIKForRawTarget(T_ee, raw_target, th_3, workspace, candidates, frame_disturbance, frame_disturbance_ready, legacy || ik_output.empty());
+        computeIKForRawTarget(T_ee, raw_target, th_3, workspace, candidates, frame_disturbance, frame_disturbance_ready, legacy || ik_output.empty(), nullptr, &refinement_seeds);
         for (const auto& candidate : candidates)
         {
             if (std::find(ik_output.begin(), ik_output.end(), candidate) == ik_output.end())
@@ -3808,12 +3823,63 @@ static void computeIK(const Eigen::Matrix4d& T_ee, double th_3, RawIKWorksace& w
             {
                 const Eigen::Matrix4d raw_target = legacy ? endEffectorTargetOriginalToRawLegacyFrame(T_ee) : endEffectorTargetOriginalToRaw(T_ee);
                 std::vector<std::array<double, robot_nq>> candidates;
-                computeIKForRawTarget(T_ee, raw_target, th_3, workspace, candidates, frame_disturbance, frame_disturbance_ready, false, &alias);
+                computeIKForRawTarget(T_ee, raw_target, th_3, workspace, candidates, frame_disturbance, frame_disturbance_ready, false, &alias, &refinement_seeds);
                 for (const auto& candidate : candidates)
                 {
                     if (std::find(ik_output.begin(), ik_output.end(), candidate) == ik_output.end())
                         ik_output.push_back(candidate);
                 }
+            }
+        }
+    }
+    auto refinement_fk = [&](const std::array<double,robot_nq>& q) { return computeFK(q); };
+    if (!refinement_seeds.strict_witness)
+    {
+        for (const auto& entry : refinement_seeds)
+        {
+            auto candidate=entry.second;
+            if (refineIkSeed<robot_nq>(refinement_fk,T_ee,candidate,fixedJoints()))
+            {
+                ik_output.push_back(candidate);
+                refinement_seeds.strict_witness=true;
+                break;
+            }
+        }
+    }
+    if (!refinement_seeds.strict_witness)
+    {
+        refinement_seeds.clear();
+        std::array<double,1> seed_parameters = {{addRevoluteOffset(th_3, th_3_offset_original2raw)}};
+        const std::array<std::pair<std::size_t,double>, 2> seed_centers = {{{0, -0.0522033313182534}, {0, 3.141592653589793}}};
+        const auto seed_aliases=fixedJointPhaseAliases(seed_parameters,seed_centers,zero_tolerance);
+        if (!seed_aliases.empty()) seed_parameters=seed_aliases.back();
+        for (const auto& shifted : nearbyIkTargets(T_ee))
+        {
+            if (!shifted.allFinite()) continue;
+            for (bool legacy : {true, false})
+            {
+                const Eigen::Matrix4d raw_target = legacy ? endEffectorTargetOriginalToRawLegacyFrame(shifted) : endEffectorTargetOriginalToRaw(shifted);
+                computeRawIK(raw_target, seed_parameters[0], workspace);
+                for (auto candidate : workspace.raw_ik_out)
+                {
+                    candidate[0] = candidate[0] - th_0_offset_original2raw;
+                    candidate[1] = addRevoluteOffset(candidate[1], -th_1_offset_original2raw);
+                    candidate[2] = addRevoluteOffset(candidate[2], -th_2_offset_original2raw);
+                    candidate[3] = th_3;
+                    candidate[4] = candidate[4] - th_4_offset_original2raw;
+                    candidate[5] = addRevoluteOffset(candidate[5], -th_5_offset_original2raw);
+                    candidate[6] = candidate[6] - th_6_offset_original2raw;
+                    wrapAngleToPi(candidate);
+                    retainRefinementSeed<robot_nq>(refinement_seeds,candidate,(refinement_fk(candidate)-T_ee).cwiseAbs().maxCoeff());
+                }
+            }
+        }
+        for (const auto& entry : refinement_seeds)
+        {
+            auto candidate=entry.second;
+            if (refineIkSeed<robot_nq>(refinement_fk,T_ee,candidate,fixedJoints()))
+            {
+                ik_output.push_back(candidate);refinement_seeds.strict_witness=true;break;
             }
         }
     }

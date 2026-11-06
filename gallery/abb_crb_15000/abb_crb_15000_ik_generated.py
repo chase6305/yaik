@@ -2383,7 +2383,6 @@ def abb_crb_15000_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndar
         return []
     ik_output_raw = abb_crb_15000_ik_solve_raw(T_ee_raw_in)
     ik_output = list()
-    strict_raw_witness = False
     for i in range(len(ik_output_raw)):
         ik_out_i = ik_output_raw[i]
         ik_out_i[0] = ik_out_i[0] - th_0_offset_original2raw
@@ -2396,9 +2395,9 @@ def abb_crb_15000_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndar
         ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
         if _yaik_seed_candidates is not None:
             if ee_pose_diff < 1e-7:
-                strict_raw_witness = True
+                _yaik_seed_candidates.strict_witness = True
                 _yaik_seed_candidates.clear()
-            elif not strict_raw_witness:
+            elif not _yaik_seed_candidates.strict_witness:
                 retain_refinement_seed(_yaik_seed_candidates, ik_out_i, ee_pose_diff)
         if ee_pose_diff < pose_tolerance:
             ik_output.append(ik_out_i)
@@ -2408,6 +2407,9 @@ def abb_crb_15000_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndar
             snapped_pose = abb_crb_15000_fk(snapped)
             if (np.linalg.norm(snapped_pose[:3, 3]-T_ee[:3, 3]) <= 1e-7 and np.max(np.abs(snapped_pose[:3, :3]-T_ee[:3, :3])) <= 1e-7):
                 ik_output.append(snapped)
+                if _yaik_seed_candidates is not None and np.max(np.abs(snapped_pose-T_ee)) < 1e-7:
+                    _yaik_seed_candidates.strict_witness = True
+                    _yaik_seed_candidates.clear()
     return ik_output
 
 
@@ -2415,17 +2417,39 @@ def abb_crb_15000_ik_solve(T_ee: np.ndarray):
     if not np.all(np.isfinite(T_ee)):
         return []
     result, seen = [], set()
-    refinement_seeds = []
+    refinement_seeds = RefinementSeeds()
     for transform in (abb_crb_15000_ik_target_original_to_raw,):
         raw_target = transform(T_ee)
         for candidate in abb_crb_15000_ik_solve_for_raw_target(T_ee, raw_target, _yaik_seed_candidates=refinement_seeds):
             result.append(candidate)
     refinement_fk = lambda q: abb_crb_15000_fk(q)
-    if refinement_seeds and not any(np.max(np.abs(refinement_fk(q)-T_ee)) < 1e-7 for q in result):
+    if refinement_seeds and not refinement_seeds.strict_witness:
         for _, seed in refinement_seeds:
             refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, False, False, False])
             if refined is not None:
                 result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
+    if not refinement_seeds.strict_witness:
+        refinement_seeds.clear()
+        seed_parameters = ()
+        for shifted in nearby_ik_targets(T_ee):
+            for transform in (abb_crb_15000_ik_target_original_to_raw,):
+                raw_target = transform(shifted)
+                for raw_candidate in abb_crb_15000_ik_solve_raw(raw_target, *seed_parameters):
+                    seed = raw_candidate.reshape(-1).copy()
+                    seed[0] = seed[0] - th_0_offset_original2raw
+                    seed[1] = add_revolute_offset(seed[1], -th_1_offset_original2raw)
+                    seed[2] = seed[2] - th_2_offset_original2raw
+                    seed[3] = add_revolute_offset(seed[3], -th_3_offset_original2raw)
+                    seed[4] = add_revolute_offset(seed[4], -th_4_offset_original2raw)
+                    seed[5] = seed[5] - th_5_offset_original2raw
+                    retain_ik_refinement_seed(refinement_seeds, refinement_fk, T_ee, seed)
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, False, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
                 break
     return result
 

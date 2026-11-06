@@ -2299,12 +2299,13 @@ def marvin_m6_left_arm_ik_solve_raw(T_ee: np.ndarray, th_4):
     return ik_out
 
 
-def marvin_m6_left_arm_ik_solve(T_ee: np.ndarray, th_4):
+def marvin_m6_left_arm_ik_solve_for_raw_target(T_ee: np.ndarray, T_ee_raw_in: np.ndarray, th_4, _yaik_seed_candidates=None):
     if not np.all(np.isfinite(T_ee)):
         return []
     if not (math.isfinite(th_4)):
         return []
-    T_ee_raw_in = marvin_m6_left_arm_ik_target_original_to_raw(T_ee)
+    if not np.all(np.isfinite(T_ee_raw_in)):
+        return []
     ik_output_raw = marvin_m6_left_arm_ik_solve_raw(T_ee_raw_in, th_4 + th_4_offset_original2raw)
     ik_output = list()
     for i in range(len(ik_output_raw)):
@@ -2318,6 +2319,12 @@ def marvin_m6_left_arm_ik_solve(T_ee: np.ndarray, th_4):
         ik_out_i[6] = add_revolute_offset(ik_out_i[6], -th_6_offset_original2raw)
         ee_pose_i = marvin_m6_left_arm_fk(ik_out_i)
         ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))
+        if _yaik_seed_candidates is not None:
+            if ee_pose_diff < 1e-7:
+                _yaik_seed_candidates.strict_witness = True
+                _yaik_seed_candidates.clear()
+            elif not _yaik_seed_candidates.strict_witness:
+                retain_refinement_seed(_yaik_seed_candidates, ik_out_i, ee_pose_diff)
         if ee_pose_diff < pose_tolerance:
             ik_output.append(ik_out_i)
         snapped = snap_near_joint_limits(ik_out_i, [-3.1066860685499065, -2.094395102393195, -3.1066860685499065, -2.530727415391778, -3.1066860685499065, -1.0471975511965976, -1.5707963267948966], [3.1066860685499065, 2.0943951023931953, 3.1066860685499065, 1.0471975511965974, 3.1066860685499065, 1.0471975511965974, 1.5707963267948966], [True, True, True, True, True, True, True], [False, False, False, False, True, False, False])
@@ -2326,7 +2333,54 @@ def marvin_m6_left_arm_ik_solve(T_ee: np.ndarray, th_4):
             snapped_pose = marvin_m6_left_arm_fk(snapped)
             if (np.linalg.norm(snapped_pose[:3, 3]-T_ee[:3, 3]) <= 1e-7 and np.max(np.abs(snapped_pose[:3, :3]-T_ee[:3, :3])) <= 1e-7):
                 ik_output.append(snapped)
+                if _yaik_seed_candidates is not None and np.max(np.abs(snapped_pose-T_ee)) < 1e-7:
+                    _yaik_seed_candidates.strict_witness = True
+                    _yaik_seed_candidates.clear()
     return ik_output
+
+
+def marvin_m6_left_arm_ik_solve(T_ee: np.ndarray, th_4):
+    if not np.all(np.isfinite(T_ee)):
+        return []
+    if not (math.isfinite(th_4)):
+        return []
+    result, seen = [], set()
+    refinement_seeds = RefinementSeeds()
+    for transform in (marvin_m6_left_arm_ik_target_original_to_raw,):
+        raw_target = transform(T_ee)
+        for candidate in marvin_m6_left_arm_ik_solve_for_raw_target(T_ee, raw_target, th_4, _yaik_seed_candidates=refinement_seeds):
+            result.append(candidate)
+    refinement_fk = lambda q: marvin_m6_left_arm_fk(q)
+    if refinement_seeds and not refinement_seeds.strict_witness:
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, False, True, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
+    if not refinement_seeds.strict_witness:
+        refinement_seeds.clear()
+        seed_parameters = (th_4 + th_4_offset_original2raw,)
+        for shifted in nearby_ik_targets(T_ee):
+            for transform in (marvin_m6_left_arm_ik_target_original_to_raw,):
+                raw_target = transform(shifted)
+                for raw_candidate in marvin_m6_left_arm_ik_solve_raw(raw_target, *seed_parameters):
+                    seed = raw_candidate.reshape(-1).copy()
+                    seed[0] = seed[0] - th_0_offset_original2raw
+                    seed[1] = add_revolute_offset(seed[1], -th_1_offset_original2raw)
+                    seed[2] = seed[2] - th_2_offset_original2raw
+                    seed[3] = add_revolute_offset(seed[3], -th_3_offset_original2raw)
+                    seed[4] = th_4
+                    seed[5] = add_revolute_offset(seed[5], -th_5_offset_original2raw)
+                    seed[6] = add_revolute_offset(seed[6], -th_6_offset_original2raw)
+                    retain_ik_refinement_seed(refinement_seeds, refinement_fk, T_ee, seed)
+        for _, seed in refinement_seeds:
+            refined = refine_ik_seed(refinement_fk, T_ee, seed, [False, False, False, False, True, False, False])
+            if refined is not None:
+                result.append(refined.reshape((-1, 1)))
+                refinement_seeds.strict_witness = True
+                break
+    return result
 
 
 def test_ik_solve_marvin_m6_left_arm():
