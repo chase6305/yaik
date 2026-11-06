@@ -70,6 +70,7 @@ jobs:
           solver/test_guard_domains.py solver/test_rounded_frames.py
           solver/test_candidate_assignment.py solver/test_partial_branches.py
           solver/test_compact_workspace.py solver/test_fixed_joint_phases.py
+          solver/test_seed_refinement.py
           solver/test_gallery_regeneration.py
           solver/test_equation_branches.py solver/test_family_critical.py
           solver/test_completeness.py solver/test_linear_circles.py

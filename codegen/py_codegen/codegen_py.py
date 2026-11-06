@@ -14,6 +14,7 @@ class CodeGenerationPython(CodeGenerationBase):
     def __init__(self, tree: SkeletonTree):
         super().__init__(tree)
         self._all_solved_symbol = tree.all_solved_symbol()
+        self._refine_raw_seeds = tree.has_general_6dof_solution_node()
 
         # Init the code
         self._generate_visitor = NodeIkSolutionGeneratorPython_v2(tree)
@@ -402,12 +403,14 @@ class CodeGenerationPython(CodeGenerationBase):
         self.append_new_function_two_empty_lines()
         func_arguments = self._ik_func_args_string()
         method = self.ik_function_name(False)
-        wrapped = self._has_frame_fallback or bool(self.fixed_joint_phase_centers)
+        wrapped = self._has_frame_fallback or bool(self.fixed_joint_phase_centers) or self._refine_raw_seeds
         if wrapped:
             method += '_for_raw_target'
             func_arguments = func_arguments.replace('(T_ee: np.ndarray', '(T_ee: np.ndarray, T_ee_raw_in: np.ndarray')
         if self.fixed_joint_phase_centers:
             func_arguments = func_arguments[:-2]+', _yaik_phase_parameters=None):'
+        if self._refine_raw_seeds:
+            func_arguments = func_arguments[:-2]+', _yaik_seed_candidates=None):'
         self._add_code_line('def ' + method + func_arguments)
         self._add_code_line('if not np.all(np.isfinite(T_ee)):', indent_level=1)
         self._add_code_line('return []', indent_level=2)
@@ -443,6 +446,8 @@ class CodeGenerationPython(CodeGenerationBase):
         func_arguments_call += ')'
         self._add_code_line('ik_output_raw = ' + ik_raw_func + func_arguments_call, indent_level=1)
         self._add_code_line('ik_output = list()', indent_level=1)
+        if self._refine_raw_seeds:
+            self._add_code_line('strict_raw_witness = False', indent_level=1)
         self._add_code_line('for i in range(len(ik_output_raw)):', indent_level=1)
         self._add_code_line('ik_out_i = ik_output_raw[i]', indent_level=2)
 
@@ -467,6 +472,13 @@ class CodeGenerationPython(CodeGenerationBase):
         self._add_code_line('ee_pose_i = {fk_func}{fk_args}'.
                             format(fk_func=fk_func_name, fk_args=fk_args_call), indent_level=2)
         self._add_code_line('ee_pose_diff = np.max(np.abs(ee_pose_i - T_ee))', indent_level=2)
+        if self._refine_raw_seeds:
+            self._add_code_line('if _yaik_seed_candidates is not None:', indent_level=2)
+            self._add_code_line('if ee_pose_diff < 1e-7:', indent_level=3)
+            self._add_code_line('strict_raw_witness = True', indent_level=4)
+            self._add_code_line('_yaik_seed_candidates.clear()', indent_level=4)
+            self._add_code_line('elif not strict_raw_witness:', indent_level=3)
+            self._add_code_line('retain_refinement_seed(_yaik_seed_candidates, ik_out_i, ee_pose_diff)', indent_level=4)
         self._add_code_line('if ee_pose_diff < pose_tolerance:', indent_level=2)
         self._add_code_line('ik_output.append(ik_out_i)', indent_level=3)
         offsets = self.robot.get_unknown_offset() or [0.]*len(self.robot.unknowns)
@@ -498,11 +510,14 @@ class CodeGenerationPython(CodeGenerationBase):
             self._add_code_line('return []', indent_level=2)
         primary = self.get_ik_target_original_to_raw_name()
         self._add_code_line('result, seen = [], set()', indent_level=1)
+        if self._refine_raw_seeds:
+            self._add_code_line('refinement_seeds = []', indent_level=1)
         transforms = primary+'_legacy_frame, '+primary if self._has_frame_fallback else primary+','
         self._add_code_line('for transform in ('+transforms+'):', indent_level=1)
         self._add_code_line('raw_target = '+self.frame_transform_call('transform', 'T_ee'), indent_level=2)
         arguments = ', '+', '.join(map(str, free)) if free else ''
-        self._add_code_line('for candidate in '+handler+'(T_ee, raw_target'+arguments+'):', indent_level=2)
+        seed_arguments = ', _yaik_seed_candidates=refinement_seeds' if self._refine_raw_seeds else ''
+        self._add_code_line('for candidate in '+handler+'(T_ee, raw_target'+arguments+seed_arguments+'):', indent_level=2)
         if self._has_frame_fallback:
             self._add_code_line('key = tuple(float(value) for value in candidate.ravel())', indent_level=3)
             self._add_code_line('if key not in seen:', indent_level=3)
@@ -519,11 +534,23 @@ class CodeGenerationPython(CodeGenerationBase):
             self._add_code_line(f'for alias in fixed_joint_phase_aliases(phase_parameters, {centers!r}, zero_tolerance):', indent_level=2)
             self._add_code_line('for transform in ('+transforms+'):', indent_level=3)
             self._add_code_line('raw_target = '+self.frame_transform_call('transform', 'T_ee'), indent_level=4)
-            self._add_code_line('for candidate in '+handler+'(T_ee, raw_target'+arguments+', _yaik_phase_parameters=alias):', indent_level=4)
+            self._add_code_line('for candidate in '+handler+'(T_ee, raw_target'+arguments+', _yaik_phase_parameters=alias'+seed_arguments+'):', indent_level=4)
             self._add_code_line('key = tuple(float(value) for value in candidate.ravel())', indent_level=5)
             self._add_code_line('if key not in seen:', indent_level=5)
             self._add_code_line('seen.add(key)', indent_level=6)
             self._add_code_line('result.append(candidate)', indent_level=6)
+        if self._refine_raw_seeds:
+            geometry = self.free_symbols(include_unknown_as_parameter=False)
+            geometric_args = ', '+', '.join(map(str, geometry)) if geometry else ''
+            fk = self.fk_function_name()
+            self._add_code_line('refinement_fk = lambda q: '+fk+'(q'+geometric_args+')', indent_level=1)
+            self._add_code_line('if refinement_seeds and not any(np.max(np.abs(refinement_fk(q)-T_ee)) < 1e-7 for q in result):', indent_level=1)
+            self._add_code_line('for _, seed in refinement_seeds:', indent_level=2)
+            fixed = [unknown.symbol in self.robot.unknown_as_parameter_more_dof for unknown in self.robot.unknowns]
+            self._add_code_line('refined = refine_ik_seed(refinement_fk, T_ee, seed, '+repr(fixed)+')', indent_level=3)
+            self._add_code_line('if refined is not None:', indent_level=3)
+            self._add_code_line('result.append(refined.reshape((-1, 1)))', indent_level=4)
+            self._add_code_line('break', indent_level=4)
         self._add_code_line('return result', indent_level=1)
 
     def _generate_test_method(self):

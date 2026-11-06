@@ -44,6 +44,96 @@ def fixed_joint_phase_aliases(arguments, centers, tolerance=1e-6):
     return aliases
 
 
+def retain_refinement_seed(seeds, candidate, error):
+    """Keep a few distinct finite raw candidates, ordered by original FK error."""
+    if not math.isfinite(error) or (len(seeds) >= 4 and error >= seeds[-1][0]):
+        return
+    candidate = np.asarray(candidate, dtype=float).reshape(-1)
+    if not np.isfinite(candidate).all():
+        return
+    if any(np.array_equal(candidate, entry[1]) for entry in seeds):
+        return
+    if len(seeds) < 4 or error < seeds[-1][0]:
+        seeds.append((float(error), candidate.copy()))
+        seeds.sort(key=lambda entry: entry[0])
+        del seeds[4:]
+
+
+def refine_ik_seed(fk, target, seed, fixed_joints=()):
+    """Refine one finite seed with bounded steps; return only a strict FK witness.
+
+    This local search does not establish reachability or completeness. Fixed
+    coordinates are never perturbed. Failure leaves the caller's seed untouched.
+    """
+    q = np.asarray(seed, dtype=float).reshape(-1).copy()
+    target = np.asarray(target, dtype=float)
+    fixed = np.asarray(fixed_joints if len(fixed_joints) else [False]*len(q), dtype=bool)
+    if target.shape != (4, 4) or fixed.shape != q.shape or not np.isfinite(target).all() or not np.isfinite(q).all():
+        return None
+    active = np.flatnonzero(~fixed)
+
+    def residual(values):
+        try:
+            with np.errstate(over='ignore', invalid='ignore', divide='ignore'):
+                pose = np.asarray(fk(values), dtype=float)
+                error = pose-target
+            if pose.shape == target.shape and np.isfinite(error).all():
+                return error.reshape(-1)
+        except (ArithmeticError, ValueError):
+            pass
+        return None
+
+    error = residual(q)
+    if error is None:
+        return None
+    for _ in range(40):
+        if np.max(np.abs(error)) < 1e-8:
+            return q
+        if not len(active):
+            return None
+        with np.errstate(over='ignore', invalid='ignore'):
+            previous_norm = float(np.dot(error, error))
+        if not math.isfinite(previous_norm):
+            return None
+        columns = []
+        for joint in active:
+            plus, minus = q.copy(), q.copy()
+            plus[joint] += 1e-6
+            minus[joint] -= 1e-6
+            upper, lower = residual(plus), residual(minus)
+            if upper is None or lower is None:
+                return None
+            with np.errstate(over='ignore', invalid='ignore', divide='ignore'):
+                columns.append((upper-lower)/(2e-6))
+        jacobian = np.asarray(columns).T
+        if not np.isfinite(jacobian).all():
+            return None
+        improved = False
+        for damping in (1e-10, 1e-8, 1e-6, 1e-4, .01):
+            try:
+                augmented = np.vstack((jacobian, math.sqrt(damping)*np.eye(len(active))))
+                step = np.linalg.lstsq(augmented, np.r_[-error, np.zeros(len(active))], rcond=None)[0]
+            except np.linalg.LinAlgError:
+                return None
+            if not np.isfinite(step).all():
+                continue
+            step *= min(1., .35/max(1e-30, float(np.max(np.abs(step)))))
+            for scale in (1., .5, .25, .125):
+                trial = q.copy()
+                trial[active] += scale*step
+                next_error = residual(trial)
+                with np.errstate(over='ignore', invalid='ignore'):
+                    next_norm = math.inf if next_error is None else float(np.dot(next_error, next_error))
+                if next_norm < previous_norm:
+                    q, error, improved = trial, next_error, True
+                    break
+            if improved:
+                break
+        if not improved:
+            break
+    return q if np.max(np.abs(error)) < 1e-7 else None
+
+
 def _trig_root_offset(a, b, c):
     """atan2(sqrt(a*a+b*b-c*c), -c) for scaled finite coefficients.
 

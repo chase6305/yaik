@@ -267,6 +267,16 @@ Regenerated C++ kernels reserve up to 48 candidates instead of truncating the
 24-eigenvalue problem into a 16-element buffer. Singular systems that remain
 unresolved return an empty candidate list; this does not prove infeasibility.
 
+Checked exports containing a general 6R numerical node also retain up to four
+distinct finite raw candidates. After the existing checked paths finish, if no
+candidate has maximum matrix-entry error below `1e-7`, they try local refinement
+with damped finite differences, bounded steps and at most 40 iterations per seed.
+Only a strictly verified result is added; existing candidates and supplied fixed
+coordinates are retained, and the refinement draws no random numbers. This can
+recover inaccurate roots but cannot recover an empty raw candidate set or certify
+completeness. Exceptional inputs can take longer. Re-export the saved tree with
+`--with-runtime` to bundle the matching helpers.
+
 ## Validation
 
 ```sh
@@ -278,6 +288,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   solver/test_argument_guards.py solver/test_guard_domains.py solver/test_rounded_frames.py \
   solver/test_candidate_assignment.py solver/test_partial_branches.py \
   solver/test_compact_workspace.py solver/test_fixed_joint_phases.py \
+  solver/test_seed_refinement.py \
   solver/test_gallery_regeneration.py \
   solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 
@@ -316,7 +327,7 @@ these approximate frames, checked IK also retains the legacy transpose-derived
 candidates and verifies both sets against the original target with the existing
 FK thresholds. Fixed C++ joints remain unchanged during numerical refinement.
 Approximate-frame paths share one C++ disturbance, preserving the legacy random
-stream; extra numerical refinement is skipped when legacy candidates exist.
+stream; extra disturbance paths are skipped when legacy candidates exist.
 When numerical recovery is needed, C++ also checks two fixed disturbance axes
 without consuming extra random values. Every candidate uses the existing FK
 acceptance thresholds.

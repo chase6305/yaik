@@ -6,13 +6,19 @@ struct atlas_r_hand_ik {
 
 // Constants for solver
 static constexpr int robot_nq = 7;
-static constexpr int max_n_solutions = 256;
+static constexpr int max_n_solutions = 384;
+static std::array<double, robot_nq> jointLower() { return {{-3.141592653589793, -4.71238898038469, -6.283185307179586, -6.283185307179586, -6.283185307179586, -6.283185307179586, -4.71238898038469}}; }
+static std::array<double, robot_nq> jointUpper() { return {{3.141592653589793, 1.5707963267948966, 0.0, 0.0, 0.0, 0.0, 1.5707963267948966}}; }
+static std::array<bool, robot_nq> periodicLimitJoints() { return {{false, true, true, true, true, true, true}}; }
+static std::array<bool, robot_nq> fixedJoints() { return {{true, false, false, false, false, false, false}}; }
 static constexpr int n_tree_nodes = 22;
 static constexpr int intermediate_solution_size = 8;
 static constexpr double pose_tolerance = 1e-6;
 static constexpr double pose_tolerance_degenerate = 1e-4;
 static constexpr double zero_tolerance = 1e-6;
-using RawIKWorksace = ::yaik_cpp::RawIkWorkspaceTemplate<intermediate_solution_size, max_n_solutions, robot_nq>;
+using SolutionQueueType = ::yaik_cpp::CompactSolutionQueue<intermediate_solution_size, max_n_solutions>;
+using NodeIndexWorkspaceType = ::yaik_cpp::CompactNodeIndexWorkspace;
+using RawIKWorksace = ::yaik_cpp::RawIkWorkspaceTemplate<intermediate_solution_size, max_n_solutions, robot_nq, SolutionQueueType, NodeIndexWorkspaceType>;
 
 // Robot parameters
 static constexpr double a_1 = 0.11;
@@ -109,13 +115,13 @@ static Eigen::Matrix4d computeFK(const std::array<double, robot_nq>& theta_input
 {
     // Extract the variables
     const double th_0 = theta_input_original[0] + th_0_offset_original2raw;
-    const double th_1 = theta_input_original[1] + th_1_offset_original2raw;
-    const double th_2 = theta_input_original[2] + th_2_offset_original2raw;
-    const double th_3 = theta_input_original[3] + th_3_offset_original2raw;
-    const double th_4 = theta_input_original[4] + th_4_offset_original2raw;
-    const double th_5 = theta_input_original[5] + th_5_offset_original2raw;
-    const double th_6 = theta_input_original[6] + th_6_offset_original2raw;
-    
+    const double th_1 = addRevoluteOffset(theta_input_original[1], th_1_offset_original2raw);
+    const double th_2 = addRevoluteOffset(theta_input_original[2], th_2_offset_original2raw);
+    const double th_3 = addRevoluteOffset(theta_input_original[3], th_3_offset_original2raw);
+    const double th_4 = addRevoluteOffset(theta_input_original[4], th_4_offset_original2raw);
+    const double th_5 = addRevoluteOffset(theta_input_original[5], th_5_offset_original2raw);
+    const double th_6 = addRevoluteOffset(theta_input_original[6], th_6_offset_original2raw);
+
     // Temp variable for efficiency
     const double x0 = std::sin(th_6);
     const double x1 = std::cos(th_4);
@@ -139,7 +145,7 @@ static Eigen::Matrix4d computeFK(const std::array<double, robot_nq>& theta_input
     const double x19 = -x1*x9 - x10*x18;
     const double x20 = std::cos(th_6);
     const double x21 = std::sin(th_5);
-    const double x22 = -x11*x17 + x13*x14;
+    const double x22 = -x11*x17 + x12*x14*x7;
     const double x23 = std::cos(th_5);
     const double x24 = x1*x18 - x10*x9;
     const double x25 = -x21*x22 + x23*x24;
@@ -149,7 +155,7 @@ static Eigen::Matrix4d computeFK(const std::array<double, robot_nq>& theta_input
     const double x29 = x4*x5 - x8;
     const double x30 = x11*x28 + x14*x29;
     const double x31 = -x1*x27 - x10*x30;
-    const double x32 = -x11*x29 + x14*x28;
+    const double x32 = -x11*x29 + x12*x14*x2;
     const double x33 = x1*x30 - x10*x27;
     const double x34 = -x21*x32 + x23*x33;
     const double x35 = x12*x6;
@@ -181,13 +187,13 @@ static void computeTwistJacobian(const std::array<double, robot_nq>& theta_input
 {
     // Extract the variables
     const double th_0 = theta_input_original[0] + th_0_offset_original2raw;
-    const double th_1 = theta_input_original[1] + th_1_offset_original2raw;
-    const double th_2 = theta_input_original[2] + th_2_offset_original2raw;
-    const double th_3 = theta_input_original[3] + th_3_offset_original2raw;
-    const double th_4 = theta_input_original[4] + th_4_offset_original2raw;
-    const double th_5 = theta_input_original[5] + th_5_offset_original2raw;
-    const double th_6 = theta_input_original[6] + th_6_offset_original2raw;
-    
+    const double th_1 = addRevoluteOffset(theta_input_original[1], th_1_offset_original2raw);
+    const double th_2 = addRevoluteOffset(theta_input_original[2], th_2_offset_original2raw);
+    const double th_3 = addRevoluteOffset(theta_input_original[3], th_3_offset_original2raw);
+    const double th_4 = addRevoluteOffset(theta_input_original[4], th_4_offset_original2raw);
+    const double th_5 = addRevoluteOffset(theta_input_original[5], th_5_offset_original2raw);
+    const double th_6 = addRevoluteOffset(theta_input_original[6], th_6_offset_original2raw);
+
     // Temp variable for efficiency
     const double x0 = std::cos(th_0);
     const double x1 = std::sin(th_0);
@@ -201,83 +207,86 @@ static void computeTwistJacobian(const std::array<double, robot_nq>& theta_input
     const double x9 = -x5 - x6*x8;
     const double x10 = std::cos(th_3);
     const double x11 = std::sin(th_3);
-    const double x12 = x0*x7;
-    const double x13 = x1*x4;
-    const double x14 = -x12 + x13*x6;
-    const double x15 = x10*x3 - x11*x14;
-    const double x16 = std::cos(th_4);
-    const double x17 = std::sin(th_4);
-    const double x18 = x10*x14 + x11*x3;
-    const double x19 = -x16*x9 - x17*x18;
-    const double x20 = std::cos(th_5);
-    const double x21 = std::sin(th_5);
-    const double x22 = -x15*x20 - x21*(x16*x18 - x17*x9);
-    const double x23 = x0*x2;
-    const double x24 = x12*x6 - x13;
-    const double x25 = -x5*x6 - x8;
-    const double x26 = -x10*x23 - x11*x25;
-    const double x27 = x10*x25 - x11*x23;
-    const double x28 = -x16*x24 - x17*x27;
-    const double x29 = -x20*x26 - x21*(x16*x27 - x17*x24);
-    const double x30 = x2*x7;
-    const double x31 = x2*x4;
-    const double x32 = x10*x6 + x11*x31;
-    const double x33 = -x10*x31 + x11*x6;
-    const double x34 = -x16*x30 - x17*x33;
-    const double x35 = -x20*x32 - x21*(x16*x33 - x17*x30);
-    const double x36 = -a_2*x2 - d_2*x6 + pre_transform_s2;
+    const double x12 = x1*x4;
+    const double x13 = -x0*x7 + x12*x6;
+    const double x14 = x1*x10*x2 - x11*x13;
+    const double x15 = std::cos(th_4);
+    const double x16 = std::sin(th_4);
+    const double x17 = x10*x13 + x11*x3;
+    const double x18 = -x15*x9 - x16*x17;
+    const double x19 = std::cos(th_5);
+    const double x20 = std::sin(th_5);
+    const double x21 = -x14*x19 - x20*(x15*x17 - x16*x9);
+    const double x22 = x0*x2;
+    const double x23 = x0*x6*x7 - x12;
+    const double x24 = -x5*x6 - x8;
+    const double x25 = -x10*x22 - x11*x24;
+    const double x26 = x10*x24 - x11*x22;
+    const double x27 = -x15*x23 - x16*x26;
+    const double x28 = -x19*x25 - x20*(x15*x26 - x16*x23);
+    const double x29 = x2*x7;
+    const double x30 = x2*x4;
+    const double x31 = x10*x6 + x11*x30;
+    const double x32 = -x10*x30 + x11*x6;
+    const double x33 = -x15*x29 - x16*x32;
+    const double x34 = -x19*x31 - x20*(x15*x32 - x16*x29);
+    const double x35 = a_2*x2 + d_2*x6 - pre_transform_s2;
+    const double x36 = -x35;
     const double x37 = a_2*x6;
-    const double x38 = -a_1*x0 + pre_transform_s1;
-    const double x39 = d_2*x23 - x0*x37 + x38;
-    const double x40 = -a_3*x31 + x36;
-    const double x41 = a_3*x25 + x39;
-    const double x42 = a_4*x33 + d_4*x32 + x40;
-    const double x43 = a_4*x27 + d_4*x26 + x41;
-    const double x44 = a_1*x1 + pre_transform_s0;
-    const double x45 = -d_2*x3 + x1*x37 + x44;
-    const double x46 = a_3*x14 + x45;
-    const double x47 = a_4*x18 + d_4*x15 + x46;
+    const double x38 = x0*x37;
+    const double x39 = a_1*x0;
+    const double x40 = -pre_transform_s1 + x39;
+    const double x41 = d_2*x0*x2 - x38 - x40;
+    const double x42 = a_3*x30 + x35;
+    const double x43 = -x42;
+    const double x44 = a_3*x24 + d_2*x22 + pre_transform_s1 - x38 - x39;
+    const double x45 = a_4*x32 + d_4*x31 - x42;
+    const double x46 = a_4*x26 + d_4*x25 + x44;
+    const double x47 = a_1*x1 + pre_transform_s0;
+    const double x48 = -d_2*x3 + x1*x37 + x47;
+    const double x49 = a_3*x13 + x48;
+    const double x50 = a_4*x17 + d_4*x14 + x49;
     // End of temp variables
-    
+
     jacobian.setZero();
     jacobian(0, 1) = x0;
     jacobian(0, 2) = -x3;
     jacobian(0, 3) = x9;
-    jacobian(0, 4) = x15;
-    jacobian(0, 5) = x19;
-    jacobian(0, 6) = x22;
+    jacobian(0, 4) = x14;
+    jacobian(0, 5) = x18;
+    jacobian(0, 6) = x21;
     jacobian(1, 1) = x1;
-    jacobian(1, 2) = x23;
-    jacobian(1, 3) = x24;
-    jacobian(1, 4) = x26;
-    jacobian(1, 5) = x28;
-    jacobian(1, 6) = x29;
+    jacobian(1, 2) = x22;
+    jacobian(1, 3) = x23;
+    jacobian(1, 4) = x25;
+    jacobian(1, 5) = x27;
+    jacobian(1, 6) = x28;
     jacobian(2, 0) = 1;
     jacobian(2, 2) = -x6;
-    jacobian(2, 3) = x30;
-    jacobian(2, 4) = x32;
-    jacobian(2, 5) = x34;
-    jacobian(2, 6) = x35;
+    jacobian(2, 3) = x29;
+    jacobian(2, 4) = x31;
+    jacobian(2, 5) = x33;
+    jacobian(2, 6) = x34;
     jacobian(3, 0) = pre_transform_s1;
     jacobian(3, 1) = -pre_transform_s2*x1;
-    jacobian(3, 2) = -x23*x36 - x39*x6;
-    jacobian(3, 3) = -x24*x40 + x30*x41;
-    jacobian(3, 4) = -x26*x42 + x32*x43;
-    jacobian(3, 5) = -x28*x42 + x34*x43;
-    jacobian(3, 6) = -x29*x42 + x35*x43;
+    jacobian(3, 2) = -x22*x36 - x41*x6;
+    jacobian(3, 3) = x2*x44*x7 - x23*x43;
+    jacobian(3, 4) = -x25*x45 + x31*x46;
+    jacobian(3, 5) = -x27*x45 + x33*x46;
+    jacobian(3, 6) = -x28*x45 + x34*x46;
     jacobian(4, 0) = -pre_transform_s0;
     jacobian(4, 1) = pre_transform_s2*x0;
-    jacobian(4, 2) = -x3*x36 + x45*x6;
-    jacobian(4, 3) = -x30*x46 + x40*x9;
-    jacobian(4, 4) = x15*x42 - x32*x47;
-    jacobian(4, 5) = x19*x42 - x34*x47;
-    jacobian(4, 6) = x22*x42 - x35*x47;
-    jacobian(5, 1) = -x0*x38 + x1*x44;
-    jacobian(5, 2) = x23*x45 + x3*x39;
-    jacobian(5, 3) = x24*x46 - x41*x9;
-    jacobian(5, 4) = -x15*x43 + x26*x47;
-    jacobian(5, 5) = -x19*x43 + x28*x47;
-    jacobian(5, 6) = -x22*x43 + x29*x47;
+    jacobian(4, 2) = -x3*x36 + x48*x6;
+    jacobian(4, 3) = -x29*x49 + x43*x9;
+    jacobian(4, 4) = x14*x45 - x31*x50;
+    jacobian(4, 5) = x18*x45 - x33*x50;
+    jacobian(4, 6) = x21*x45 - x34*x50;
+    jacobian(5, 1) = x0*x40 + x1*x47;
+    jacobian(5, 2) = x22*x48 + x3*x41;
+    jacobian(5, 3) = x23*x49 - x44*x9;
+    jacobian(5, 4) = -x14*x46 + x25*x50;
+    jacobian(5, 5) = -x18*x46 + x27*x50;
+    jacobian(5, 6) = -x21*x46 + x28*x50;
     return;
 }
 
@@ -285,13 +294,13 @@ static void computeAngularVelocityJacobian(const std::array<double, robot_nq>& t
 {
     // Extract the variables
     const double th_0 = theta_input_original[0] + th_0_offset_original2raw;
-    const double th_1 = theta_input_original[1] + th_1_offset_original2raw;
-    const double th_2 = theta_input_original[2] + th_2_offset_original2raw;
-    const double th_3 = theta_input_original[3] + th_3_offset_original2raw;
-    const double th_4 = theta_input_original[4] + th_4_offset_original2raw;
-    const double th_5 = theta_input_original[5] + th_5_offset_original2raw;
-    const double th_6 = theta_input_original[6] + th_6_offset_original2raw;
-    
+    const double th_1 = addRevoluteOffset(theta_input_original[1], th_1_offset_original2raw);
+    const double th_2 = addRevoluteOffset(theta_input_original[2], th_2_offset_original2raw);
+    const double th_3 = addRevoluteOffset(theta_input_original[3], th_3_offset_original2raw);
+    const double th_4 = addRevoluteOffset(theta_input_original[4], th_4_offset_original2raw);
+    const double th_5 = addRevoluteOffset(theta_input_original[5], th_5_offset_original2raw);
+    const double th_6 = addRevoluteOffset(theta_input_original[6], th_6_offset_original2raw);
+
     // Temp variable for efficiency
     const double x0 = std::cos(th_0);
     const double x1 = std::sin(th_0);
@@ -305,45 +314,44 @@ static void computeAngularVelocityJacobian(const std::array<double, robot_nq>& t
     const double x9 = -x5 - x6*x8;
     const double x10 = std::cos(th_3);
     const double x11 = std::sin(th_3);
-    const double x12 = x0*x7;
-    const double x13 = x1*x4;
-    const double x14 = -x12 + x13*x6;
-    const double x15 = x10*x3 - x11*x14;
-    const double x16 = std::cos(th_4);
-    const double x17 = std::sin(th_4);
-    const double x18 = x10*x14 + x11*x3;
-    const double x19 = std::cos(th_5);
-    const double x20 = std::sin(th_5);
-    const double x21 = x0*x2;
-    const double x22 = x12*x6 - x13;
-    const double x23 = -x5*x6 - x8;
-    const double x24 = -x10*x21 - x11*x23;
-    const double x25 = x10*x23 - x11*x21;
-    const double x26 = x2*x7;
-    const double x27 = x2*x4;
-    const double x28 = x10*x6 + x11*x27;
-    const double x29 = -x10*x27 + x11*x6;
+    const double x12 = x1*x4;
+    const double x13 = -x0*x7 + x12*x6;
+    const double x14 = x1*x10*x2 - x11*x13;
+    const double x15 = std::cos(th_4);
+    const double x16 = std::sin(th_4);
+    const double x17 = x10*x13 + x11*x3;
+    const double x18 = std::cos(th_5);
+    const double x19 = std::sin(th_5);
+    const double x20 = x0*x2;
+    const double x21 = x0*x6*x7 - x12;
+    const double x22 = -x5*x6 - x8;
+    const double x23 = -x10*x20 - x11*x22;
+    const double x24 = x10*x22 - x11*x20;
+    const double x25 = x2*x7;
+    const double x26 = x2*x4;
+    const double x27 = x10*x6 + x11*x26;
+    const double x28 = -x10*x26 + x11*x6;
     // End of temp variables
-    
+
     jacobian.setZero();
     jacobian(0, 1) = x0;
     jacobian(0, 2) = -x3;
     jacobian(0, 3) = x9;
-    jacobian(0, 4) = x15;
-    jacobian(0, 5) = -x16*x9 - x17*x18;
-    jacobian(0, 6) = -x15*x19 - x20*(x16*x18 - x17*x9);
+    jacobian(0, 4) = x14;
+    jacobian(0, 5) = -x15*x9 - x16*x17;
+    jacobian(0, 6) = -x14*x18 - x19*(x15*x17 - x16*x9);
     jacobian(1, 1) = x1;
-    jacobian(1, 2) = x21;
-    jacobian(1, 3) = x22;
-    jacobian(1, 4) = x24;
-    jacobian(1, 5) = -x16*x22 - x17*x25;
-    jacobian(1, 6) = -x19*x24 - x20*(x16*x25 - x17*x22);
+    jacobian(1, 2) = x20;
+    jacobian(1, 3) = x21;
+    jacobian(1, 4) = x23;
+    jacobian(1, 5) = -x15*x21 - x16*x24;
+    jacobian(1, 6) = -x18*x23 - x19*(x15*x24 - x16*x21);
     jacobian(2, 0) = 1;
     jacobian(2, 2) = -x6;
-    jacobian(2, 3) = x26;
-    jacobian(2, 4) = x28;
-    jacobian(2, 5) = -x16*x26 - x17*x29;
-    jacobian(2, 6) = -x19*x28 - x20*(x16*x29 - x17*x26);
+    jacobian(2, 3) = x25;
+    jacobian(2, 4) = x27;
+    jacobian(2, 5) = -x15*x25 - x16*x28;
+    jacobian(2, 6) = -x18*x27 - x19*(x15*x28 - x16*x25);
     return;
 }
 
@@ -351,94 +359,97 @@ static void computeTransformPointJacobian(const std::array<double, robot_nq>& th
 {
     // Extract the variables
     const double th_0 = theta_input_original[0] + th_0_offset_original2raw;
-    const double th_1 = theta_input_original[1] + th_1_offset_original2raw;
-    const double th_2 = theta_input_original[2] + th_2_offset_original2raw;
-    const double th_3 = theta_input_original[3] + th_3_offset_original2raw;
-    const double th_4 = theta_input_original[4] + th_4_offset_original2raw;
-    const double th_5 = theta_input_original[5] + th_5_offset_original2raw;
-    const double th_6 = theta_input_original[6] + th_6_offset_original2raw;
+    const double th_1 = addRevoluteOffset(theta_input_original[1], th_1_offset_original2raw);
+    const double th_2 = addRevoluteOffset(theta_input_original[2], th_2_offset_original2raw);
+    const double th_3 = addRevoluteOffset(theta_input_original[3], th_3_offset_original2raw);
+    const double th_4 = addRevoluteOffset(theta_input_original[4], th_4_offset_original2raw);
+    const double th_5 = addRevoluteOffset(theta_input_original[5], th_5_offset_original2raw);
+    const double th_6 = addRevoluteOffset(theta_input_original[6], th_6_offset_original2raw);
     const double p_on_ee_x = point_on_ee[0];
     const double p_on_ee_y = point_on_ee[1];
     const double p_on_ee_z = point_on_ee[2];
-    
+
     // Temp variable for efficiency
-    const double x0 = std::sin(th_0);
-    const double x1 = p_on_ee_z*x0;
+    const double x0 = -pre_transform_s1;
+    const double x1 = std::sin(th_0);
     const double x2 = std::cos(th_1);
     const double x3 = std::sin(th_1);
     const double x4 = std::cos(th_0);
     const double x5 = p_on_ee_z*x4;
-    const double x6 = -a_2*x3 - d_2*x2 + pre_transform_s2;
-    const double x7 = x3*x4;
-    const double x8 = a_2*x2;
-    const double x9 = -a_1*x4 + pre_transform_s1;
-    const double x10 = d_2*x7 - x4*x8 + x9;
-    const double x11 = std::sin(th_2);
-    const double x12 = x11*x3;
-    const double x13 = std::cos(th_2);
-    const double x14 = x0*x13;
-    const double x15 = x11*x4;
-    const double x16 = -x14 + x15*x2;
-    const double x17 = x13*x3;
-    const double x18 = -a_3*x17 + x6;
-    const double x19 = x0*x11;
-    const double x20 = x13*x4;
-    const double x21 = -x19 - x2*x20;
-    const double x22 = a_3*x21 + x10;
-    const double x23 = std::cos(th_3);
-    const double x24 = std::sin(th_3);
-    const double x25 = x17*x24 + x2*x23;
-    const double x26 = -x21*x24 - x23*x7;
-    const double x27 = -x17*x23 + x2*x24;
-    const double x28 = a_4*x27 + d_4*x25 + x18;
-    const double x29 = x21*x23 - x24*x7;
-    const double x30 = a_4*x29 + d_4*x26 + x22;
-    const double x31 = std::cos(th_4);
-    const double x32 = std::sin(th_4);
-    const double x33 = -x12*x31 - x27*x32;
-    const double x34 = -x16*x31 - x29*x32;
-    const double x35 = std::cos(th_5);
-    const double x36 = std::sin(th_5);
-    const double x37 = -x25*x35 - x36*(-x12*x32 + x27*x31);
-    const double x38 = -x26*x35 - x36*(-x16*x32 + x29*x31);
-    const double x39 = x0*x3;
-    const double x40 = a_1*x0 + pre_transform_s0;
-    const double x41 = -d_2*x39 + x0*x8 + x40;
-    const double x42 = -x19*x2 - x20;
-    const double x43 = x14*x2 - x15;
-    const double x44 = a_3*x43 + x41;
-    const double x45 = x23*x39 - x24*x43;
-    const double x46 = x23*x43 + x24*x39;
-    const double x47 = a_4*x46 + d_4*x45 + x44;
-    const double x48 = -x31*x42 - x32*x46;
-    const double x49 = -x35*x45 - x36*(x31*x46 - x32*x42);
+    const double x6 = a_2*x3 + d_2*x2 - pre_transform_s2;
+    const double x7 = -x6;
+    const double x8 = x3*x4;
+    const double x9 = a_2*x2;
+    const double x10 = x4*x9;
+    const double x11 = a_1*x4;
+    const double x12 = x0 + x11;
+    const double x13 = d_2*x3*x4 - x10 - x12;
+    const double x14 = std::sin(th_2);
+    const double x15 = x14*x3;
+    const double x16 = std::cos(th_2);
+    const double x17 = x1*x16;
+    const double x18 = x14*x2*x4 - x17;
+    const double x19 = x16*x3;
+    const double x20 = a_3*x19 + x6;
+    const double x21 = -x20;
+    const double x22 = x1*x14;
+    const double x23 = x16*x4;
+    const double x24 = -x2*x23 - x22;
+    const double x25 = a_3*x24 + d_2*x8 + pre_transform_s1 - x10 - x11;
+    const double x26 = std::cos(th_3);
+    const double x27 = std::sin(th_3);
+    const double x28 = x19*x27 + x2*x26;
+    const double x29 = -x24*x27 - x26*x8;
+    const double x30 = -x19*x26 + x2*x27;
+    const double x31 = a_4*x30 + d_4*x28 - x20;
+    const double x32 = x24*x26 - x27*x8;
+    const double x33 = a_4*x32 + d_4*x29 + x25;
+    const double x34 = std::cos(th_4);
+    const double x35 = std::sin(th_4);
+    const double x36 = -x15*x34 - x30*x35;
+    const double x37 = -x18*x34 - x32*x35;
+    const double x38 = std::cos(th_5);
+    const double x39 = std::sin(th_5);
+    const double x40 = -x28*x38 - x39*(-x15*x35 + x30*x34);
+    const double x41 = -x29*x38 - x39*(-x18*x35 + x32*x34);
+    const double x42 = x1*x3;
+    const double x43 = a_1*x1 + pre_transform_s0;
+    const double x44 = -d_2*x42 + x1*x9 + x43;
+    const double x45 = -x2*x22 - x23;
+    const double x46 = -x14*x4 + x17*x2;
+    const double x47 = a_3*x46 + x44;
+    const double x48 = x1*x26*x3 - x27*x46;
+    const double x49 = x26*x46 + x27*x42;
+    const double x50 = a_4*x49 + d_4*x48 + x47;
+    const double x51 = -x34*x45 - x35*x49;
+    const double x52 = -x38*x48 - x39*(x34*x49 - x35*x45);
     // End of temp variables
-    
+
     jacobian.setZero();
-    jacobian(0, 0) = -p_on_ee_y + pre_transform_s1;
-    jacobian(0, 1) = -pre_transform_s2*x0 + x1;
-    jacobian(0, 2) = p_on_ee_y*x2 - x10*x2 + x3*x5 - x6*x7;
-    jacobian(0, 3) = -p_on_ee_y*x12 + p_on_ee_z*x16 + x12*x22 - x16*x18;
-    jacobian(0, 4) = -p_on_ee_y*x25 + p_on_ee_z*x26 + x25*x30 - x26*x28;
-    jacobian(0, 5) = -p_on_ee_y*x33 + p_on_ee_z*x34 - x28*x34 + x30*x33;
-    jacobian(0, 6) = -p_on_ee_y*x37 + p_on_ee_z*x38 - x28*x38 + x30*x37;
+    jacobian(0, 0) = -p_on_ee_y - x0;
+    jacobian(0, 1) = p_on_ee_z*x1 - pre_transform_s2*x1;
+    jacobian(0, 2) = p_on_ee_y*x2 - x13*x2 + x3*x5 - x7*x8;
+    jacobian(0, 3) = -p_on_ee_y*x15 + p_on_ee_z*x18 + x14*x25*x3 - x18*x21;
+    jacobian(0, 4) = -p_on_ee_y*x28 + p_on_ee_z*x29 + x28*x33 - x29*x31;
+    jacobian(0, 5) = -p_on_ee_y*x36 + p_on_ee_z*x37 - x31*x37 + x33*x36;
+    jacobian(0, 6) = -p_on_ee_y*x40 + p_on_ee_z*x41 - x31*x41 + x33*x40;
     jacobian(1, 0) = p_on_ee_x - pre_transform_s0;
     jacobian(1, 1) = pre_transform_s2*x4 - x5;
-    jacobian(1, 2) = -p_on_ee_x*x2 + x1*x3 + x2*x41 - x39*x6;
-    jacobian(1, 3) = p_on_ee_x*x12 - p_on_ee_z*x42 - x12*x44 + x18*x42;
-    jacobian(1, 4) = p_on_ee_x*x25 - p_on_ee_z*x45 - x25*x47 + x28*x45;
-    jacobian(1, 5) = p_on_ee_x*x33 - p_on_ee_z*x48 + x28*x48 - x33*x47;
-    jacobian(1, 6) = p_on_ee_x*x37 - p_on_ee_z*x49 + x28*x49 - x37*x47;
-    jacobian(2, 1) = -p_on_ee_x*x0 + p_on_ee_y*x4 + x0*x40 - x4*x9;
-    jacobian(2, 2) = -p_on_ee_x*x7 - p_on_ee_y*x39 + x10*x39 + x41*x7;
-    jacobian(2, 3) = -p_on_ee_x*x16 + p_on_ee_y*x42 + x16*x44 - x22*x42;
-    jacobian(2, 4) = -p_on_ee_x*x26 + p_on_ee_y*x45 + x26*x47 - x30*x45;
-    jacobian(2, 5) = -p_on_ee_x*x34 + p_on_ee_y*x48 - x30*x48 + x34*x47;
-    jacobian(2, 6) = -p_on_ee_x*x38 + p_on_ee_y*x49 - x30*x49 + x38*x47;
+    jacobian(1, 2) = -p_on_ee_x*x2 + p_on_ee_z*x1*x3 + x2*x44 - x42*x7;
+    jacobian(1, 3) = p_on_ee_x*x15 - p_on_ee_z*x45 - x15*x47 + x21*x45;
+    jacobian(1, 4) = p_on_ee_x*x28 - p_on_ee_z*x48 - x28*x50 + x31*x48;
+    jacobian(1, 5) = p_on_ee_x*x36 - p_on_ee_z*x51 + x31*x51 - x36*x50;
+    jacobian(1, 6) = p_on_ee_x*x40 - p_on_ee_z*x52 + x31*x52 - x40*x50;
+    jacobian(2, 1) = -p_on_ee_x*x1 + p_on_ee_y*x4 + x1*x43 + x12*x4;
+    jacobian(2, 2) = -p_on_ee_x*x8 - p_on_ee_y*x42 + x1*x13*x3 + x3*x4*x44;
+    jacobian(2, 3) = -p_on_ee_x*x18 + p_on_ee_y*x45 + x18*x47 - x25*x45;
+    jacobian(2, 4) = -p_on_ee_x*x29 + p_on_ee_y*x48 + x29*x50 - x33*x48;
+    jacobian(2, 5) = -p_on_ee_x*x37 + p_on_ee_y*x51 - x33*x51 + x37*x50;
+    jacobian(2, 6) = -p_on_ee_x*x41 + p_on_ee_y*x52 - x33*x52 + x41*x50;
     return;
 }
 
-static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue<intermediate_solution_size, max_n_solutions>& solution_queue, NodeIndexWorkspace<max_n_solutions>& node_index_workspace, std::vector<std::array<double, robot_nq>>& ik_output)
+static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueueType& solution_queue, NodeIndexWorkspaceType& node_index_workspace, std::vector<std::array<double, robot_nq>>& ik_output)
 {
     // Extracting the ik target symbols
     const double r_11 = T_ee(0, 0);
@@ -459,25 +470,26 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     const double inv_Px = inv_ee_translation(0);
     const double inv_Py = inv_ee_translation(1);
     const double inv_Pz = inv_ee_translation(2);
-    
+
     solution_queue.reset();
-    node_index_workspace.reset(n_tree_nodes);
-    
+    static constexpr std::array<std::size_t, n_tree_nodes> node_input_capacities = {{1, 1, 48, 48, 96, 96, 96, 96, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192}};
+    node_index_workspace.reset(node_input_capacities, max_n_solutions);
+
     using RawSolution = IntermediateSolution<intermediate_solution_size>;
-    auto make_raw_solution = []() -> RawSolution { return {}; };
-    
+    auto make_raw_solution = []() -> RawSolution { RawSolution result; result.fill(std::numeric_limits<double>::quiet_NaN()); return result; };
+
     auto append_solution_to_queue = [&solution_queue](RawSolution solution_2_add) -> int {
         return solution_queue.push_solution(solution_2_add);
     };
-    
+
     auto add_input_index_to = [&node_index_workspace](int node_idx, int solution_idx) -> void {
         if (solution_idx < 0) return;
         node_index_workspace.append_index_to_node(node_idx, solution_idx);
     };
-    
+
     // Code for non-branch dispatcher node 0
     // Actually, there is no code
-    
+
     // Code for general_6dof solution node 1, solved variable is th_2
     auto General6DoFNumericalReduceSolutionNode_node_1_solve_th_2_processor = [&]() -> void
     {
@@ -485,7 +497,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(0);
         if (!this_input_valid)
             return;
-        
+
         // The general 6-dof solution of root node
         Eigen::Matrix<double, 8, 8> R_l;
         R_l.setZero();
@@ -519,7 +531,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
                 if (std::isnan(R_l_mat_inv(r, c)) || (!std::isfinite(R_l_mat_inv(r, c)))) return;
             }
         }
-        
+
         const double R_l_inv_00 = R_l_mat_inv(0, 0);
         const double R_l_inv_01 = R_l_mat_inv(0, 1);
         const double R_l_inv_02 = R_l_mat_inv(0, 2);
@@ -584,562 +596,505 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const double R_l_inv_75 = R_l_mat_inv(7, 5);
         const double R_l_inv_76 = R_l_mat_inv(7, 6);
         const double R_l_inv_77 = R_l_mat_inv(7, 7);
-        
+
         // Temp variable for efficiency
         const double x0 = std::sin(th_0);
         const double x1 = Px*x0;
         const double x2 = std::cos(th_0);
-        const double x3 = Py*x2;
-        const double x4 = x1 - x3;
-        const double x5 = std::pow(Pz, 2);
-        const double x6 = -x1 + x3;
-        const double x7 = std::pow(x6, 2);
-        const double x8 = Px*x2 + Py*x0 - a_1*std::pow(x0, 2) - a_1*std::pow(x2, 2);
-        const double x9 = std::pow(x8, 2);
-        const double x10 = -x5 - x7 - x9;
-        const double x11 = 2*a_3;
-        const double x12 = a_2*x11;
-        const double x13 = -x12;
-        const double x14 = 2*a_4;
-        const double x15 = a_2*x14;
-        const double x16 = x13 + x15;
-        const double x17 = a_4*x11;
-        const double x18 = 2*d_2;
-        const double x19 = d_4*x18;
-        const double x20 = -x17 + x19;
-        const double x21 = std::pow(a_2, 2);
-        const double x22 = std::pow(a_3, 2);
-        const double x23 = std::pow(a_4, 2);
-        const double x24 = std::pow(d_2, 2);
-        const double x25 = std::pow(d_4, 2);
-        const double x26 = x21 + x22 + x23 + x24 + x25;
-        const double x27 = x20 + x26;
-        const double x28 = x16 + x27;
-        const double x29 = x10 + x28;
-        const double x30 = 4*a_2;
+        const double x3 = -Py*x2 + x1;
+        const double x4 = std::pow(Pz, 2);
+        const double x5 = -x3;
+        const double x6 = std::pow(x5, 2);
+        const double x7 = Px*x2 + Py*x0 - a_1*std::pow(x0, 2) - a_1*std::pow(x2, 2);
+        const double x8 = std::pow(x7, 2);
+        const double x9 = -x4 - x6 - x8;
+        const double x10 = 2*a_3;
+        const double x11 = a_4*x10;
+        const double x12 = -x11;
+        const double x13 = 2*a_4;
+        const double x14 = a_2*x13;
+        const double x15 = 2*d_2;
+        const double x16 = d_4*x15;
+        const double x17 = x12 + x14 + x16;
+        const double x18 = std::pow(a_2, 2);
+        const double x19 = std::pow(a_3, 2);
+        const double x20 = std::pow(a_4, 2);
+        const double x21 = std::pow(d_2, 2);
+        const double x22 = std::pow(d_4, 2);
+        const double x23 = a_2*x10;
+        const double x24 = x18 + x19 + x20 + x21 + x22 - x23;
+        const double x25 = x17 + x24;
+        const double x26 = x25 + x9;
+        const double x27 = 4*a_2;
+        const double x28 = d_4*x27;
+        const double x29 = -x28;
+        const double x30 = 4*a_3;
         const double x31 = d_4*x30;
-        const double x32 = 4*a_3;
-        const double x33 = d_4*x32;
-        const double x34 = 4*a_4;
-        const double x35 = d_2*x34;
+        const double x32 = 4*a_4;
+        const double x33 = d_2*x32;
+        const double x34 = x31 + x33;
+        const double x35 = x29 + x34;
         const double x36 = -x35;
-        const double x37 = -x33 + x36;
-        const double x38 = x31 + x37;
-        const double x39 = -x15;
-        const double x40 = x10 + x39;
-        const double x41 = x17 - x19;
-        const double x42 = x26 + x41;
-        const double x43 = x13 + x42;
-        const double x44 = x40 + x43;
-        const double x45 = r_11*x2 + r_21*x0;
-        const double x46 = Pz*x45;
-        const double x47 = r_31*x8;
-        const double x48 = x46 - x47;
-        const double x49 = r_12*x2 + r_22*x0;
-        const double x50 = Pz*x49;
-        const double x51 = r_32*x8;
-        const double x52 = x50 - x51;
-        const double x53 = R_l_inv_60*x48 + R_l_inv_70*x52;
-        const double x54 = a_3*x53;
-        const double x55 = R_l_inv_61*x48 + R_l_inv_71*x52;
-        const double x56 = d_2*x55;
-        const double x57 = d_4*x55;
-        const double x58 = -a_2*x53;
-        const double x59 = a_4*x53;
-        const double x60 = -x59;
-        const double x61 = x54 + x56 + x57 + x58 + x60;
-        const double x62 = R_l_inv_67*x48 + R_l_inv_77*x52;
-        const double x63 = a_4*x62;
-        const double x64 = R_l_inv_66*x48 + R_l_inv_76*x52;
-        const double x65 = d_4*x64;
-        const double x66 = x63 + x65;
-        const double x67 = a_2*x62;
-        const double x68 = d_2*x64;
-        const double x69 = R_l_inv_64*x48;
-        const double x70 = -x69;
-        const double x71 = R_l_inv_74*x52;
-        const double x72 = -x71;
-        const double x73 = a_3*x62;
-        const double x74 = -x73;
-        const double x75 = x67 + x68 + x70 + x72 + x74;
-        const double x76 = 2*d_4;
-        const double x77 = -x76;
-        const double x78 = 2*R_l_inv_62;
-        const double x79 = x48*x78;
-        const double x80 = 2*R_l_inv_72;
-        const double x81 = x52*x80;
-        const double x82 = R_l_inv_65*x48 + R_l_inv_75*x52;
-        const double x83 = 2*a_2;
-        const double x84 = x82*x83;
-        const double x85 = -x18 + x79 + x81 + x84;
-        const double x86 = x77 + x85;
-        const double x87 = x11*x82;
-        const double x88 = x14*x82;
-        const double x89 = -x87 + x88;
-        const double x90 = -x63;
-        const double x91 = -x65;
-        const double x92 = x90 + x91;
-        const double x93 = -x67;
-        const double x94 = -x68;
-        const double x95 = x69 + x71 + x73 + x93 + x94;
-        const double x96 = x14*x64;
-        const double x97 = -x96;
-        const double x98 = x62*x76;
-        const double x99 = -x14*x55;
-        const double x100 = x53*x76;
-        const double x101 = -x100 + x99;
-        const double x102 = 4*d_2;
-        const double x103 = 4*R_l_inv_63;
-        const double x104 = 4*R_l_inv_73;
-        const double x105 = -x102*x82 + x103*x48 + x104*x52 - x30;
-        const double x106 = -x98;
-        const double x107 = -x57;
-        const double x108 = x56 + x58 + x59;
-        const double x109 = x107 + x108 + x54;
-        const double x110 = x18 - x79 - x81 - x84;
-        const double x111 = x110 + x77;
-        const double x112 = x87 + x88;
-        const double x113 = -r_11*x0 + r_21*x2;
-        const double x114 = 2*Pz;
-        const double x115 = x114*x6;
-        const double x116 = 2*x8;
-        const double x117 = -r_31*x5 + r_31*x7 + r_31*x9 - x113*x115 - x116*x46;
-        const double x118 = -r_12*x0 + r_22*x2;
-        const double x119 = -r_32*x5 + r_32*x7 + r_32*x9 - x115*x118 - x116*x50;
-        const double x120 = x8*(-2*x1 + 2*x3);
-        const double x121 = x113*x120 + x114*x47 - x45*x5 - x45*x7 + x45*x9;
-        const double x122 = x114*x51 + x118*x120 - x49*x5 - x49*x7 + x49*x9;
-        const double x123 = R_l_inv_00*x117 + R_l_inv_10*x119 + R_l_inv_20*x121 + R_l_inv_30*x122;
-        const double x124 = a_3*x123;
-        const double x125 = R_l_inv_01*x117 + R_l_inv_11*x119 + R_l_inv_21*x121 + R_l_inv_31*x122;
-        const double x126 = d_2*x125;
-        const double x127 = d_4*x125;
-        const double x128 = -a_2*x123;
-        const double x129 = a_4*x123;
-        const double x130 = -x129;
-        const double x131 = x124 + x126 + x127 + x128 + x130;
-        const double x132 = R_l_inv_07*x117 + R_l_inv_17*x119 + R_l_inv_27*x121 + R_l_inv_37*x122;
-        const double x133 = a_4*x132;
-        const double x134 = R_l_inv_06*x117 + R_l_inv_16*x119 + R_l_inv_26*x121 + R_l_inv_36*x122;
-        const double x135 = d_4*x134;
-        const double x136 = x133 + x135;
-        const double x137 = a_2*x132;
-        const double x138 = d_2*x134;
-        const double x139 = R_l_inv_04*x117;
-        const double x140 = -x139;
-        const double x141 = R_l_inv_14*x119;
-        const double x142 = -x141;
-        const double x143 = R_l_inv_24*x121;
-        const double x144 = -x143;
-        const double x145 = R_l_inv_34*x122;
-        const double x146 = -x145;
-        const double x147 = a_3*x132;
-        const double x148 = -x147;
-        const double x149 = x137 + x138 + x140 + x142 + x144 + x146 + x148;
-        const double x150 = 4*d_4;
-        const double x151 = d_2*x150;
-        const double x152 = -x151;
-        const double x153 = a_4*x32;
-        const double x154 = -x153;
-        const double x155 = R_l_inv_05*x117 + R_l_inv_15*x119 + R_l_inv_25*x121 + R_l_inv_35*x122;
-        const double x156 = x14*x155;
-        const double x157 = a_4*x30;
-        const double x158 = x152 + x154 + x156 + x157;
-        const double x159 = a_3*x30;
-        const double x160 = x11*x155;
-        const double x161 = -x159 - x160;
-        const double x162 = 2*x24;
-        const double x163 = 2*x25;
-        const double x164 = 2*x21;
-        const double x165 = 2*x117;
-        const double x166 = R_l_inv_02*x165;
-        const double x167 = 2*x119;
-        const double x168 = R_l_inv_12*x167;
-        const double x169 = 2*x121;
-        const double x170 = R_l_inv_22*x169;
-        const double x171 = 2*x122;
-        const double x172 = R_l_inv_32*x171;
-        const double x173 = x155*x83;
-        const double x174 = -x162 - x163 + x164 + x166 + x168 + x170 + x172 + x173;
-        const double x175 = 2*x22;
-        const double x176 = 2*x23;
-        const double x177 = x175 + x176;
-        const double x178 = x174 + x177;
-        const double x179 = -x133;
-        const double x180 = -x135;
-        const double x181 = x179 + x180;
-        const double x182 = -x137;
-        const double x183 = -x138;
-        const double x184 = x139 + x141 + x143 + x145 + x147 + x182 + x183;
-        const double x185 = x134*x14;
-        const double x186 = -x185;
-        const double x187 = x132*x76;
-        const double x188 = -x125*x14;
-        const double x189 = x123*x76;
-        const double x190 = x188 - x189;
-        const double x191 = 8*d_2;
-        const double x192 = a_3*x191;
-        const double x193 = 8*d_4;
-        const double x194 = a_4*x193;
-        const double x195 = 4*x117;
-        const double x196 = 4*x119;
-        const double x197 = 4*x121;
-        const double x198 = 4*x122;
-        const double x199 = R_l_inv_03*x195 + R_l_inv_13*x196 + R_l_inv_23*x197 + R_l_inv_33*x198 - a_2*x191 - x102*x155;
-        const double x200 = -x187;
-        const double x201 = -x127;
-        const double x202 = x126 + x128 + x129;
-        const double x203 = x124 + x201 + x202;
-        const double x204 = -x175 - x176;
-        const double x205 = x162 + x163 - x164 - x166 - x168 - x170 - x172 - x173;
-        const double x206 = x204 + x205;
-        const double x207 = x159 + x160;
-        const double x208 = R_l_inv_00*x121 + R_l_inv_10*x122 - R_l_inv_20*x117 - R_l_inv_30*x119;
-        const double x209 = a_3*x208;
-        const double x210 = R_l_inv_01*x121 + R_l_inv_11*x122 - R_l_inv_21*x117 - R_l_inv_31*x119;
-        const double x211 = d_2*x210;
-        const double x212 = d_4*x210;
-        const double x213 = -a_2*x208;
-        const double x214 = a_4*x208;
-        const double x215 = -x214;
-        const double x216 = x209 + x211 + x212 + x213 + x215;
-        const double x217 = R_l_inv_07*x121 + R_l_inv_17*x122 - R_l_inv_27*x117 - R_l_inv_37*x119;
-        const double x218 = a_4*x217;
-        const double x219 = R_l_inv_06*x121 + R_l_inv_16*x122 - R_l_inv_26*x117 - R_l_inv_36*x119;
-        const double x220 = d_4*x219;
-        const double x221 = x218 + x220;
-        const double x222 = R_l_inv_24*x117;
-        const double x223 = R_l_inv_34*x119;
-        const double x224 = a_2*x217;
-        const double x225 = d_2*x219;
-        const double x226 = R_l_inv_04*x121;
-        const double x227 = -x226;
-        const double x228 = R_l_inv_14*x122;
-        const double x229 = -x228;
-        const double x230 = a_3*x217;
-        const double x231 = -x230;
-        const double x232 = x222 + x223 + x224 + x225 + x227 + x229 + x231;
-        const double x233 = d_2*x30;
-        const double x234 = R_l_inv_22*x165;
-        const double x235 = R_l_inv_32*x167;
-        const double x236 = R_l_inv_02*x169;
-        const double x237 = R_l_inv_12*x171;
-        const double x238 = R_l_inv_05*x121 + R_l_inv_15*x122 - R_l_inv_25*x117 - R_l_inv_35*x119;
-        const double x239 = x238*x83;
-        const double x240 = -x233 - x234 - x235 + x236 + x237 + x239;
-        const double x241 = -x31;
-        const double x242 = x241 + x33;
-        const double x243 = x14*x238 + x36;
-        const double x244 = x242 + x243;
-        const double x245 = a_4*x150;
-        const double x246 = x11*x238;
-        const double x247 = d_2*x32;
-        const double x248 = -x245 - x246 + x247;
-        const double x249 = -x218;
-        const double x250 = -x220;
-        const double x251 = x249 + x250;
-        const double x252 = -x222;
-        const double x253 = -x223;
-        const double x254 = -x224;
-        const double x255 = -x225;
-        const double x256 = x226 + x228 + x230 + x252 + x253 + x254 + x255;
-        const double x257 = x14*x219;
-        const double x258 = -x257;
-        const double x259 = x217*x76;
-        const double x260 = -x14*x210;
-        const double x261 = x208*x76;
-        const double x262 = x260 - x261;
-        const double x263 = 8*a_3;
-        const double x264 = a_2*x263;
-        const double x265 = 4*x22;
-        const double x266 = 4*x24;
-        const double x267 = -x265 + x266;
-        const double x268 = 4*x21;
-        const double x269 = 4*x25;
-        const double x270 = 4*x23;
-        const double x271 = -x268 - x269 + x270;
-        const double x272 = R_l_inv_03*x197 + R_l_inv_13*x198 - R_l_inv_23*x195 - R_l_inv_33*x196 - x102*x238 + x267 + x271;
-        const double x273 = -x259;
-        const double x274 = -x212;
-        const double x275 = x211 + x213 + x214;
-        const double x276 = x209 + x274 + x275;
-        const double x277 = x233 + x234 + x235 - x236 - x237 - x239;
-        const double x278 = x245 + x246 - x247;
-        const double x279 = r_31*x115 - x113*x5 + x113*x7 - x113*x9 + x120*x45;
-        const double x280 = r_32*x115 - x118*x5 + x118*x7 - x118*x9 + x120*x49;
-        const double x281 = R_l_inv_60*x279 + R_l_inv_70*x280;
-        const double x282 = a_3*x281;
-        const double x283 = R_l_inv_61*x279 + R_l_inv_71*x280;
-        const double x284 = d_2*x283;
-        const double x285 = d_4*x283;
-        const double x286 = -a_2*x281;
-        const double x287 = a_4*x281;
-        const double x288 = -x287;
-        const double x289 = x282 + x284 + x285 + x286 + x288;
-        const double x290 = R_l_inv_67*x279 + R_l_inv_77*x280;
-        const double x291 = a_4*x290;
-        const double x292 = R_l_inv_66*x279 + R_l_inv_76*x280;
-        const double x293 = d_4*x292;
-        const double x294 = x291 + x293;
-        const double x295 = a_2*x290;
-        const double x296 = d_2*x292;
-        const double x297 = R_l_inv_64*x279;
-        const double x298 = -x297;
-        const double x299 = R_l_inv_74*x280;
-        const double x300 = -x299;
-        const double x301 = a_3*x290;
-        const double x302 = -x301;
-        const double x303 = x295 + x296 + x298 + x300 + x302;
-        const double x304 = x279*x78;
-        const double x305 = x280*x80;
-        const double x306 = R_l_inv_65*x279 + R_l_inv_75*x280;
-        const double x307 = x306*x83;
-        const double x308 = x304 + x305 + x307;
-        const double x309 = x11*x306;
-        const double x310 = x14*x306;
-        const double x311 = -x309 + x310;
-        const double x312 = -x293;
-        const double x313 = x301 + x312;
-        const double x314 = -x291 + x39;
-        const double x315 = -x21 - x22 - x23 - x24 - x25 - x295 - x296 + x297 + x299;
-        const double x316 = x315 + x41;
-        const double x317 = x14*x292;
-        const double x318 = -x317;
-        const double x319 = x290*x76;
-        const double x320 = -x14*x283;
-        const double x321 = x281*x76;
-        const double x322 = x320 - x321;
-        const double x323 = -x102*x306 + x103*x279 + x104*x280;
-        const double x324 = -x319;
-        const double x325 = x317 + x35;
-        const double x326 = x287 + x312;
-        const double x327 = x284 - x285 + x286;
-        const double x328 = x314 + x327;
-        const double x329 = -x304 - x305 - x307;
-        const double x330 = x309 + x310;
-        const double x331 = x12 + x15;
-        const double x332 = x287 + x301;
-        const double x333 = x20 + x315;
-        const double x334 = -x11;
-        const double x335 = x14 + x334;
-        const double x336 = -x14 + x334;
-        const double x337 = 4*x69;
-        const double x338 = 4*x71;
-        const double x339 = 4*x67;
-        const double x340 = 4*x68;
-        const double x341 = -4*x65;
-        const double x342 = x110 + x76;
-        const double x343 = x76 + x85;
-        const double x344 = x152 + x153;
-        const double x345 = x174 + x204;
-        const double x346 = 4*x139;
-        const double x347 = 4*x141;
-        const double x348 = 4*x143;
-        const double x349 = 4*x145;
-        const double x350 = x132*x30;
-        const double x351 = 4*x138;
-        const double x352 = -4*x135;
-        const double x353 = x151 + x154;
-        const double x354 = x177 + x205;
-        const double x355 = a_3*x193;
-        const double x356 = a_4*x191;
-        const double x357 = 4*x222;
-        const double x358 = 4*x223;
-        const double x359 = 4*x226;
-        const double x360 = 4*x228;
-        const double x361 = x217*x30;
-        const double x362 = 4*x225;
-        const double x363 = -4*x220;
-        const double x364 = x277 + x31;
-        const double x365 = 8*a_2*a_4;
-        const double x366 = x240 + x31;
-        const double x367 = x290*x30;
-        const double x368 = 4*x296;
-        const double x369 = 4*x297;
-        const double x370 = 4*x299;
-        const double x371 = -a_4*x263 - d_4*x191 - 4*x293;
-        const double x372 = x12 + x27;
-        const double x373 = x372 + x40;
-        const double x374 = x241 + x37;
-        const double x375 = x331 + x42;
-        const double x376 = x10 + x375;
-        const double x377 = -x54;
-        const double x378 = x108 + x377 + x57;
-        const double x379 = x63 + x91;
-        const double x380 = x69 + x71 + x74 + x93 + x94;
-        const double x381 = x65 + x90;
-        const double x382 = x67 + x68 + x70 + x72 + x73;
-        const double x383 = x100 + x99;
-        const double x384 = x107 + x377 + x56 + x58 + x60;
-        const double x385 = -x124;
-        const double x386 = x127 + x202 + x385;
-        const double x387 = x133 + x180;
-        const double x388 = x139 + x141 + x143 + x145 + x148 + x182 + x183;
-        const double x389 = x151 + x153 + x156 + x157;
-        const double x390 = x135 + x179;
-        const double x391 = x137 + x138 + x140 + x142 + x144 + x146 + x147;
-        const double x392 = x188 + x189;
-        const double x393 = x126 + x128 + x130 + x201 + x385;
-        const double x394 = -x209;
-        const double x395 = x212 + x275 + x394;
-        const double x396 = x218 + x250;
-        const double x397 = x226 + x228 + x231 + x252 + x253 + x254 + x255;
-        const double x398 = x243 + x33;
-        const double x399 = x220 + x249;
-        const double x400 = x222 + x223 + x224 + x225 + x227 + x229 + x230;
-        const double x401 = x260 + x261;
-        const double x402 = x211 + x213 + x215 + x274 + x394;
-        const double x403 = -x282;
-        const double x404 = x302 + x403;
-        const double x405 = x284 + x285 + x286;
-        const double x406 = x295 + x296 + x298 + x300 + x403;
-        const double x407 = x320 + x321;
-        
+        const double x37 = x17 - x18 - x19 - x20 - x21 - x22 + x23;
+        const double x38 = -x37 - x4 - x6 - x8;
+        const double x39 = r_11*x2 + r_21*x0;
+        const double x40 = Pz*x39;
+        const double x41 = r_31*x7;
+        const double x42 = x40 - x41;
+        const double x43 = r_12*x2 + r_22*x0;
+        const double x44 = Pz*x43;
+        const double x45 = r_32*x7;
+        const double x46 = x44 - x45;
+        const double x47 = R_l_inv_67*x42 + R_l_inv_77*x46;
+        const double x48 = a_4*x47;
+        const double x49 = R_l_inv_61*x42 + R_l_inv_71*x46;
+        const double x50 = d_4*x49;
+        const double x51 = R_l_inv_66*x42 + R_l_inv_76*x46;
+        const double x52 = d_4*x51;
+        const double x53 = R_l_inv_60*x42 + R_l_inv_70*x46;
+        const double x54 = a_4*x53;
+        const double x55 = -x54;
+        const double x56 = x48 + x50 + x52 + x55;
+        const double x57 = a_3*x53;
+        const double x58 = a_3*x47;
+        const double x59 = -x58;
+        const double x60 = x57 + x59;
+        const double x61 = a_2*x53;
+        const double x62 = d_2*x49 - x61;
+        const double x63 = a_2*x47;
+        const double x64 = d_2*x51;
+        const double x65 = R_l_inv_64*x42;
+        const double x66 = R_l_inv_74*x46;
+        const double x67 = x63 + x64 - x65 - x66;
+        const double x68 = x62 + x67;
+        const double x69 = R_l_inv_65*x42 + R_l_inv_75*x46;
+        const double x70 = x10*x69;
+        const double x71 = -x70;
+        const double x72 = x13*x69;
+        const double x73 = 2*d_4;
+        const double x74 = 2*R_l_inv_62;
+        const double x75 = 2*R_l_inv_72;
+        const double x76 = 2*a_2;
+        const double x77 = -x15 + x42*x74 + x46*x75 + x69*x76;
+        const double x78 = -x73 + x77;
+        const double x79 = -x48;
+        const double x80 = x50 + x58 + x79;
+        const double x81 = -x52;
+        const double x82 = x57 + x81;
+        const double x83 = -x63 - x64 + x65 + x66;
+        const double x84 = x62 + x83;
+        const double x85 = x47*x73;
+        const double x86 = x13*x51;
+        const double x87 = x13*x49;
+        const double x88 = x53*x73;
+        const double x89 = x87 + x88;
+        const double x90 = 4*R_l_inv_63;
+        const double x91 = 4*R_l_inv_73;
+        const double x92 = 4*d_2;
+        const double x93 = x69*x92;
+        const double x94 = -x57;
+        const double x95 = -d_2*x49;
+        const double x96 = x58 + x61 + x95;
+        const double x97 = -2*a_4*x69;
+        const double x98 = x73 + x77;
+        const double x99 = x52 + x54;
+        const double x100 = x48 + x84;
+        const double x101 = -r_11*x0 + r_21*x2;
+        const double x102 = 2*Pz;
+        const double x103 = x102*x5;
+        const double x104 = 2*x7;
+        const double x105 = -r_31*x4 + r_31*x6 + r_31*x8 - x101*x103 - x104*x40;
+        const double x106 = -r_12*x0 + r_22*x2;
+        const double x107 = -r_32*x4 + r_32*x6 + r_32*x8 - x103*x106 - x104*x44;
+        const double x108 = x7*(2*Py*x2 - 2*x1);
+        const double x109 = x101*x108 + x102*x41 - x39*x4 - x39*x6 + x39*x8;
+        const double x110 = x102*x45 + x106*x108 - x4*x43 - x43*x6 + x43*x8;
+        const double x111 = R_l_inv_00*x105 + R_l_inv_10*x107 + R_l_inv_20*x109 + R_l_inv_30*x110;
+        const double x112 = a_3*x111;
+        const double x113 = -x112;
+        const double x114 = R_l_inv_01*x105 + R_l_inv_11*x107 + R_l_inv_21*x109 + R_l_inv_31*x110;
+        const double x115 = d_4*x114;
+        const double x116 = -x115;
+        const double x117 = a_2*x111;
+        const double x118 = R_l_inv_07*x105 + R_l_inv_17*x107 + R_l_inv_27*x109 + R_l_inv_37*x110;
+        const double x119 = a_3*x118;
+        const double x120 = a_4*x111;
+        const double x121 = -d_2*x114;
+        const double x122 = R_l_inv_06*x105 + R_l_inv_16*x107 + R_l_inv_26*x109 + R_l_inv_36*x110;
+        const double x123 = d_4*x122;
+        const double x124 = -x123;
+        const double x125 = x117 + x119 + x120 + x121 + x124;
+        const double x126 = R_l_inv_04*x105;
+        const double x127 = R_l_inv_14*x107;
+        const double x128 = R_l_inv_24*x109;
+        const double x129 = R_l_inv_34*x110;
+        const double x130 = a_2*x118;
+        const double x131 = -x130;
+        const double x132 = a_4*x118;
+        const double x133 = d_2*x122;
+        const double x134 = -x133;
+        const double x135 = x126 + x127 + x128 + x129 + x131 - x132 + x134;
+        const double x136 = 2*x19;
+        const double x137 = 2*x20;
+        const double x138 = a_3*x27;
+        const double x139 = R_l_inv_05*x105 + R_l_inv_15*x107 + R_l_inv_25*x109 + R_l_inv_35*x110;
+        const double x140 = x10*x139;
+        const double x141 = x136 + x137 - x138 - x140;
+        const double x142 = a_4*x30;
+        const double x143 = -x142;
+        const double x144 = -2*x21;
+        const double x145 = -2*x22;
+        const double x146 = 2*x18;
+        const double x147 = 4*d_4;
+        const double x148 = d_2*x147;
+        const double x149 = 2*x105;
+        const double x150 = R_l_inv_02*x149;
+        const double x151 = 2*x107;
+        const double x152 = R_l_inv_12*x151;
+        const double x153 = 2*x109;
+        const double x154 = R_l_inv_22*x153;
+        const double x155 = 2*x110;
+        const double x156 = R_l_inv_32*x155;
+        const double x157 = x139*x76;
+        const double x158 = x144 + x145 + x146 - x148 + x150 + x152 + x154 + x156 + x157;
+        const double x159 = x143 + x158;
+        const double x160 = a_4*x27 + x13*x139;
+        const double x161 = -x120;
+        const double x162 = x119 + x161;
+        const double x163 = x112 + x115;
+        const double x164 = x135 + x163;
+        const double x165 = d_2*x114 - x117;
+        const double x166 = x124 + x165;
+        const double x167 = x118*x73;
+        const double x168 = x122*x13;
+        const double x169 = x114*x13;
+        const double x170 = x111*x73;
+        const double x171 = x169 + x170;
+        const double x172 = 8*d_2;
+        const double x173 = a_3*x172;
+        const double x174 = 8*d_4;
+        const double x175 = a_4*x174;
+        const double x176 = 4*x105;
+        const double x177 = 4*x107;
+        const double x178 = R_l_inv_03*x176 + R_l_inv_13*x177 + 4*R_l_inv_23*x109 + 4*R_l_inv_33*x110 - a_2*x172 - x139*x92;
+        const double x179 = x117 + x121 + x123;
+        const double x180 = x126 + x127 + x128 + x129 + x131 + x132 + x134;
+        const double x181 = x113 + x115 + x180;
+        const double x182 = -4*a_2*a_4 - 2*a_4*x139;
+        const double x183 = x144 + x145 + x146 + x148 + x150 + x152 + x154 + x156 + x157;
+        const double x184 = x142 + x183;
+        const double x185 = x112 + x116 + x180;
+        const double x186 = R_l_inv_07*x109 + R_l_inv_17*x110 - R_l_inv_27*x105 - R_l_inv_37*x107;
+        const double x187 = a_4*x186;
+        const double x188 = R_l_inv_01*x109 + R_l_inv_11*x110 - R_l_inv_21*x105 - R_l_inv_31*x107;
+        const double x189 = d_4*x188;
+        const double x190 = R_l_inv_06*x109 + R_l_inv_16*x110 - R_l_inv_26*x105 - R_l_inv_36*x107;
+        const double x191 = d_4*x190;
+        const double x192 = R_l_inv_00*x109 + R_l_inv_10*x110 - R_l_inv_20*x105 - R_l_inv_30*x107;
+        const double x193 = a_4*x192;
+        const double x194 = -x193;
+        const double x195 = x187 + x189 + x191 + x194;
+        const double x196 = a_3*x192;
+        const double x197 = a_3*x186;
+        const double x198 = -x197;
+        const double x199 = x196 + x198;
+        const double x200 = a_2*x192;
+        const double x201 = d_2*x188 - x200;
+        const double x202 = R_l_inv_24*x105;
+        const double x203 = R_l_inv_34*x107;
+        const double x204 = a_2*x186;
+        const double x205 = d_2*x190;
+        const double x206 = R_l_inv_04*x109;
+        const double x207 = R_l_inv_14*x110;
+        const double x208 = x202 + x203 + x204 + x205 - x206 - x207;
+        const double x209 = x201 + x208;
+        const double x210 = R_l_inv_05*x109 + R_l_inv_15*x110 - R_l_inv_25*x105 - R_l_inv_35*x107;
+        const double x211 = x28 - x31;
+        const double x212 = R_l_inv_02*x153;
+        const double x213 = R_l_inv_12*x155;
+        const double x214 = x210*x76;
+        const double x215 = R_l_inv_22*x149;
+        const double x216 = R_l_inv_32*x151;
+        const double x217 = d_2*x27;
+        const double x218 = -x212 - x213 - x214 + x215 + x216 + x217;
+        const double x219 = d_2*x30;
+        const double x220 = x10*x210;
+        const double x221 = a_4*x147;
+        const double x222 = -x219 + x220 + x221;
+        const double x223 = x218 + x222;
+        const double x224 = -x196;
+        const double x225 = -d_2*x188;
+        const double x226 = x200 + x224 + x225;
+        const double x227 = -x189;
+        const double x228 = x191 + x193;
+        const double x229 = x187 + x227 + x228;
+        const double x230 = x186*x73;
+        const double x231 = x13*x190;
+        const double x232 = x13*x188;
+        const double x233 = x192*x73;
+        const double x234 = x232 + x233;
+        const double x235 = 8*a_3;
+        const double x236 = a_2*x235;
+        const double x237 = 4*x21;
+        const double x238 = 4*x19;
+        const double x239 = -x237 + x238;
+        const double x240 = 4*x20;
+        const double x241 = 4*x18;
+        const double x242 = 4*x22;
+        const double x243 = -x240 + x241 + x242;
+        const double x244 = -4*R_l_inv_03*x109 - 4*R_l_inv_13*x110 + R_l_inv_23*x176 + R_l_inv_33*x177 + x210*x92 + x239 + x243;
+        const double x245 = -x202 - x203 - x204 - x205 + x206 + x207;
+        const double x246 = x197 + x245;
+        const double x247 = -x33;
+        const double x248 = x13*x210 + x247 + x31;
+        const double x249 = r_31*x103 - x101*x4 + x101*x6 - x101*x8 + x108*x39;
+        const double x250 = r_32*x103 - x106*x4 + x106*x6 - x106*x8 + x108*x43;
+        const double x251 = R_l_inv_61*x249 + R_l_inv_71*x250;
+        const double x252 = d_4*x251;
+        const double x253 = R_l_inv_60*x249 + R_l_inv_70*x250;
+        const double x254 = a_3*x253;
+        const double x255 = R_l_inv_67*x249 + R_l_inv_77*x250;
+        const double x256 = a_4*x255;
+        const double x257 = d_2*x251;
+        const double x258 = R_l_inv_66*x249 + R_l_inv_76*x250;
+        const double x259 = d_4*x258;
+        const double x260 = a_2*x253;
+        const double x261 = -x260;
+        const double x262 = x254 + x256 + x257 + x259 + x261;
+        const double x263 = a_2*x255;
+        const double x264 = d_2*x258;
+        const double x265 = R_l_inv_64*x249;
+        const double x266 = -x265;
+        const double x267 = R_l_inv_74*x250;
+        const double x268 = -x267;
+        const double x269 = a_4*x253;
+        const double x270 = x263 + x264 + x266 + x268 - x269;
+        const double x271 = a_3*x255;
+        const double x272 = -x271;
+        const double x273 = x25 + x272;
+        const double x274 = R_l_inv_65*x249 + R_l_inv_75*x250;
+        const double x275 = x13*x274;
+        const double x276 = x10*x274;
+        const double x277 = x249*x74 + x250*x75 + x274*x76;
+        const double x278 = -x276 + x277;
+        const double x279 = -x254;
+        const double x280 = x256 + x279;
+        const double x281 = -d_2*x251;
+        const double x282 = x259 + x260 + x281;
+        const double x283 = -x252;
+        const double x284 = x269 + x283;
+        const double x285 = x263 + x264 + x266 + x268 + x284;
+        const double x286 = x255*x73;
+        const double x287 = x13*x258;
+        const double x288 = x13*x251;
+        const double x289 = x253*x73;
+        const double x290 = x288 + x289;
+        const double x291 = x249*x90 + x250*x91 - x274*x92;
+        const double x292 = -x14;
+        const double x293 = x11 - x16;
+        const double x294 = -x256;
+        const double x295 = x254 + x294;
+        const double x296 = -x259;
+        const double x297 = x257 + x261;
+        const double x298 = x296 + x297;
+        const double x299 = -2*a_4*x274;
+        const double x300 = -x10 + x13;
+        const double x301 = -x10 - x13;
+        const double x302 = 4*x65;
+        const double x303 = 4*x66;
+        const double x304 = 4*x63;
+        const double x305 = 4*x64;
+        const double x306 = 4*x52;
+        const double x307 = -x136 - x137;
+        const double x308 = x142 + x158 + x307;
+        const double x309 = 4*x123;
+        const double x310 = -x118*x27 + 4*x126 + 4*x127 + 4*x128 + 4*x129 - 4*x133;
+        const double x311 = a_3*x174 + a_4*x172;
+        const double x312 = x143 + x183 + x307;
+        const double x313 = x218 + x28;
+        const double x314 = 4*x191;
+        const double x315 = x186*x27 + 4*x202 + 4*x203 + 4*x205 - 4*x206 - 4*x207;
+        const double x316 = 8*a_2*a_4;
+        const double x317 = x212 + x213 + x214 - x215 - x216 - x217 + x28;
+        const double x318 = 4*x265;
+        const double x319 = 4*x267;
+        const double x320 = x255*x27;
+        const double x321 = 4*x264;
+        const double x322 = a_4*x235 + d_4*x172 + 4*x259;
+        const double x323 = -x277;
+        const double x324 = x18 + x19 + x20 + x21 + x22 + x23;
+        const double x325 = x324 + x9;
+        const double x326 = x12 + x16 + x292;
+        const double x327 = x325 + x326;
+        const double x328 = x28 + x34;
+        const double x329 = -x328;
+        const double x330 = x14 + x293;
+        const double x331 = x325 + x330;
+        const double x332 = x50 + x54;
+        const double x333 = x85 + x86;
+        const double x334 = -x119;
+        const double x335 = x120 + x334;
+        const double x336 = x136 + x137 + x138 + x140;
+        const double x337 = x167 + x168;
+        const double x338 = -x187;
+        const double x339 = x197 + x338;
+        const double x340 = x200 + x225;
+        const double x341 = x196 + x208 + x340;
+        const double x342 = x189 + x228;
+        const double x343 = x230 + x231;
+        const double x344 = x271 + x324;
+        const double x345 = x326 + x344;
+        const double x346 = x270 + x283;
+        const double x347 = x276 + x277;
+        const double x348 = x252 + x263 + x264 + x266 + x268 + x269;
+        const double x349 = x286 + x287 + x328;
+        const double x350 = x330 + x344;
+
         Eigen::Matrix<double, 6, 9> A;
         A.setZero();
-        A(0, 0) = x4;
-        A(0, 2) = x4;
-        A(0, 6) = x4;
-        A(0, 8) = x4;
-        A(1, 0) = x29;
-        A(1, 2) = x29;
-        A(1, 3) = x38;
-        A(1, 5) = x38;
-        A(1, 6) = x44;
-        A(1, 8) = x44;
-        A(2, 0) = x61 + x66 + x75;
-        A(2, 1) = x86 + x89;
-        A(2, 2) = x61 + x92 + x95;
-        A(2, 3) = x101 + x97 + x98;
-        A(2, 4) = x105 + x32;
-        A(2, 5) = x101 + x106 + x96;
-        A(2, 6) = x109 + x75 + x92;
-        A(2, 7) = x111 + x112;
-        A(2, 8) = x109 + x66 + x95;
-        A(3, 0) = x131 + x136 + x149;
-        A(3, 1) = x158 + x161 + x178;
-        A(3, 2) = x131 + x181 + x184;
-        A(3, 3) = x186 + x187 + x190;
-        A(3, 4) = x192 + x194 + x199;
-        A(3, 5) = x185 + x190 + x200;
-        A(3, 6) = x149 + x181 + x203;
-        A(3, 7) = x158 + x206 + x207;
-        A(3, 8) = x136 + x184 + x203;
-        A(4, 0) = x216 + x221 + x232;
-        A(4, 1) = x240 + x244 + x248;
-        A(4, 2) = x216 + x251 + x256;
-        A(4, 3) = x258 + x259 + x262;
-        A(4, 4) = x264 + x272;
-        A(4, 5) = x257 + x262 + x273;
-        A(4, 6) = x232 + x251 + x276;
-        A(4, 7) = x244 + x277 + x278;
-        A(4, 8) = x221 + x256 + x276;
-        A(5, 0) = x28 + x289 + x294 + x303;
-        A(5, 1) = x308 + x311;
-        A(5, 2) = x12 + x289 + x313 + x314 + x316;
-        A(5, 3) = x318 + x319 + x322 + x38;
-        A(5, 4) = x323;
-        A(5, 5) = x242 + x322 + x324 + x325;
-        A(5, 6) = x282 + x303 + x326 + x328 + x43;
-        A(5, 7) = x329 + x330;
-        A(5, 8) = x282 + x294 + x327 + x331 + x332 + x333;
-        
+        A(0, 0) = x3;
+        A(0, 2) = x3;
+        A(0, 6) = x3;
+        A(0, 8) = x3;
+        A(1, 0) = x26;
+        A(1, 2) = x26;
+        A(1, 3) = x36;
+        A(1, 5) = x36;
+        A(1, 6) = x38;
+        A(1, 8) = x38;
+        A(2, 0) = x56 + x60 + x68;
+        A(2, 1) = x71 + x72 + x78;
+        A(2, 2) = x55 + x80 + x82 + x84;
+        A(2, 3) = x85 - x86 - x89;
+        A(2, 4) = -x27 + x30 + x42*x90 + x46*x91 - x93;
+        A(2, 5) = -x85 + x86 - x89;
+        A(2, 6) = -x56 - x83 - x94 - x96;
+        A(2, 7) = -x71 - x97 - x98;
+        A(2, 8) = x100 - x50 + x57 + x58 + x99;
+        A(3, 0) = -x113 - x116 - x125 - x135;
+        A(3, 1) = x141 + x159 + x160;
+        A(3, 2) = x162 + x164 + x166;
+        A(3, 3) = x167 - x168 - x171;
+        A(3, 4) = x173 + x175 + x178;
+        A(3, 5) = -x167 + x168 - x171;
+        A(3, 6) = -x162 - x179 - x181;
+        A(3, 7) = -x141 - x182 - x184;
+        A(3, 8) = x119 + x120 + x123 + x165 + x185;
+        A(4, 0) = x195 + x199 + x209;
+        A(4, 1) = 2*a_4*x210 - x211 - x223 - x33;
+        A(4, 2) = -x198 - x208 - x226 - x229;
+        A(4, 3) = x230 - x231 - x234;
+        A(4, 4) = x236 - x244;
+        A(4, 5) = -x230 + x231 - x234;
+        A(4, 6) = -x195 - x226 - x246;
+        A(4, 7) = x223 + x248 + x29;
+        A(4, 8) = x196 + x201 + x229 + x246;
+        A(5, 0) = x252 + x262 + x270 + x273;
+        A(5, 1) = x275 + x278;
+        A(5, 2) = -x273 - x280 - x282 - x285;
+        A(5, 3) = x286 - x287 - x290 - x35;
+        A(5, 4) = x291;
+        A(5, 5) = -x211 - x247 - x286 + x287 - x290;
+        A(5, 6) = x24 + x272 + x285 + x292 + x293 + x295 + x298;
+        A(5, 7) = -x278 - x299;
+        A(5, 8) = x262 - x263 - x264 + x265 + x267 + x271 + x284 + x37;
+
         Eigen::Matrix<double, 6, 9> B;
         B.setZero();
-        B(0, 0) = x335;
-        B(0, 2) = x335;
-        B(0, 3) = x150;
-        B(0, 5) = x150;
-        B(0, 6) = x336;
-        B(0, 8) = x336;
-        B(2, 0) = x86;
-        B(2, 1) = x337 + x338 - x339 - x340 + x341;
-        B(2, 2) = x342;
-        B(2, 3) = x34;
-        B(2, 4) = x263*x64;
-        B(2, 5) = -x34;
-        B(2, 6) = x343;
-        B(2, 7) = -x337 - x338 + x339 + x340 + x341;
-        B(2, 8) = x111;
-        B(3, 0) = x344 + x345;
-        B(3, 1) = x346 + x347 + x348 + x349 - x350 - x351 + x352;
-        B(3, 2) = x353 + x354;
-        B(3, 3) = x355 + x356;
-        B(3, 4) = x134*x263;
-        B(3, 5) = -x355 - x356;
-        B(3, 6) = x345 + x353;
-        B(3, 7) = -x346 - x347 - x348 - x349 + x350 + x351 + x352;
-        B(3, 8) = x344 + x354;
-        B(4, 0) = x240 + x241;
-        B(4, 1) = -x357 - x358 + x359 + x360 - x361 - x362 + x363;
-        B(4, 2) = x364;
-        B(4, 3) = x365;
-        B(4, 4) = x219*x263;
-        B(4, 5) = -x365;
-        B(4, 6) = x366;
-        B(4, 7) = x357 + x358 - x359 - x360 + x361 + x362 + x363;
-        B(4, 8) = x241 + x277;
-        B(5, 0) = x308;
-        B(5, 1) = x265 - x266 + x271 - x367 - x368 + x369 + x370 + x371;
-        B(5, 2) = x329;
-        B(5, 4) = 16*a_3*d_2 + 16*a_4*d_4 + x263*x292;
-        B(5, 6) = x308;
-        B(5, 7) = x267 + x268 + x269 - x270 + x367 + x368 - x369 - x370 + x371;
-        B(5, 8) = x329;
-        
+        B(0, 0) = x300;
+        B(0, 2) = x300;
+        B(0, 3) = x147;
+        B(0, 5) = x147;
+        B(0, 6) = x301;
+        B(0, 8) = x301;
+        B(2, 0) = x78;
+        B(2, 1) = x302 + x303 - x304 - x305 - x306;
+        B(2, 2) = -x78;
+        B(2, 3) = x32;
+        B(2, 4) = x235*x51;
+        B(2, 5) = -x32;
+        B(2, 6) = x98;
+        B(2, 7) = -x302 - x303 + x304 + x305 - x306;
+        B(2, 8) = -x98;
+        B(3, 0) = x308;
+        B(3, 1) = -x309 + x310;
+        B(3, 2) = -x308;
+        B(3, 3) = x311;
+        B(3, 4) = x122*x235;
+        B(3, 5) = -x311;
+        B(3, 6) = x312;
+        B(3, 7) = -x309 - x310;
+        B(3, 8) = -x312;
+        B(4, 0) = -x313;
+        B(4, 1) = -x314 - x315;
+        B(4, 2) = x313;
+        B(4, 3) = x316;
+        B(4, 4) = x190*x235;
+        B(4, 5) = -x316;
+        B(4, 6) = x317;
+        B(4, 7) = -x314 + x315;
+        B(4, 8) = -x317;
+        B(5, 0) = x277;
+        B(5, 1) = -x237 + x238 - x243 + x318 + x319 - x320 - x321 - x322;
+        B(5, 2) = x323;
+        B(5, 4) = 16*a_3*d_2 + 16*a_4*d_4 + x235*x258;
+        B(5, 6) = x277;
+        B(5, 7) = -x239 - x240 + x241 + x242 - x318 - x319 + x320 + x321 - x322;
+        B(5, 8) = x323;
+
         Eigen::Matrix<double, 6, 9> C;
         C.setZero();
-        C(0, 0) = x4;
-        C(0, 2) = x4;
-        C(0, 6) = x4;
-        C(0, 8) = x4;
-        C(1, 0) = x373;
-        C(1, 2) = x373;
-        C(1, 3) = x374;
-        C(1, 5) = x374;
-        C(1, 6) = x376;
-        C(1, 8) = x376;
-        C(2, 0) = x378 + x379 + x380;
-        C(2, 1) = x342 + x89;
-        C(2, 2) = x378 + x381 + x382;
-        C(2, 3) = x383 + x96 + x98;
-        C(2, 4) = x105 - x32;
-        C(2, 5) = x106 + x383 + x97;
-        C(2, 6) = x380 + x381 + x384;
-        C(2, 7) = x112 + x343;
-        C(2, 8) = x379 + x382 + x384;
-        C(3, 0) = x386 + x387 + x388;
-        C(3, 1) = x161 + x206 + x389;
-        C(3, 2) = x386 + x390 + x391;
-        C(3, 3) = x185 + x187 + x392;
-        C(3, 4) = -x192 - x194 + x199;
-        C(3, 5) = x186 + x200 + x392;
-        C(3, 6) = x388 + x390 + x393;
-        C(3, 7) = x178 + x207 + x389;
-        C(3, 8) = x387 + x391 + x393;
-        C(4, 0) = x395 + x396 + x397;
-        C(4, 1) = x248 + x364 + x398;
-        C(4, 2) = x395 + x399 + x400;
-        C(4, 3) = x257 + x259 + x401;
-        C(4, 4) = -x264 + x272;
-        C(4, 5) = x258 + x273 + x401;
-        C(4, 6) = x397 + x399 + x402;
-        C(4, 7) = x278 + x366 + x398;
-        C(4, 8) = x396 + x400 + x402;
-        C(5, 0) = x16 + x291 + x316 + x326 + x404 + x405;
-        C(5, 1) = x311 + x329;
-        C(5, 2) = x293 + x314 + x332 + x372 + x405 + x406;
-        C(5, 3) = x31 + x319 + x325 + x33 + x407;
-        C(5, 4) = x323;
-        C(5, 5) = x318 + x324 + x374 + x407;
-        C(5, 6) = x13 + x288 + x293 + x328 + x333 + x404;
-        C(5, 7) = x308 + x330;
-        C(5, 8) = x288 + x291 + x313 + x327 + x375 + x406;
-        
+        C(0, 0) = x3;
+        C(0, 2) = x3;
+        C(0, 6) = x3;
+        C(0, 8) = x3;
+        C(1, 0) = x327;
+        C(1, 2) = x327;
+        C(1, 3) = x329;
+        C(1, 5) = x329;
+        C(1, 6) = x331;
+        C(1, 8) = x331;
+        C(2, 0) = x100 + x332 + x59 + x81 + x94;
+        C(2, 1) = -x70 - x78 - x97;
+        C(2, 2) = x68 + x80 + x94 + x99;
+        C(2, 3) = x333 - x87 + x88;
+        C(2, 4) = 4*R_l_inv_63*x42 + 4*R_l_inv_73*x46 - x27 - x30 - x93;
+        C(2, 5) = -x333 - x87 + x88;
+        C(2, 6) = -x332 - x48 - x67 - x82 - x96;
+        C(2, 7) = x70 + x72 + x98;
+        C(2, 8) = -x50 - x60 - x61 - x79 - x83 - x95 - x99;
+        C(3, 0) = x166 + x181 + x335;
+        C(3, 1) = -x159 - x182 - x336;
+        C(3, 2) = -x117 - x121 - x124 - x161 - x185 - x334;
+        C(3, 3) = -x169 + x170 + x337;
+        C(3, 4) = -x173 - x175 + x178;
+        C(3, 5) = -x169 + x170 - x337;
+        C(3, 6) = -x125 + x126 + x127 + x128 + x129 - x130 - x132 - x133 - x163;
+        C(3, 7) = x160 + x184 + x336;
+        C(3, 8) = -x164 - x179 - x335;
+        C(4, 0) = -x191 - x194 - x227 - x339 - x341;
+        C(4, 1) = x219 - x220 - x221 + x248 + x313;
+        C(4, 2) = x209 + x224 + x339 + x342;
+        C(4, 3) = -x232 + x233 + x343;
+        C(4, 4) = -x236 - x244;
+        C(4, 5) = -x232 + x233 - x343;
+        C(4, 6) = -x187 - x189 + x191 - x193 - x197 - x341;
+        C(4, 7) = x222 + x248 + x317;
+        C(4, 8) = -x199 - x245 - x338 - x340 - x342;
+        C(5, 0) = -x282 - x295 - x345 - x346;
+        C(5, 1) = -x299 - x347;
+        C(5, 2) = x259 + x279 + x294 + x297 + x345 + x348;
+        C(5, 3) = -x288 + x289 + x349;
+        C(5, 4) = x291;
+        C(5, 5) = -x288 + x289 - x349;
+        C(5, 6) = -x254 - x256 - x260 - x281 - x296 - x348 - x350;
+        C(5, 7) = x275 + x347;
+        C(5, 8) = x280 + x298 + x346 + x350;
+
         // Invoke the solver
-        std::array<double, 16> solution_buffer;
+        std::array<double, 48> solution_buffer;
         int n_solutions = yaik_cpp::general_6dof_internal::computeSolutionFromTanhalfLME(A, B, C, &solution_buffer);
-        
+
         for(auto i = 0; i < n_solutions; i++)
         {
             auto solution_i = make_raw_solution();
@@ -1151,7 +1106,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     // Invoke the processor
     General6DoFNumericalReduceSolutionNode_node_1_solve_th_2_processor();
     // Finish code for general_6dof solution node 0
-    
+
     // Code for equation all-zero dispatcher node 2
     auto EquationAllZeroDispatcherNode_node_2_processor = [&]() -> void
     {
@@ -1166,18 +1121,18 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_2 = this_solution[2];
-            const bool checked_result = std::fabs(2*a_2*a_4*std::cos(th_2) + 2*a_3*a_4 - 2*d_2*d_4) <= 9.9999999999999995e-7 && std::fabs(2*a_2*d_4*std::cos(th_2) + 2*a_3*d_4 + 2*a_4*d_2) <= 9.9999999999999995e-7 && std::fabs(-std::pow(Px, 2) + 2*Px*a_1*std::cos(th_0) - std::pow(Py, 2) + 2*Py*a_1*std::sin(th_0) - std::pow(Pz, 2) - std::pow(a_1, 2) + std::pow(a_2, 2) + 2*a_2*a_3*std::cos(th_2) + std::pow(a_3, 2) + std::pow(a_4, 2) + std::pow(d_2, 2) + std::pow(d_4, 2)) <= 9.9999999999999995e-7;
+            const bool checked_result = ((std::fabs(2*a_2*a_4*std::cos(th_2) + 2*a_3*a_4 - 2*d_2*d_4) <= 9.9999999999999995e-7) && (std::fabs(2*a_2*d_4*std::cos(th_2) + 2*a_3*d_4 + 2*a_4*d_2) <= 9.9999999999999995e-7) && (std::fabs(-std::pow(Px, 2) + 2*Px*a_1*std::cos(th_0) - std::pow(Py, 2) + 2*Py*a_1*std::sin(th_0) - std::pow(Pz, 2) - std::pow(a_1, 2) + std::pow(a_2, 2) + 2*a_2*a_3*std::cos(th_2) + std::pow(a_3, 2) + std::pow(a_4, 2) + std::pow(d_2, 2) + std::pow(d_4, 2)) <= 9.9999999999999995e-7));
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(3, node_input_i_idx_in_queue);
             else
                 solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
-    
+
     // Invoke the processor
     EquationAllZeroDispatcherNode_node_2_processor();
     // Finish code for equation all-zero dispatcher node 2
-    
+
     // Code for explicit solution node 3, solved variable is th_3
     auto ExplicitSolutionNode_node_3_solve_th_3_processor = [&]() -> void
     {
@@ -1185,7 +1140,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(3);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 3
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1194,11 +1149,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_2 = this_solution[2];
-            
-            const bool condition_0 = std::fabs(2*a_2*a_4*std::cos(th_2) + 2*a_3*a_4 - 2*d_2*d_4) >= zero_tolerance || std::fabs(2*a_2*d_4*std::cos(th_2) + 2*a_3*d_4 + 2*a_4*d_2) >= zero_tolerance || std::fabs(-std::pow(Px, 2) + 2*Px*a_1*std::cos(th_0) - std::pow(Py, 2) + 2*Py*a_1*std::sin(th_0) - std::pow(Pz, 2) - std::pow(a_1, 2) + std::pow(a_2, 2) + 2*a_2*a_3*std::cos(th_2) + std::pow(a_3, 2) + std::pow(a_4, 2) + std::pow(d_2, 2) + std::pow(d_4, 2)) >= zero_tolerance;
+            const bool condition_0 = ((std::fabs(2*a_2*a_4*std::cos(th_2) + 2*a_3*a_4 - 2*d_2*d_4) >= zero_tolerance) || (std::fabs(2*a_2*d_4*std::cos(th_2) + 2*a_3*d_4 + 2*a_4*d_2) >= zero_tolerance) || (std::fabs(-std::pow(Px, 2) + 2*Px*a_1*std::cos(th_0) - std::pow(Py, 2) + 2*Py*a_1*std::sin(th_0) - std::pow(Pz, 2) - std::pow(a_1, 2) + std::pow(a_2, 2) + 2*a_2*a_3*std::cos(th_2) + std::pow(a_3, 2) + std::pow(a_4, 2) + std::pow(d_2, 2) + std::pow(d_4, 2)) >= zero_tolerance));
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = 2*d_4;
                 const double x1 = 2*a_4;
                 const double x2 = a_2*std::cos(th_2);
@@ -1208,27 +1161,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
                 const double x6 = 2*a_1;
                 const double x7 = std::pow(Px, 2) - Px*x6*std::cos(th_0) + std::pow(Py, 2) - Py*x6*std::sin(th_0) + std::pow(Pz, 2) + std::pow(a_1, 2) - std::pow(a_2, 2) - std::pow(a_3, 2) - 2*a_3*x2 - std::pow(a_4, 2) - std::pow(d_2, 2) - std::pow(d_4, 2);
                 const double x8 = safe_sqrt(std::pow(x3, 2) + std::pow(x4, 2) - std::pow(x7, 2));
-                // End of temp variables
                 RawSolution solution_0(this_solution);
                 solution_0[3] = x5 + std::atan2(x8, x7);
-                int appended_idx = append_solution_to_queue(solution_0);
-                add_input_index_to(4, appended_idx);
-            }
-            
-            const bool condition_1 = std::fabs(2*a_2*a_4*std::cos(th_2) + 2*a_3*a_4 - 2*d_2*d_4) >= zero_tolerance || std::fabs(2*a_2*d_4*std::cos(th_2) + 2*a_3*d_4 + 2*a_4*d_2) >= zero_tolerance || std::fabs(-std::pow(Px, 2) + 2*Px*a_1*std::cos(th_0) - std::pow(Py, 2) + 2*Py*a_1*std::sin(th_0) - std::pow(Pz, 2) - std::pow(a_1, 2) + std::pow(a_2, 2) + 2*a_2*a_3*std::cos(th_2) + std::pow(a_3, 2) + std::pow(a_4, 2) + std::pow(d_2, 2) + std::pow(d_4, 2)) >= zero_tolerance;
-            if (condition_1)
-            {
-                // Temp variable for efficiency
-                const double x0 = 2*d_4;
-                const double x1 = 2*a_4;
-                const double x2 = a_2*std::cos(th_2);
-                const double x3 = -a_3*x0 - d_2*x1 - x0*x2;
-                const double x4 = a_3*x1 - d_2*x0 + x1*x2;
-                const double x5 = std::atan2(x3, x4);
-                const double x6 = 2*a_1;
-                const double x7 = std::pow(Px, 2) - Px*x6*std::cos(th_0) + std::pow(Py, 2) - Py*x6*std::sin(th_0) + std::pow(Pz, 2) + std::pow(a_1, 2) - std::pow(a_2, 2) - std::pow(a_3, 2) - 2*a_3*x2 - std::pow(a_4, 2) - std::pow(d_2, 2) - std::pow(d_4, 2);
-                const double x8 = safe_sqrt(std::pow(x3, 2) + std::pow(x4, 2) - std::pow(x7, 2));
-                // End of temp variables
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(4, appended_idx_0);
                 const double tmp_sol_value = x5 + std::atan2(-x8, x7);
                 solution_queue.get_solution(node_input_i_idx_in_queue)[3] = tmp_sol_value;
                 add_input_index_to(4, node_input_i_idx_in_queue);
@@ -1242,7 +1178,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     // Invoke the processor
     ExplicitSolutionNode_node_3_solve_th_3_processor();
     // Finish code for explicit solution node 3
-    
+
     // Code for equation all-zero dispatcher node 4
     auto EquationAllZeroDispatcherNode_node_4_processor = [&]() -> void
     {
@@ -1256,18 +1192,18 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            const bool checked_result = std::fabs(Pz) <= 9.9999999999999995e-7 && std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0) - a_1) <= 9.9999999999999995e-7;
+            const bool checked_result = ((std::fabs(Pz) <= 9.9999999999999995e-7) && (std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0) - a_1) <= 9.9999999999999995e-7));
             if (!checked_result)  // To non-degenerate node
                 add_input_index_to(5, node_input_i_idx_in_queue);
             else
                 solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
-    
+
     // Invoke the processor
     EquationAllZeroDispatcherNode_node_4_processor();
     // Finish code for equation all-zero dispatcher node 4
-    
+
     // Code for explicit solution node 5, solved variable is th_1
     auto ExplicitSolutionNode_node_5_solve_th_1_processor = [&]() -> void
     {
@@ -1275,7 +1211,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(5);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 5
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1285,18 +1221,15 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_2 = this_solution[2];
             const double th_3 = this_solution[3];
-            
-            const bool condition_0 = std::fabs(Pz) >= 9.9999999999999995e-7 || std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0) - a_1) >= 9.9999999999999995e-7;
+            const bool condition_0 = ((std::fabs(Pz) >= 9.9999999999999995e-7) || (std::fabs(Px*std::cos(th_0) + Py*std::sin(th_0) - a_1) >= 9.9999999999999995e-7));
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = std::cos(th_2);
-                const double x1 = std::sin(th_3);
-                const double x2 = std::cos(th_3);
-                const double x3 = -a_2 - a_3*x0 - a_4*x0*x2 + d_4*x0*x1;
+                const double x1 = std::cos(th_3);
+                const double x2 = std::sin(th_3);
+                const double x3 = -a_2 - a_3*x0 - a_4*x0*x1 + d_4*x0*x2;
                 const double x4 = -Px*std::cos(th_0) - Py*std::sin(th_0) + a_1;
-                const double x5 = a_4*x1 - d_2 + d_4*x2;
-                // End of temp variables
+                const double x5 = a_4*x2 - d_2 + d_4*x1;
                 const double tmp_sol_value = std::atan2(Pz*x3 - x4*x5, Pz*x5 + x3*x4);
                 solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
                 add_input_index_to(6, node_input_i_idx_in_queue);
@@ -1310,10 +1243,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     // Invoke the processor
     ExplicitSolutionNode_node_5_solve_th_1_processor();
     // Finish code for explicit solution node 5
-    
+
     // Code for non-branch dispatcher node 6
     // Actually, there is no code
-    
+
     // Code for explicit solution node 7, solved variable is th_5
     auto ExplicitSolutionNode_node_7_solve_th_5_processor = [&]() -> void
     {
@@ -1321,7 +1254,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(6);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 7
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1332,43 +1265,23 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[2];
             const double th_3 = this_solution[3];
-            
-            const bool condition_0 = std::fabs(r_13*((-std::sin(th_1)*std::cos(th_3) + std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::cos(th_0) + std::sin(th_0)*std::sin(th_2)*std::sin(th_3)) + r_23*((-std::sin(th_1)*std::cos(th_3) + std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::sin(th_0) - std::sin(th_2)*std::sin(th_3)*std::cos(th_0)) - r_33*(std::sin(th_1)*std::sin(th_3)*std::cos(th_2) + std::cos(th_1)*std::cos(th_3))) <= 1;
+            const bool condition_0 = std::fabs(r_13*((std::sin(th_1)*std::cos(th_3) - std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::cos(th_0) - std::sin(th_0)*std::sin(th_2)*std::sin(th_3)) + r_23*((std::sin(th_1)*std::cos(th_3) - std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::sin(th_0) + std::sin(th_2)*std::sin(th_3)*std::cos(th_0)) + r_33*(std::sin(th_1)*std::sin(th_3)*std::cos(th_2) + std::cos(th_1)*std::cos(th_3))) <= 70368744177665.0/70368744177664.0;
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = std::cos(th_1);
                 const double x1 = std::cos(th_3);
                 const double x2 = std::sin(th_1);
-                const double x3 = std::sin(th_3);
-                const double x4 = x3*std::cos(th_2);
+                const double x3 = std::cos(th_2);
+                const double x4 = std::sin(th_3);
                 const double x5 = std::sin(th_0);
-                const double x6 = x3*std::sin(th_2);
+                const double x6 = x4*std::sin(th_2);
                 const double x7 = std::cos(th_0);
-                const double x8 = x0*x4 - x1*x2;
-                const double x9 = safe_acos(r_13*(x5*x6 + x7*x8) + r_23*(x5*x8 - x6*x7) - r_33*(x0*x1 + x2*x4));
-                // End of temp variables
+                const double x8 = x0*x3*x4 - x1*x2;
+                const double x9 = safe_acos(r_13*(x5*x6 + x7*x8) + r_23*(x5*x8 - x6*x7) - r_33*(x0*x1 + x2*x3*x4));
                 RawSolution solution_0(this_solution);
                 solution_0[6] = x9;
-                int appended_idx = append_solution_to_queue(solution_0);
-                add_input_index_to(8, appended_idx);
-            }
-            
-            const bool condition_1 = std::fabs(r_13*((-std::sin(th_1)*std::cos(th_3) + std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::cos(th_0) + std::sin(th_0)*std::sin(th_2)*std::sin(th_3)) + r_23*((-std::sin(th_1)*std::cos(th_3) + std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::sin(th_0) - std::sin(th_2)*std::sin(th_3)*std::cos(th_0)) - r_33*(std::sin(th_1)*std::sin(th_3)*std::cos(th_2) + std::cos(th_1)*std::cos(th_3))) <= 1;
-            if (condition_1)
-            {
-                // Temp variable for efficiency
-                const double x0 = std::cos(th_1);
-                const double x1 = std::cos(th_3);
-                const double x2 = std::sin(th_1);
-                const double x3 = std::sin(th_3);
-                const double x4 = x3*std::cos(th_2);
-                const double x5 = std::sin(th_0);
-                const double x6 = x3*std::sin(th_2);
-                const double x7 = std::cos(th_0);
-                const double x8 = x0*x4 - x1*x2;
-                const double x9 = safe_acos(r_13*(x5*x6 + x7*x8) + r_23*(x5*x8 - x6*x7) - r_33*(x0*x1 + x2*x4));
-                // End of temp variables
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(8, appended_idx_0);
                 const double tmp_sol_value = -x9;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[6] = tmp_sol_value;
                 add_input_index_to(8, node_input_i_idx_in_queue);
@@ -1382,7 +1295,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     // Invoke the processor
     ExplicitSolutionNode_node_7_solve_th_5_processor();
     // Finish code for explicit solution node 6
-    
+
     // Code for solved_variable dispatcher node 8
     auto SolvedVariableDispatcherNode_node_8_processor = [&]() -> void
     {
@@ -1390,7 +1303,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(8);
         if (!this_input_valid)
             return;
-        
+
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
             int node_input_i_idx_in_queue = this_node_input_index[i];
@@ -1400,7 +1313,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             bool taken_by_degenerate = false;
             bool forwarded_to_child = false;
             const double th_5 = this_solution[6];
-            
+
             const bool degenerate_valid_0 = std::fabs(th_5) <= 9.9999999999999995e-7;
             if (degenerate_valid_0)
             {
@@ -1411,7 +1324,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
                 forwarded_to_child = true;
                 add_input_index_to(12, branch_input_index);
             }
-            
+
             const bool degenerate_valid_1 = std::fabs(th_5 - M_PI) <= 9.9999999999999995e-7;
             if (degenerate_valid_1)
             {
@@ -1422,16 +1335,16 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
                 forwarded_to_child = true;
                 add_input_index_to(17, branch_input_index);
             }
-            
+
             if (!taken_by_degenerate)
                 add_input_index_to(9, node_input_i_idx_in_queue);
         }
     };
-    
+
     // Invoke the processor
     SolvedVariableDispatcherNode_node_8_processor();
     // Finish code for solved_variable dispatcher node 8
-    
+
     // Code for explicit solution node 17, solved variable is th_4th_6_soa
     auto ExplicitSolutionNode_node_17_solve_th_4th_6_soa_processor = [&]() -> void
     {
@@ -1439,7 +1352,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(17);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 17
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1449,11 +1362,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[2];
-            
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*(std::sin(th_0)*std::cos(th_2) - std::sin(th_2)*std::cos(th_0)*std::cos(th_1)) - r_21*(std::sin(th_0)*std::sin(th_2)*std::cos(th_1) + std::cos(th_0)*std::cos(th_2)) + r_31*std::sin(th_1)*std::sin(th_2)) >= zero_tolerance || std::fabs(r_12*(std::sin(th_0)*std::cos(th_2) - std::sin(th_2)*std::cos(th_0)*std::cos(th_1)) - r_22*(std::sin(th_0)*std::sin(th_2)*std::cos(th_1) + std::cos(th_0)*std::cos(th_2)) + r_32*std::sin(th_1)*std::sin(th_2)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*(std::sin(th_0)*std::cos(th_2) - std::sin(th_2)*std::cos(th_0)*std::cos(th_1)) - r_21*(std::sin(th_0)*std::sin(th_2)*std::cos(th_1) + std::cos(th_0)*std::cos(th_2)) + r_31*std::sin(th_1)*std::sin(th_2)) >= zero_tolerance) || (std::fabs(r_12*(std::sin(th_0)*std::cos(th_2) - std::sin(th_2)*std::cos(th_0)*std::cos(th_1)) - r_22*(std::sin(th_0)*std::sin(th_2)*std::cos(th_1) + std::cos(th_0)*std::cos(th_2)) + r_32*std::sin(th_1)*std::sin(th_2)) >= zero_tolerance));
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = std::sin(th_2);
                 const double x1 = x0*std::sin(th_1);
                 const double x2 = std::sin(th_0);
@@ -1462,7 +1373,6 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
                 const double x5 = x0*std::cos(th_1);
                 const double x6 = x2*x3 - x4*x5;
                 const double x7 = x2*x5 + x3*x4;
-                // End of temp variables
                 const double tmp_sol_value = std::atan2(r_11*x6 - r_21*x7 + r_31*x1, r_12*x6 - r_22*x7 + r_32*x1);
                 solution_queue.get_solution(node_input_i_idx_in_queue)[5] = tmp_sol_value;
                 add_input_index_to(18, node_input_i_idx_in_queue);
@@ -1476,10 +1386,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     // Invoke the processor
     ExplicitSolutionNode_node_17_solve_th_4th_6_soa_processor();
     // Finish code for explicit solution node 17
-    
+
     // Code for non-branch dispatcher node 18
     // Actually, there is no code
-    
+
     // Code for explicit solution node 19, solved variable is th_4
     auto ExplicitSolutionNode_node_19_solve_th_4_processor = [&]() -> void
     {
@@ -1487,7 +1397,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(18);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 19
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1495,12 +1405,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            
             const bool condition_0 = true;
             if (condition_0)
             {
-                // Temp variable for efficiency
-                // End of temp variables
                 const double tmp_sol_value = 0;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[4] = tmp_sol_value;
                 add_input_index_to(20, node_input_i_idx_in_queue);
@@ -1514,10 +1421,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     // Invoke the processor
     ExplicitSolutionNode_node_19_solve_th_4_processor();
     // Finish code for explicit solution node 18
-    
+
     // Code for non-branch dispatcher node 20
     // Actually, there is no code
-    
+
     // Code for explicit solution node 21, solved variable is th_6
     auto ExplicitSolutionNode_node_21_solve_th_6_processor = [&]() -> void
     {
@@ -1525,7 +1432,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(20);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 21
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1535,12 +1442,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_4 = this_solution[4];
             const double th_4th_6_soa = this_solution[5];
-            
             const bool condition_0 = 1 >= zero_tolerance;
             if (condition_0)
             {
-                // Temp variable for efficiency
-                // End of temp variables
                 const double tmp_sol_value = -th_4 + th_4th_6_soa;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[7] = tmp_sol_value;
             }
@@ -1553,7 +1457,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     // Invoke the processor
     ExplicitSolutionNode_node_21_solve_th_6_processor();
     // Finish code for explicit solution node 20
-    
+
     // Code for explicit solution node 12, solved variable is negative_th_6_positive_th_4__soa
     auto ExplicitSolutionNode_node_12_solve_negative_th_6_positive_th_4__soa_processor = [&]() -> void
     {
@@ -1561,7 +1465,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(12);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 12
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1571,21 +1475,18 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double th_1 = this_solution[1];
             const double th_2 = this_solution[2];
-            
-            const bool condition_0 = 1 >= zero_tolerance || std::fabs(r_11*(std::sin(th_0)*std::cos(th_2) - std::sin(th_2)*std::cos(th_0)*std::cos(th_1)) - r_21*(std::sin(th_0)*std::sin(th_2)*std::cos(th_1) + std::cos(th_0)*std::cos(th_2)) + r_31*std::sin(th_1)*std::sin(th_2)) >= zero_tolerance || std::fabs(r_12*(std::sin(th_0)*std::cos(th_2) - std::sin(th_2)*std::cos(th_0)*std::cos(th_1)) - r_22*(std::sin(th_0)*std::sin(th_2)*std::cos(th_1) + std::cos(th_0)*std::cos(th_2)) + r_32*std::sin(th_1)*std::sin(th_2)) >= zero_tolerance;
+            const bool condition_0 = ((1 >= zero_tolerance) || (std::fabs(r_11*(std::sin(th_0)*std::cos(th_2) - std::sin(th_2)*std::cos(th_0)*std::cos(th_1)) - r_21*(std::sin(th_0)*std::sin(th_2)*std::cos(th_1) + std::cos(th_0)*std::cos(th_2)) + r_31*std::sin(th_1)*std::sin(th_2)) >= zero_tolerance) || (std::fabs(r_12*(std::sin(th_0)*std::cos(th_2) - std::sin(th_2)*std::cos(th_0)*std::cos(th_1)) - r_22*(std::sin(th_0)*std::sin(th_2)*std::cos(th_1) + std::cos(th_0)*std::cos(th_2)) + r_32*std::sin(th_1)*std::sin(th_2)) >= zero_tolerance));
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = std::sin(th_2);
                 const double x1 = x0*std::sin(th_1);
-                const double x2 = std::cos(th_0);
+                const double x2 = std::sin(th_0);
                 const double x3 = std::cos(th_2);
-                const double x4 = std::sin(th_0);
+                const double x4 = std::cos(th_0);
                 const double x5 = x0*std::cos(th_1);
-                const double x6 = x2*x3 + x4*x5;
-                const double x7 = -x2*x5 + x3*x4;
-                // End of temp variables
-                const double tmp_sol_value = std::atan2(-r_11*x7 + r_21*x6 - r_31*x1, r_12*x7 - r_22*x6 + r_32*x1);
+                const double x6 = x2*x3 - x4*x5;
+                const double x7 = x2*x5 + x3*x4;
+                const double tmp_sol_value = std::atan2(-r_11*x6 + r_21*x7 - r_31*x1, r_12*x6 - r_22*x7 + r_32*x1);
                 solution_queue.get_solution(node_input_i_idx_in_queue)[0] = tmp_sol_value;
                 add_input_index_to(13, node_input_i_idx_in_queue);
             }
@@ -1598,10 +1499,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     // Invoke the processor
     ExplicitSolutionNode_node_12_solve_negative_th_6_positive_th_4__soa_processor();
     // Finish code for explicit solution node 12
-    
+
     // Code for non-branch dispatcher node 13
     // Actually, there is no code
-    
+
     // Code for explicit solution node 14, solved variable is th_4
     auto ExplicitSolutionNode_node_14_solve_th_4_processor = [&]() -> void
     {
@@ -1609,7 +1510,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(13);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 14
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1617,12 +1518,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
-            
             const bool condition_0 = true;
             if (condition_0)
             {
-                // Temp variable for efficiency
-                // End of temp variables
                 const double tmp_sol_value = 0;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[4] = tmp_sol_value;
                 add_input_index_to(15, node_input_i_idx_in_queue);
@@ -1636,10 +1534,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     // Invoke the processor
     ExplicitSolutionNode_node_14_solve_th_4_processor();
     // Finish code for explicit solution node 13
-    
+
     // Code for non-branch dispatcher node 15
     // Actually, there is no code
-    
+
     // Code for explicit solution node 16, solved variable is th_6
     auto ExplicitSolutionNode_node_16_solve_th_6_processor = [&]() -> void
     {
@@ -1647,7 +1545,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(15);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 16
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1657,12 +1555,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             const double negative_th_6_positive_th_4__soa = this_solution[0];
             const double th_4 = this_solution[4];
-            
             const bool condition_0 = 1 >= zero_tolerance;
             if (condition_0)
             {
-                // Temp variable for efficiency
-                // End of temp variables
                 const double tmp_sol_value = -negative_th_6_positive_th_4__soa + th_4;
                 solution_queue.get_solution(node_input_i_idx_in_queue)[7] = tmp_sol_value;
             }
@@ -1675,7 +1570,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     // Invoke the processor
     ExplicitSolutionNode_node_16_solve_th_6_processor();
     // Finish code for explicit solution node 15
-    
+
     // Code for explicit solution node 9, solved variable is th_4
     auto ExplicitSolutionNode_node_9_solve_th_4_processor = [&]() -> void
     {
@@ -1683,7 +1578,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(9);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 9
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1695,11 +1590,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             const double th_2 = this_solution[2];
             const double th_3 = this_solution[3];
             const double th_5 = this_solution[6];
-            
-            const bool condition_0 = std::fabs(-r_13*((std::sin(th_1)*std::sin(th_3) + std::cos(th_1)*std::cos(th_2)*std::cos(th_3))*std::cos(th_0) + std::sin(th_0)*std::sin(th_2)*std::cos(th_3)) - r_23*((std::sin(th_1)*std::sin(th_3) + std::cos(th_1)*std::cos(th_2)*std::cos(th_3))*std::sin(th_0) - std::sin(th_2)*std::cos(th_0)*std::cos(th_3)) - r_33*(-std::sin(th_1)*std::cos(th_2)*std::cos(th_3) + std::sin(th_3)*std::cos(th_1))) >= zero_tolerance || std::fabs(r_13*(std::sin(th_0)*std::cos(th_2) - std::sin(th_2)*std::cos(th_0)*std::cos(th_1)) - r_23*(std::sin(th_0)*std::sin(th_2)*std::cos(th_1) + std::cos(th_0)*std::cos(th_2)) + r_33*std::sin(th_1)*std::sin(th_2)) >= zero_tolerance || std::fabs(std::sin(th_5)) >= zero_tolerance;
+            const bool condition_0 = ((std::fabs(std::sin(th_5)) >= zero_tolerance) || (std::fabs(r_13*(std::sin(th_0)*std::cos(th_2) - std::sin(th_2)*std::cos(th_0)*std::cos(th_1)) - r_23*(std::sin(th_0)*std::sin(th_2)*std::cos(th_1) + std::cos(th_0)*std::cos(th_2)) + r_33*std::sin(th_1)*std::sin(th_2)) >= zero_tolerance) || (std::fabs(r_13*((std::sin(th_1)*std::sin(th_3) + std::cos(th_1)*std::cos(th_2)*std::cos(th_3))*std::cos(th_0) + std::sin(th_0)*std::sin(th_2)*std::cos(th_3)) + r_23*((std::sin(th_1)*std::sin(th_3) + std::cos(th_1)*std::cos(th_2)*std::cos(th_3))*std::sin(th_0) - std::sin(th_2)*std::cos(th_0)*std::cos(th_3)) - r_33*(std::sin(th_1)*std::cos(th_2)*std::cos(th_3) - std::sin(th_3)*std::cos(th_1))) >= zero_tolerance));
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = 1.0/std::sin(th_5);
                 const double x1 = std::sin(th_1);
                 const double x2 = std::sin(th_2);
@@ -1713,7 +1606,6 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
                 const double x10 = x4*x9;
                 const double x11 = x2*x9;
                 const double x12 = x1*x8 + x10*x6;
-                // End of temp variables
                 const double tmp_sol_value = std::atan2(x0*(r_13*(x3*x4 - x5*x7) - r_23*(x3*x7 + x4*x5) + r_33*x1*x2), x0*(-r_13*(x11*x3 + x12*x5) - r_23*(-x11*x5 + x12*x3) - r_33*(-x1*x10 + x6*x8)));
                 solution_queue.get_solution(node_input_i_idx_in_queue)[4] = tmp_sol_value;
                 add_input_index_to(10, node_input_i_idx_in_queue);
@@ -1727,10 +1619,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     // Invoke the processor
     ExplicitSolutionNode_node_9_solve_th_4_processor();
     // Finish code for explicit solution node 9
-    
+
     // Code for non-branch dispatcher node 10
     // Actually, there is no code
-    
+
     // Code for explicit solution node 11, solved variable is th_6
     auto ExplicitSolutionNode_node_11_solve_th_6_processor = [&]() -> void
     {
@@ -1738,7 +1630,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(10);
         if (!this_input_valid)
             return;
-        
+
         // The solution of non-root node 11
         for(int i = 0; i < this_node_input_index.size(); i++)
         {
@@ -1750,11 +1642,9 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
             const double th_2 = this_solution[2];
             const double th_3 = this_solution[3];
             const double th_5 = this_solution[6];
-            
-            const bool condition_0 = std::fabs(-r_11*((-std::sin(th_1)*std::cos(th_3) + std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::cos(th_0) + std::sin(th_0)*std::sin(th_2)*std::sin(th_3)) - r_21*((-std::sin(th_1)*std::cos(th_3) + std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::sin(th_0) - std::sin(th_2)*std::sin(th_3)*std::cos(th_0)) + r_31*(std::sin(th_1)*std::sin(th_3)*std::cos(th_2) + std::cos(th_1)*std::cos(th_3))) >= zero_tolerance || std::fabs(r_12*((std::sin(th_1)*std::cos(th_3) - std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::cos(th_0) - std::sin(th_0)*std::sin(th_2)*std::sin(th_3)) + r_22*((std::sin(th_1)*std::cos(th_3) - std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::sin(th_0) + std::sin(th_2)*std::sin(th_3)*std::cos(th_0)) + r_32*(std::sin(th_1)*std::sin(th_3)*std::cos(th_2) + std::cos(th_1)*std::cos(th_3))) >= zero_tolerance || std::fabs(std::sin(th_5)) >= zero_tolerance;
+            const bool condition_0 = ((std::fabs(std::sin(th_5)) >= zero_tolerance) || (std::fabs(r_12*((std::sin(th_1)*std::cos(th_3) - std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::cos(th_0) - std::sin(th_0)*std::sin(th_2)*std::sin(th_3)) + r_22*((std::sin(th_1)*std::cos(th_3) - std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::sin(th_0) + std::sin(th_2)*std::sin(th_3)*std::cos(th_0)) + r_32*(std::sin(th_1)*std::sin(th_3)*std::cos(th_2) + std::cos(th_1)*std::cos(th_3))) >= zero_tolerance) || (std::fabs(-r_11*((-std::sin(th_1)*std::cos(th_3) + std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::cos(th_0) + std::sin(th_0)*std::sin(th_2)*std::sin(th_3)) - r_21*((-std::sin(th_1)*std::cos(th_3) + std::sin(th_3)*std::cos(th_1)*std::cos(th_2))*std::sin(th_0) - std::sin(th_2)*std::sin(th_3)*std::cos(th_0)) + r_31*(std::sin(th_1)*std::sin(th_3)*std::cos(th_2) + std::cos(th_1)*std::cos(th_3))) >= zero_tolerance));
             if (condition_0)
             {
-                // Temp variable for efficiency
                 const double x0 = 1.0/std::sin(th_5);
                 const double x1 = std::cos(th_1);
                 const double x2 = std::cos(th_3);
@@ -1766,13 +1656,10 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
                 const double x8 = x4*std::sin(th_2);
                 const double x9 = x7*x8;
                 const double x10 = std::sin(th_0);
-                const double x11 = x2*x3;
-                const double x12 = x1*x5;
-                const double x13 = x11 - x12;
-                const double x14 = x10*x8;
-                const double x15 = -x11 + x12;
-                // End of temp variables
-                const double tmp_sol_value = std::atan2(x0*(r_12*(x13*x7 - x14) + r_22*(x10*x13 + x9) + r_32*x6), x0*(r_11*(x14 + x15*x7) + r_21*(x10*x15 - x9) - r_31*x6));
+                const double x11 = -x1*x5 + x2*x3;
+                const double x12 = x10*x8;
+                const double x13 = -x11;
+                const double tmp_sol_value = std::atan2(x0*(r_12*(x11*x7 - x12) + r_22*(x10*x11 + x9) + r_32*x6), x0*(r_11*(x12 + x13*x7) + r_21*(x10*x13 - x9) - r_31*x6));
                 solution_queue.get_solution(node_input_i_idx_in_queue)[7] = tmp_sol_value;
             }
             else
@@ -1784,7 +1671,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
     // Invoke the processor
     ExplicitSolutionNode_node_11_solve_th_6_processor();
     // Finish code for explicit solution node 10
-    
+
     // Collect the output
     for(int i = 0; i < solution_queue.size(); i++)
     {
@@ -1806,14 +1693,14 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, double th_0, SolutionQueue
         new_ik_i[5] = value_at_5;
         const double value_at_6 = raw_ik_out_i[7];  // th_6
         new_ik_i[6] = value_at_6;
-        ik_output.push_back(new_ik_i);
+        if (std::all_of(new_ik_i.begin(), new_ik_i.end(), [](double value) { return std::isfinite(value); }))
+            ik_output.push_back(new_ik_i);
     }
 }
 
 static void computeRawIK(const Eigen::Matrix4d& T_ee_raw, double th_0, RawIKWorksace& workspace)
 {
     workspace.raw_ik_out.clear();
-    workspace.raw_ik_out.reserve(max_n_solutions);
     computeRawIK(T_ee_raw, th_0, workspace.solution_queue, workspace.node_index_workspace, workspace.raw_ik_out);
 }
 
@@ -1826,13 +1713,13 @@ static void computeIKUnChecked(const Eigen::Matrix4d& T_ee, double th_0, RawIKWo
     for(int i = 0; i < raw_ik_out.size(); i++)
     {
         auto ik_out_i = raw_ik_out[i];
-        ik_out_i[0] -= th_0_offset_original2raw;
-        ik_out_i[1] -= th_1_offset_original2raw;
-        ik_out_i[2] -= th_2_offset_original2raw;
-        ik_out_i[3] -= th_3_offset_original2raw;
-        ik_out_i[4] -= th_4_offset_original2raw;
-        ik_out_i[5] -= th_5_offset_original2raw;
-        ik_out_i[6] -= th_6_offset_original2raw;
+        ik_out_i[0] = th_0;
+        ik_out_i[1] = addRevoluteOffset(ik_out_i[1], -th_1_offset_original2raw);
+        ik_out_i[2] = addRevoluteOffset(ik_out_i[2], -th_2_offset_original2raw);
+        ik_out_i[3] = addRevoluteOffset(ik_out_i[3], -th_3_offset_original2raw);
+        ik_out_i[4] = addRevoluteOffset(ik_out_i[4], -th_4_offset_original2raw);
+        ik_out_i[5] = addRevoluteOffset(ik_out_i[5], -th_5_offset_original2raw);
+        ik_out_i[6] = addRevoluteOffset(ik_out_i[6], -th_6_offset_original2raw);
         ik_output.push_back(ik_out_i);
     }
 }
@@ -1860,67 +1747,132 @@ static void wrapAngleToPi(std::vector<std::array<double, robot_nq>>& ik_output)
         wrapAngleToPi(solution_i);
 }
 
-static void computeIK(const Eigen::Matrix4d& T_ee, double th_0, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output)
+static void computeIKForRawTarget(const Eigen::Matrix4d& T_ee, const Eigen::Matrix4d& T_ee_raw, double th_0, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output, Eigen::Matrix4d& frame_disturbance, bool& frame_disturbance_ready, bool allow_disturbance, std::vector<std::pair<double,std::array<double,robot_nq>>>* refinement_seeds = nullptr)
 {
     if (!T_ee.allFinite()) { ik_output.clear(); return; }
     if (!std::isfinite(th_0)) { ik_output.clear(); return; }
-    const Eigen::Matrix4d& T_ee_raw = endEffectorTargetOriginalToRaw(T_ee);
+    if (!T_ee_raw.allFinite()) { ik_output.clear(); return; }
     computeRawIK(T_ee_raw, th_0 + th_0_offset_original2raw, workspace);
     const auto& raw_ik_out = workspace.raw_ik_out;
     ik_output.clear();
+    bool strict_raw_witness = false;
     for(int i = 0; i < raw_ik_out.size(); i++)
     {
         auto ik_out_i = raw_ik_out[i];
-        ik_out_i[0] -= th_0_offset_original2raw;
-        ik_out_i[1] -= th_1_offset_original2raw;
-        ik_out_i[2] -= th_2_offset_original2raw;
-        ik_out_i[3] -= th_3_offset_original2raw;
-        ik_out_i[4] -= th_4_offset_original2raw;
-        ik_out_i[5] -= th_5_offset_original2raw;
-        ik_out_i[6] -= th_6_offset_original2raw;
+        ik_out_i[0] = th_0;
+        ik_out_i[1] = addRevoluteOffset(ik_out_i[1], -th_1_offset_original2raw);
+        ik_out_i[2] = addRevoluteOffset(ik_out_i[2], -th_2_offset_original2raw);
+        ik_out_i[3] = addRevoluteOffset(ik_out_i[3], -th_3_offset_original2raw);
+        ik_out_i[4] = addRevoluteOffset(ik_out_i[4], -th_4_offset_original2raw);
+        ik_out_i[5] = addRevoluteOffset(ik_out_i[5], -th_5_offset_original2raw);
+        ik_out_i[6] = addRevoluteOffset(ik_out_i[6], -th_6_offset_original2raw);
         wrapAngleToPi(ik_out_i);
         const Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
         double ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
+        if (refinement_seeds)
+        {
+            const double refinement_error = (ee_pose_i-T_ee).cwiseAbs().maxCoeff();
+            if (refinement_error < 1e-7) { strict_raw_witness=true;refinement_seeds->clear(); }
+            else if (!strict_raw_witness) retainRefinementSeed(*refinement_seeds, ik_out_i, refinement_error);
+        }
         if (ee_pose_diff < pose_tolerance)
             ik_output.push_back(ik_out_i);
+        std::array<double, robot_nq> snapped;
+        if (snapNearJointLimits<robot_nq>(ik_out_i, snapped, jointLower(), jointUpper(), periodicLimitJoints(), fixedJoints()))
+        {
+            const Eigen::Matrix4d snapped_pose = computeFK(snapped);
+            if ((snapped_pose.block<3, 1>(0, 3)-T_ee.block<3, 1>(0, 3)).norm() <= 1e-7 && (snapped_pose.block<3, 3>(0, 0)-T_ee.block<3, 3>(0, 0)).cwiseAbs().maxCoeff() <= 1e-7)
+                ik_output.push_back(snapped);
+        }
     }
-    
+
     if (!ik_output.empty())
     {
-        removeDuplicate<robot_nq>(ik_output, zero_tolerance);
+        removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, ikCandidateClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints(), [&](const std::array<double, robot_nq>& candidate) { return computeFK(candidate); }, T_ee));
         return;
     }
-    
+
     // Disturbing method for degenerate handling
-    Eigen::Matrix4d T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);
-    Eigen::Matrix4d T_ee_disturbed = endEffectorTargetRawToOriginal(T_ee_raw_disturbed);
-    computeRawIK(T_ee_raw_disturbed, th_0 + th_0_offset_original2raw, workspace);
-    const auto& raw_ik_out_disturb = workspace.raw_ik_out;
-    for(int i = 0; i < raw_ik_out_disturb.size(); i++)
+    if (!allow_disturbance) return;
+    for (int perturbation = 0; perturbation < 3; ++perturbation)
     {
-        auto ik_out_i = raw_ik_out_disturb[i];
-        ik_out_i[0] -= th_0_offset_original2raw;
-        ik_out_i[1] -= th_1_offset_original2raw;
-        ik_out_i[2] -= th_2_offset_original2raw;
-        ik_out_i[3] -= th_3_offset_original2raw;
-        ik_out_i[4] -= th_4_offset_original2raw;
-        ik_out_i[5] -= th_5_offset_original2raw;
-        ik_out_i[6] -= th_6_offset_original2raw;
-        wrapAngleToPi(ik_out_i);
-        Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
-        double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();
-        if (!std::isfinite(ee_pose_diff) || ee_pose_diff > pose_tolerance_degenerate)
-            continue;
-        
-        // Try numerical refinement
-        yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i, 1e-4, std::array<bool, robot_nq>{{true, false, false, false, false, false, false}});
-        wrapAngleToPi(ik_out_i);
-        ee_pose_i = computeFK(ik_out_i);
-        ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
-        if (ee_pose_diff < pose_tolerance_degenerate)
-            ik_output.push_back(ik_out_i);
+        Eigen::Matrix4d T_ee_raw_disturbed;
+        if (perturbation != 0)
+            T_ee_raw_disturbed = yaik_cpp::disturbTransform<double>(T_ee_raw, 1e-2, 1e-2, nullptr, perturbation-1);
+        else
+        {
+            T_ee_raw_disturbed = yaik_cpp::disturbTransform(T_ee_raw);
+        }
+        Eigen::Matrix4d T_ee_disturbed = endEffectorTargetRawToOriginal(T_ee_raw_disturbed);
+        computeRawIK(T_ee_raw_disturbed, th_0 + th_0_offset_original2raw, workspace);
+        const auto& raw_ik_out_disturb = workspace.raw_ik_out;
+        for(int i = 0; i < raw_ik_out_disturb.size(); i++)
+        {
+            auto ik_out_i = raw_ik_out_disturb[i];
+            ik_out_i[0] = th_0;
+            ik_out_i[1] = addRevoluteOffset(ik_out_i[1], -th_1_offset_original2raw);
+            ik_out_i[2] = addRevoluteOffset(ik_out_i[2], -th_2_offset_original2raw);
+            ik_out_i[3] = addRevoluteOffset(ik_out_i[3], -th_3_offset_original2raw);
+            ik_out_i[4] = addRevoluteOffset(ik_out_i[4], -th_4_offset_original2raw);
+            ik_out_i[5] = addRevoluteOffset(ik_out_i[5], -th_5_offset_original2raw);
+            ik_out_i[6] = addRevoluteOffset(ik_out_i[6], -th_6_offset_original2raw);
+            wrapAngleToPi(ik_out_i);
+            Eigen::Matrix4d ee_pose_i = computeFK(ik_out_i);
+            double ee_pose_diff = (ee_pose_i - T_ee_disturbed).squaredNorm();
+            if (!std::isfinite(ee_pose_diff) || ee_pose_diff > pose_tolerance_degenerate)
+                continue;
+
+            // Try numerical refinement
+            yaik_cpp::numericalRefinement<robot_nq>(computeFK, computeTwistJacobian, T_ee, ik_out_i, 1e-4, std::array<bool, robot_nq>{{true, false, false, false, false, false, false}});
+            wrapAngleToPi(ik_out_i);
+            ee_pose_i = computeFK(ik_out_i);
+            ee_pose_diff = (ee_pose_i - T_ee).squaredNorm();
+            if (ee_pose_diff < pose_tolerance_degenerate)
+                ik_output.push_back(ik_out_i);
+        }
     }
-    removeDuplicate<robot_nq>(ik_output, zero_tolerance);
+
+    removeDuplicateWithinClasses<robot_nq>(ik_output, zero_tolerance, ikCandidateClasses<robot_nq>(ik_output, jointLower(), jointUpper(), periodicLimitJoints(), [&](const std::array<double, robot_nq>& candidate) { return computeFK(candidate); }, T_ee));
+}
+
+static void computeIK(const Eigen::Matrix4d& T_ee, double th_0, RawIKWorksace& workspace, std::vector<std::array<double, robot_nq>>& ik_output)
+{
+    ik_output.clear();
+    if (!T_ee.allFinite()) return;
+    if (!std::isfinite(th_0)) return;
+    Eigen::Matrix4d frame_disturbance;
+    bool frame_disturbance_ready = false;
+    std::vector<std::pair<double,std::array<double,robot_nq>>> refinement_seeds;
+    for (bool legacy : {false})
+    {
+        const Eigen::Matrix4d raw_target = legacy ? endEffectorTargetOriginalToRaw(T_ee) : endEffectorTargetOriginalToRaw(T_ee);
+        std::vector<std::array<double, robot_nq>> candidates;
+        computeIKForRawTarget(T_ee, raw_target, th_0, workspace, candidates, frame_disturbance, frame_disturbance_ready, legacy || ik_output.empty(), &refinement_seeds);
+        for (const auto& candidate : candidates)
+        {
+            if (std::find(ik_output.begin(), ik_output.end(), candidate) == ik_output.end())
+                ik_output.push_back(candidate);
+        }
+    }
+    if (!refinement_seeds.empty())
+    {
+        auto refinement_fk = [&](const std::array<double,robot_nq>& q) { return computeFK(q); };
+        bool strict_witness = false;
+        for (const auto& candidate : ik_output)
+            if ((refinement_fk(candidate)-T_ee).cwiseAbs().maxCoeff()<1e-7) { strict_witness=true;break; }
+        if (!strict_witness)
+        {
+            for (const auto& entry : refinement_seeds)
+            {
+                auto candidate=entry.second;
+                if (refineIkSeed<robot_nq>(refinement_fk,T_ee,candidate,fixedJoints()))
+                {
+                    ik_output.push_back(candidate);
+                    break;
+                }
+            }
+        }
+    }
 }
 
 static std::vector<std::array<double, robot_nq>> computeIK(const Eigen::Matrix4d& T_ee, double th_0)
@@ -1954,4 +1906,5 @@ void test_ik_solve_atlas_r_hand()
 int main()
 {
     test_ik_solve_atlas_r_hand();
+    return 0;
 }
