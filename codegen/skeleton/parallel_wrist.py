@@ -41,6 +41,8 @@ def parallel_wrist_solutions(robot, wrist_value, representative_count=33):
     if not parallel_wrist_supported(robot) or representative_count < 2:
         return []
     wrist_value = sp.sympify(wrist_value)
+    if wrist_value.is_zero is True:
+        wrist_value = sp.S.Zero
     if wrist_value not in (sp.S.Zero, sp.pi):
         return []
     q0, q1, q2, q3, _, psi = (joint.symbol for joint in robot.unknowns)

@@ -17,7 +17,7 @@ from codegen.cpp_codegen.codegen_cpp import CodeGenerationCpp
 from codegen.py_codegen.codegen_py import CodeGenerationPython
 from codegen.skeleton.completeness import audit_completeness
 from codegen.skeleton.parallel_wrist import (
-    complete_parallel_wrist_branches, parallel_wrist_supported)
+    complete_parallel_wrist_branches, parallel_wrist_solutions, parallel_wrist_supported)
 from codegen.skeleton.tree_serialize import read_skeleton_tree, save_ik_tree
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -105,6 +105,8 @@ class TestParallelWrist(TestCase):
     def test_geometry_guard_rejects_unsupported_charts(self):
         robot = tree_for('ur_10').robot
         self.assertTrue(parallel_wrist_supported(robot))
+        self.assertEqual(len(parallel_wrist_solutions(robot, sp.Float(0))), 4)
+        self.assertEqual(parallel_wrist_solutions(robot, sp.Float('1e-30')), [])
         for field, value in (('alpha', sp.Rational(1, 10**30)), ('a', sp.Rational(1, 10**30))):
             changed = copy.deepcopy(robot)
             setattr(changed.dh_params[4], field, getattr(changed.dh_params[4], field)+value)
