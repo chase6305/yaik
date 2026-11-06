@@ -6,12 +6,12 @@ struct ur_10_ik {
 
 // Constants for solver
 static constexpr int robot_nq = 6;
-static constexpr int max_n_solutions = 16;
+static constexpr int max_n_solutions = 704;
 static std::array<double, robot_nq> jointLower() { return {{-3.141592653589793, -3.141592653589793, -3.141592653589793, -3.141592653589793, -6.283185307179586, -3.141592653589793}}; }
 static std::array<double, robot_nq> jointUpper() { return {{3.141592653589793, 3.141592653589793, 3.141592653589793, 3.141592653589793, 0.0, 3.141592653589793}}; }
 static std::array<bool, robot_nq> periodicLimitJoints() { return {{true, true, true, true, true, true}}; }
 static std::array<bool, robot_nq> fixedJoints() { return {{false, false, false, false, false, false}}; }
-static constexpr int n_tree_nodes = 18;
+static constexpr int n_tree_nodes = 32;
 static constexpr int intermediate_solution_size = 9;
 static constexpr double pose_tolerance = 1e-6;
 static constexpr double pose_tolerance_degenerate = 1e-4;
@@ -427,7 +427,7 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueueType& solutio
     const double inv_Pz = inv_ee_translation(2);
 
     solution_queue.reset();
-    static constexpr std::array<std::size_t, n_tree_nodes> node_input_capacities = {{1, 1, 2, 2, 4, 4, 4, 4, 4, 4, 8, 8, 8, 8, 8, 8, 8, 8}};
+    static constexpr std::array<std::size_t, n_tree_nodes> node_input_capacities = {{1, 1, 2, 2, 4, 4, 4, 4, 4, 4, 8, 8, 8, 8, 8, 8, 8, 8, 4, 176, 176, 352, 352, 352, 352, 4, 176, 176, 352, 352, 352, 352}};
     node_index_workspace.reset(node_input_capacities, max_n_solutions);
 
     using RawSolution = IntermediateSolution<intermediate_solution_size>;
@@ -534,30 +534,458 @@ static void computeRawIK(const Eigen::Matrix4d& T_ee, SolutionQueueType& solutio
                 continue;
             const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
             bool taken_by_degenerate = false;
+            bool forwarded_to_child = false;
             const double th_4 = this_solution[7];
 
             const bool degenerate_valid_0 = std::fabs(th_4) <= 9.9999999999999995e-7;
             if (degenerate_valid_0)
             {
                 taken_by_degenerate = true;
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(18, branch_input_index);
             }
 
             const bool degenerate_valid_1 = std::fabs(th_4 - M_PI) <= 9.9999999999999995e-7;
             if (degenerate_valid_1)
             {
                 taken_by_degenerate = true;
+                int branch_input_index = node_input_i_idx_in_queue;
+                if (forwarded_to_child)
+                    branch_input_index = append_solution_to_queue(this_solution);
+                forwarded_to_child = true;
+                add_input_index_to(25, branch_input_index);
             }
 
             if (!taken_by_degenerate)
                 add_input_index_to(5, node_input_i_idx_in_queue);
-            else
-                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
         }
     };
 
     // Invoke the processor
     SolvedVariableDispatcherNode_node_4_processor();
     // Finish code for solved_variable dispatcher node 4
+
+    // Code for explicit solution node 25, solved variable is th_5
+    auto ExplicitSolutionNode_node_25_solve_th_5_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(25);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(25);
+        if (!this_input_valid)
+            return;
+        for (int family_prefix = 0; family_prefix < this_node_input_index.size(); ++family_prefix)
+        {
+            const int queue_index = this_node_input_index[family_prefix];
+            if (!solution_queue.is_solution_valid(queue_index)) continue;
+            const auto& this_solution = solution_queue.get_solution(queue_index);
+            const double th_0 = this_solution[0];
+            std::vector<double> family_values;
+            if (std::pow(r_31, 2) + std::pow(r_11*std::cos(th_0) + r_21*std::sin(th_0), 2) > 9.9999999999999998e-13)
+            {
+                family_values.push_back(-3.14159265358979);
+                family_values.push_back(-2.9452431127404299);
+                family_values.push_back(-2.7488935718910699);
+                family_values.push_back(-2.5525440310417098);
+                family_values.push_back(-2.35619449019234);
+                family_values.push_back(-2.1598449493429799);
+                family_values.push_back(-1.96349540849362);
+                family_values.push_back(-1.76714586764426);
+                family_values.push_back(-1.5707963267949001);
+                family_values.push_back(-1.37444678594553);
+                family_values.push_back(-1.17809724509617);
+                family_values.push_back(-0.98174770424681101);
+                family_values.push_back(-0.78539816339744795);
+                family_values.push_back(-0.58904862254808599);
+                family_values.push_back(-0.39269908169872397);
+                family_values.push_back(-0.19634954084936199);
+                family_values.push_back(0.0);
+                family_values.push_back(0.19634954084936199);
+                family_values.push_back(0.39269908169872397);
+                family_values.push_back(0.58904862254808599);
+                family_values.push_back(0.78539816339744795);
+                family_values.push_back(0.98174770424681101);
+                family_values.push_back(1.17809724509617);
+                family_values.push_back(1.37444678594553);
+                family_values.push_back(1.5707963267949001);
+                family_values.push_back(1.76714586764426);
+                family_values.push_back(1.96349540849362);
+                family_values.push_back(2.1598449493429799);
+                family_values.push_back(2.35619449019234);
+                family_values.push_back(2.5525440310417098);
+                family_values.push_back(2.7488935718910699);
+                family_values.push_back(2.9452431127404299);
+                family_values.push_back(3.14159265358979);
+            }
+            if (std::pow(r_31, 2) + std::pow(r_11*std::cos(th_0) + r_21*std::sin(th_0), 2) > 9.9999999999999998e-13)
+            {
+                const double x0 = -Pz + d_6*r_33;
+                const double x1 = std::cos(th_0);
+                const double x2 = std::sin(th_0);
+                const double x3 = r_11*x1 + r_21*x2;
+                const double x4 = std::pow(std::pow(r_31, 2) + std::pow(x3, 2), -1.0/2.0);
+                const double x5 = -x3*x4;
+                const double x6 = x1*(Px - d_6*r_13) + x2*(Py - d_6*r_23);
+                const double x7 = r_31*x4;
+                const double x8 = 2*d_5;
+                const double x9 = x8*(-x0*x5 + x6*x7);
+                const double x10 = -x8*(x0*x7 + x5*x6);
+                const double x11 = std::pow(d_5, 2) + std::pow(x0, 2) + std::pow(x6, 2);
+                family_values = ::yaik_cpp::trigFamilyRepresentatives({{{x9, x10, x11 - std::pow(a_1 - a_3, 2)}}, {{x9, x10, x11 - std::pow(a_1 + a_3, 2)}}}, -3.141592653589793, 3.141592653589793, family_values);
+            }
+            for (std::size_t family_index = 0; family_index < family_values.size(); ++family_index)
+            {
+                auto candidate = this_solution;
+                candidate[8] = family_values[family_index];
+                int candidate_index;
+                if (family_index+1 == family_values.size())
+                {
+                    solution_queue.get_solution(queue_index) = candidate;
+                    candidate_index = queue_index;
+                }
+                else candidate_index = append_solution_to_queue(candidate);
+                add_input_index_to(26, candidate_index);
+            }
+            if (family_values.empty()) solution_queue.solutions_validity[queue_index] = false;
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_25_solve_th_5_processor();
+    // Finish code for explicit solution node 25
+
+    // Code for non-branch dispatcher node 26
+    // Actually, there is no code
+
+    // Code for explicit solution node 27, solved variable is th_2
+    auto ExplicitSolutionNode_node_27_solve_th_2_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(26);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(26);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 27
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const double th_5 = this_solution[8];
+            const bool condition_0 = true;
+            if (condition_0)
+            {
+                const double x0 = std::cos(th_0);
+                const double x1 = std::sin(th_0);
+                const double x2 = th_5 - std::atan2(-r_31, r_11*x0 + r_21*x1);
+                const double x3 = safe_acos((1.0/2.0)*(-std::pow(a_1, 2) - std::pow(a_3, 2) + std::pow(-Pz + d_5*std::cos(x2) + d_6*r_33, 2) + std::pow(d_5*std::sin(x2) + x0*(Px - d_6*r_13) + x1*(Py - d_6*r_23), 2))/(a_1*a_3));
+                RawSolution solution_0(this_solution);
+                solution_0[4] = x3;
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(28, appended_idx_0);
+                const double tmp_sol_value = -x3;
+                solution_queue.get_solution(node_input_i_idx_in_queue)[4] = tmp_sol_value;
+                add_input_index_to(28, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_27_solve_th_2_processor();
+    // Finish code for explicit solution node 26
+
+    // Code for non-branch dispatcher node 28
+    // Actually, there is no code
+
+    // Code for explicit solution node 29, solved variable is th_1
+    auto ExplicitSolutionNode_node_29_solve_th_1_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(28);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(28);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 29
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const double th_2 = this_solution[4];
+            const double th_5 = this_solution[8];
+            const bool condition_0 = true;
+            if (condition_0)
+            {
+                const double x0 = std::cos(th_0);
+                const double x1 = std::sin(th_0);
+                const double x2 = th_5 - std::atan2(-r_31, r_11*x0 + r_21*x1);
+                const double tmp_sol_value = -std::atan2(a_3*std::sin(th_2), a_1 + a_3*std::cos(th_2)) + std::atan2(-Pz + d_5*std::cos(x2) + d_6*r_33, d_5*std::sin(x2) + x0*(Px - d_6*r_13) + x1*(Py - d_6*r_23));
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+                add_input_index_to(30, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_29_solve_th_1_processor();
+    // Finish code for explicit solution node 28
+
+    // Code for non-branch dispatcher node 30
+    // Actually, there is no code
+
+    // Code for explicit solution node 31, solved variable is th_3
+    auto ExplicitSolutionNode_node_31_solve_th_3_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(30);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(30);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 31
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const double th_1 = this_solution[1];
+            const double th_2 = this_solution[4];
+            const double th_5 = this_solution[8];
+            const bool condition_0 = true;
+            if (condition_0)
+            {
+                const double tmp_sol_value = -th_1 - th_2 - th_5 + std::atan2(-r_31, r_11*std::cos(th_0) + r_21*std::sin(th_0)) - M_PI;
+                solution_queue.get_solution(node_input_i_idx_in_queue)[6] = tmp_sol_value;
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_31_solve_th_3_processor();
+    // Finish code for explicit solution node 30
+
+    // Code for explicit solution node 18, solved variable is th_5
+    auto ExplicitSolutionNode_node_18_solve_th_5_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(18);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(18);
+        if (!this_input_valid)
+            return;
+        for (int family_prefix = 0; family_prefix < this_node_input_index.size(); ++family_prefix)
+        {
+            const int queue_index = this_node_input_index[family_prefix];
+            if (!solution_queue.is_solution_valid(queue_index)) continue;
+            const auto& this_solution = solution_queue.get_solution(queue_index);
+            const double th_0 = this_solution[0];
+            std::vector<double> family_values;
+            if (std::pow(r_31, 2) + std::pow(r_11*std::cos(th_0) + r_21*std::sin(th_0), 2) > 9.9999999999999998e-13)
+            {
+                family_values.push_back(-3.14159265358979);
+                family_values.push_back(-2.9452431127404299);
+                family_values.push_back(-2.7488935718910699);
+                family_values.push_back(-2.5525440310417098);
+                family_values.push_back(-2.35619449019234);
+                family_values.push_back(-2.1598449493429799);
+                family_values.push_back(-1.96349540849362);
+                family_values.push_back(-1.76714586764426);
+                family_values.push_back(-1.5707963267949001);
+                family_values.push_back(-1.37444678594553);
+                family_values.push_back(-1.17809724509617);
+                family_values.push_back(-0.98174770424681101);
+                family_values.push_back(-0.78539816339744795);
+                family_values.push_back(-0.58904862254808599);
+                family_values.push_back(-0.39269908169872397);
+                family_values.push_back(-0.19634954084936199);
+                family_values.push_back(0.0);
+                family_values.push_back(0.19634954084936199);
+                family_values.push_back(0.39269908169872397);
+                family_values.push_back(0.58904862254808599);
+                family_values.push_back(0.78539816339744795);
+                family_values.push_back(0.98174770424681101);
+                family_values.push_back(1.17809724509617);
+                family_values.push_back(1.37444678594553);
+                family_values.push_back(1.5707963267949001);
+                family_values.push_back(1.76714586764426);
+                family_values.push_back(1.96349540849362);
+                family_values.push_back(2.1598449493429799);
+                family_values.push_back(2.35619449019234);
+                family_values.push_back(2.5525440310417098);
+                family_values.push_back(2.7488935718910699);
+                family_values.push_back(2.9452431127404299);
+                family_values.push_back(3.14159265358979);
+            }
+            if (std::pow(r_31, 2) + std::pow(r_11*std::cos(th_0) + r_21*std::sin(th_0), 2) > 9.9999999999999998e-13)
+            {
+                const double x0 = std::cos(th_0);
+                const double x1 = std::sin(th_0);
+                const double x2 = r_11*x0 + r_21*x1;
+                const double x3 = std::pow(std::pow(r_31, 2) + std::pow(x2, 2), -1.0/2.0);
+                const double x4 = -Pz + d_6*r_33;
+                const double x5 = x3*x4;
+                const double x6 = x0*(Px - d_6*r_13) + x1*(Py - d_6*r_23);
+                const double x7 = 2*d_5;
+                const double x8 = x7*(-r_31*x3*x6 - x2*x5);
+                const double x9 = x7*(-r_31*x5 + x2*x3*x6);
+                const double x10 = std::pow(d_5, 2) + std::pow(x4, 2) + std::pow(x6, 2);
+                family_values = ::yaik_cpp::trigFamilyRepresentatives({{{x8, x9, x10 - std::pow(a_1 - a_3, 2)}}, {{x8, x9, x10 - std::pow(a_1 + a_3, 2)}}}, -3.141592653589793, 3.141592653589793, family_values);
+            }
+            for (std::size_t family_index = 0; family_index < family_values.size(); ++family_index)
+            {
+                auto candidate = this_solution;
+                candidate[8] = family_values[family_index];
+                int candidate_index;
+                if (family_index+1 == family_values.size())
+                {
+                    solution_queue.get_solution(queue_index) = candidate;
+                    candidate_index = queue_index;
+                }
+                else candidate_index = append_solution_to_queue(candidate);
+                add_input_index_to(19, candidate_index);
+            }
+            if (family_values.empty()) solution_queue.solutions_validity[queue_index] = false;
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_18_solve_th_5_processor();
+    // Finish code for explicit solution node 18
+
+    // Code for non-branch dispatcher node 19
+    // Actually, there is no code
+
+    // Code for explicit solution node 20, solved variable is th_2
+    auto ExplicitSolutionNode_node_20_solve_th_2_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(19);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(19);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 20
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const double th_5 = this_solution[8];
+            const bool condition_0 = true;
+            if (condition_0)
+            {
+                const double x0 = std::cos(th_0);
+                const double x1 = std::sin(th_0);
+                const double x2 = th_5 + std::atan2(-r_31, r_11*x0 + r_21*x1);
+                const double x3 = safe_acos((1.0/2.0)*(-std::pow(a_1, 2) - std::pow(a_3, 2) + std::pow(-Pz - d_5*std::cos(x2) + d_6*r_33, 2) + std::pow(d_5*std::sin(x2) + x0*(Px - d_6*r_13) + x1*(Py - d_6*r_23), 2))/(a_1*a_3));
+                RawSolution solution_0(this_solution);
+                solution_0[4] = x3;
+                int appended_idx_0 = append_solution_to_queue(solution_0);
+                add_input_index_to(21, appended_idx_0);
+                const double tmp_sol_value = -x3;
+                solution_queue.get_solution(node_input_i_idx_in_queue)[4] = tmp_sol_value;
+                add_input_index_to(21, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_20_solve_th_2_processor();
+    // Finish code for explicit solution node 19
+
+    // Code for non-branch dispatcher node 21
+    // Actually, there is no code
+
+    // Code for explicit solution node 22, solved variable is th_1
+    auto ExplicitSolutionNode_node_22_solve_th_1_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(21);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(21);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 22
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const double th_2 = this_solution[4];
+            const double th_5 = this_solution[8];
+            const bool condition_0 = true;
+            if (condition_0)
+            {
+                const double x0 = std::cos(th_0);
+                const double x1 = std::sin(th_0);
+                const double x2 = th_5 + std::atan2(-r_31, r_11*x0 + r_21*x1);
+                const double tmp_sol_value = -std::atan2(a_3*std::sin(th_2), a_1 + a_3*std::cos(th_2)) + std::atan2(-Pz - d_5*std::cos(x2) + d_6*r_33, d_5*std::sin(x2) + x0*(Px - d_6*r_13) + x1*(Py - d_6*r_23));
+                solution_queue.get_solution(node_input_i_idx_in_queue)[1] = tmp_sol_value;
+                add_input_index_to(23, node_input_i_idx_in_queue);
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_22_solve_th_1_processor();
+    // Finish code for explicit solution node 21
+
+    // Code for non-branch dispatcher node 23
+    // Actually, there is no code
+
+    // Code for explicit solution node 24, solved variable is th_3
+    auto ExplicitSolutionNode_node_24_solve_th_3_processor = [&]() -> void
+    {
+        const auto& this_node_input_index = node_index_workspace.get_input_indices_for_node(23);
+        const bool this_input_valid = node_index_workspace.is_input_indices_valid_for_node(23);
+        if (!this_input_valid)
+            return;
+
+        // The solution of non-root node 24
+        for(int i = 0; i < this_node_input_index.size(); i++)
+        {
+            int node_input_i_idx_in_queue = this_node_input_index[i];
+            if (!solution_queue.is_solution_valid(node_input_i_idx_in_queue))
+                continue;
+            const auto& this_solution = solution_queue.get_solution(node_input_i_idx_in_queue);
+            const double th_0 = this_solution[0];
+            const double th_1 = this_solution[1];
+            const double th_2 = this_solution[4];
+            const double th_5 = this_solution[8];
+            const bool condition_0 = true;
+            if (condition_0)
+            {
+                const double tmp_sol_value = -th_1 - th_2 + th_5 + std::atan2(-r_31, r_11*std::cos(th_0) + r_21*std::sin(th_0));
+                solution_queue.get_solution(node_input_i_idx_in_queue)[6] = tmp_sol_value;
+            }
+            else
+            {
+                solution_queue.solutions_validity[node_input_i_idx_in_queue] = false;
+            }
+        }
+    };
+    // Invoke the processor
+    ExplicitSolutionNode_node_24_solve_th_3_processor();
+    // Finish code for explicit solution node 23
 
     // Code for explicit solution node 5, solved variable is th_1th_2th_3_soa
     auto ExplicitSolutionNode_node_5_solve_th_1th_2th_3_soa_processor = [&]() -> void

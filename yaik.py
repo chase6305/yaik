@@ -333,7 +333,7 @@ def generation_arguments(command):
                          help='Copy matching runtime helper files into the output directory')
     command.set_defaults(handler=generate)
     command.add_argument('--no-extra-recovery', action='store_true',
-                         help='Skip additional seed refinement and nearby-target recovery; retain legacy checked paths')
+                         help='Skip extra numerical refinement; keep analytic branches and existing checked fallbacks')
 
 
 def codegen_arguments(command):
@@ -346,7 +346,7 @@ def codegen_arguments(command):
                          help='Reject export unless a verified completeness certificate is available')
     command.set_defaults(handler=codegen)
     command.add_argument('--no-extra-recovery', action='store_true',
-                         help='Skip additional seed refinement and nearby-target recovery; retain legacy checked paths')
+                         help='Skip extra numerical refinement; keep analytic branches and existing checked fallbacks')
 
 
 def parser(command=None, language=None):

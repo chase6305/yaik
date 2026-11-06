@@ -6,7 +6,7 @@ from python_run_import import *
 
 # Constants for solver
 robot_nq: int = 6
-n_tree_nodes: int = 18
+n_tree_nodes: int = 32
 pose_tolerance: float = 1e-4
 zero_tolerance: float = 1e-6
 
@@ -398,7 +398,7 @@ def ur10_urdf_ik_solve_raw(T_ee: np.ndarray):
     max_n_solutions: int = 16
     node_input_index: List[List[int]] = list()
     node_input_validity: List[bool] = list()
-    for i in range(18):
+    for i in range(32):
         node_input_index.append(list())
         node_input_validity.append(False)
     def add_input_index_to(node_idx: int, solution_idx: int):
@@ -482,24 +482,381 @@ def ur10_urdf_ik_solve_raw(T_ee: np.ndarray):
                 continue
             this_solution = solution_queue[node_input_i_idx_in_queue]
             taken_by_degenerate: bool = False
+            forwarded_to_child = False
             th_4 = this_solution[7]
             degenerate_valid_0 = (abs(th_4) <= 1.0e-6)
             if degenerate_valid_0:
                 taken_by_degenerate = True
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(18, branch_input_index)
 
             th_4 = this_solution[7]
             degenerate_valid_1 = (abs(th_4 - math.pi) <= 1.0e-6)
             if degenerate_valid_1:
                 taken_by_degenerate = True
+                branch_input_index = node_input_i_idx_in_queue
+                if forwarded_to_child:
+                    branch_input_index = append_solution_to_queue(copy.copy(this_solution))
+                forwarded_to_child = True
+                add_input_index_to(25, branch_input_index)
 
             if not taken_by_degenerate:
                 add_input_index_to(5, node_input_i_idx_in_queue)
-            else:
-                queue_element_validity[node_input_i_idx_in_queue] = False
 
     # Invoke the processor
     SolvedVariableDispatcherNode_node_4_processor()
     # Finish code for solved_variable dispatcher node 4
+
+    # Code for explicit solution node 25, solved variable is th_5
+    def ExplicitSolutionNode_node_25_solve_th_5_processor():
+        this_node_input_index: List[int] = node_input_index[25]
+        this_input_valid: bool = node_input_validity[25]
+        if not this_input_valid:
+            return
+        for queue_index in this_node_input_index:
+            if not queue_element_validity[queue_index]:
+                continue
+            this_solution = solution_queue[queue_index]
+            th_0 = this_solution[0]
+            family_values = []
+            if (r_31**2 + (r_11*math.cos(th_0) + r_21*math.sin(th_0))**2 > 1.0e-12):
+                family_values.append(-3.14159265358979)
+                family_values.append(-2.94524311274043)
+                family_values.append(-2.74889357189107)
+                family_values.append(-2.55254403104171)
+                family_values.append(-2.35619449019234)
+                family_values.append(-2.15984494934298)
+                family_values.append(-1.96349540849362)
+                family_values.append(-1.76714586764426)
+                family_values.append(-1.57079632679490)
+                family_values.append(-1.37444678594553)
+                family_values.append(-1.17809724509617)
+                family_values.append(-0.981747704246811)
+                family_values.append(-0.785398163397448)
+                family_values.append(-0.589048622548086)
+                family_values.append(-0.392699081698724)
+                family_values.append(-0.196349540849362)
+                family_values.append(0.0)
+                family_values.append(0.196349540849362)
+                family_values.append(0.392699081698724)
+                family_values.append(0.589048622548086)
+                family_values.append(0.785398163397448)
+                family_values.append(0.981747704246811)
+                family_values.append(1.17809724509617)
+                family_values.append(1.37444678594553)
+                family_values.append(1.57079632679490)
+                family_values.append(1.76714586764426)
+                family_values.append(1.96349540849362)
+                family_values.append(2.15984494934298)
+                family_values.append(2.35619449019234)
+                family_values.append(2.55254403104171)
+                family_values.append(2.74889357189107)
+                family_values.append(2.94524311274043)
+                family_values.append(3.14159265358979)
+            if (r_31**2 + (r_11*math.cos(th_0) + r_21*math.sin(th_0))**2 > 1.0e-12):
+                x0 = math.cos(th_0)
+                x1 = math.sin(th_0)
+                x2 = Px*x0 + Py*x1
+                x3 = r_11*x0 + r_21*x1
+                x4 = 1/safe_sqrt(r_31**2 + x3**2)
+                x5 = r_31*x4
+                x6 = -x3
+                x7 = 2*d_4
+                x8 = x7*(Pz*x4*x6 + x2*x5)
+                x9 = -x7*(-Pz*x5 + x2*x4*x6)
+                x10 = Pz**2 + d_4**2 + x2**2
+                family_values = trig_family_representatives([(x8, x9, x10 - (a_2 - a_3)**2), (x8, x9, x10 - (a_2 + a_3)**2)], -3.141592653589793, 3.141592653589793, family_values)
+            for family_index, family_value in enumerate(family_values):
+                candidate = copy.copy(this_solution)
+                candidate[8] = family_value
+                if family_index == len(family_values)-1:
+                    solution_queue[queue_index] = candidate
+                    candidate_index = queue_index
+                else:
+                    candidate_index = append_solution_to_queue(candidate)
+                add_input_index_to(26, candidate_index)
+            if not family_values:
+                queue_element_validity[queue_index] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_25_solve_th_5_processor()
+    # Finish code for explicit solution node 25
+
+    # Code for non-branch dispatcher node 26
+    # Actually, there is no code
+
+    # Code for explicit solution node 27, solved variable is th_2
+    def ExplicitSolutionNode_node_27_solve_th_2_processor():
+        this_node_input_index: List[int] = node_input_index[26]
+        this_input_valid: bool = node_input_validity[26]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 27
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_5 = this_solution[8]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.cos(th_0)
+                x1 = math.sin(th_0)
+                x2 = th_5 - math.atan2(-r_31, r_11*x0 + r_21*x1)
+                x3 = safe_acos((1/2)*(-a_2**2 - a_3**2 + (-Pz + d_4*math.cos(x2))**2 + (Px*x0 + Py*x1 + d_4*math.sin(x2))**2)/(a_2*a_3))
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[4] = x3
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(28, appended_idx)
+                this_solution[4] = -x3
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(28, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_27_solve_th_2_processor()
+    # Finish code for explicit solution node 26
+
+    # Code for non-branch dispatcher node 28
+    # Actually, there is no code
+
+    # Code for explicit solution node 29, solved variable is th_1
+    def ExplicitSolutionNode_node_29_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[28]
+        this_input_valid: bool = node_input_validity[28]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 29
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_2 = this_solution[4]
+            th_5 = this_solution[8]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.cos(th_0)
+                x1 = math.sin(th_0)
+                x2 = th_5 - math.atan2(-r_31, r_11*x0 + r_21*x1)
+                this_solution[1] = -math.atan2(a_3*math.sin(th_2), a_2 + a_3*math.cos(th_2)) + math.atan2(-Pz + d_4*math.cos(x2), Px*x0 + Py*x1 + d_4*math.sin(x2))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(30, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_29_solve_th_1_processor()
+    # Finish code for explicit solution node 28
+
+    # Code for non-branch dispatcher node 30
+    # Actually, there is no code
+
+    # Code for explicit solution node 31, solved variable is th_3
+    def ExplicitSolutionNode_node_31_solve_th_3_processor():
+        this_node_input_index: List[int] = node_input_index[30]
+        this_input_valid: bool = node_input_validity[30]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 31
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_1 = this_solution[1]
+            th_2 = this_solution[4]
+            th_5 = this_solution[8]
+            condition_0: bool = True
+            if condition_0:
+                this_solution[6] = -th_1 - th_2 - th_5 + math.atan2(-r_31, r_11*math.cos(th_0) + r_21*math.sin(th_0)) - math.pi
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_31_solve_th_3_processor()
+    # Finish code for explicit solution node 30
+
+    # Code for explicit solution node 18, solved variable is th_5
+    def ExplicitSolutionNode_node_18_solve_th_5_processor():
+        this_node_input_index: List[int] = node_input_index[18]
+        this_input_valid: bool = node_input_validity[18]
+        if not this_input_valid:
+            return
+        for queue_index in this_node_input_index:
+            if not queue_element_validity[queue_index]:
+                continue
+            this_solution = solution_queue[queue_index]
+            th_0 = this_solution[0]
+            family_values = []
+            if (r_31**2 + (r_11*math.cos(th_0) + r_21*math.sin(th_0))**2 > 1.0e-12):
+                family_values.append(-3.14159265358979)
+                family_values.append(-2.94524311274043)
+                family_values.append(-2.74889357189107)
+                family_values.append(-2.55254403104171)
+                family_values.append(-2.35619449019234)
+                family_values.append(-2.15984494934298)
+                family_values.append(-1.96349540849362)
+                family_values.append(-1.76714586764426)
+                family_values.append(-1.57079632679490)
+                family_values.append(-1.37444678594553)
+                family_values.append(-1.17809724509617)
+                family_values.append(-0.981747704246811)
+                family_values.append(-0.785398163397448)
+                family_values.append(-0.589048622548086)
+                family_values.append(-0.392699081698724)
+                family_values.append(-0.196349540849362)
+                family_values.append(0.0)
+                family_values.append(0.196349540849362)
+                family_values.append(0.392699081698724)
+                family_values.append(0.589048622548086)
+                family_values.append(0.785398163397448)
+                family_values.append(0.981747704246811)
+                family_values.append(1.17809724509617)
+                family_values.append(1.37444678594553)
+                family_values.append(1.57079632679490)
+                family_values.append(1.76714586764426)
+                family_values.append(1.96349540849362)
+                family_values.append(2.15984494934298)
+                family_values.append(2.35619449019234)
+                family_values.append(2.55254403104171)
+                family_values.append(2.74889357189107)
+                family_values.append(2.94524311274043)
+                family_values.append(3.14159265358979)
+            if (r_31**2 + (r_11*math.cos(th_0) + r_21*math.sin(th_0))**2 > 1.0e-12):
+                x0 = math.cos(th_0)
+                x1 = math.sin(th_0)
+                x2 = r_11*x0 + r_21*x1
+                x3 = 1/safe_sqrt(r_31**2 + x2**2)
+                x4 = Pz*x3
+                x5 = Px*x0 + Py*x1
+                x6 = x3*x5
+                x7 = 2*d_4
+                x8 = x7*(-r_31*x6 + x2*x4)
+                x9 = x7*(r_31*x4 + x2*x6)
+                x10 = Pz**2 + d_4**2 + x5**2
+                family_values = trig_family_representatives([(x8, x9, x10 - (a_2 - a_3)**2), (x8, x9, x10 - (a_2 + a_3)**2)], -3.141592653589793, 3.141592653589793, family_values)
+            for family_index, family_value in enumerate(family_values):
+                candidate = copy.copy(this_solution)
+                candidate[8] = family_value
+                if family_index == len(family_values)-1:
+                    solution_queue[queue_index] = candidate
+                    candidate_index = queue_index
+                else:
+                    candidate_index = append_solution_to_queue(candidate)
+                add_input_index_to(19, candidate_index)
+            if not family_values:
+                queue_element_validity[queue_index] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_18_solve_th_5_processor()
+    # Finish code for explicit solution node 18
+
+    # Code for non-branch dispatcher node 19
+    # Actually, there is no code
+
+    # Code for explicit solution node 20, solved variable is th_2
+    def ExplicitSolutionNode_node_20_solve_th_2_processor():
+        this_node_input_index: List[int] = node_input_index[19]
+        this_input_valid: bool = node_input_validity[19]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 20
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_5 = this_solution[8]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.cos(th_0)
+                x1 = math.sin(th_0)
+                x2 = th_5 + math.atan2(-r_31, r_11*x0 + r_21*x1)
+                x3 = safe_acos((1/2)*(-a_2**2 - a_3**2 + (-Pz - d_4*math.cos(x2))**2 + (Px*x0 + Py*x1 + d_4*math.sin(x2))**2)/(a_2*a_3))
+                solution_0: IkSolution = copy.copy(this_solution)
+                solution_0[4] = x3
+                appended_idx = append_solution_to_queue(solution_0)
+                add_input_index_to(21, appended_idx)
+                this_solution[4] = -x3
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(21, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_20_solve_th_2_processor()
+    # Finish code for explicit solution node 19
+
+    # Code for non-branch dispatcher node 21
+    # Actually, there is no code
+
+    # Code for explicit solution node 22, solved variable is th_1
+    def ExplicitSolutionNode_node_22_solve_th_1_processor():
+        this_node_input_index: List[int] = node_input_index[21]
+        this_input_valid: bool = node_input_validity[21]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 22
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_2 = this_solution[4]
+            th_5 = this_solution[8]
+            condition_0: bool = True
+            if condition_0:
+                x0 = math.cos(th_0)
+                x1 = math.sin(th_0)
+                x2 = th_5 + math.atan2(-r_31, r_11*x0 + r_21*x1)
+                this_solution[1] = -math.atan2(a_3*math.sin(th_2), a_2 + a_3*math.cos(th_2)) + math.atan2(-Pz - d_4*math.cos(x2), Px*x0 + Py*x1 + d_4*math.sin(x2))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+                add_input_index_to(23, node_input_i_idx_in_queue)
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_22_solve_th_1_processor()
+    # Finish code for explicit solution node 21
+
+    # Code for non-branch dispatcher node 23
+    # Actually, there is no code
+
+    # Code for explicit solution node 24, solved variable is th_3
+    def ExplicitSolutionNode_node_24_solve_th_3_processor():
+        this_node_input_index: List[int] = node_input_index[23]
+        this_input_valid: bool = node_input_validity[23]
+        if not this_input_valid:
+            return
+
+        # The solution of non-root node 24
+        for i in range(len(this_node_input_index)):
+            node_input_i_idx_in_queue = this_node_input_index[i]
+            if not queue_element_validity[node_input_i_idx_in_queue]:
+                continue
+            this_solution = solution_queue[node_input_i_idx_in_queue]
+            th_0 = this_solution[0]
+            th_1 = this_solution[1]
+            th_2 = this_solution[4]
+            th_5 = this_solution[8]
+            condition_0: bool = True
+            if condition_0:
+                this_solution[6] = -th_1 - th_2 + th_5 + math.atan2(-r_31, r_11*math.cos(th_0) + r_21*math.sin(th_0))
+                solution_queue[node_input_i_idx_in_queue] = this_solution
+            else:
+                queue_element_validity[node_input_i_idx_in_queue] = False
+    # Invoke the processor
+    ExplicitSolutionNode_node_24_solve_th_3_processor()
+    # Finish code for explicit solution node 23
 
     # Code for explicit solution node 5, solved variable is th_1th_2th_3_soa
     def ExplicitSolutionNode_node_5_solve_th_1th_2th_3_soa_processor():

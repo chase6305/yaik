@@ -66,7 +66,7 @@ class TestEmptyRecovery(TestCase):
                             self.assertEqual(float(q[index,0]),case['parameters'][str(joint.symbol)])
 
     def test_cli_can_export_legacy_paths_with_matching_runtimes(self):
-        tree=ROOT/'gallery/ur_10/ur_10_ik.yaml'
+        tree=ROOT/'gallery/arm_robo/arm_robo_ik.yaml'
         with tempfile.TemporaryDirectory(prefix='yaik-recovery-cli-') as temporary:
             output=Path(temporary)
             result=subprocess.run([sys.executable,'-B',str(ROOT/'yaik.py'),'codegen',str(tree),
@@ -77,13 +77,13 @@ class TestEmptyRecovery(TestCase):
             for name in ('python_run_import.py','yaik_cpp_common.h'):
                 self.assertEqual((output/name).read_bytes(),(ROOT/name).read_bytes())
             scope={}
-            exec((output/'ur_10_ik_generated.py').read_text(),scope)
-            case=next(row for row in CASES if row['robot']=='ur_10' and row['recovery_expected'])
-            self.assertEqual(scope['ur_10_ik_solve'](np.array(case['target'])),[])
+            exec((output/'arm_robo_ik_generated.py').read_text(),scope)
+            case=next(row for row in CASES if row['robot']=='arm_robo' and row['recovery_expected'])
+            self.assertEqual(scope['arm_robo_ik_solve'](np.array(case['target'])),[])
             model=read_skeleton_tree(str(tree))
             with redirect_stdout(StringIO()):
                 expected='\n'.join(line.rstrip() for line in CodeGenerationCpp(model,use_safe_operator=True,refine_seeds=False).generate_code())+'\n'
-            self.assertEqual((output/'ur_10_ik_generated.cpp').read_text(),expected)
+            self.assertEqual((output/'arm_robo_ik_generated.cpp').read_text(),expected)
 
     @skipUnless(TOOLCHAIN,'Requires g++ and Eigen3')
     def test_cpp_empty_paths_keep_the_legacy_random_stream(self):

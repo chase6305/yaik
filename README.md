@@ -261,6 +261,14 @@ joint. These candidates pass the generated wrapper's FK checks. This is finite
 coverage of continuous families, with no guarantee of full-workspace completeness.
 The stored Marvin trees and both generated languages include this recovery.
 
+UR10, UR5, and the UR10 URDF snapshots also include aligned-wrist branches
+for raw wrist angles `0` and `pi`. The arm-plane two-link construction samples
+the remaining wrist angle and includes analytic reach-annulus boundary roots
+and interval representatives, retaining tangencies that a fixed grid can miss.
+This branch recovery also runs through `generate --resume-tree`; existing
+children and the node budget are respected. It remains a finite family search,
+with no certificate of bounded workspace completeness.
+
 The generic 6R matrix kernel retains its original eigenvalue candidates and adds
 one stable tangent-half-angle chart when the leading matrix is ill-conditioned.
 Regenerated C++ kernels reserve up to 48 candidates instead of truncating the
@@ -277,8 +285,9 @@ draws no random numbers. The seed transforms use `1e-4` radians and a translatio
 of length `1e-4` in the model's length units. They only construct starting points.
 Local recovery can still fail and does not certify completeness or call latency.
 Re-export with `--with-runtime` to bundle the matching helpers. Generic `codegen`
-and `generate` accept `--no-extra-recovery` to export the legacy checked paths;
-library generators accept `refine_seeds=False` for the same choice.
+and `generate` accept `--no-extra-recovery` to disable this additional numerical stage;
+analytic branches already present in the saved tree remain enabled.
+Library generators accept `refine_seeds=False` for the same choice.
 
 ## Validation
 
@@ -292,7 +301,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
   solver/test_candidate_assignment.py solver/test_partial_branches.py \
   solver/test_compact_workspace.py solver/test_fixed_joint_phases.py \
   solver/test_seed_refinement.py \
-  solver/test_empty_recovery.py \
+  solver/test_empty_recovery.py solver/test_parallel_wrist.py \
   solver/test_gallery_regeneration.py \
   solver/test_parameterized_frames.py solver/general_6dof/test_runtime.py utility/test_artifacts.py -q -W error
 

@@ -107,14 +107,14 @@ parameters_value:
   d_6: 0.0922
   pre_transform_special_symbol_23: 0.1273
 symbolic_parameters:
-- a_3
 - a_1
-- d_4
-- pre_transform_special_symbol_23
+- a_3
 - d_0
-- d_6
 - d_2
+- d_4
 - d_5
+- d_6
+- pre_transform_special_symbol_23
 unknown_as_parameter_more_dof: []
 unknowns:
 - degenerate_check_value:

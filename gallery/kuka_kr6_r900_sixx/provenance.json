@@ -19,13 +19,14 @@
     "codegen/skeleton/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "codegen/skeleton/branch_certificates.py": "da94e0c2f193e39f55bd03bbda53da0e1ba3cbedc69dc6c5fd6e1b7c14f9117a",
     "codegen/skeleton/build_equation_branch.py": "8790a2bc0b20249fd0dd1069c39c4f8cea5eea65ead0463efae00410e686a21f",
-    "codegen/skeleton/build_variable_branch.py": "ba7c68f8b45f5118f9c7ea65deadf3215678967aca4867680dc31a6ca56a86cc",
+    "codegen/skeleton/build_variable_branch.py": "affce8af4c7bffe00a76198561e72c947a2b02f32e8398b25ad9971ae099bcbd",
     "codegen/skeleton/codegen_base.py": "c9d47fb1905422bf949b32821ab3a65d53d3c84c60f06b697fe51d4f4fb8515d",
     "codegen/skeleton/complete_partial_branches.py": "fc6377aa90f1df67f3826c50e2880df53bff6edf7dc0145aa0e415607a2253d2",
     "codegen/skeleton/completeness.py": "ad191623749278254be2e3a787baaf4ff8752a413517960de0f6626d0cce6400",
     "codegen/skeleton/family_critical.py": "3a1cd353557ccac72ece32de2ed7b64d4e55715a0f60d463c45357913a79b29b",
     "codegen/skeleton/fixed_joint_phases.py": "6abeede6dd3eb54e645c6d24ebb2009d5de9895b901beb357561a69107d36686",
     "codegen/skeleton/guard_codegen.py": "66453cdc2fa662dba4a3048cca2a5de5be30b6f0975f0b10ff5987fc290e1d1d",
+    "codegen/skeleton/parallel_wrist.py": "313f8a98323b7d8ca590d9e19376cbb0c8e3daf03a8db32f3c0020b38a6df6d9",
     "codegen/skeleton/skeleton_tree.py": "8aff99153da797118db0a101a56110f7e493c5a89fa711ad3e3d05283906a7f5",
     "codegen/skeleton/tree_node.py": "624192f5e35d02ff62d7af2345af8b98d260ef7c3169024d3ccf42e046cd6eb2",
     "codegen/skeleton/tree_serialize.py": "52fb24e24a6caeee0ddd3fdeeee80c2078d049983b34c13aeb9f275085650548",
@@ -101,7 +102,7 @@
     "utility/rotation_utils.py": "266baf0421529070107254f54d3822d32cb08d24d62168e984c3047a59855942",
     "utility/symbolic_utils.py": "c15cbb9ad2187feb750c56542aaf49b1bcf98bd69db23fe3a98123c044a6e616",
     "utility/transformations.py": "37945d0c6be26182f5fdad89422bf99c353256f2a87b2f111f2fce47c3cb408e",
-    "yaik.py": "c10fdb4e17094d0cdbf5197f097e98271cd541b68b66fc6aff381a37c1f331af"
+    "yaik.py": "d15bfb4d74cea66c11bc094b2c2aae27eef49ae68182dda3094c8eb12ce01938"
   },
   "dependencies": {
     "numpy": "2.2.6",
@@ -116,7 +117,7 @@
     "kuka_kr6_r900_sixx_ik_generated.cpp": "57724ed9ff3cf75e4b584a4871fd505be1db95f4419d0177a902cb6800b21261"
   },
   "note": "Historical symbolic-search seed is unknown. Only the saved tree is re-exported; local raw/nearby-seed recovery does not establish completeness.",
-  "generator_base_revision": "4c4389217bf8fbfe89436047b5792fbe403ebcc0",
+  "generator_base_revision": "7dff7f1cec4a0133177786b37380850088af1867",
   "runtime_sha256": {
     "python_run_import.py": "085a32131e3867deab6bc16de2d77a897ada229d06cd6089dd30caba48b7d392",
     "yaik_cpp_common.h": "2d025448b631622acbd3ba94be57a2ea1b15acdd990d4bbf57cb521ff97097f9"
